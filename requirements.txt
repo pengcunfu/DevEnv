@@ -1,0 +1,27 @@
+# GUI Framework
+PySide6>=6.5.0
+
+# Fluent Design Components
+PySide6-Fluent-Widgets
+
+# Material Design Theme (if used)
+qt-material>=2.14
+
+# HTTP Requests
+requests>=2.31.0
+
+# YAML Configuration
+PyYAML>=6.0
+
+# Legacy Qt Support (for core modules)
+PyQt5>=5.15.0
+
+# Standard Library Dependencies (included with Python)
+# - os
+# - sys
+# - json
+# - shutil
+# - subprocess
+# - pathlib
+# - threading
+# - traceback

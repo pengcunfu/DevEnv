@@ -1,0 +1,39 @@
+下载地址：
+
+DevTools:
+  - name: Android Studio
+    desc: Android官方IDE
+    icon: resource/icons/androidstudio.png
+    versions:
+      - version: 2024.1.1
+        url: https://redirector.gvt1.com/edgedl/android/studio/ide-zips/2024.1.1.18/android-studio-2024.1.1.18-windows.exe
+  - name: JetBrains Toolbox
+    desc: JetBrains全家桶管理器（可安装IDEA、PyCharm等）
+    icon: resource/icons/jetbrains.png
+    versions:
+      - version: 2.3.1
+        url: https://download.jetbrains.com/toolbox/jetbrains-toolbox-2.3.1.31116.exe
+  - name: Visual Studio Code
+    desc: 微软开源代码编辑器
+    icon: resource/icons/vscode.png
+    versions:
+      - version: 1.89.1
+        url: https://update.code.visualstudio.com/1.89.1/win32-x64-user/stable
+  - name: Visual Studio Community
+    desc: 微软旗舰IDE（社区版免费）
+    icon: resource/icons/vs.png
+    versions:
+      - version: 2022
+        url: https://aka.ms/vs/17/release/vs_Community.exe
+  - name: Postman
+    desc: API接口调试与测试工具
+    icon: resource/icons/postman.png
+    versions:
+      - version: 11.0.11
+        url: https://dl.pstmn.io/download/latest/win64
+  - name: JMeter
+    desc: Apache开源压力测试工具
+    icon: resource/icons/jmeter.png
+    versions:
+      - version: 5.6.3
+        url: https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.zip

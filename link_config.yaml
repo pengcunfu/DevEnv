@@ -1,0 +1,143 @@
+Java:
+  - name: OpenJDK
+    desc: 开源Java开发工具包
+    icon: resource/icons/java.png
+    versions:
+      - version: 8
+        url: https://mirrors.tuna.tsinghua.edu.cn/Adoptium/8/jdk/x64/windows/OpenJDK8U-jdk_x64_windows_hotspot_8u452b09.zip
+      - version: 11
+        url: https://mirrors.tuna.tsinghua.edu.cn/Adoptium/11/jdk/x64/windows/OpenJDK11U-jdk_x64_windows_hotspot_11.0.27_6.zip
+      - version: 17
+        url: https://mirrors.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/windows/OpenJDK17U-jdk_x64_windows_hotspot_17.0.15_6.zip
+
+Python:
+  - name: Python
+    desc: 主流Python解释器
+    icon: resource/icons/python.png
+    versions:
+      - version: 3.8.18
+        url: https://www.python.org/downloads/release/python-3818/
+      - version: 3.10.14
+        url: https://www.python.org/downloads/release/python-31014/
+      - version: 3.12.3
+        url: https://www.python.org/downloads/release/python-3123/
+  - name: Anaconda
+    desc: 科学计算Python发行版
+    icon: icons/anaconda.png
+    versions:
+      - version: 2023.09
+        url: https://repo.anaconda.com/archive/
+      - version: 2024.02
+        url: https://www.anaconda.com/download
+
+PHP:
+  - name: PHP
+    desc: 主流PHP解释器
+    icon: resource/icons/php.png
+    versions:
+      - version: 7.4.33
+        url: https://windows.php.net/downloads/releases/archives/
+      - version: 8.1.27
+        url: https://windows.php.net/download/
+      - version: 8.3.7
+        url: https://windows.php.net/download/
+
+Node.js:
+  - name: Node.js
+    desc: JavaScript运行环境
+    icon: resource/icons/nodejs.png
+    versions:
+      - version: 18.20.2
+        url: https://nodejs.org/en/download/
+      - version: 20.12.2
+        url: https://nodejs.org/en/download/
+  - name: nvm-windows
+    desc: Node多版本管理工具
+    icon: icons/nvm.png
+    versions:
+      - version: 1.1.12
+        url: https://github.com/coreybutler/nvm-windows/releases
+
+WebServer:
+  - name: Apache
+    desc: 主流Web服务器
+    icon: resource/icons/apache.png
+    versions:
+      - version: 2.4.58
+        url: https://www.apachelounge.com/download/VC15/binaries/httpd-2.4.58-win64-VS16.zip
+  - name: Nginx
+    desc: 高性能Web服务器
+    icon: resource/icons/nginx.png
+    versions:
+      - version: 1.24.0
+        url: https://nginx.org/download/nginx-1.24.0.zip
+      - version: 1.25.2
+        url: https://nginx.org/download/nginx-1.25.2.zip
+  - name: Tomcat
+    desc: Java Web应用服务器
+    icon: resource/icons/tomcat.png
+    versions:
+      - version: 9.0.85
+        url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.85/bin/apache-tomcat-9.0.85-windows-x64.zip
+      - version: 10.1.18
+        url: https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.18/bin/apache-tomcat-10.1.18-windows-x64.zip
+
+Database:
+  - name: MySQL
+    desc: 主流关系型数据库
+    icon: resource/icons/mysql.png
+    versions:
+      - version: 5.7.44
+        url: https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-5.7.44-winx64.zip
+      - version: 8.0.36
+        url: https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.36-winx64.zip
+
+Cache:
+  - name: Redis
+    desc: 高性能键值缓存数据库
+    icon: resource/icons/redis.png
+    versions:
+      - version: 7.2.4
+        url: https://github.com/tporadowski/redis/releases/download/v7.2.4/redis-7.2.4.1-win64.zip
+  - name: Redis Another Manager
+    desc: Redis可视化管理工具
+    icon: resource/icons/ram.png
+    versions:
+      - version: 1.0.0
+        url: https://github.com/qishibo/AnotherRedisDesktopManager/releases/download/v1.0.0/Another-Redis-Desktop-Manager.1.0.0.exe
+
+PHP:
+  - name: PHP
+    desc: 主流PHP解释器
+    icon: resource/icons/php.png
+    versions:
+      - version: 8.3.7
+        url: https://windows.php.net/downloads/releases/php-8.3.7-Win32-vs16-x64.zip
+      - version: 7.4.33
+        url: https://windows.php.net/downloads/releases/archives/php-7.4.33-Win32-vs16-x64.zip
+  - name: Composer
+    desc: PHP依赖管理工具
+    icon: resource/icons/composer.png
+    versions:
+      - version: 2.7.6
+        url: https://getcomposer.org/download/2.7.6/composer.phar
+
+DBTools:
+  - name: Navicat Premium
+    desc: 强大的多数据库管理工具（试用版/需授权）
+    icon: resource/icons/navicat.png
+    versions:
+      - version: 16.3.7
+        url: https://download.navicat.com.cn/download/navicat16-premium-zh.exe
+  - name: HeidiSQL
+    desc: 免费开源的MySQL/MariaDB/SQL Server/PostgreSQL管理工具
+    icon: resource/icons/heidisql.png
+    versions:
+      - version: 12.7.0.6675
+        url: https://www.heidisql.com/downloads/releases/HeidiSQL_12.7.0.6675_Setup.exe
+  - name: DBeaver
+    desc: 免费开源的多数据库管理工具
+    icon: resource/icons/dbeaver.png
+    versions:
+      - version: 24.0.2
+        url: https://dbeaver.io/files/dbeaver-ce-24.0.2-win32.win32.x86_64.zip
