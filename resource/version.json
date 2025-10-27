@@ -1,0 +1,6 @@
+{
+    "version": "1.0.1",
+    "changelog": "1. 修复了xxx问题\n2. 新增了xxx功能",
+    "download_url": "https://example.com/downloads/app-1.0.1.exe",
+    "checksum": "文件校验和"
+}
