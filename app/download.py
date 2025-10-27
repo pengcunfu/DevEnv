@@ -4,13 +4,15 @@ import aiohttp
 import aiofiles
 import threading
 import time
+import urllib.request
+import platform
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Optional, Callable, Dict, Any
+from typing import Optional, Callable, Dict, Any, Union
 import httpx
 from tqdm import tqdm
 
-class AdvancedDownloader:
+class Downloader:
     """高级多线程下载器，支持断点续传、进度监控、速度限制等功能"""
     
     def __init__(self, url: str, save_path: str, 
@@ -19,7 +21,9 @@ class AdvancedDownloader:
                  timeout: int = 30,
                  max_retries: int = 3,
                  speed_limit: Optional[int] = None,  # bytes per second
-                 progress_callback: Optional[Callable] = None):
+                 progress_callback: Optional[Callable] = None,
+                 proxy: Optional[Union[str, Dict[str, str]]] = None,
+                 use_system_proxy: bool = True):
         """
         初始化下载器
         
@@ -32,6 +36,8 @@ class AdvancedDownloader:
             max_retries: 最大重试次数
             speed_limit: 速度限制 (bytes/s)
             progress_callback: 进度回调函数
+            proxy: 代理设置 (字符串或字典格式)
+            use_system_proxy: 是否使用系统代理
         """
         self.url = url
         self.save_path = Path(save_path)
@@ -41,6 +47,8 @@ class AdvancedDownloader:
         self.max_retries = max_retries
         self.speed_limit = speed_limit
         self.progress_callback = progress_callback
+        self.proxy = proxy
+        self.use_system_proxy = use_system_proxy
         
         # 状态控制
         self._is_running = False
@@ -64,14 +72,90 @@ class AdvancedDownloader:
         # 进度条
         self.progress_bar = None
         
+        # 代理配置
+        self.proxy_config = self._setup_proxy()
+        
         # 初始化
         self._init_download()
+
+    def _setup_proxy(self) -> Optional[Dict[str, str]]:
+        """设置代理配置"""
+        proxy_config = None
+        
+        # 如果指定了代理
+        if self.proxy:
+            if isinstance(self.proxy, str):
+                # 字符串格式代理
+                proxy_config = {
+                    'http': self.proxy,
+                    'https': self.proxy
+                }
+            elif isinstance(self.proxy, dict):
+                # 字典格式代理
+                proxy_config = self.proxy
+        
+        # 如果启用系统代理且没有手动指定代理
+        elif self.use_system_proxy:
+            proxy_config = self._get_system_proxy()
+        
+        if proxy_config:
+            print(f"使用代理: {proxy_config}")
+        
+        return proxy_config
+    
+    def _get_system_proxy(self) -> Optional[Dict[str, str]]:
+        """获取系统代理设置"""
+        try:
+            # 获取系统代理
+            proxy_handler = urllib.request.getproxies()
+            
+            if proxy_handler:
+                print(f"检测到系统代理: {proxy_handler}")
+                return proxy_handler
+            
+            # Windows系统特殊处理
+            if platform.system() == 'Windows':
+                try:
+                    import winreg
+                    # 读取注册表中的代理设置
+                    with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                                      r'Software\Microsoft\Windows\CurrentVersion\Internet Settings') as key:
+                        proxy_enable = winreg.QueryValueEx(key, 'ProxyEnable')[0]
+                        if proxy_enable:
+                            proxy_server = winreg.QueryValueEx(key, 'ProxyServer')[0]
+                            if proxy_server:
+                                # 处理代理服务器格式
+                                if '=' in proxy_server:
+                                    # 协议特定代理
+                                    proxies = {}
+                                    for item in proxy_server.split(';'):
+                                        if '=' in item:
+                                            protocol, server = item.split('=', 1)
+                                            proxies[protocol] = f'http://{server}'
+                                    return proxies
+                                else:
+                                    # 通用代理
+                                    return {
+                                        'http': f'http://{proxy_server}',
+                                        'https': f'http://{proxy_server}'
+                                    }
+                except Exception as e:
+                    print(f"读取Windows代理设置失败: {e}")
+            
+        except Exception as e:
+            print(f"获取系统代理失败: {e}")
+        
+        return None
 
     def _init_download(self):
         """初始化下载信息"""
         try:
             # 获取文件信息
-            with httpx.Client(timeout=self.timeout) as client:
+            client_kwargs = {'timeout': self.timeout}
+            if self.proxy_config:
+                client_kwargs['proxies'] = self.proxy_config
+                
+            with httpx.Client(**client_kwargs) as client:
                 response = client.head(self.url, follow_redirects=True)
                 response.raise_for_status()
                 
@@ -203,11 +287,24 @@ class AdvancedDownloader:
         connector = aiohttp.TCPConnector(limit=self.max_workers)
         timeout = aiohttp.ClientTimeout(total=self.timeout)
         
-        async with aiohttp.ClientSession(
-            connector=connector, 
-            timeout=timeout,
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        ) as session:
+        # 设置会话参数
+        session_kwargs = {
+            'connector': connector,
+            'timeout': timeout,
+            'headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        }
+        
+        # 添加代理配置
+        if self.proxy_config:
+            # aiohttp使用不同的代理格式
+            if 'http' in self.proxy_config:
+                session_kwargs['trust_env'] = True
+                # 设置环境变量代理
+                os.environ['HTTP_PROXY'] = self.proxy_config['http']
+                if 'https' in self.proxy_config:
+                    os.environ['HTTPS_PROXY'] = self.proxy_config['https']
+        
+        async with aiohttp.ClientSession(**session_kwargs) as session:
             
             # 创建下载任务
             tasks = []
@@ -316,18 +413,34 @@ class AdvancedDownloader:
             'is_complete': self._download_complete
         }
 
-# 保持向后兼容性
-class Downloader(AdvancedDownloader):
-    """向后兼容的下载器类"""
-    
-    def __init__(self, url, save_path, num_threads=4, chunk_size=1024*1024):
-        super().__init__(
-            url=url,
-            save_path=save_path,
-            max_workers=num_threads,
-            chunk_size=chunk_size
-        )
-
-    def stop(self):
-        """停止下载"""
-        self.cancel() 
+    def set_proxy(self, proxy: Union[str, Dict[str, str], None]):
+        """设置代理"""
+        self.proxy = proxy
+        self.proxy_config = self._setup_proxy()
+        
+    def disable_proxy(self):
+        """禁用代理"""
+        self.proxy = None
+        self.use_system_proxy = False
+        self.proxy_config = None
+        
+    def get_proxy_info(self) -> Optional[Dict[str, str]]:
+        """获取当前代理信息"""
+        return self.proxy_config
+        
+    def test_proxy(self) -> bool:
+        """测试代理连接"""
+        try:
+            client_kwargs = {'timeout': 10}
+            if self.proxy_config:
+                client_kwargs['proxies'] = self.proxy_config
+                
+            with httpx.Client(**client_kwargs) as client:
+                # 测试连接到一个简单的URL
+                response = client.get('http://httpbin.org/ip')
+                response.raise_for_status()
+                print(f"代理测试成功，IP信息: {response.json()}")
+                return True
+        except Exception as e:
+            print(f"代理测试失败: {e}")
+            return False
