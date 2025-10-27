@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QStackedWidget, QFrame
+from PySide6.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QStackedWidget, QFrame, QMenuBar, QMenu
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QAction
 
 from .main_page import MainPage
 from .search_page import SearchDialog
@@ -17,57 +17,88 @@ class MainWindow(QMainWindow):
         # 初始化更新器
         self.updater = Updater(self)
         
+        # 创建菜单栏
+        self.create_menu_bar()
+        
         # 创建中央窗口部件
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
-        # 创建主布局
-        main_layout = QHBoxLayout(central_widget)
-        
-        # 创建导航栏
-        self.nav_frame = QFrame()
-        self.nav_frame.setFixedWidth(200)
-        self.nav_frame.setFrameStyle(QFrame.StyledPanel)
-        nav_layout = QVBoxLayout(self.nav_frame)
-        
-        # 创建导航按钮
-        self.nav_buttons = []
-        self.home_btn = QPushButton('主页')
-        self.search_btn = QPushButton('搜索')
-        self.download_btn = QPushButton('下载管理')
-        self.config_btn = QPushButton('设置')
-        
-        self.nav_buttons = [self.home_btn, self.search_btn, self.download_btn, self.config_btn]
-        
-        for btn in self.nav_buttons:
-            btn.setCheckable(True)
-            btn.setMinimumHeight(40)
-            nav_layout.addWidget(btn)
-        
-        nav_layout.addStretch()
+        # 创建主布局（垂直布局，只包含内容区域）
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(5, 5, 5, 5)
         
         # 创建内容区域
         self.stacked_widget = QStackedWidget()
-        
-        # 添加到主布局
-        main_layout.addWidget(self.nav_frame)
         main_layout.addWidget(self.stacked_widget)
         
         # 初始化界面
         self.init_interface()
         
-        # 连接导航按钮信号
-        self.home_btn.clicked.connect(lambda: self.switch_page(0))
-        self.search_btn.clicked.connect(lambda: self.switch_page(1))
-        self.download_btn.clicked.connect(lambda: self.switch_page(2))
-        self.config_btn.clicked.connect(lambda: self.switch_page(3))
-        
-        # 默认选择主页
+        # 默认显示主页
         self.switch_page(0)
         
         # 暂时禁用自动更新检查，避免启动时的线程问题
         # self.check_update()
+    
+    def create_menu_bar(self):
+        """创建菜单栏"""
+        menubar = self.menuBar()
         
+        # 视图菜单
+        view_menu = menubar.addMenu('视图(&V)')
+        
+        # 主页动作
+        self.home_action = QAction('主页(&H)', self)
+        self.home_action.setShortcut('Ctrl+H')
+        self.home_action.setStatusTip('显示主页')
+        self.home_action.triggered.connect(lambda: self.switch_page(0))
+        view_menu.addAction(self.home_action)
+        
+        # 搜索动作
+        self.search_action = QAction('搜索(&S)', self)
+        self.search_action.setShortcut('Ctrl+F')
+        self.search_action.setStatusTip('打开搜索页面')
+        self.search_action.triggered.connect(lambda: self.switch_page(1))
+        view_menu.addAction(self.search_action)
+        
+        # 下载管理动作
+        self.download_action = QAction('下载管理(&D)', self)
+        self.download_action.setShortcut('Ctrl+D')
+        self.download_action.setStatusTip('打开下载管理页面')
+        self.download_action.triggered.connect(lambda: self.switch_page(2))
+        view_menu.addAction(self.download_action)
+        
+        view_menu.addSeparator()
+        
+        # 设置动作
+        self.config_action = QAction('设置(&C)', self)
+        self.config_action.setShortcut('Ctrl+,')
+        self.config_action.setStatusTip('打开设置页面')
+        self.config_action.triggered.connect(lambda: self.switch_page(3))
+        view_menu.addAction(self.config_action)
+        
+        # 工具菜单
+        tools_menu = menubar.addMenu('工具(&T)')
+        
+        # 检查更新动作
+        update_action = QAction('检查更新(&U)', self)
+        update_action.setStatusTip('检查软件更新')
+        update_action.triggered.connect(self.check_update)
+        tools_menu.addAction(update_action)
+        
+        # 帮助菜单
+        help_menu = menubar.addMenu('帮助(&H)')
+        
+        # 关于动作
+        about_action = QAction('关于(&A)', self)
+        about_action.setStatusTip('关于软件下载管理器')
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+        
+        # 创建状态栏
+        self.statusBar().showMessage('就绪')
+
     def init_interface(self):
         # 加载软件配置
         import yaml
@@ -96,12 +127,13 @@ class MainWindow(QMainWindow):
         
     def switch_page(self, index):
         """切换页面"""
-        # 更新按钮状态
-        for i, btn in enumerate(self.nav_buttons):
-            btn.setChecked(i == index)
-        
         # 切换页面
         self.stacked_widget.setCurrentIndex(index)
+        
+        # 更新状态栏
+        page_names = ['主页', '搜索', '下载管理', '设置']
+        if 0 <= index < len(page_names):
+            self.statusBar().showMessage(f'当前页面: {page_names[index]}')
         
     def on_config_save(self, config):
         # 处理配置保存
@@ -110,6 +142,15 @@ class MainWindow(QMainWindow):
     def check_update(self):
         """检查更新"""
         self.updater.check_for_updates()
+        
+    def show_about(self):
+        """显示关于对话框"""
+        from PySide6.QtWidgets import QMessageBox
+        QMessageBox.about(self, "关于软件下载管理器", 
+                         "软件下载管理器 v1.0\n\n"
+                         "一个功能强大的软件下载管理工具\n"
+                         "支持多线程下载、断点续传、代理设置等功能\n\n"
+                         "© 2024 熔岩DEV")
         
     def closeEvent(self, event):
         """关闭窗口时清理临时文件"""

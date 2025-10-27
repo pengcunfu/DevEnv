@@ -4,7 +4,18 @@
 
 2、可以自由切换本地Java环境（版本）
 
-
+```
+一键安装Docker-Compose
+一键安装Docker
+一键安装Go
+一键安装MaraDB
+一键安装MySQL
+一键安装Nodejs
+一键安装PostgreSQL
+一键安装PyEnv
+一键安装Redis
+一键安装ROS2
+```
 
 专注于环境变量的工具：
 
