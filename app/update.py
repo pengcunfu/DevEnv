@@ -6,8 +6,7 @@ import requests
 import subprocess
 from pathlib import Path
 from PySide6.QtCore import QObject, Signal, QThread
-from PySide6.QtWidgets import QMessageBox, QProgressDialog
-from qfluentwidgets import MessageBox, ProgressBar
+from PySide6.QtWidgets import QMessageBox, QProgressDialog, QApplication
 
 class UpdateChecker(QObject):
     """更新检查器"""
@@ -104,16 +103,16 @@ class Updater:
 
     def _on_update_available(self, update_info):
         """发现新版本"""
-        msg = MessageBox(
-            "发现新版本",
-            f"当前版本: {self.current_version}\n"
-            f"新版本: {update_info['version']}\n\n"
-            f"更新内容:\n{update_info['changelog']}\n\n"
-            "是否立即更新？",
-            self.parent
-        )
+        msg = QMessageBox(self.parent)
+        msg.setWindowTitle("发现新版本")
+        msg.setText(f"当前版本: {self.current_version}\n"
+                   f"新版本: {update_info['version']}\n\n"
+                   f"更新内容:\n{update_info['changelog']}\n\n"
+                   "是否立即更新？")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.setDefaultButton(QMessageBox.Yes)
         
-        if msg.exec():
+        if msg.exec() == QMessageBox.Yes:
             self._start_update(update_info)
 
     def _start_update(self, update_info):
@@ -122,9 +121,9 @@ class Updater:
         save_path = self.temp_dir / f"update_{update_info['version']}.exe"
         
         # 创建进度对话框
-        progress_dialog = ProgressBar(self.parent)
+        progress_dialog = QProgressDialog("正在下载更新...", "取消", 0, 100, self.parent)
         progress_dialog.setWindowTitle("下载更新")
-        progress_dialog.setRange(0, 100)
+        progress_dialog.setWindowModality(2)  # Qt.WindowModal
         progress_dialog.show()
         
         # 创建下载器
@@ -163,7 +162,7 @@ class Updater:
 
     def _on_error(self, error_msg):
         """处理错误"""
-        MessageBox("更新错误", error_msg, self.parent).exec()
+        QMessageBox.critical(self.parent, "更新错误", error_msg)
 
     def cleanup(self):
         """清理临时文件"""
