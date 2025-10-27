@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QPushButton, QComboBox, QLineEdit, QHBoxLayout, QLabel, QMessageBox
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QTimer
-from ui.search_page import SearchDialog
+from app.ui.search_page import SearchDialog
 import os
 
 CACHE_DIR = os.path.join('data', 'cache')

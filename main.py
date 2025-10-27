@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QSize, QThread, Signal, QTimer
 import traceback
-from ui.main_window import MainWindow
+from app.ui.main_window import MainWindow
 
 CONFIG_PATH = 'data/link_config.yaml'
 CACHE_DIR = os.path.join('data', 'cache')
