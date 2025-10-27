@@ -10,7 +10,7 @@ from PySide6.QtCore import QSize, QThread, Signal, QTimer
 import traceback
 from app.ui.main_window import MainWindow
 
-CONFIG_PATH = 'data/link_config.yaml'
+CONFIG_PATH = 'resource/link_config.yaml'
 CACHE_DIR = os.path.join('data', 'cache')
 
 if not os.path.exists(CACHE_DIR):

@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
         # 加载软件配置
         import yaml
         try:
-            with open('data/link_config.yaml', 'r', encoding='utf-8') as f:
+            with open('resource/link_config.yaml', 'r', encoding='utf-8') as f:
                 software_tabs = yaml.safe_load(f)
         except:
             software_tabs = {}
