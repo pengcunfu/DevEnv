@@ -14,6 +14,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('软件下载管理器')
         self.resize(900, 700)
         
+        # 设置窗口图标
+        self.setWindowIcon(QIcon('resource/icon.png'))
+        
         # 初始化更新器
         self.updater = Updater(self)
         

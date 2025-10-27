@@ -223,6 +223,10 @@ class SoftwareManager(QWidget):
 
 def main():
     app = QApplication(sys.argv)
+    
+    # 设置应用程序图标
+    app.setWindowIcon(QIcon('resource/icon.png'))
+    
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
