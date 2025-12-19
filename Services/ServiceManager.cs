@@ -37,15 +37,24 @@ namespace DevEnv.Services
         public void StopMonitoring()
         {
             _timer.Stop();
+            _timer.Dispose();
         }
 
         private void CheckAllServicesStatus(object? sender, ElapsedEventArgs e)
         {
-            foreach (var serviceName in _serviceNames.Keys)
+            try
             {
-                var status = GetServiceStatus(serviceName);
-                _serviceStatuses[serviceName] = status;
-                ServiceStatusUpdated?.Invoke(this, new ServiceStatusUpdatedEventArgs(serviceName, status));
+                foreach (var serviceName in _serviceNames.Keys)
+                {
+                    var status = GetServiceStatus(serviceName);
+                    _serviceStatuses[serviceName] = status;
+                    ServiceStatusUpdated?.Invoke(this, new ServiceStatusUpdatedEventArgs(serviceName, status));
+                }
+            }
+            catch
+            {
+                // Silently handle any exceptions during status check
+                // This prevents TaskCanceledException when window is closing
             }
         }
 

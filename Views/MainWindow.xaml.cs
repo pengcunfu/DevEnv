@@ -44,7 +44,14 @@ namespace DevEnv.Views
 
         protected override void OnClosed(EventArgs e)
         {
-            _viewModel?.StopMonitoring();
+            try
+            {
+                _viewModel?.StopMonitoring();
+            }
+            catch
+            {
+                // Silently handle any exceptions during close
+            }
             base.OnClosed(e);
         }
     }
