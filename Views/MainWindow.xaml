@@ -8,6 +8,18 @@
         Title="Windows 服务管理器" Height="500" Width="800"
         WindowStartupLocation="CenterScreen">
     <DockPanel Margin="10">
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="工具(_T)">
+                <MenuItem Header="JSON 格式化器(_J)" Click="OpenJsonFormatter_Click"/>
+                <Separator/>
+                <MenuItem Header="退出(_X)" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="帮助(_H)">
+                <MenuItem Header="关于(_A)" Click="About_Click"/>
+            </MenuItem>
+        </Menu>
+
         <!-- Title -->
         <Label DockPanel.Dock="Top"
                Content="Windows 服务管理器"
