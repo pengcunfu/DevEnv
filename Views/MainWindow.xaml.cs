@@ -62,6 +62,12 @@ namespace DevEnv.Views
             jsonFormatter.ShowDialog();
         }
 
+        private void OpenSoftwareDownloader_Click(object sender, RoutedEventArgs e)
+        {
+            var downloader = new SoftwareDownloadWindow();
+            downloader.ShowDialog();
+        }
+
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
@@ -69,7 +75,7 @@ namespace DevEnv.Views
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Windows 服务管理器\n\n包含功能：\n• 服务管理\n• JSON 格式化工具\n\n版本: 1.0.0", "关于", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Windows 服务管理器\n\n包含功能：\n• 服务管理\n• JSON 格式化工具\n• 软件下载工具\n\n版本: 1.0.0", "关于", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
