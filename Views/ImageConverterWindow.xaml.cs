@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using DevEnv.ViewModels;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace DevEnv.Views
 {
@@ -49,23 +50,33 @@ namespace DevEnv.Views
 
         private void SelectFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            // 简化实现：使用一个输入框让用户输入文件夹路径
-            var folderDialog = new FolderSelectionDialog();
-            folderDialog.Owner = this;
-            if (folderDialog.ShowDialog() == true)
+            using (var dialog = new CommonOpenFileDialog())
             {
-                _viewModel.AddFolder(folderDialog.SelectedPath);
+                dialog.Title = "选择要转换的图像文件所在的文件夹";
+                dialog.IsFolderPicker = true;
+                dialog.Multiselect = false;
+                dialog.EnsurePathExists = true;
+
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    _viewModel.AddFolder(dialog.FileName);
+                }
             }
         }
 
         private void BrowseOutputButton_Click(object sender, RoutedEventArgs e)
         {
-            // 简化实现：使用一个输入框让用户输入文件夹路径
-            var folderDialog = new FolderSelectionDialog();
-            folderDialog.Owner = this;
-            if (folderDialog.ShowDialog() == true)
+            using (var dialog = new CommonOpenFileDialog())
             {
-                _viewModel.OutputDirectory = folderDialog.SelectedPath;
+                dialog.Title = "选择转换后图像的保存目录";
+                dialog.IsFolderPicker = true;
+                dialog.Multiselect = false;
+                dialog.EnsurePathExists = true;
+
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    _viewModel.OutputDirectory = dialog.FileName;
+                }
             }
         }
 
@@ -102,85 +113,6 @@ namespace DevEnv.Views
         private void ClearLogButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.ClearLog();
-        }
-    }
-
-    // 简单的文件夹选择对话框
-    public class FolderSelectionDialog : Window
-    {
-        public string SelectedPath { get; private set; } = string.Empty;
-
-        public FolderSelectionDialog()
-        {
-            Title = "选择文件夹";
-            Width = 500;
-            Height = 200;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            ResizeMode = ResizeMode.NoResize;
-
-            var grid = new Grid();
-            grid.Margin = new Thickness(15);
-
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            var label = new Label { Content = "请输入文件夹路径：" };
-            grid.Children.Add(label);
-            Grid.SetRow(label, 0);
-
-            var textBox = new TextBox
-            {
-                Margin = new Thickness(0, 10, 0, 0),
-                VerticalContentAlignment = VerticalAlignment.Center
-            };
-            grid.Children.Add(textBox);
-            Grid.SetRow(textBox, 1);
-
-            var buttonPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 15, 0, 0)
-            };
-            grid.Children.Add(buttonPanel);
-            Grid.SetRow(buttonPanel, 2);
-
-            var okButton = new Button { Content = "确定", Width = 80, Height = 30, Margin = new Thickness(0, 0, 10, 0), IsDefault = true };
-            var cancelButton = new Button { Content = "取消", Width = 80, Height = 30, IsCancel = true };
-
-            buttonPanel.Children.Add(okButton);
-            buttonPanel.Children.Add(cancelButton);
-
-            okButton.Click += (s, e) =>
-            {
-                SelectedPath = textBox.Text.Trim();
-                if (string.IsNullOrEmpty(SelectedPath))
-                {
-                    MessageBox.Show("请输入文件夹路径。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (!Directory.Exists(SelectedPath))
-                {
-                    MessageBox.Show("指定的文件夹不存在。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                DialogResult = true;
-                Close();
-            };
-
-            cancelButton.Click += (s, e) =>
-            {
-                DialogResult = false;
-                Close();
-            };
-
-            Content = grid;
-
-            // 设置默认路径
-            textBox.Text = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         }
     }
 }
