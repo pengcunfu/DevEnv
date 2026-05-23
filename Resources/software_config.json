@@ -105,6 +105,19 @@
           "file_name": "mysql-8.0.44-winx64.zip"
         }
       ]
+    },
+    {
+      "name": "PostgreSQL",
+      "desc": "PostgreSQL 绿色 zip 版 (EDB 二进制，解压即用)",
+      "icon": "Icons/postgresql.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "16.6",
+          "url": "https://get.enterprisedb.com/postgresql/postgresql-16.6-1-windows-x64-binaries.zip",
+          "file_name": "postgresql-16.6-1-windows-x64-binaries.zip"
+        }
+      ]
     }
   ],
   "Cache": [

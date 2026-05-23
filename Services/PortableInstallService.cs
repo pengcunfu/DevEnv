@@ -72,6 +72,7 @@ namespace DevEnv.Services
             return softwareName.ToLowerInvariant() switch
             {
                 "mysql" => "mysql",
+                "postgresql" => "postgresql",
                 "redis" => "redis",
                 "mongodb" => "mongodb",
                 "minio" => "minio",
@@ -96,7 +97,8 @@ namespace DevEnv.Services
             var innerName = Path.GetFileName(inner).ToLowerInvariant();
 
             if (innerName.Contains(targetName) || innerName.Contains("mysql") || innerName.Contains("redis") ||
-                innerName.Contains("nginx") || innerName.Contains("node") || innerName.Contains("jdk"))
+                innerName.Contains("nginx") || innerName.Contains("node") || innerName.Contains("jdk") ||
+                innerName.Contains("pgsql") || innerName.Contains("postgres"))
             {
                 foreach (var entry in Directory.GetFileSystemEntries(inner))
                 {

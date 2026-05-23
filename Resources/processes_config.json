@@ -16,7 +16,7 @@
       "redis-server"
     ],
     "executable": "{apps_dir}/redis/redis-server.exe",
-    "arguments": "{apps_dir}/redis/redis.windows.conf",
+    "arguments": "redis.windows.conf",
     "working_directory": "{apps_dir}/redis"
   },
   "MongoDB": {
@@ -48,5 +48,15 @@
     "executable": "{apps_dir}/nginx/nginx.exe",
     "arguments": "",
     "working_directory": "{apps_dir}/nginx"
+  },
+  "PostgreSQL": {
+    "display_name": "PostgreSQL",
+    "description": "绿色版 PostgreSQL 数据库",
+    "process_names": [
+      "postgres"
+    ],
+    "executable": "{apps_dir}/postgresql/bin/postgres.exe",
+    "arguments": "-D {apps_dir}/postgresql/data -p 5432",
+    "working_directory": "{apps_dir}/postgresql/bin"
   }
 }

@@ -88,7 +88,7 @@ namespace DevEnv.Views
                 "DevEnv - 开发环境管理器\n\n" +
                 "核心理念：绿色版 · 免安装 · 无需管理员权限\n\n" +
                 "核心功能：\n" +
-                "• 绿色版进程管理 (MySQL/Redis/MongoDB/MinIO/Nginx)\n" +
+                "• 绿色版进程管理 (MySQL/PostgreSQL/Redis/MongoDB/MinIO/Nginx)\n" +
                 "• 软件下载与自动解压 (zip 绿色包)\n" +
                 "• 环境扫描 (Java/Python/Node.js/PHP/.NET)\n" +
                 "• 镜像源配置 (pip/npm/pnpm/Yarn/Maven/Composer/Go/NuGet)\n" +

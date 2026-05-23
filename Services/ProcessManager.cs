@@ -95,6 +95,13 @@ namespace DevEnv.Services
                 if (process == null)
                     return Task.FromResult((false, "进程启动失败"));
 
+                Thread.Sleep(800);
+                if (process.HasExited)
+                {
+                    return Task.FromResult((false,
+                        $"{def.DisplayName} 启动后立即退出 (代码 {process.ExitCode})，请检查配置文件或应用目录"));
+                }
+
                 _trackedPids[name] = process.Id;
                 SaveState();
                 return Task.FromResult((true, $"{def.DisplayName} 已启动 (PID {process.Id})"));
@@ -298,6 +305,54 @@ namespace DevEnv.Services
                 case "Redis":
                     EnsureRedisConfig(appsDir);
                     break;
+                case "PostgreSQL":
+                    EnsurePostgreSQLRuntime(appsDir);
+                    break;
+            }
+        }
+
+        private void EnsurePostgreSQLRuntime(string appsDir)
+        {
+            var pgDir = Path.Combine(appsDir, "postgresql");
+            var binDir = Path.Combine(pgDir, "bin");
+            var dataDir = Path.Combine(pgDir, "data");
+            var logDir = Path.Combine(pgDir, "log");
+            Directory.CreateDirectory(dataDir);
+            Directory.CreateDirectory(logDir);
+
+            if (File.Exists(Path.Combine(dataDir, "PG_VERSION")))
+                return;
+
+            var initdb = Path.Combine(binDir, "initdb.exe");
+            if (!File.Exists(initdb))
+                throw new FileNotFoundException("未找到 initdb.exe，请确认 PostgreSQL 已正确解压到应用目录");
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = initdb,
+                Arguments = $"-D \"{dataDir}\" -U postgres -A trust -E UTF8 --locale=C",
+                WorkingDirectory = binDir,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            using var process = Process.Start(startInfo)
+                ?? throw new InvalidOperationException("initdb 启动失败");
+
+            if (!process.WaitForExit(120000))
+            {
+                try { process.Kill(true); } catch { }
+                throw new TimeoutException("initdb 初始化超时");
+            }
+
+            if (process.ExitCode != 0)
+            {
+                var error = process.StandardError.ReadToEnd();
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error)
+                    ? $"initdb 初始化失败，退出码 {process.ExitCode}"
+                    : error.Trim());
             }
         }
 
@@ -305,10 +360,16 @@ namespace DevEnv.Services
         {
             var redisDir = Path.Combine(appsDir, "redis");
             Directory.CreateDirectory(redisDir);
+            Directory.CreateDirectory(Path.Combine(redisDir, "data"));
+
             var confPath = Path.Combine(redisDir, "redis.windows.conf");
             if (!File.Exists(confPath))
             {
-                File.WriteAllText(confPath, "bind 127.0.0.1\r\nport 6379\r\n");
+                File.WriteAllText(confPath,
+                    "bind 127.0.0.1\r\n" +
+                    "port 6379\r\n" +
+                    "dir ./data\r\n" +
+                    "appendonly yes\r\n");
             }
         }
     }
