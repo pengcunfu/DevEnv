@@ -4,7 +4,7 @@ layout: home
 hero:
   name: 熔岩
   text: 环境管理工具
-  tagline: 绿色版 · 免安装 · 进程方式管理常用开发服务与小工具
+  tagline: 开源智能开发环境管理 · 一键下载、配置与管理多语言全栈本地环境
   actions:
     - theme: brand
       text: 快速开始

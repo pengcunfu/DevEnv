@@ -301,7 +301,7 @@
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <TextBlock Style="{StaticResource FooterLink}"
                        HorizontalAlignment="Left"
-                       Text="使用文档"
+                       Text="官方文档"
                        MouseLeftButtonUp="OpenDocs_Click"
                        ToolTip="在浏览器中打开帮助文档"/>
             <TextBlock Style="{StaticResource FooterLink}"

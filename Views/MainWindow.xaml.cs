@@ -126,7 +126,7 @@ namespace DevEnv.Views
         {
             MessageBox.Show(
                 $"{AppInfo.ProductName}\n\n" +
-                "核心理念：绿色版 · 免安装 · 无需管理员权限\n\n" +
+                $"{AppInfo.ProductTagline}\n\n" +
                 "核心功能：\n" +
                 "• 绿色版进程管理 (MySQL/PostgreSQL/Redis/MongoDB/MinIO/Nginx)\n" +
                 "• 软件下载与自动解压 (zip 绿色包)\n" +

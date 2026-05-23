@@ -5,13 +5,14 @@
 [![WPF](https://img.shields.io/badge/WPF-Windows%20Presentation%20Foundation-blue.svg)](https://docs.microsoft.com/en-us/dotnet/desktop/wpf/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows/)
 
-> 一款集成了多种开发工具的 Windows 桌面应用程序，专为提升开发者工作效率而设计。
+> 开源智能开发环境管理工具，帮助初级开发者与全栈工程师一键下载、配置和管理本地多语言开发环境。
 
+**GitHub 仓库**：[https://github.com/pengcunfu/devenv](https://github.com/pengcunfu/devenv)  
 **帮助文档**：[https://pengcunfu.github.io/devenv/](https://pengcunfu.github.io/devenv/)
 
 ## 项目简介
 
-熔岩环境管理工具（仓库代号 DevEnv / 发布包 LavaEnv）是一款基于 .NET 10.0 和 WPF 的 Windows 桌面应用，集成常用开发工具，为开发者提供一站式环境管理。
+熔岩环境管理工具（仓库代号 DevEnv / 发布包 LavaEnv）是一款基于 .NET 10.0 和 WPF 的开源 Windows 桌面应用。面向初级开发者、多语言开发者与全栈工程师，提供开发软件一键下载、镜像源配置、绿色版服务启停与环境扫描，降低本地开发环境的搭建与维护成本。
 
 ### 5. 文件哈希计算器
 
@@ -33,10 +34,10 @@
 
 ### 核心理念
 
-- **一站式工具集** - 集成常用开发工具，减少工具切换
-- **简洁高效** - 直观的界面设计，操作简单快捷
-- **安全可靠** - 所有操作都有权限检测和错误处理
-- **持续扩展** - 模块化设计，易于添加新功能
+- **降低门槛** - 一键下载、解压与配置，让初级开发者快速上手多语言环境
+- **面向全栈** - 覆盖 Java、Python、Node.js、Go、PHP、.NET 等常见技术栈
+- **绿色便携** - 免安装、进程方式管理常用服务，不污染系统
+- **开源可扩展** - MIT 开源，模块化设计，社区可参与共建
 
 ## 功能特性
 
@@ -119,7 +120,7 @@
 
 #### 方式一：直接运行（推荐）
 
-1. 下载最新版本的发布包
+1. 在 [GitHub Releases](https://github.com/pengcunfu/devenv/releases) 下载最新发布包（`LavaEnv-x.x.x-win-x64.zip`）
 2. 解压到任意目录
 3. 右键点击 `DevEnv.exe`，选择"以管理员身份运行"
 4. 开始使用！

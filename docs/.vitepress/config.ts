@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: '熔岩环境管理工具',
-  description: '熔岩环境管理工具帮助文档',
+  description: '开源智能开发环境管理工具帮助文档 — 为多语言与全栈开发者提供一键下载、配置与管理',
   lang: 'zh-CN',
   base: '/devenv/',
   themeConfig: {
