@@ -190,6 +190,7 @@
                                 <MenuItem Header="图像格式转换器" Click="OpenImageConverter_Click"/>
                                 <MenuItem Header="文件哈希计算器" Click="OpenHashCalculator_Click"/>
                                 <Separator/>
+                                <MenuItem Header="环境变量" Click="OpenEnvironmentVariables_Click"/>
                                 <MenuItem Header="应用目录" Click="OpenAppsDir_Click"/>
                                 <MenuItem Header="数据目录" Click="OpenSettings_Click"/>
                             </ContextMenu>

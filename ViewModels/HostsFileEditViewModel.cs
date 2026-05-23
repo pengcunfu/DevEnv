@@ -88,7 +88,6 @@ namespace DevEnv.ViewModels
         public ICommand SaveTextCommand { get; }
         public ICommand LocateFileCommand { get; }
         public ICommand OpenInNotepadCommand { get; }
-        public ICommand OpenEnvVarsCommand { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -101,7 +100,6 @@ namespace DevEnv.ViewModels
             SaveTextCommand = new RelayCommand(async () => await SaveText());
             LocateFileCommand = new RelayCommand(() => LocateFile());
             OpenInNotepadCommand = new RelayCommand(() => OpenInNotepad());
-            OpenEnvVarsCommand = new RelayCommand(() => OpenEnvVars());
 
             // 初始化时加载文件
             _ = LoadHostsFile();
@@ -336,21 +334,5 @@ namespace DevEnv.ViewModels
             }
         }
 
-        private void OpenEnvVars()
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "rundll32.exe",
-                    Arguments = "sysdm.cpl,EditEnvironmentVariables",
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"无法打开环境变量设置: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
     }
 }

@@ -93,6 +93,18 @@ namespace DevEnv.Views
             new HashCalculatorWindow().ShowDialog();
         }
 
+        private void OpenEnvironmentVariables_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                SystemTools.OpenEnvironmentVariables();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"无法打开环境变量设置: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void ToolsMenuButton_Click(object sender, RoutedEventArgs e)
         {
             if (ToolsMenuButton.ContextMenu is { } menu)
