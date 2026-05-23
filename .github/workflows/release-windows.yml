@@ -1,0 +1,83 @@
+name: Release Windows
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Read version from project
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(dotnet msbuild DevEnv.csproj -getProperty:Version -nologo)
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Project version: $VERSION"
+
+      - name: Validate tag matches project version
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PROJECT_VERSION="${{ steps.version.outputs.value }}"
+          if [[ "$TAG_VERSION" != "$PROJECT_VERSION" ]]; then
+            echo "::error::Git tag v$TAG_VERSION 与 DevEnv.csproj 中的 Version ($PROJECT_VERSION) 不一致。"
+            echo "请先修改 csproj 中的 <Version>，再打上匹配的 tag。"
+            exit 1
+          fi
+
+      - name: Publish (win-x64)
+        run: >
+          dotnet publish DevEnv.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=false
+          -o "${{ runner.temp }}/publish"
+
+      - name: Create zip
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.value }}"
+          $zipName = "DevEnv-$version-win-x64.zip"
+          $zipPath = Join-Path $env:RUNNER_TEMP $zipName
+          $publishDir = Join-Path $env:RUNNER_TEMP 'publish'
+          Push-Location $publishDir
+          try {
+            Compress-Archive -Path * -DestinationPath $zipPath -Force
+          } finally {
+            Pop-Location
+          }
+          "ZIP_PATH=$zipPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.version.outputs.value) }}
+          name: DevEnv ${{ steps.version.outputs.value }} (Windows)
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          prerelease: ${{ contains(steps.version.outputs.value, '-') }}
+          files: ${{ env.ZIP_PATH }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

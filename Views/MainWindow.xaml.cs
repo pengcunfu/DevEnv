@@ -98,7 +98,7 @@ namespace DevEnv.Views
                 "• 镜像源配置 (pip/npm/pnpm/Yarn/Maven/Composer/Go/NuGet)\n" +
                 "• 数据目录: D:\\devenv (config.json 配置)\n" +
                 "• JSON 格式化 / Hosts 编辑 / 哈希计算 / 图像转换\n\n" +
-                "版本: 1.2.0",
+                $"版本: {AppInfo.Version}",
                 "关于", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
