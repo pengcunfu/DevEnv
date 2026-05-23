@@ -112,11 +112,19 @@ namespace DevEnv.Services
 
                 try
                 {
-                    using var headRequest = new HttpRequestMessage(HttpMethod.Head, record.Url);
-                    using var headResponse = await client.SendAsync(headRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                    totalSize = headResponse.Content.Headers.ContentLength ?? 0;
+                    try
+                    {
+                        using var headRequest = new HttpRequestMessage(HttpMethod.Head, record.Url);
+                        using var headResponse = await client.SendAsync(headRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                        if (headResponse.IsSuccessStatusCode)
+                            totalSize = headResponse.Content.Headers.ContentLength ?? 0;
+                    }
+                    catch
+                    {
+                        // 部分服务器不支持 HEAD，继续走 GET 下载
+                    }
 
-                    if (existingSize > 0 && existingSize < totalSize)
+                    if (existingSize > 0 && totalSize > 0 && existingSize < totalSize)
                     {
                         // resume supported
                     }
@@ -129,6 +137,7 @@ namespace DevEnv.Services
                             r.DownloadedSize = totalSize;
                             r.TotalSize = totalSize;
                         });
+                        await TryAutoExtractAsync(record, settings);
                         DownloadCompleted?.Invoke(this, record.Id);
                         return;
                     }
@@ -145,52 +154,55 @@ namespace DevEnv.Services
                     response.EnsureSuccessStatusCode();
 
                     var mode = existingSize > 0 ? FileMode.Append : FileMode.Create;
-                    await using var fileStream = new FileStream(record.SavePath, mode, FileAccess.Write, FileShare.None);
-                    await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-
-                    if (totalSize == 0)
-                        totalSize = response.Content.Headers.ContentLength ?? 0;
-
-                    var buffer = new byte[settings.ChunkSizeMb * 1024 * 1024];
-                    var downloaded = existingSize;
-                    var stopwatch = Stopwatch.StartNew();
-                    var lastReport = stopwatch.Elapsed;
-                    var lastDownloaded = downloaded;
-                    int bytesRead;
-
-                    while ((bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+                    long downloaded;
                     {
-                        await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
-                        downloaded += bytesRead;
+                        await using var fileStream = new FileStream(record.SavePath, mode, FileAccess.Write, FileShare.None);
+                        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
-                        if (stopwatch.Elapsed - lastReport >= TimeSpan.FromMilliseconds(500))
+                        if (totalSize == 0)
+                            totalSize = response.Content.Headers.ContentLength ?? 0;
+
+                        var buffer = new byte[settings.ChunkSizeMb * 1024 * 1024];
+                        downloaded = existingSize;
+                        var stopwatch = Stopwatch.StartNew();
+                        var lastReport = stopwatch.Elapsed;
+                        var lastDownloaded = downloaded;
+                        int bytesRead;
+
+                        while ((bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
                         {
-                            var elapsed = (stopwatch.Elapsed - lastReport).TotalSeconds;
-                            var speed = elapsed > 0 ? (downloaded - lastDownloaded) / elapsed : 0;
-                            var progress = totalSize > 0 ? (int)(downloaded * 100 / totalSize) : 0;
-                            var eta = speed > 0 && totalSize > 0 ? (int)((totalSize - downloaded) / speed) : 0;
+                            await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                            downloaded += bytesRead;
 
-                            _historyService.Update(record.Id, r =>
+                            if (stopwatch.Elapsed - lastReport >= TimeSpan.FromMilliseconds(500))
                             {
-                                r.Progress = progress;
-                                r.DownloadedSize = downloaded;
-                                r.TotalSize = totalSize;
-                                r.Speed = speed;
-                                r.Eta = eta;
-                            });
+                                var elapsed = (stopwatch.Elapsed - lastReport).TotalSeconds;
+                                var speed = elapsed > 0 ? (downloaded - lastDownloaded) / elapsed : 0;
+                                var progress = totalSize > 0 ? (int)(downloaded * 100 / totalSize) : 0;
+                                var eta = speed > 0 && totalSize > 0 ? (int)((totalSize - downloaded) / speed) : 0;
 
-                            ProgressChanged?.Invoke(this, new DownloadProgressEventArgs
-                            {
-                                DownloadId = record.Id,
-                                Progress = progress,
-                                DownloadedSize = downloaded,
-                                TotalSize = totalSize,
-                                Speed = speed,
-                                Eta = eta
-                            });
+                                _historyService.Update(record.Id, r =>
+                                {
+                                    r.Progress = progress;
+                                    r.DownloadedSize = downloaded;
+                                    r.TotalSize = totalSize;
+                                    r.Speed = speed;
+                                    r.Eta = eta;
+                                });
 
-                            lastReport = stopwatch.Elapsed;
-                            lastDownloaded = downloaded;
+                                ProgressChanged?.Invoke(this, new DownloadProgressEventArgs
+                                {
+                                    DownloadId = record.Id,
+                                    Progress = progress,
+                                    DownloadedSize = downloaded,
+                                    TotalSize = totalSize,
+                                    Speed = speed,
+                                    Eta = eta
+                                });
+
+                                lastReport = stopwatch.Elapsed;
+                                lastDownloaded = downloaded;
+                            }
                         }
                     }
 

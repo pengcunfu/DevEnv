@@ -2,23 +2,23 @@
   "Java": [
     {
       "name": "OpenJDK",
-      "desc": "开源 Java 开发工具包 (绿色 zip)",
+      "desc": "开源 Java 开发工具包 (绿色 zip，Adoptium)",
       "icon": "Icons/java.png",
       "portable": true,
       "versions": [
         {
           "version": "8u452",
-          "url": "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/8/jdk/x64/windows/OpenJDK8U-jdk_x64_windows_hotspot_8u452b09.zip",
+          "url": "https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u452-b09/OpenJDK8U-jdk_x64_windows_hotspot_8u452b09.zip",
           "file_name": "OpenJDK8U-jdk_x64_windows_hotspot_8u452b09.zip"
         },
         {
           "version": "11u27",
-          "url": "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/11/jdk/x64/windows/OpenJDK11U-jdk_x64_windows_hotspot_11.0.27_6.zip",
+          "url": "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.27%2B6/OpenJDK11U-jdk_x64_windows_hotspot_11.0.27_6.zip",
           "file_name": "OpenJDK11U-jdk_x64_windows_hotspot_11.0.27_6.zip"
         },
         {
           "version": "17u15",
-          "url": "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/windows/OpenJDK17U-jdk_x64_windows_hotspot_17.0.15_6.zip",
+          "url": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.15%2B6/OpenJDK17U-jdk_x64_windows_hotspot_17.0.15_6.zip",
           "file_name": "OpenJDK17U-jdk_x64_windows_hotspot_17.0.15_6.zip"
         }
       ]
@@ -32,9 +32,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "3.10.14",
-          "url": "https://www.python.org/ftp/python/3.10.14/python-3.10.14-embed-amd64.zip",
-          "file_name": "python-3.10.14-embed-amd64.zip"
+          "version": "3.10.11",
+          "url": "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip",
+          "file_name": "python-3.10.11-embed-amd64.zip"
         },
         {
           "version": "3.12.3",
@@ -85,9 +85,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "9.0.85",
-          "url": "https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.85/bin/apache-tomcat-9.0.85-windows-x64.zip",
-          "file_name": "apache-tomcat-9.0.85-windows-x64.zip"
+          "version": "9.0.102",
+          "url": "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.102/bin/apache-tomcat-9.0.102-windows-x64.zip",
+          "file_name": "apache-tomcat-9.0.102-windows-x64.zip"
         }
       ]
     }
@@ -100,9 +100,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "8.0.36",
-          "url": "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.36-winx64.zip",
-          "file_name": "mysql-8.0.36-winx64.zip"
+          "version": "8.0.44",
+          "url": "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-8.0.44-winx64.zip",
+          "file_name": "mysql-8.0.44-winx64.zip"
         }
       ]
     }
@@ -115,9 +115,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "7.2.4",
-          "url": "https://github.com/tporadowski/redis/releases/download/v7.2.4/Redis-x64-7.2.4.zip",
-          "file_name": "Redis-x64-7.2.4.zip"
+          "version": "7.4.6",
+          "url": "https://github.com/redis-windows/redis-windows/releases/download/7.4.6/Redis-7.4.6-Windows-x64-cygwin-with-Service.zip",
+          "file_name": "Redis-7.4.6-Windows-x64-cygwin-with-Service.zip"
         }
       ]
     },
@@ -158,14 +158,14 @@
       "portable": true,
       "versions": [
         {
-          "version": "8.3.7",
-          "url": "https://windows.php.net/downloads/releases/php-8.3.7-Win32-vs16-x64.zip",
-          "file_name": "php-8.3.7-Win32-vs16-x64.zip"
+          "version": "8.3.31",
+          "url": "https://windows.php.net/downloads/releases/php-8.3.31-Win32-vs16-x64.zip",
+          "file_name": "php-8.3.31-Win32-vs16-x64.zip"
         },
         {
           "version": "7.4.33",
-          "url": "https://windows.php.net/downloads/releases/archives/php-7.4.33-Win32-vs16-x64.zip",
-          "file_name": "php-7.4.33-Win32-vs16-x64.zip"
+          "url": "https://windows.php.net/downloads/releases/archives/php-7.4.33-Win32-vc15-x64.zip",
+          "file_name": "php-7.4.33-Win32-vc15-x64.zip"
         }
       ]
     },
@@ -191,9 +191,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "2.44.0",
-          "url": "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/PortableGit-2.44.0-64-bit.7z.exe",
-          "file_name": "PortableGit-2.44.0-64-bit.7z.exe"
+          "version": "2.49.0",
+          "url": "https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/PortableGit-2.49.0-64-bit.7z.exe",
+          "file_name": "PortableGit-2.49.0-64-bit.7z.exe"
         }
       ]
     },
@@ -204,9 +204,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "1.22.2",
-          "url": "https://go.dev/dl/go1.22.2.windows-amd64.zip",
-          "file_name": "go1.22.2.windows-amd64.zip"
+          "version": "1.24.3",
+          "url": "https://go.dev/dl/go1.24.3.windows-amd64.zip",
+          "file_name": "go1.24.3.windows-amd64.zip"
         }
       ]
     },
@@ -217,9 +217,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "3.9.6",
-          "url": "https://dlcdn.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.zip",
-          "file_name": "apache-maven-3.9.6-bin.zip"
+          "version": "3.9.9",
+          "url": "https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip",
+          "file_name": "apache-maven-3.9.9-bin.zip"
         }
       ]
     }
@@ -227,14 +227,14 @@
   "IDE": [
     {
       "name": "Visual Studio Code",
-      "desc": "VS Code 便携 zip 版",
+      "desc": "VS Code 便携 zip 版 (最新 stable)",
       "icon": "Icons/vscode.png",
       "portable": true,
       "versions": [
         {
-          "version": "1.87.2",
-          "url": "https://update.code.visualstudio.com/1.87.2/win32-x64-archive/stable",
-          "file_name": "VSCode-win32-x64-1.87.2.zip"
+          "version": "latest",
+          "url": "https://update.code.visualstudio.com/latest/win32-x64-archive/stable",
+          "file_name": "VSCode-win32-x64.zip"
         }
       ]
     },
@@ -260,9 +260,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "24.0.2",
-          "url": "https://dbeaver.io/files/dbeaver-ce-24.0.2-win32.win32.x86_64.zip",
-          "file_name": "dbeaver-ce-24.0.2-win32.win32.x86_64.zip"
+          "version": "25.0.0",
+          "url": "https://github.com/dbeaver/dbeaver/releases/download/25.0.0/dbeaver-ce-25.0.0-win32.win32.x86_64.zip",
+          "file_name": "dbeaver-ce-25.0.0-win32.win32.x86_64.zip"
         }
       ]
     },
@@ -273,9 +273,9 @@
       "portable": true,
       "versions": [
         {
-          "version": "12.7.0.6675",
-          "url": "https://www.heidisql.com/downloads/releases/HeidiSQL_12.7.0.6675_Portable.zip",
-          "file_name": "HeidiSQL_12.7.0.6675_Portable.zip"
+          "version": "12.10",
+          "url": "https://www.heidisql.com/downloads/releases/HeidiSQL_12.10_64_Portable.zip",
+          "file_name": "HeidiSQL_12.10_64_Portable.zip"
         }
       ]
     }
