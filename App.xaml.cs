@@ -1,9 +1,8 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Text;
+﻿using System.Text;
 using System.Windows;
 using DevEnv.Models;
 using DevEnv.Services;
+using DevEnv.Views;
 
 namespace DevEnv
 {
@@ -21,8 +20,20 @@ namespace DevEnv
         {
             AppPaths.EnsureDirectories();
             AppServices.Config.Load();
-            base.OnStartup(e);
+
+            if (e.Args.Contains(ElevationHelper.EditHostsArgument, StringComparer.OrdinalIgnoreCase))
+            {
+                ShutdownMode = ShutdownMode.OnMainWindowClose;
+                var window = new HostsFileEditWindow();
+                MainWindow = window;
+                window.Show();
+                return;
+            }
+
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            var mainWindow = new MainWindow();
+            MainWindow = mainWindow;
+            mainWindow.Show();
         }
     }
-
 }
