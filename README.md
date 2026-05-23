@@ -7,6 +7,8 @@
 
 > 一款集成了多种开发工具的 Windows 桌面应用程序，专为提升开发者工作效率而设计。
 
+**帮助文档**：[https://pengcunfu.github.io/devenv/](https://pengcunfu.github.io/devenv/)
+
 ## 项目简介
 
 DevEnv 是一个基于 .NET 10.0 和 WPF 开发的 Windows 桌面应用程序，集成了多个实用的开发工具，为开发者提供一站式的开发环境管理解决方案。

@@ -5,6 +5,9 @@ namespace DevEnv;
 /// <summary>应用版本信息，与 DevEnv.csproj 中的 Version 同步。</summary>
 public static class AppInfo
 {
+    /// <summary>GitHub Pages 帮助文档首页。</summary>
+    public const string DocsUrl = "https://pengcunfu.github.io/devenv/";
+
     public static string Version
     {
         get

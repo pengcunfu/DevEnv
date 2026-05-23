@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using DevEnv.ViewModels;
 
 namespace DevEnv.Views
@@ -94,7 +96,12 @@ namespace DevEnv.Views
             }
         }
 
-        private void Version_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => ShowAbout();
+        private void OpenDocs_Click(object sender, MouseButtonEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo(AppInfo.DocsUrl) { UseShellExecute = true });
+        }
+
+        private void Version_Click(object sender, MouseButtonEventArgs e) => ShowAbout();
 
         private void ShowAbout()
         {
