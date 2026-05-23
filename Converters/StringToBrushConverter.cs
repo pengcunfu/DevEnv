@@ -12,12 +12,13 @@ namespace DevEnv.Converters
             {
                 return colorString.ToLower() switch
                 {
-                    "green" => new SolidColorBrush(Colors.Green),
-                    "red" => new SolidColorBrush(Colors.Red),
-                    "blue" => new SolidColorBrush(Colors.Blue),
-                    "orange" => new SolidColorBrush(Colors.Orange),
-                    "gray" => new SolidColorBrush(Colors.Gray),
-                    _ => new SolidColorBrush(Colors.Black)
+                    "green" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#059669")!),
+                    "red" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626")!),
+                    "blue" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2563EB")!),
+                    "orange" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D97706")!),
+                    "gray" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6B7280")!),
+                    "dodgerblue" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0284C7")!),
+                    _ => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#374151")!)
                 };
             }
             return new SolidColorBrush(Colors.Black);

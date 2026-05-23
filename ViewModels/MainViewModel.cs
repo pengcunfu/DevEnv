@@ -19,22 +19,50 @@ namespace DevEnv.ViewModels
             Processes = new ObservableCollection<ProcessItemViewModel>();
 
             foreach (var def in _processManager.GetDefinitions())
-                Processes.Add(new ProcessItemViewModel(def, _processManager));
+            {
+                var item = new ProcessItemViewModel(def, _processManager);
+                item.UpdateStatus(_processManager.GetProcessStatus(def.Name));
+                Processes.Add(item);
+            }
 
             _processManager.ProcessStatusUpdated += OnProcessStatusUpdated;
             _processManager.StartMonitoring();
+            RefreshSummary();
         }
 
         public ObservableCollection<ProcessItemViewModel> Processes { get; }
 
         public string AppsDirectory => _processManager.GetAppsDirectory();
 
+        public string ProcessSummary
+        {
+            get => _processSummary;
+            private set
+            {
+                if (_processSummary == value) return;
+                _processSummary = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _processSummary = string.Empty;
+
+        private void RefreshSummary()
+        {
+            var running = Processes.Count(p => p.IsRunning);
+            ProcessSummary = $"{running}/{Processes.Count} 运行中";
+        }
+
         private void OnProcessStatusUpdated(object? sender, ProcessStatusUpdatedEventArgs e)
         {
             var item = Processes.FirstOrDefault(p => p.Name == e.ProcessName);
             if (item != null)
             {
-                Application.Current.Dispatcher.Invoke(() => item.UpdateStatus(e.Status));
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    item.UpdateStatus(e.Status);
+                    RefreshSummary();
+                });
             }
         }
 
@@ -62,6 +90,7 @@ namespace DevEnv.ViewModels
         private string _statusColor = "Gray";
         private bool _canStart;
         private bool _canStop;
+        private bool _isRunning;
 
         public ProcessItemViewModel(ProcessDefinition definition, ProcessManager processManager)
         {
@@ -99,6 +128,12 @@ namespace DevEnv.ViewModels
             set { if (_canStop != value) { _canStop = value; OnPropertyChanged(); } }
         }
 
+        public bool IsRunning
+        {
+            get => _isRunning;
+            private set { if (_isRunning != value) { _isRunning = value; OnPropertyChanged(); } }
+        }
+
         public void UpdateStatus(ProcessStatusInfo status)
         {
             StatusText = status.DisplayText;
@@ -110,18 +145,22 @@ namespace DevEnv.ViewModels
                 case ProcessState.ExternalRunning:
                     CanStart = false;
                     CanStop = true;
+                    IsRunning = true;
                     break;
                 case ProcessState.Stopped:
                     CanStart = true;
                     CanStop = false;
+                    IsRunning = false;
                     break;
                 case ProcessState.NotConfigured:
                     CanStart = false;
                     CanStop = false;
+                    IsRunning = false;
                     break;
                 default:
                     CanStart = true;
                     CanStop = true;
+                    IsRunning = false;
                     break;
             }
         }

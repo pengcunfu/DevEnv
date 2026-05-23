@@ -4,11 +4,144 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="DevEnv - 开发环境管理器" Height="520" Width="900"
+        Title="DevEnv - 开发环境管理器"
+        Height="560" Width="860" MinHeight="420" MinWidth="720"
+        Background="#F3F4F6"
         WindowStartupLocation="CenterScreen">
-    <DockPanel Margin="10">
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="工具(_T)">
+    <Window.Resources>
+        <Style x:Key="ToolbarButton" TargetType="Button">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F9FAFB"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#9CA3AF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E5E7EB"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryToolbarButton" TargetType="Button" BasedOn="{StaticResource ToolbarButton}">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#2563EB"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1D4ED8"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#1D4ED8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1E40AF"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Width" Value="52"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.92"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="StartButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#ECFDF5"/>
+            <Setter Property="Foreground" Value="#047857"/>
+            <Setter Property="BorderBrush" Value="#A7F3D0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#D1FAE5"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StopButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#FEF2F2"/>
+            <Setter Property="Foreground" Value="#B91C1C"/>
+            <Setter Property="BorderBrush" Value="#FECACA"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FEE2E2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0" Background="Transparent" Padding="0,0,0,4">
+            <MenuItem Header="工具(_T)" FontSize="12">
                 <MenuItem Header="软件下载器(_S)" Click="OpenSoftwareDownloader_Click"/>
                 <MenuItem Header="下载管理(_D)" Click="OpenDownloadManager_Click"/>
                 <MenuItem Header="环境扫描(_E)" Click="OpenEnvironmentScanner_Click"/>
@@ -22,88 +155,152 @@
                 <MenuItem Header="数据目录(_C)" Click="OpenSettings_Click"/>
                 <MenuItem Header="退出(_X)" Click="Exit_Click"/>
             </MenuItem>
-            <MenuItem Header="帮助(_H)">
+            <MenuItem Header="帮助(_H)" FontSize="12">
                 <MenuItem Header="关于(_A)" Click="About_Click"/>
             </MenuItem>
         </Menu>
 
-        <Label DockPanel.Dock="Top"
-               Content="开发环境管理器"
-               FontSize="20" FontWeight="Bold"
-               HorizontalAlignment="Center"
-               Margin="0,0,0,10"/>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
-            <TextBlock Text="绿色版进程管理 | 软件下载 | 镜像配置 | 环境扫描"
-                       Foreground="Gray" VerticalAlignment="Center"/>
-            <Button Content="打开应用目录" Margin="15,0,0,0" Padding="8,3" Click="OpenAppsDir_Click"/>
-        </StackPanel>
+        <!-- 顶栏 -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="14,10" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <DataGrid x:Name="ProcessesDataGrid"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  CanUserReorderColumns="False"
-                  CanUserResizeRows="False"
-                  CanUserSortColumns="False"
-                  GridLinesVisibility="Horizontal"
-                  HeadersVisibility="Column"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  ItemsSource="{Binding Processes}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="程序" Binding="{Binding DisplayName}" Width="120">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="DevEnv" FontSize="18" FontWeight="SemiBold" Foreground="#111827"/>
+                    <TextBlock Text="绿色版开发环境 · 进程管理 · 免管理员权限"
+                               FontSize="11" Foreground="#6B7280" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="软件下载" Style="{StaticResource PrimaryToolbarButton}" Click="OpenSoftwareDownloader_Click"/>
+                    <Button Content="环境扫描" Style="{StaticResource ToolbarButton}" Click="OpenEnvironmentScanner_Click"/>
+                    <Button Content="镜像配置" Style="{StaticResource ToolbarButton}" Click="OpenMirrorConfig_Click"/>
+                    <Button Content="应用目录" Style="{StaticResource ToolbarButton}" Click="OpenAppsDir_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 统计条 -->
+        <Border Grid.Row="2" Background="#EEF2FF" BorderBrush="#C7D2FE" BorderThickness="1"
+                CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="进程" FontSize="11" Foreground="#4338CA" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ProcessSummary}" FontSize="11" Foreground="#4338CA"
+                               Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding AppsDirectory, StringFormat=数据目录: {0}}"
+                           FontSize="11" Foreground="#6366F1" HorizontalAlignment="Right"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            </Grid>
+        </Border>
+
+        <!-- 进程列表 -->
+        <Border Grid.Row="3" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Margin="4,2,4,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="108"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="132"/>
+                        <ColumnDefinition Width="116"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="程序" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
+                    <TextBlock Grid.Column="1" Text="说明" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
+                    <TextBlock Grid.Column="2" Text="状态" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="操作" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                </Grid>
+
+                <ListView Grid.Row="1"
+                          ItemsSource="{Binding Processes}"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0,0,0,4"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewItem">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="*">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="TextWrapping" Value="Wrap"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="160">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Foreground" Value="{Binding StatusColor, Converter={StaticResource StringToBrushConverter}}"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <DataGridTemplateColumn Header="启动" Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Button Content="启动" Click="StartProcess_Click" Tag="{Binding}"
-                                    Padding="8,4" IsEnabled="{Binding CanStart}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                            <Border Background="#FAFAFA" BorderBrush="#E5E7EB" BorderThickness="1"
+                                    CornerRadius="6" Padding="10,7" Margin="0,0,0,2">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="108"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="132"/>
+                                        <ColumnDefinition Width="116"/>
+                                    </Grid.ColumnDefinitions>
 
-                <DataGridTemplateColumn Header="停止" Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="停止" Click="StopProcess_Click" Tag="{Binding}"
-                                    Padding="8,4" IsEnabled="{Binding CanStop}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}"
+                                               FontSize="13" FontWeight="SemiBold" Foreground="#111827"
+                                               VerticalAlignment="Center"/>
 
-        <StatusBar DockPanel.Dock="Bottom" Height="25">
-            <StatusBarItem>
-                <TextBlock Text="无需管理员权限 · 绿色版解压即用 · 进程方式启动"/>
-            </StatusBarItem>
-        </StatusBar>
-    </DockPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Description}"
+                                               FontSize="11" Foreground="#6B7280"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding Description}"/>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Ellipse Width="7" Height="7" Margin="0,0,6,0"
+                                                 Fill="{Binding StatusColor, Converter={StaticResource StringToBrushConverter}}"/>
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="Medium"
+                                                   Foreground="{Binding StatusColor, Converter={StaticResource StringToBrushConverter}}"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="110"
+                                                   ToolTip="{Binding StatusText}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Button Content="启动" Style="{StaticResource StartButton}"
+                                                Click="StartProcess_Click" Tag="{Binding}"
+                                                IsEnabled="{Binding CanStart}" Margin="0,0,4,0"/>
+                                        <Button Content="停止" Style="{StaticResource StopButton}"
+                                                Click="StopProcess_Click" Tag="{Binding}"
+                                                IsEnabled="{Binding CanStop}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="4" Margin="0,8,0,0" Padding="2,0">
+            <TextBlock Text="无需管理员权限 · 绿色版解压即用 · 进程方式启动"
+                       FontSize="10" Foreground="#9CA3AF" HorizontalAlignment="Center"/>
+        </Border>
+    </Grid>
 </Window>
