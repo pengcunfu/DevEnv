@@ -1,83 +1,72 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using DevEnv.Models;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using DevEnv.Services;
 using Button = System.Windows.Controls.Button;
 
 namespace DevEnv.Views
 {
     public partial class SoftwareDownloadWindow : Window
     {
-        private ObservableCollection<SoftwareInfo> _allSoftware = new ObservableCollection<SoftwareInfo>();
-        private ObservableCollection<SoftwareInfo> _filteredSoftware = new ObservableCollection<SoftwareInfo>();
-        private List<string> _categories = new List<string>();
+        private readonly ObservableCollection<SoftwareInfo> _allSoftware = new();
+        private readonly ObservableCollection<SoftwareInfo> _filteredSoftware = new();
+        private readonly List<string> _categories = [];
 
         public SoftwareDownloadWindow()
         {
             InitializeComponent();
             LoadSoftwareConfig();
+            AppServices.DownloadHistory.HistoryChanged += (_, _) => Dispatcher.Invoke(UpdateActiveDownloadCount);
         }
 
         private void LoadSoftwareConfig()
         {
             try
             {
-                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "software_config.yaml");
-                if (!File.Exists(configPath))
+                var config = ResourceLoader.LoadBundledJson<Dictionary<string, List<SoftwareCatalogItem>>>(
+                    ResourcePaths.SoftwareCatalogFile);
+
+                if (config == null || config.Count == 0)
                 {
-                    UpdateStatus("配置文件不存在", true);
+                    UpdateStatus($"资源文件不存在或为空: {ResourcePaths.GetBundledResourcePath(ResourcePaths.SoftwareCatalogFile)}", true);
                     return;
                 }
-
-                var yamlContent = File.ReadAllText(configPath);
-                var deserializer = new DeserializerBuilder()
-                    .WithNamingConvention(NullNamingConvention.Instance)
-                    .Build();
-
-                var config = deserializer.Deserialize<Dictionary<string, List<Dictionary<string, object>>>>(yamlContent);
 
                 _allSoftware.Clear();
                 _categories.Clear();
                 _categories.Add("全部");
 
-                foreach (var category in config)
+                foreach (var (category, items) in config)
                 {
-                    _categories.Add(category.Key);
+                    _categories.Add(category);
 
-                    foreach (var software in category.Value)
+                    foreach (var item in items)
                     {
                         var softwareInfo = new SoftwareInfo
                         {
-                            Name = software.ContainsKey("name") ? software["name"]?.ToString() ?? "" : "",
-                            Description = software.ContainsKey("desc") ? software["desc"]?.ToString() ?? "" : "",
-                            Icon = software.ContainsKey("icon") ? software["icon"]?.ToString() ?? "" : "",
-                            Category = category.Key,
-                            Versions = new List<SoftwareVersion>()
+                            Name = item.Name,
+                            Description = item.Desc,
+                            Icon = item.Icon,
+                            Category = category,
+                            Versions = []
                         };
 
-                        if (software.ContainsKey("versions") && software["versions"] is List<object> versions)
+                        foreach (var version in item.Versions)
                         {
-                            foreach (var versionObj in versions)
+                            var fileName = version.FileName;
+                            if (string.IsNullOrEmpty(fileName))
+                                fileName = InferFileName(version.Url, item.Name, version.Version);
+
+                            softwareInfo.Versions.Add(new SoftwareVersion
                             {
-                                if (versionObj is Dictionary<string, object> versionDict)
-                                {
-                                    softwareInfo.Versions.Add(new SoftwareVersion
-                                    {
-                                        Version = versionDict.ContainsKey("version") ? versionDict["version"]?.ToString() ?? "" : "",
-                                        Url = versionDict.ContainsKey("url") ? versionDict["url"]?.ToString() ?? "" : ""
-                                    });
-                                }
-                            }
+                                Version = version.Version,
+                                Url = version.Url,
+                                FileName = fileName
+                            });
                         }
 
                         _allSoftware.Add(softwareInfo);
@@ -87,11 +76,14 @@ namespace DevEnv.Views
                 CmbCategory.ItemsSource = _categories;
                 CmbCategory.SelectedIndex = 0;
 
-                _filteredSoftware = new ObservableCollection<SoftwareInfo>(_allSoftware);
-                SoftwareDataGrid.ItemsSource = _filteredSoftware;
+                _filteredSoftware.Clear();
+                foreach (var software in _allSoftware)
+                    _filteredSoftware.Add(software);
 
+                SoftwareDataGrid.ItemsSource = _filteredSoftware;
                 UpdateStatus($"已加载 {_allSoftware.Count} 个软件", false);
                 UpdateCount();
+                UpdateActiveDownloadCount();
             }
             catch (Exception ex)
             {
@@ -99,20 +91,26 @@ namespace DevEnv.Views
             }
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        private static string InferFileName(string url, string softwareName, string version)
         {
-            FilterSoftware();
+            if (string.IsNullOrEmpty(url)) return $"{softwareName}_{version}.exe";
+            try
+            {
+                var uri = new Uri(url);
+                var name = Path.GetFileName(uri.LocalPath);
+                if (!string.IsNullOrEmpty(name) && name != "/")
+                    return name;
+            }
+            catch
+            {
+                // ignore
+            }
+            return $"{softwareName}_{version}{Path.GetExtension(url)}";
         }
 
-        private void CmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            FilterSoftware();
-        }
-
-        private void BtnSearch_Click(object sender, RoutedEventArgs e)
-        {
-            FilterSoftware();
-        }
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) => FilterSoftware();
+        private void CmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e) => FilterSoftware();
+        private void BtnSearch_Click(object sender, RoutedEventArgs e) => FilterSoftware();
 
         private void BtnReset_Click(object sender, RoutedEventArgs e)
         {
@@ -136,9 +134,7 @@ namespace DevEnv.Views
 
             _filteredSoftware.Clear();
             foreach (var software in filtered)
-            {
                 _filteredSoftware.Add(software);
-            }
 
             UpdateStatus($"找到 {filtered.Count} 个软件", false);
             UpdateCount();
@@ -146,108 +142,139 @@ namespace DevEnv.Views
 
         private async void BtnDownload_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is SoftwareInfo software)
+            if (sender is not Button button || button.Tag is not SoftwareInfo software)
+                return;
+
+            var row = FindVisualParent<DataGridRow>(button);
+            var comboBox = row != null ? FindVisualChild<ComboBox>(row) : null;
+            var version = comboBox?.SelectedItem as SoftwareVersion ?? software.Versions.FirstOrDefault();
+
+            if (version == null || string.IsNullOrWhiteSpace(version.Url))
             {
-                // 获取选中的版本
-                var dataGridRow = FindVisualParent<DataGridRow>(button);
-                if (dataGridRow != null)
-                {
-                    var dataGridCell = FindVisualParent<DataGridCell>(button);
-                    if (dataGridCell != null)
-                    {
-                        var comboBox = FindVisualChild<ComboBox>(dataGridCell);
-                        if (comboBox != null && comboBox.SelectedItem is SoftwareVersion version)
-                        {
-                            await DownloadSoftware(software, version, button);
-                        }
-                    }
-                }
+                MessageBox.Show("请先选择版本", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
             }
+
+            await StartDownloadAsync(software, version, button);
         }
 
-        private async Task DownloadSoftware(SoftwareInfo software, SoftwareVersion version, Button button)
+        private async Task StartDownloadAsync(SoftwareInfo software, SoftwareVersion version, Button button)
         {
             try
             {
                 button.IsEnabled = false;
-                button.Content = "下载中...";
+                button.Content = "排队中...";
 
-                // 创建下载目录
-                var downloadDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Downloads");
-                if (!Directory.Exists(downloadDir))
+                var downloadId = await AppServices.Download.StartDownloadAsync(
+                    version.Url,
+                    version.FileName,
+                    software.Name,
+                    version.Version);
+
+                button.Content = "下载中";
+                UpdateStatus($"已开始下载: {software.Name} {version.Version}", false);
+                UpdateActiveDownloadCount();
+
+                AppServices.Download.ProgressChanged += OnProgressChanged;
+                AppServices.Download.DownloadCompleted += OnDownloadCompleted;
+                AppServices.Download.DownloadFailed += OnDownloadFailed;
+
+                void OnProgressChanged(object? s, DownloadProgressEventArgs args)
                 {
-                    Directory.CreateDirectory(downloadDir);
+                    if (args.DownloadId != downloadId) return;
+                    Dispatcher.Invoke(() =>
+                    {
+                        button.Content = $"{args.Progress}%";
+                        UpdateStatus($"下载中: {software.Name} - {args.Progress}% ({FormatBytes((long)args.Speed)}/s)", false);
+                    });
                 }
 
-                var fileName = $"{software.Name}_{version.Version}{Path.GetExtension(version.Url) ?? ".exe"}";
-                var filePath = Path.Combine(downloadDir, fileName);
-
-                using var httpClient = new HttpClient();
-                var response = await httpClient.GetAsync(version.Url, HttpCompletionOption.ResponseHeadersRead);
-                response.EnsureSuccessStatusCode();
-
-                var totalBytes = response.Content.Headers.ContentLength ?? 0;
-                var receivedBytes = 0L;
-
-                using var stream = await response.Content.ReadAsStreamAsync();
-                using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
-
-                var buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                void OnDownloadCompleted(object? s, string id)
                 {
-                    await fileStream.WriteAsync(buffer, 0, bytesRead);
-                    receivedBytes += bytesRead;
+                    if (id != downloadId) return;
+                    Cleanup();
+                    Dispatcher.Invoke(() =>
+                    {
+                        button.Content = "完成";
+                        button.IsEnabled = true;
+                        UpdateStatus($"下载完成: {software.Name} {version.Version}", false);
+                        UpdateActiveDownloadCount();
 
-                    if (totalBytes > 0)
-                    {
-                        var progress = (int)(receivedBytes * 100 / totalBytes);
-                        button.Content = $"下载中... {progress}%";
-                    }
-                    else
-                    {
-                        button.Content = $"下载中... {receivedBytes / 1024} KB";
-                    }
+                        var settings = AppServices.Config.Load();
+                        var msg = settings.AutoExtractPortable
+                            ? $"绿色版已下载并解压到应用目录\n{settings.AppsDir}\n\n是否打开应用目录？"
+                            : "软件已下载完成\n\n是否打开下载目录？";
+                        var openDir = settings.AutoExtractPortable ? settings.AppsDir : settings.CacheDir;
+                        if (MessageBox.Show(msg, "下载完成", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            Process.Start("explorer.exe", openDir);
+                    });
                 }
 
-                button.Content = "完成";
-                UpdateStatus($"下载完成: {filePath}", false);
-
-                // 询问是否打开文件
-                var result = MessageBox.Show($"软件已下载到:\n{filePath}\n\n是否打开文件夹？", "下载完成",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes)
+                void OnDownloadFailed(object? s, (string Id, string Error) args)
                 {
-                    Process.Start("explorer.exe", downloadDir);
+                    if (args.Id != downloadId) return;
+                    Cleanup();
+                    Dispatcher.Invoke(() =>
+                    {
+                        button.Content = "下载";
+                        button.IsEnabled = true;
+                        UpdateStatus($"下载失败: {args.Error}", true);
+                        MessageBox.Show($"下载失败: {args.Error}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    });
+                }
+
+                void Cleanup()
+                {
+                    AppServices.Download.ProgressChanged -= OnProgressChanged;
+                    AppServices.Download.DownloadCompleted -= OnDownloadCompleted;
+                    AppServices.Download.DownloadFailed -= OnDownloadFailed;
                 }
             }
             catch (Exception ex)
             {
                 button.Content = "下载";
+                button.IsEnabled = true;
                 UpdateStatus($"下载失败: {ex.Message}", true);
                 MessageBox.Show($"下载失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally
-            {
-                button.IsEnabled = true;
-            }
+        }
+
+        private void BtnOpenDownloadManager_Click(object sender, RoutedEventArgs e)
+        {
+            var manager = new DownloadManagerWindow();
+            manager.Show();
+        }
+
+        private void UpdateActiveDownloadCount()
+        {
+            var active = AppServices.DownloadHistory.GetActive().Count;
+            if (active > 0)
+                TxtCount.Text = $"共 {_filteredSoftware.Count} 项 | 活动下载 {active} 个";
         }
 
         private void UpdateStatus(string message, bool isError)
         {
             TxtStatus.Text = message;
-            TxtStatus.Foreground = isError ?
-                System.Windows.Media.Brushes.Red :
-                System.Windows.Media.Brushes.Green;
+            TxtStatus.Foreground = isError ? Brushes.Red : Brushes.Green;
         }
 
         private void UpdateCount()
         {
-            TxtCount.Text = $"共 {_filteredSoftware.Count} 项";
+            UpdateActiveDownloadCount();
+            if (!TxtCount.Text.Contains("活动下载"))
+                TxtCount.Text = $"共 {_filteredSoftware.Count} 项";
         }
 
-        // 辅助方法：查找父元素
-        private static T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+        private static string FormatBytes(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB" };
+            double len = bytes;
+            var order = 0;
+            while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
+            return $"{len:0.##} {sizes[order]}";
+        }
+
+        private static T? FindVisualParent<T>(DependencyObject child) where T : DependencyObject
         {
             var parentObject = VisualTreeHelper.GetParent(child);
             if (parentObject == null) return null;
@@ -255,17 +282,14 @@ namespace DevEnv.Views
             return FindVisualParent<T>(parentObject);
         }
 
-        // 辅助方法：查找子元素
         private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T found)
-                    return found;
+                if (child is T found) return found;
                 var childOfChild = FindVisualChild<T>(child);
-                if (childOfChild != null)
-                    return childOfChild;
+                if (childOfChild != null) return childOfChild;
             }
             return null;
         }

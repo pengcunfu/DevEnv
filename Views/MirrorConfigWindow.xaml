@@ -1,0 +1,45 @@
+<Window x:Class="DevEnv.Views.MirrorConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="镜像源配置" Height="580" Width="720"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="配置各语言/包管理器的国内镜像源，支持测速与一键应用"
+                   Foreground="Gray" Margin="0,0,0,10"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="工具类型:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <ComboBox Name="CmbToolType" Width="180" SelectionChanged="CmbToolType_SelectionChanged"/>
+        </StackPanel>
+
+        <GroupBox Grid.Row="2" Header="可用镜像源" Padding="8">
+            <ListBox Name="MirrorList" DisplayMemberPath="DisplayName"/>
+        </GroupBox>
+
+        <TextBlock Grid.Row="3" Name="TxtCurrentMirror" Margin="0,10,0,10" TextWrapping="Wrap"/>
+
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StatusBar Grid.Column="0">
+                <StatusBarItem>
+                    <TextBlock Name="TxtStatus" Text="就绪"/>
+                </StatusBarItem>
+            </StatusBar>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="测试速度" Width="90" Height="30" Margin="0,0,8,0" Click="BtnTest_Click"/>
+                <Button Content="应用配置" Width="90" Height="30" IsDefault="True" Click="BtnApply_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

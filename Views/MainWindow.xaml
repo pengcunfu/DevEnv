@@ -3,20 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DevEnv"
         mc:Ignorable="d"
-        Title="Windows 服务管理器" Height="500" Width="800"
+        Title="DevEnv - 开发环境管理器" Height="520" Width="900"
         WindowStartupLocation="CenterScreen">
     <DockPanel Margin="10">
-        <!-- Menu Bar -->
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="工具(_T)">
-                <MenuItem Header="JSON 格式化器(_J)" Click="OpenJsonFormatter_Click"/>
                 <MenuItem Header="软件下载器(_S)" Click="OpenSoftwareDownloader_Click"/>
+                <MenuItem Header="下载管理(_D)" Click="OpenDownloadManager_Click"/>
+                <MenuItem Header="环境扫描(_E)" Click="OpenEnvironmentScanner_Click"/>
+                <MenuItem Header="镜像源配置(_M)" Click="OpenMirrorConfig_Click"/>
+                <Separator/>
+                <MenuItem Header="JSON 格式化器(_J)" Click="OpenJsonFormatter_Click"/>
                 <MenuItem Header="Hosts 文件编辑器(_H)" Click="OpenHostsFileEditor_Click"/>
                 <MenuItem Header="图像格式转换器(_I)" Click="OpenImageConverter_Click"/>
                 <MenuItem Header="文件哈希计算器(_F)" Click="OpenHashCalculator_Click"/>
                 <Separator/>
+                <MenuItem Header="数据目录(_C)" Click="OpenSettings_Click"/>
                 <MenuItem Header="退出(_X)" Click="Exit_Click"/>
             </MenuItem>
             <MenuItem Header="帮助(_H)">
@@ -24,15 +27,18 @@
             </MenuItem>
         </Menu>
 
-        <!-- Title -->
         <Label DockPanel.Dock="Top"
-               Content="Windows 服务管理器"
+               Content="开发环境管理器"
                FontSize="20" FontWeight="Bold"
                HorizontalAlignment="Center"
-               Margin="0,0,0,20"/>
+               Margin="0,0,0,10"/>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+            <TextBlock Text="绿色版进程管理 | 软件下载 | 镜像配置 | 环境扫描"
+                       Foreground="Gray" VerticalAlignment="Center"/>
+            <Button Content="打开应用目录" Margin="15,0,0,0" Padding="8,3" Click="OpenAppsDir_Click"/>
+        </StackPanel>
 
-        <!-- Services Table -->
-        <DataGrid x:Name="ServicesDataGrid"
+        <DataGrid x:Name="ProcessesDataGrid"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
@@ -43,25 +49,27 @@
                   HeadersVisibility="Column"
                   IsReadOnly="True"
                   SelectionMode="Single"
-                  ItemsSource="{Binding Services}">
+                  ItemsSource="{Binding Processes}">
             <DataGrid.Columns>
-                <!-- Service Name -->
-                <DataGridTextColumn Header="服务名称"
-                                    Binding="{Binding Name}"
-                                    Width="2*">
+                <DataGridTextColumn Header="程序" Binding="{Binding DisplayName}" Width="120">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <!-- Status -->
-                <DataGridTextColumn Header="状态"
-                                    Binding="{Binding StatusText}"
-                                    Width="2*">
+                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="TextWrapping" Value="Wrap"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="160">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -72,38 +80,29 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <!-- Start Button -->
-                <DataGridTemplateColumn Header="启动" Width="100">
+                <DataGridTemplateColumn Header="启动" Width="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="启动"
-                                    Click="StartService_Click"
-                                    Tag="{Binding}"
-                                    Padding="10,5"
-                                    IsEnabled="{Binding CanStart}"/>
+                            <Button Content="启动" Click="StartProcess_Click" Tag="{Binding}"
+                                    Padding="8,4" IsEnabled="{Binding CanStart}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <!-- Stop Button -->
-                <DataGridTemplateColumn Header="停止" Width="100">
+                <DataGridTemplateColumn Header="停止" Width="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="停止"
-                                    Click="StopService_Click"
-                                    Tag="{Binding}"
-                                    Padding="10,5"
-                                    IsEnabled="{Binding CanStop}"/>
+                            <Button Content="停止" Click="StopProcess_Click" Tag="{Binding}"
+                                    Padding="8,4" IsEnabled="{Binding CanStop}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Status Bar -->
         <StatusBar DockPanel.Dock="Bottom" Height="25">
             <StatusBarItem>
-                <TextBlock Text="就绪"/>
+                <TextBlock Text="无需管理员权限 · 绿色版解压即用 · 进程方式启动"/>
             </StatusBarItem>
         </StatusBar>
     </DockPanel>

@@ -1,53 +1,50 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using DevEnv.Services;
 using DevEnv.Models;
+using DevEnv.Services;
 
 namespace DevEnv.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly ServiceManager _serviceManager;
-        private readonly List<string> _services;
+        private readonly ProcessManager _processManager;
 
         public MainViewModel()
         {
-            _serviceManager = new ServiceManager();
-            _services = new List<string> { "MySQL", "Redis", "MongoDB", "MinIO" };
-            Services = new ObservableCollection<ServiceItemViewModel>();
+            _processManager = AppServices.ProcessManager;
+            Processes = new ObservableCollection<ProcessItemViewModel>();
 
-            InitializeServices();
-            _serviceManager.ServiceStatusUpdated += OnServiceStatusUpdated;
-            _serviceManager.StartMonitoring();
+            foreach (var def in _processManager.GetDefinitions())
+                Processes.Add(new ProcessItemViewModel(def, _processManager));
+
+            _processManager.ProcessStatusUpdated += OnProcessStatusUpdated;
+            _processManager.StartMonitoring();
         }
 
-        public ObservableCollection<ServiceItemViewModel> Services { get; }
+        public ObservableCollection<ProcessItemViewModel> Processes { get; }
 
-        private void InitializeServices()
+        public string AppsDirectory => _processManager.GetAppsDirectory();
+
+        private void OnProcessStatusUpdated(object? sender, ProcessStatusUpdatedEventArgs e)
         {
-            foreach (var serviceName in _services)
+            var item = Processes.FirstOrDefault(p => p.Name == e.ProcessName);
+            if (item != null)
             {
-                Services.Add(new ServiceItemViewModel(serviceName, _serviceManager));
+                Application.Current.Dispatcher.Invoke(() => item.UpdateStatus(e.Status));
             }
         }
 
-        private void OnServiceStatusUpdated(object? sender, ServiceStatusUpdatedEventArgs e)
-        {
-            var serviceViewModel = Services.FirstOrDefault(s => s.Name == e.ServiceName);
-            if (serviceViewModel != null)
-            {
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    serviceViewModel.UpdateStatus(e.Status);
-                });
-            }
-        }
+        public void StopMonitoring() => _processManager.StopMonitoring();
 
-        public void StopMonitoring()
+        public void OpenAppsDirectory()
         {
-            _serviceManager.StopMonitoring();
+            var dir = _processManager.GetAppsDirectory();
+            Directory.CreateDirectory(dir);
+            Process.Start("explorer.exe", dir);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -58,90 +55,67 @@ namespace DevEnv.ViewModels
         }
     }
 
-    public class ServiceItemViewModel : INotifyPropertyChanged
+    public class ProcessItemViewModel : INotifyPropertyChanged
     {
-        private readonly ServiceManager _serviceManager;
+        private readonly ProcessManager _processManager;
         private string _statusText = "检查中...";
         private string _statusColor = "Gray";
-        private bool _canStart = false;
-        private bool _canStop = false;
+        private bool _canStart;
+        private bool _canStop;
 
-        public ServiceItemViewModel(string name, ServiceManager serviceManager)
+        public ProcessItemViewModel(ProcessDefinition definition, ProcessManager processManager)
         {
-            Name = name;
-            _serviceManager = serviceManager;
+            Name = definition.Name;
+            DisplayName = definition.DisplayName;
+            Description = definition.Description;
+            _processManager = processManager;
         }
 
         public string Name { get; }
+        public string DisplayName { get; }
+        public string Description { get; }
 
         public string StatusText
         {
             get => _statusText;
-            set
-            {
-                if (_statusText != value)
-                {
-                    _statusText = value;
-                    OnPropertyChanged();
-                }
-            }
+            set { if (_statusText != value) { _statusText = value; OnPropertyChanged(); } }
         }
 
         public string StatusColor
         {
             get => _statusColor;
-            set
-            {
-                if (_statusColor != value)
-                {
-                    _statusColor = value;
-                    OnPropertyChanged();
-                }
-            }
+            set { if (_statusColor != value) { _statusColor = value; OnPropertyChanged(); } }
         }
 
         public bool CanStart
         {
             get => _canStart;
-            set
-            {
-                if (_canStart != value)
-                {
-                    _canStart = value;
-                    OnPropertyChanged();
-                }
-            }
+            set { if (_canStart != value) { _canStart = value; OnPropertyChanged(); } }
         }
 
         public bool CanStop
         {
             get => _canStop;
-            set
-            {
-                if (_canStop != value)
-                {
-                    _canStop = value;
-                    OnPropertyChanged();
-                }
-            }
+            set { if (_canStop != value) { _canStop = value; OnPropertyChanged(); } }
         }
 
-        public void UpdateStatus(ServiceStatusInfo status)
+        public void UpdateStatus(ProcessStatusInfo status)
         {
             StatusText = status.DisplayText;
             StatusColor = status.Color;
 
             switch (status.Status)
             {
-                case ServiceState.Running:
+                case ProcessState.Running:
+                case ProcessState.ExternalRunning:
                     CanStart = false;
                     CanStop = true;
                     break;
-                case ServiceState.Stopped:
+                case ProcessState.Stopped:
                     CanStart = true;
                     CanStop = false;
                     break;
-                case ServiceState.NotFound:
+                case ProcessState.NotConfigured:
                     CanStart = false;
                     CanStop = false;
                     break;
@@ -152,42 +126,34 @@ namespace DevEnv.ViewModels
             }
         }
 
-        public async Task StartServiceAsync()
+        public async Task StartAsync()
         {
             StatusText = "启动中...";
             StatusColor = "Blue";
             CanStart = false;
             CanStop = false;
 
-            var (success, message) = await _serviceManager.StartServiceAsync(Name);
-
-            // Status will be updated by the timer, just show message
-            await ShowMessage(success, message);
+            var (success, message) = await _processManager.StartProcessAsync(Name);
+            ShowMessage(success, message);
         }
 
-        public async Task StopServiceAsync()
+        public async Task StopAsync()
         {
             StatusText = "停止中...";
             StatusColor = "Orange";
             CanStart = false;
             CanStop = false;
 
-            var (success, message) = await _serviceManager.StopServiceAsync(Name);
-
-            // Status will be updated by the timer, just show message
-            await ShowMessage(success, message);
+            var (success, message) = await _processManager.StopProcessAsync(Name);
+            ShowMessage(success, message);
         }
 
-        private async Task ShowMessage(bool success, string message)
+        private static void ShowMessage(bool success, string message)
         {
-            await Task.Run(() =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    var messageBoxImage = success ? MessageBoxImage.Information : MessageBoxImage.Warning;
-                    var messageBoxTitle = success ? "操作成功" : "操作失败";
-                    MessageBox.Show(message, messageBoxTitle, MessageBoxButton.OK, messageBoxImage);
-                });
+                MessageBox.Show(message, success ? "操作成功" : "操作失败",
+                    MessageBoxButton.OK, success ? MessageBoxImage.Information : MessageBoxImage.Warning);
             });
         }
 

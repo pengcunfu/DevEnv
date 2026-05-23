@@ -1,0 +1,13 @@
+{
+  "cache_dir": "D:\\devenv\\cache",
+  "apps_dir": "D:\\devenv\\apps",
+  "auto_extract_portable": true,
+  "max_workers": 4,
+  "chunk_size_mb": 1,
+  "timeout": 30,
+  "max_retries": 3,
+  "use_system_proxy": true,
+  "custom_proxy": "",
+  "check_update_on_startup": false,
+  "minimize_to_tray": false
+}

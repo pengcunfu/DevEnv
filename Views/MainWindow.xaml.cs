@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using DevEnv.ViewModels;
-using DevEnv.Views;
 
 namespace DevEnv.Views
 {
@@ -13,75 +12,90 @@ namespace DevEnv.Views
         {
             InitializeComponent();
             _viewModel = new MainViewModel();
-            this.DataContext = _viewModel;
+            DataContext = _viewModel;
         }
 
-        private async void StartService_Click(object sender, RoutedEventArgs e)
+        private async void StartProcess_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is ServiceItemViewModel service)
-            {
-                await service.StartServiceAsync();
-            }
+            if (sender is Button button && button.Tag is ProcessItemViewModel process)
+                await process.StartAsync();
         }
 
-        private async void StopService_Click(object sender, RoutedEventArgs e)
+        private async void StopProcess_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is ServiceItemViewModel service)
-            {
-                await service.StopServiceAsync();
-            }
+            if (sender is Button button && button.Tag is ProcessItemViewModel process)
+                await process.StopAsync();
         }
+
+        private void OpenAppsDir_Click(object sender, RoutedEventArgs e) => _viewModel.OpenAppsDirectory();
 
         protected override void OnClosed(EventArgs e)
         {
-            try
-            {
-                _viewModel?.StopMonitoring();
-            }
-            catch
-            {
-            }
+            try { _viewModel?.StopMonitoring(); } catch { }
             base.OnClosed(e);
         }
 
         private void OpenJsonFormatter_Click(object sender, RoutedEventArgs e)
         {
-            var jsonFormatter = new JsonFormatterWindow();
-            jsonFormatter.ShowDialog();
+            new JsonFormatterWindow().ShowDialog();
         }
 
         private void OpenSoftwareDownloader_Click(object sender, RoutedEventArgs e)
         {
-            var downloader = new SoftwareDownloadWindow();
-            downloader.ShowDialog();
+            new SoftwareDownloadWindow().Show();
+        }
+
+        private void OpenDownloadManager_Click(object sender, RoutedEventArgs e)
+        {
+            new DownloadManagerWindow().Show();
+        }
+
+        private void OpenEnvironmentScanner_Click(object sender, RoutedEventArgs e)
+        {
+            new EnvironmentScannerWindow().Show();
+        }
+
+        private void OpenMirrorConfig_Click(object sender, RoutedEventArgs e)
+        {
+            new MirrorConfigWindow().Show();
+        }
+
+        private void OpenSettings_Click(object sender, RoutedEventArgs e)
+        {
+            new SettingsWindow().ShowDialog();
         }
 
         private void OpenHostsFileEditor_Click(object sender, RoutedEventArgs e)
         {
-            var hostsEditor = new HostsFileEditWindow();
-            hostsEditor.ShowDialog();
+            new HostsFileEditWindow().ShowDialog();
         }
 
         private void OpenImageConverter_Click(object sender, RoutedEventArgs e)
         {
-            var imageConverter = new ImageConverterWindow();
-            imageConverter.ShowDialog();
+            new ImageConverterWindow().ShowDialog();
         }
 
         private void OpenHashCalculator_Click(object sender, RoutedEventArgs e)
         {
-            var hashCalculator = new HashCalculatorWindow();
-            hashCalculator.ShowDialog();
+            new HashCalculatorWindow().ShowDialog();
         }
 
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        private void Exit_Click(object sender, RoutedEventArgs e) => Close();
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Windows 服务管理器\n\n包含功能：\n• 服务管理\n• JSON 格式化工具\n• 软件下载工具\n• Hosts 文件编辑器\n• 图像格式转换器\n• 文件哈希计算器\n\n版本: 1.0.0", "关于", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(
+                "DevEnv - 开发环境管理器\n\n" +
+                "核心理念：绿色版 · 免安装 · 无需管理员权限\n\n" +
+                "核心功能：\n" +
+                "• 绿色版进程管理 (MySQL/Redis/MongoDB/MinIO/Nginx)\n" +
+                "• 软件下载与自动解压 (zip 绿色包)\n" +
+                "• 环境扫描 (Java/Python/Node.js/PHP/.NET)\n" +
+                "• 镜像源配置 (pip/npm/pnpm/Yarn/Maven/Composer/Go/NuGet)\n" +
+                "• 数据目录: D:\\devenv (config.json 配置)\n" +
+                "• JSON 格式化 / Hosts 编辑 / 哈希计算 / 图像转换\n\n" +
+                "版本: 1.2.0",
+                "关于", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

@@ -1,0 +1,52 @@
+{
+  "MySQL": {
+    "display_name": "MySQL",
+    "description": "绿色版 MySQL 数据库",
+    "process_names": [
+      "mysqld"
+    ],
+    "executable": "{apps_dir}/mysql/bin/mysqld.exe",
+    "arguments": "--console",
+    "working_directory": "{apps_dir}/mysql/bin"
+  },
+  "Redis": {
+    "display_name": "Redis",
+    "description": "绿色版 Redis 缓存",
+    "process_names": [
+      "redis-server"
+    ],
+    "executable": "{apps_dir}/redis/redis-server.exe",
+    "arguments": "{apps_dir}/redis/redis.windows.conf",
+    "working_directory": "{apps_dir}/redis"
+  },
+  "MongoDB": {
+    "display_name": "MongoDB",
+    "description": "绿色版 MongoDB 数据库",
+    "process_names": [
+      "mongod"
+    ],
+    "executable": "{apps_dir}/mongodb/bin/mongod.exe",
+    "arguments": "--dbpath={apps_dir}/mongodb/data --port 27017",
+    "working_directory": "{apps_dir}/mongodb/bin"
+  },
+  "MinIO": {
+    "display_name": "MinIO",
+    "description": "绿色版 MinIO 对象存储",
+    "process_names": [
+      "minio"
+    ],
+    "executable": "{apps_dir}/minio/minio.exe",
+    "arguments": "server {apps_dir}/minio/data --console-address :9001",
+    "working_directory": "{apps_dir}/minio"
+  },
+  "Nginx": {
+    "display_name": "Nginx",
+    "description": "绿色版 Nginx Web 服务器",
+    "process_names": [
+      "nginx"
+    ],
+    "executable": "{apps_dir}/nginx/nginx.exe",
+    "arguments": "",
+    "working_directory": "{apps_dir}/nginx"
+  }
+}

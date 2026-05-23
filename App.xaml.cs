@@ -2,6 +2,8 @@
 using System.Data;
 using System.Text;
 using System.Windows;
+using DevEnv.Models;
+using DevEnv.Services;
 
 namespace DevEnv
 {
@@ -12,8 +14,14 @@ namespace DevEnv
     {
         static App()
         {
-            // 注册编码提供程序以支持GB2312等编码
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            AppPaths.EnsureDirectories();
+            AppServices.Config.Load();
+            base.OnStartup(e);
         }
     }
 
