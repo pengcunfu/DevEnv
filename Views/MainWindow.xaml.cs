@@ -42,22 +42,26 @@ namespace DevEnv.Views
 
         private void OpenSoftwareDownloader_Click(object sender, RoutedEventArgs e)
         {
-            new SoftwareDownloadWindow().Show();
+            var window = new SoftwareDownloadWindow { Owner = this };
+            window.Show();
         }
 
         private void OpenDownloadManager_Click(object sender, RoutedEventArgs e)
         {
-            new DownloadManagerWindow().Show();
+            var window = new DownloadManagerWindow { Owner = this };
+            window.Show();
         }
 
         private void OpenEnvironmentScanner_Click(object sender, RoutedEventArgs e)
         {
-            new EnvironmentScannerWindow().Show();
+            var window = new EnvironmentScannerWindow { Owner = this };
+            window.Show();
         }
 
         private void OpenMirrorConfig_Click(object sender, RoutedEventArgs e)
         {
-            new MirrorConfigWindow().Show();
+            var window = new MirrorConfigWindow { Owner = this };
+            window.Show();
         }
 
         private void OpenSettings_Click(object sender, RoutedEventArgs e)

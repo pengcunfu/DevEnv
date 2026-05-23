@@ -4,8 +4,13 @@
              xmlns:converters="clr-namespace:DevEnv.Converters"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-        <converters:StringToBrushConverter x:Key="StringToBrushConverter"/>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <converters:FileSizeConverter x:Key="FileSizeConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/CompactDataGrid.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <converters:StringToBrushConverter x:Key="StringToBrushConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:FileSizeConverter x:Key="FileSizeConverter"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

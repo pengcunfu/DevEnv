@@ -116,7 +116,6 @@ namespace DevEnv.Views
         {
             TxtSearch.Text = "";
             CmbCategory.SelectedIndex = 0;
-            CmbVersion.SelectedIndex = -1;
             FilterSoftware();
         }
 
