@@ -1,4 +1,3 @@
-using DevEnv.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,6 +8,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using DevEnv.Models;
+using DevEnv.Commands;
+using DevEnv.Views;
 
 namespace DevEnv.ViewModels
 {
@@ -350,35 +351,6 @@ namespace DevEnv.ViewModels
             {
                 MessageBox.Show($"无法打开环境变量设置: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-    }
-
-    public class RelayCommand : ICommand
-    {
-        private readonly Action _execute;
-        private readonly Func<bool>? _canExecute;
-
-        public RelayCommand(Action execute, Func<bool>? canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler? CanExecuteChanged;
-
-        public bool CanExecute(object? parameter)
-        {
-            return _canExecute?.Invoke() ?? true;
-        }
-
-        public void Execute(object? parameter)
-        {
-            _execute();
-        }
-
-        public void RaiseCanExecuteChanged()
-        {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

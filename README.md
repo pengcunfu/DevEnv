@@ -11,7 +11,23 @@
 
 DevEnv 是一个基于 .NET 8.0 和 WPF 开发的 Windows 桌面应用程序，集成了多个实用的开发工具，为开发者提供一站式的开发环境管理解决方案。
 
-视频转换
+### 5. 🔢 文件哈希计算器
+
+**哈希值计算工具**
+
+- 支持多种哈希算法：MD5、SHA-1、SHA-256、SHA-384、SHA-512
+- 文件拖拽支持
+- 文本哈希计算
+- 一键复制哈希值
+- 实时计算进度显示
+- 文件大小和计算用时统计
+- 多算法并行计算
+
+**技术特色**：
+- 异步计算，大文件处理流畅
+- 8KB 分块读取，内存优化
+- 自动进度反馈
+- 精确计算耗时统计
 
 ### 🎯 核心理念
 
@@ -184,6 +200,28 @@ dotnet run
 
 > 📝 **提示**：修改 hosts 文件后，建议运行 `ipconfig /flushdns` 命令刷新 DNS 缓存
 
+#### 🔢 计算文件哈希
+
+1. 点击 `工具 > 文件哈希计算器`
+
+**文件哈希计算**：
+- 选择文件：使用"浏览"按钮选择文件，或直接拖拽文件到窗口
+- 粘贴路径：使用"粘贴文件路径"从剪贴板粘贴文件路径
+- 选择算法：MD5、SHA-1、SHA-256、SHA-384、SHA-512
+- 计算哈希：点击"计算哈希"计算单个算法，或"全部算法"同时计算所有算法
+
+**文本哈希计算**：
+- 切换到"文本哈希"标签页
+- 在文本框中输入或粘贴文本内容
+- 选择哈希算法
+- 点击"计算文本哈希"
+
+**便民功能**：
+- **拖拽支持**：直接拖拽文件到窗口开始计算
+- **一键复制**：点击"复制"按钮将哈希值复制到剪贴板
+- **进度显示**：大文件计算时显示实时进度
+- **详细信息**：显示文件大小、计算耗时等统计信息
+
 ## 🔧 技术架构
 
 ### 技术栈
@@ -209,7 +247,8 @@ DevEnv/
 │
 ├── ViewModels/            # 视图模型
 │   ├── MainViewModel.cs   # 主窗口视图模型
-│   └── HostsFileEditViewModel.cs  # Hosts 编辑视图模型
+│   ├── HostsFileEditViewModel.cs  # Hosts 编辑视图模型
+│   └── HashCalculatorViewModel.cs # 哈希计算视图模型
 │
 ├── Views/                 # 视图
 │   ├── MainWindow.xaml           # 主窗口
@@ -220,14 +259,20 @@ DevEnv/
 │   ├── SoftwareDownloadWindow.xaml.cs
 │   ├── HostsFileEditWindow.xaml  # Hosts 编辑窗口
 │   ├── HostsFileEditWindow.xaml.cs
+│   ├── ImageConverterWindow.xaml # 图像转换窗口
+│   ├── ImageConverterWindow.xaml.cs
+│   ├── HashCalculatorWindow.xaml # 哈希计算窗口
+│   ├── HashCalculatorWindow.xaml.cs
 │   ├── EditHostsEntryDialog.xaml  # 条目编辑对话框
 │   └── EditHostsEntryDialog.xaml.cs
 │
 ├── Services/              # 服务层
-│   └── JsonFormatterService.cs  # JSON 格式化服务
+│   ├── JsonFormatterService.cs  # JSON 格式化服务
+│   └── HashCalculatorService.cs # 哈希计算服务
 │
 ├── Converters/            # 值转换器
-│   └── StringToBrushConverter.cs
+│   ├── StringToBrushConverter.cs
+│   └── FileSizeConverter.cs
 │
 └── Resources/             # 资源文件
     └── icons/            # 图标资源
@@ -302,6 +347,8 @@ private async Task LoadHostsFile()
 - ✅ JSON 格式化工具
 - ✅ 软件下载工具
 - ✅ Hosts 文件编辑器
+- ✅ 图像格式转换器
+- ✅ 文件哈希计算器
 
 ### 计划中的功能
 

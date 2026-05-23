@@ -68,6 +68,12 @@ namespace DevEnv.Views
             imageConverter.ShowDialog();
         }
 
+        private void OpenHashCalculator_Click(object sender, RoutedEventArgs e)
+        {
+            var hashCalculator = new HashCalculatorWindow();
+            hashCalculator.ShowDialog();
+        }
+
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
@@ -75,7 +81,7 @@ namespace DevEnv.Views
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Windows 服务管理器\n\n包含功能：\n• 服务管理\n• JSON 格式化工具\n• 软件下载工具\n• Hosts 文件编辑器\n• 图像格式转换器\n\n版本: 1.0.0", "关于", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Windows 服务管理器\n\n包含功能：\n• 服务管理\n• JSON 格式化工具\n• 软件下载工具\n• Hosts 文件编辑器\n• 图像格式转换器\n• 文件哈希计算器\n\n版本: 1.0.0", "关于", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

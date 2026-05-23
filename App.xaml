@@ -6,5 +6,6 @@
     <Application.Resources>
         <converters:StringToBrushConverter x:Key="StringToBrushConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:FileSizeConverter x:Key="FileSizeConverter"/>
     </Application.Resources>
 </Application>

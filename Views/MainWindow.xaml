@@ -15,6 +15,7 @@
                 <MenuItem Header="软件下载器(_S)" Click="OpenSoftwareDownloader_Click"/>
                 <MenuItem Header="Hosts 文件编辑器(_H)" Click="OpenHostsFileEditor_Click"/>
                 <MenuItem Header="图像格式转换器(_I)" Click="OpenImageConverter_Click"/>
+                <MenuItem Header="文件哈希计算器(_F)" Click="OpenHashCalculator_Click"/>
                 <Separator/>
                 <MenuItem Header="退出(_X)" Click="Exit_Click"/>
             </MenuItem>
