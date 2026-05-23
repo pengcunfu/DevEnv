@@ -1,7 +1,7 @@
 # Windows 开发环境管理器 (DevEnv)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/)
 [![WPF](https://img.shields.io/badge/WPF-Windows%20Presentation%20Foundation-blue.svg)](https://docs.microsoft.com/en-us/dotnet/desktop/wpf/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows/)
 
@@ -9,7 +9,7 @@
 
 ## 📋 项目简介
 
-DevEnv 是一个基于 .NET 8.0 和 WPF 开发的 Windows 桌面应用程序，集成了多个实用的开发工具，为开发者提供一站式的开发环境管理解决方案。
+DevEnv 是一个基于 .NET 10.0 和 WPF 开发的 Windows 桌面应用程序，集成了多个实用的开发工具，为开发者提供一站式的开发环境管理解决方案。
 
 ### 5. 🔢 文件哈希计算器
 
@@ -108,7 +108,7 @@ DevEnv 是一个基于 .NET 8.0 和 WPF 开发的 Windows 桌面应用程序，�
 | 项目 | 要求 |
 |------|------|
 | 操作系统 | Windows 10/11 |
-| .NET 版本 | .NET 8.0 或更高版本 |
+| .NET 版本 | .NET 10.0 或更高版本 |
 | 内存 | 最少 512 MB RAM |
 | 磁盘空间 | 100 MB 可用空间 |
 | 权限 | 某些功能需要管理员权限 |
@@ -226,7 +226,7 @@ dotnet run
 
 ### 技术栈
 
-- **框架**：.NET 8.0
+- **框架**：.NET 10.0
 - **UI 技术**：WPF (Windows Presentation Foundation)
 - **架构模式**：MVVM (Model-View-ViewModel)
 - **异步编程**：async/await
@@ -389,7 +389,7 @@ private async Task LoadHostsFile()
 
 #### 环境搭建
 
-1. 安装 .NET 8.0 SDK
+1. 安装 .NET 10.0 SDK
 2. 安装 Visual Studio 2022 或 VS Code
 3. 克隆项目到本地
 4. 打开 `DevEnv.sln` 解决方案
