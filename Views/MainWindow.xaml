@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:services="clr-namespace:DevEnv.Services"
         mc:Ignorable="d"
         Title="DevEnv - 开发环境管理器"
         Height="560" Width="860" MinHeight="420" MinWidth="720"
@@ -179,7 +180,12 @@
                         <Button.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="JSON 格式化器" Click="OpenJsonFormatter_Click"/>
-                                <MenuItem Header="Hosts 文件编辑器" Click="OpenHostsFileEditor_Click"/>
+                                <MenuItem Header="Hosts 文件编辑器" Click="OpenHostsFileEditor_Click">
+                                    <MenuItem.Icon>
+                                        <Image Source="{x:Static services:UiIcons.UacShield}"
+                                               Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
                                 <MenuItem Header="图像格式转换器" Click="OpenImageConverter_Click"/>
                                 <MenuItem Header="文件哈希计算器" Click="OpenHashCalculator_Click"/>
                                 <Separator/>

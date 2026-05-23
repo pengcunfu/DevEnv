@@ -80,23 +80,7 @@ namespace DevEnv.Views
                 return;
             }
 
-            var result = MessageBox.Show(
-                "编辑 hosts 文件需要管理员权限。\n\n是否以管理员身份打开 Hosts 编辑器？\n（将弹出 UAC 确认，主窗口保持普通权限运行）",
-                "需要管理员权限",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result != MessageBoxResult.Yes)
-                return;
-
-            if (!ElevationHelper.TryRunElevated(ElevationHelper.EditHostsArgument))
-            {
-                MessageBox.Show(
-                    "未获得管理员权限，无法打开 Hosts 编辑器。",
-                    "已取消",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
+            ElevationHelper.TryRunElevated(ElevationHelper.EditHostsArgument);
         }
 
         private void OpenImageConverter_Click(object sender, RoutedEventArgs e)
