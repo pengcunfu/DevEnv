@@ -84,9 +84,19 @@ namespace DevEnv.Views
             new HashCalculatorWindow().ShowDialog();
         }
 
-        private void Exit_Click(object sender, RoutedEventArgs e) => Close();
+        private void ToolsMenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ToolsMenuButton.ContextMenu is { } menu)
+            {
+                menu.PlacementTarget = ToolsMenuButton;
+                menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                menu.IsOpen = true;
+            }
+        }
 
-        private void About_Click(object sender, RoutedEventArgs e)
+        private void Version_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => ShowAbout();
+
+        private void ShowAbout()
         {
             MessageBox.Show(
                 "DevEnv - 开发环境管理器\n\n" +

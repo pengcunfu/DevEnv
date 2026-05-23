@@ -79,6 +79,19 @@
             </Setter>
         </Style>
 
+        <Style x:Key="VersionLink" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#2563EB"/>
+                    <Setter Property="TextDecorations" Value="Underline"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="ActionButton" TargetType="Button">
             <Setter Property="Width" Value="52"/>
             <Setter Property="Height" Value="26"/>
@@ -134,34 +147,12 @@
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" Background="Transparent" Padding="0,0,0,4">
-            <MenuItem Header="工具(_T)" FontSize="12">
-                <MenuItem Header="软件下载器(_S)" Click="OpenSoftwareDownloader_Click"/>
-                <MenuItem Header="下载管理(_D)" Click="OpenDownloadManager_Click"/>
-                <MenuItem Header="环境扫描(_E)" Click="OpenEnvironmentScanner_Click"/>
-                <MenuItem Header="镜像源配置(_M)" Click="OpenMirrorConfig_Click"/>
-                <Separator/>
-                <MenuItem Header="JSON 格式化器(_J)" Click="OpenJsonFormatter_Click"/>
-                <MenuItem Header="Hosts 文件编辑器(_H)" Click="OpenHostsFileEditor_Click"/>
-                <MenuItem Header="图像格式转换器(_I)" Click="OpenImageConverter_Click"/>
-                <MenuItem Header="文件哈希计算器(_F)" Click="OpenHashCalculator_Click"/>
-                <Separator/>
-                <MenuItem Header="数据目录(_C)" Click="OpenSettings_Click"/>
-                <MenuItem Header="退出(_X)" Click="Exit_Click"/>
-            </MenuItem>
-            <MenuItem Header="帮助(_H)" FontSize="12">
-                <MenuItem Header="关于(_A)" Click="About_Click"/>
-            </MenuItem>
-        </Menu>
-
         <!-- 顶栏 -->
-        <Border Grid.Row="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+        <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
                 CornerRadius="8" Padding="14,10" Margin="0,0,0,8">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -177,34 +168,32 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="软件下载" Style="{StaticResource PrimaryToolbarButton}" Click="OpenSoftwareDownloader_Click"/>
+                    <Button Content="下载管理" Style="{StaticResource ToolbarButton}" Click="OpenDownloadManager_Click"/>
                     <Button Content="环境扫描" Style="{StaticResource ToolbarButton}" Click="OpenEnvironmentScanner_Click"/>
                     <Button Content="镜像配置" Style="{StaticResource ToolbarButton}" Click="OpenMirrorConfig_Click"/>
-                    <Button Content="应用目录" Style="{StaticResource ToolbarButton}" Click="OpenAppsDir_Click"/>
+                    <Button x:Name="ToolsMenuButton"
+                            Content="工具 ▾"
+                            Style="{StaticResource ToolbarButton}"
+                            Margin="0"
+                            Click="ToolsMenuButton_Click">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="JSON 格式化器" Click="OpenJsonFormatter_Click"/>
+                                <MenuItem Header="Hosts 文件编辑器" Click="OpenHostsFileEditor_Click"/>
+                                <MenuItem Header="图像格式转换器" Click="OpenImageConverter_Click"/>
+                                <MenuItem Header="文件哈希计算器" Click="OpenHashCalculator_Click"/>
+                                <Separator/>
+                                <MenuItem Header="应用目录" Click="OpenAppsDir_Click"/>
+                                <MenuItem Header="数据目录" Click="OpenSettings_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
                 </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- 统计条 -->
-        <Border Grid.Row="2" Background="#EEF2FF" BorderBrush="#C7D2FE" BorderThickness="1"
-                CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="进程" FontSize="11" Foreground="#4338CA" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding ProcessSummary}" FontSize="11" Foreground="#4338CA"
-                               Margin="6,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
-                <TextBlock Grid.Column="1" Text="{Binding AppsDirectory, StringFormat=数据目录: {0}}"
-                           FontSize="11" Foreground="#6366F1" HorizontalAlignment="Right"
-                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
             </Grid>
         </Border>
 
         <!-- 进程列表 -->
-        <Border Grid.Row="3" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+        <Border Grid.Row="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
                 CornerRadius="8" Padding="8">
             <Grid>
                 <Grid.RowDefinitions>
@@ -298,9 +287,15 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="4" Margin="0,8,0,0" Padding="2,0">
+        <Grid Grid.Row="2" Margin="0,8,0,0">
             <TextBlock Text="无需管理员权限 · 绿色版解压即用 · 进程方式启动"
-                       FontSize="10" Foreground="#9CA3AF" HorizontalAlignment="Center"/>
-        </Border>
+                       FontSize="10" Foreground="#9CA3AF"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Style="{StaticResource VersionLink}"
+                       HorizontalAlignment="Right"
+                       Text="{Binding AppVersion, StringFormat=v{0}}"
+                       MouseLeftButtonUp="Version_Click"
+                       ToolTip="点击查看关于"/>
+        </Grid>
     </Grid>
 </Window>

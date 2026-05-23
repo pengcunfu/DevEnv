@@ -27,42 +27,18 @@ namespace DevEnv.ViewModels
 
             _processManager.ProcessStatusUpdated += OnProcessStatusUpdated;
             _processManager.StartMonitoring();
-            RefreshSummary();
         }
 
         public ObservableCollection<ProcessItemViewModel> Processes { get; }
 
-        public string AppsDirectory => _processManager.GetAppsDirectory();
-
-        public string ProcessSummary
-        {
-            get => _processSummary;
-            private set
-            {
-                if (_processSummary == value) return;
-                _processSummary = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private string _processSummary = string.Empty;
-
-        private void RefreshSummary()
-        {
-            var running = Processes.Count(p => p.IsRunning);
-            ProcessSummary = $"{running}/{Processes.Count} 运行中";
-        }
+        public string AppVersion => AppInfo.Version;
 
         private void OnProcessStatusUpdated(object? sender, ProcessStatusUpdatedEventArgs e)
         {
             var item = Processes.FirstOrDefault(p => p.Name == e.ProcessName);
             if (item != null)
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    item.UpdateStatus(e.Status);
-                    RefreshSummary();
-                });
+                Application.Current.Dispatcher.Invoke(() => item.UpdateStatus(e.Status));
             }
         }
 
