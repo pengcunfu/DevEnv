@@ -128,8 +128,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-repo/DevEnv.git
-cd DevEnv
+git clone https://github.com/pengcunfu/devenv.git
+cd devenv
 
 # 构建项目
 dotnet build
@@ -410,7 +410,7 @@ private async Task LoadHostsFile()
 ```
 MIT License
 
-Copyright (c) 2025 DevEnv Contributors
+Copyright (c) 2025 熔岩环境管理工具 Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -460,10 +460,9 @@ SOFTWARE.
 
 ## 联系我们
 
-- **项目主页**：https://github.com/your-repo/DevEnv
-- **问题反馈**：https://github.com/your-repo/DevEnv/issues
-- **功能建议**：https://github.com/your-repo/DevEnv/discussions
-- **邮箱**：your.email@example.com
+- **项目主页**：https://github.com/pengcunfu/devenv
+- **问题反馈**：https://github.com/pengcunfu/devenv/issues
+- **功能建议**：https://github.com/pengcunfu/devenv/discussions
 
 ## 致谢
 
@@ -481,6 +480,6 @@ SOFTWARE.
 
 **让开发更简单高效**
 
-Made by [Your Name](https://github.com/your-username)
+Made by [pengcunfu](https://github.com/pengcunfu)
 
 </div>
