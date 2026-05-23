@@ -82,20 +82,18 @@ namespace DevEnv.Services
                 EnsureRuntimeDirectories(name);
 
                 var args = ResolvePath(def.Arguments);
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = exePath,
-                    Arguments = args,
-                    WorkingDirectory = workDir,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
+                var javaHome = name == "Kafka" ? ResolveJavaHome(appsDir: GetAppsDirectory()) : null;
+                if (name == "Kafka" && javaHome == null)
+                    return Task.FromResult((false, "Kafka 需要 Java，请先从软件下载器安装 OpenJDK 绿色版"));
+
+                var startInfo = CreateProcessStartInfo(exePath, args, workDir, javaHome);
 
                 var process = Process.Start(startInfo);
                 if (process == null)
                     return Task.FromResult((false, "进程启动失败"));
 
-                Thread.Sleep(800);
+                var startupDelay = name == "Kafka" ? 5000 : 800;
+                Thread.Sleep(startupDelay);
                 if (process.HasExited)
                 {
                     return Task.FromResult((false,
@@ -308,8 +306,140 @@ namespace DevEnv.Services
                 case "PostgreSQL":
                     EnsurePostgreSQLRuntime(appsDir);
                     break;
+                case "Kafka":
+                    EnsureKafkaRuntime(appsDir);
+                    break;
             }
         }
+
+        private void EnsureKafkaRuntime(string appsDir)
+        {
+            var kafkaDir = Path.Combine(appsDir, "kafka");
+            var configDir = Path.Combine(kafkaDir, "config");
+            var dataDir = Path.Combine(kafkaDir, "data");
+            var configPath = Path.Combine(configDir, "devenv-server.properties");
+            Directory.CreateDirectory(configDir);
+            Directory.CreateDirectory(dataDir);
+
+            var configContent =
+                "process.roles=broker,controller\r\n" +
+                "node.id=1\r\n" +
+                "controller.quorum.voters=1@localhost:9093\r\n" +
+                "listeners=PLAINTEXT://:9092,CONTROLLER://:9093\r\n" +
+                "inter.broker.listener.name=PLAINTEXT\r\n" +
+                "advertised.listeners=PLAINTEXT://localhost:9092\r\n" +
+                $"log.dirs={dataDir.Replace('\\', '/')}\r\n" +
+                "num.partitions=1\r\n" +
+                "offsets.topic.replication.factor=1\r\n" +
+                "transaction.state.log.replication.factor=1\r\n" +
+                "transaction.state.log.min.isr=1\r\n" +
+                "controller.listener.names=CONTROLLER\r\n";
+            File.WriteAllText(configPath, configContent);
+
+            var metaFile = Path.Combine(dataDir, "meta.properties");
+            if (File.Exists(metaFile))
+                return;
+
+            var javaHome = ResolveJavaHome(appsDir);
+            if (javaHome == null)
+                throw new InvalidOperationException("未找到 Java，请先安装 OpenJDK 绿色版");
+
+            var storageBat = Path.Combine(kafkaDir, "bin", "windows", "kafka-storage.bat");
+            if (!File.Exists(storageBat))
+                throw new FileNotFoundException("未找到 kafka-storage.bat，请确认 Kafka 已正确解压到应用目录");
+
+            var clusterId = RunKafkaCommand(storageBat, "random-uuid", kafkaDir, javaHome).Trim();
+            if (string.IsNullOrWhiteSpace(clusterId))
+                throw new InvalidOperationException("无法生成 Kafka 集群 ID");
+
+            var formatResult = RunKafkaCommand(
+                storageBat,
+                $"format -t {clusterId} -c \"{configPath}\"",
+                kafkaDir,
+                javaHome);
+
+            if (!File.Exists(metaFile))
+            {
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(formatResult)
+                    ? "Kafka 存储初始化失败"
+                    : formatResult.Trim());
+            }
+        }
+
+        private static string? ResolveJavaHome(string appsDir)
+        {
+            var portableJava = Path.Combine(appsDir, "java");
+            if (File.Exists(Path.Combine(portableJava, "bin", "java.exe")))
+                return portableJava;
+
+            var javaHome = Environment.GetEnvironmentVariable("JAVA_HOME");
+            if (!string.IsNullOrWhiteSpace(javaHome) &&
+                File.Exists(Path.Combine(javaHome, "bin", "java.exe")))
+                return javaHome;
+
+            return null;
+        }
+
+        private static string RunKafkaCommand(string batPath, string arguments, string workingDirectory, string javaHome)
+        {
+            var startInfo = CreateProcessStartInfo(batPath, arguments, workingDirectory, javaHome);
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+
+            using var process = Process.Start(startInfo)
+                ?? throw new InvalidOperationException("无法启动 Kafka 命令");
+
+            var output = process.StandardOutput.ReadToEnd();
+            var error = process.StandardError.ReadToEnd();
+            if (!process.WaitForExit(120000))
+            {
+                try { process.Kill(true); } catch { }
+                throw new TimeoutException("Kafka 命令执行超时");
+            }
+
+            if (process.ExitCode != 0 && string.IsNullOrWhiteSpace(output))
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"Kafka 命令失败，退出码 {process.ExitCode}" : error.Trim());
+
+            return string.IsNullOrWhiteSpace(output) ? error : output;
+        }
+
+        private static ProcessStartInfo CreateProcessStartInfo(
+            string executablePath, string arguments, string workingDirectory, string? javaHome = null)
+        {
+            ProcessStartInfo startInfo;
+            var ext = Path.GetExtension(executablePath).ToLowerInvariant();
+            if (ext is ".bat" or ".cmd")
+            {
+                var quotedArgs = string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {QuoteWindowsPath(arguments)}";
+                startInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"\"{executablePath}\"{quotedArgs}\"",
+                    WorkingDirectory = workingDirectory,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+            }
+            else
+            {
+                startInfo = new ProcessStartInfo
+                {
+                    FileName = executablePath,
+                    Arguments = arguments,
+                    WorkingDirectory = workingDirectory,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(javaHome))
+                startInfo.Environment["JAVA_HOME"] = javaHome;
+
+            return startInfo;
+        }
+
+        private static string QuoteWindowsPath(string path) =>
+            path.Contains(' ') ? $"\"{path}\"" : path;
 
         private void EnsurePostgreSQLRuntime(string appsDir)
         {

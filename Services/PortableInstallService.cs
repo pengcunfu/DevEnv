@@ -25,6 +25,15 @@ namespace DevEnv.Services
             var targetName = GetTargetFolderName(softwareName);
             var extractDir = Path.Combine(appsDir, targetName);
 
+            if (SevenZipHelper.Is7zSelfExtracting(archivePath))
+                return await Extract7zSfxPortableAsync(archivePath, extractDir, targetName);
+
+            if (SevenZipHelper.Is7zArchive(archivePath))
+                return await Extract7zPortableAsync(archivePath, extractDir, targetName);
+
+            if (IsTarGzArchive(archivePath))
+                return await Extract7zPortableAsync(archivePath, extractDir, targetName);
+
             var ext = Path.GetExtension(archivePath).ToLowerInvariant();
             if ((ext == ".exe" || ext == ".phar") && (targetName == "minio" || targetName == "composer"))
             {
@@ -32,7 +41,7 @@ namespace DevEnv.Services
             }
 
             if (ext != ".zip")
-                return (false, "当前仅支持 zip 绿色包自动解压，请手动解压到应用目录", null);
+                return (false, "当前仅支持 zip/7z 绿色包自动解压，请手动解压到应用目录", null);
 
             try
             {
@@ -43,6 +52,52 @@ namespace DevEnv.Services
                 await Task.Run(() => ZipFile.ExtractToDirectory(archivePath, extractDir, true));
                 NormalizeExtractLayout(extractDir, targetName);
 
+                return (true, $"已解压到 {extractDir}", extractDir);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"解压失败: {ex.Message}", null);
+            }
+        }
+
+        private async Task<(bool Success, string Message, string? ExtractPath)> Extract7zPortableAsync(
+            string archivePath, string extractDir, string targetName)
+        {
+            try
+            {
+                if (Directory.Exists(extractDir))
+                    Directory.Delete(extractDir, true);
+
+                var (success, message) = await SevenZipHelper.Extract7zAsync(archivePath, extractDir, _configService);
+                if (!success)
+                    return (false, $"解压失败: {message}", null);
+
+                if (targetName == "7zip")
+                    Normalize7ZipLayout(extractDir);
+
+                NormalizeExtractLayout(extractDir, targetName);
+                return (true, $"已解压到 {extractDir}", extractDir);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"解压失败: {ex.Message}", null);
+            }
+        }
+
+        private async Task<(bool Success, string Message, string? ExtractPath)> Extract7zSfxPortableAsync(
+            string sfxPath, string extractDir, string targetName)
+        {
+            try
+            {
+                if (Directory.Exists(extractDir))
+                    Directory.Delete(extractDir, true);
+
+                var (success, message) = await SevenZipHelper.Extract7zSelfExtractingAsync(
+                    sfxPath, extractDir, _configService);
+                if (!success)
+                    return (false, $"解压失败: {message}", null);
+
+                NormalizeExtractLayout(extractDir, targetName);
                 return (true, $"已解压到 {extractDir}", extractDir);
             }
             catch (Exception ex)
@@ -84,8 +139,39 @@ namespace DevEnv.Services
                 "apache maven" => "maven",
                 "git" => "git",
                 "go" => "go",
+                "7-zip" => "7zip",
+                "7zip" => "7zip",
+                "kafka" => "kafka",
+                "apache kafka" => "kafka",
                 _ => softwareName.ToLowerInvariant().Replace(' ', '-')
             };
+        }
+
+        private static void Normalize7ZipLayout(string extractDir)
+        {
+            if (!Environment.Is64BitOperatingSystem) return;
+
+            var x64Dir = Path.Combine(extractDir, "x64");
+            if (!Directory.Exists(x64Dir)) return;
+
+            foreach (var entry in Directory.GetFileSystemEntries(x64Dir))
+            {
+                var dest = Path.Combine(extractDir, Path.GetFileName(entry));
+                if (Directory.Exists(entry))
+                {
+                    if (Directory.Exists(dest))
+                        Directory.Delete(dest, true);
+                    Directory.Move(entry, dest);
+                }
+                else
+                {
+                    if (File.Exists(dest))
+                        File.Delete(dest);
+                    File.Move(entry, dest);
+                }
+            }
+
+            Directory.Delete(x64Dir, true);
         }
 
         private static void NormalizeExtractLayout(string extractDir, string targetName)
@@ -98,7 +184,8 @@ namespace DevEnv.Services
 
             if (innerName.Contains(targetName) || innerName.Contains("mysql") || innerName.Contains("redis") ||
                 innerName.Contains("nginx") || innerName.Contains("node") || innerName.Contains("jdk") ||
-                innerName.Contains("pgsql") || innerName.Contains("postgres"))
+                innerName.Contains("pgsql") || innerName.Contains("postgres") || innerName.Contains("kafka") ||
+                targetName == "go" && innerName.StartsWith("go"))
             {
                 foreach (var entry in Directory.GetFileSystemEntries(inner))
                 {
@@ -110,6 +197,13 @@ namespace DevEnv.Services
                 }
                 Directory.Delete(inner, true);
             }
+        }
+
+        private static bool IsTarGzArchive(string path)
+        {
+            var name = path.ToLowerInvariant();
+            return name.EndsWith(".tgz", StringComparison.Ordinal) ||
+                   name.EndsWith(".tar.gz", StringComparison.Ordinal);
         }
     }
 }

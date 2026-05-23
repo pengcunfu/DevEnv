@@ -17,6 +17,7 @@ namespace DevEnv.Services
             results.AddRange(await ScanDotNetAsync());
             results.AddRange(await ScanGitAsync());
             results.AddRange(await ScanMavenAsync());
+            results.AddRange(await ScanGoAsync());
             return results.OrderBy(r => r.Type).ThenBy(r => r.Name).ToList();
         }
 
@@ -256,6 +257,58 @@ namespace DevEnv.Services
                     Version = "-",
                     Path = mavenHome,
                     IsInPath = true
+                });
+            }
+
+            return DeduplicateByPath(results);
+        }
+
+        public async Task<List<InstalledEnvironment>> ScanGoAsync()
+        {
+            var results = new List<InstalledEnvironment>();
+
+            var (success, output) = await RunCommandAsync("go", "version");
+            if (success)
+            {
+                results.Add(new InstalledEnvironment
+                {
+                    Type = "Go",
+                    Name = "go",
+                    Version = output.Trim(),
+                    Path = await FindExecutablePathAsync("go") ?? "PATH",
+                    IsInPath = true
+                });
+            }
+
+            var goroot = Environment.GetEnvironmentVariable("GOROOT");
+            if (!string.IsNullOrEmpty(goroot) && Directory.Exists(goroot))
+            {
+                var goExe = Path.Combine(goroot, "bin", "go.exe");
+                if (File.Exists(goExe))
+                {
+                    var version = await GetCommandVersionAsync(goExe, "version");
+                    results.Add(new InstalledEnvironment
+                    {
+                        Type = "Go",
+                        Name = "GOROOT",
+                        Version = version,
+                        Path = goroot,
+                        IsInPath = !string.IsNullOrEmpty(goroot)
+                    });
+                }
+            }
+
+            var portableGo = Path.Combine(AppPaths.AppsDir, "go", "bin", "go.exe");
+            if (File.Exists(portableGo))
+            {
+                var version = await GetCommandVersionAsync(portableGo, "version");
+                results.Add(new InstalledEnvironment
+                {
+                    Type = "Go",
+                    Name = "绿色版 (DevEnv)",
+                    Version = version,
+                    Path = Path.GetDirectoryName(portableGo) ?? AppPaths.AppsDir,
+                    IsInPath = false
                 });
             }
 

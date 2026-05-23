@@ -64,6 +64,31 @@
       ]
     }
   ],
+  "Go": [
+    {
+      "name": "Go",
+      "desc": "Go 语言官方绿色 zip 版 (解压即用，含 go/bin/go.exe)",
+      "icon": "Icons/go.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "1.22.12",
+          "url": "https://go.dev/dl/go1.22.12.windows-amd64.zip",
+          "file_name": "go1.22.12.windows-amd64.zip"
+        },
+        {
+          "version": "1.23.10",
+          "url": "https://go.dev/dl/go1.23.10.windows-amd64.zip",
+          "file_name": "go1.23.10.windows-amd64.zip"
+        },
+        {
+          "version": "1.24.3",
+          "url": "https://go.dev/dl/go1.24.3.windows-amd64.zip",
+          "file_name": "go1.24.3.windows-amd64.zip"
+        }
+      ]
+    }
+  ],
   "WebServer": [
     {
       "name": "Nginx",
@@ -163,6 +188,26 @@
       ]
     }
   ],
+  "MessageQueue": [
+    {
+      "name": "Kafka",
+      "desc": "Apache Kafka 官方二进制 (tgz，解压即用，KRaft 模式，需 Java)",
+      "icon": "Icons/kafka.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "3.9.2",
+          "url": "https://downloads.apache.org/kafka/3.9.2/kafka_2.13-3.9.2.tgz",
+          "file_name": "kafka_2.13-3.9.2.tgz"
+        },
+        {
+          "version": "3.9.0",
+          "url": "https://archive.apache.org/dist/kafka/3.9.0/kafka_2.13-3.9.0.tgz",
+          "file_name": "kafka_2.13-3.9.0.tgz"
+        }
+      ]
+    }
+  ],
   "PHP": [
     {
       "name": "PHP",
@@ -198,8 +243,26 @@
   ],
   "DevTools": [
     {
+      "name": "7-Zip",
+      "desc": "7-Zip 绿色版 (Extra 控制台包，含 7z.exe，解压即用)",
+      "icon": "Icons/7zip.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "26.01",
+          "url": "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-extra.7z",
+          "file_name": "7z2601-extra.7z"
+        },
+        {
+          "version": "24.09",
+          "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-extra.7z",
+          "file_name": "7z2409-extra.7z"
+        }
+      ]
+    },
+    {
       "name": "Git",
-      "desc": "Git 便携版 (绿色 zip)",
+      "desc": "Git 便携版 (7z 自解压包，下载后自动解压)",
       "icon": "Icons/git.png",
       "portable": true,
       "versions": [
@@ -207,19 +270,6 @@
           "version": "2.49.0",
           "url": "https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/PortableGit-2.49.0-64-bit.7z.exe",
           "file_name": "PortableGit-2.49.0-64-bit.7z.exe"
-        }
-      ]
-    },
-    {
-      "name": "Go",
-      "desc": "Go 语言绿色 zip 版",
-      "icon": "Icons/go.png",
-      "portable": true,
-      "versions": [
-        {
-          "version": "1.24.3",
-          "url": "https://go.dev/dl/go1.24.3.windows-amd64.zip",
-          "file_name": "go1.24.3.windows-amd64.zip"
         }
       ]
     },
@@ -238,6 +288,24 @@
     }
   ],
   "IDE": [
+    {
+      "name": "Cursor",
+      "desc": "Cursor AI 代码编辑器 (最新 Windows 用户安装包)",
+      "icon": "Icons/cursor.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "3.5.33",
+          "url": "https://downloads.cursor.com/production/aac81804b986d739acab348ed96b8bea6e83cc57/win32/x64/user-setup/CursorUserSetup-x64-3.5.33.exe",
+          "file_name": "CursorUserSetup-x64-3.5.33.exe"
+        },
+        {
+          "version": "3.5.17",
+          "url": "https://downloads.cursor.com/production/d5b2fc092e16007956c9e5047f76097b9e626cab/win32/x64/user-setup/CursorUserSetup-x64-3.5.17.exe",
+          "file_name": "CursorUserSetup-x64-3.5.17.exe"
+        }
+      ]
+    },
     {
       "name": "Visual Studio Code",
       "desc": "VS Code 便携 zip 版 (最新 stable)",
@@ -261,6 +329,47 @@
           "version": "2024.1",
           "url": "https://download.jetbrains.com/idea/ideaIU-2024.1.win.zip",
           "file_name": "ideaIU-2024.1.win.zip"
+        }
+      ]
+    }
+  ],
+  "VisualStudio": [
+    {
+      "name": "Visual Studio 2026 Community",
+      "desc": "VS 2026 Community 在线安装引导程序 (Stable 通道，需联网安装)",
+      "icon": "Icons/visualstudio.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "Stable",
+          "url": "https://aka.ms/vs/18/Stable/vs_community.exe",
+          "file_name": "vs_community.exe"
+        }
+      ]
+    },
+    {
+      "name": "Visual Studio 2026 Professional",
+      "desc": "VS 2026 Professional 在线安装引导程序 (Stable 通道)",
+      "icon": "Icons/visualstudio.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "Stable",
+          "url": "https://aka.ms/vs/18/Stable/vs_professional.exe",
+          "file_name": "vs_professional.exe"
+        }
+      ]
+    },
+    {
+      "name": "Visual Studio 2026 Build Tools",
+      "desc": "VS 2026 Build Tools 在线安装引导程序 (仅编译工具)",
+      "icon": "Icons/visualstudio.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "Stable",
+          "url": "https://aka.ms/vs/18/Stable/vs_buildtools.exe",
+          "file_name": "vs_buildtools.exe"
         }
       ]
     }

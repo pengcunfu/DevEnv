@@ -58,5 +58,13 @@
     "executable": "{apps_dir}/postgresql/bin/postgres.exe",
     "arguments": "-D {apps_dir}/postgresql/data -p 5432",
     "working_directory": "{apps_dir}/postgresql/bin"
+  },
+  "Kafka": {
+    "display_name": "Kafka",
+    "description": "Apache Kafka 消息队列 (KRaft 模式，需 Java)",
+    "process_names": [],
+    "executable": "{apps_dir}/kafka/bin/windows/kafka-server-start.bat",
+    "arguments": "{apps_dir}/kafka/config/devenv-server.properties",
+    "working_directory": "{apps_dir}/kafka"
   }
 }

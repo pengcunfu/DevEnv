@@ -235,14 +235,25 @@ namespace DevEnv.Services
         {
             if (!settings.AutoExtractPortable) return;
 
-            var ext = Path.GetExtension(record.SavePath).ToLowerInvariant();
-            if (ext != ".zip" && ext != ".exe" && ext != ".phar") return;
+            var path = record.SavePath;
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            var isPortableArchive = ext == ".zip" || ext == ".phar" || ext == ".7z" || ext == ".tgz" ||
+                                    path.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase) ||
+                                    SevenZipHelper.Is7zSelfExtracting(path) ||
+                                    (ext == ".exe" && IsSingleFilePortable(record.SoftwareName));
+            if (!isPortableArchive) return;
 
             var (success, message, _) = await _portableInstall.ExtractPortableAsync(
                 record.SavePath, record.SoftwareName, record.Version);
 
             if (success)
                 PortableInstalled?.Invoke(this, (record.Id, message));
+        }
+
+        private static bool IsSingleFilePortable(string softwareName)
+        {
+            var name = softwareName.ToLowerInvariant();
+            return name is "minio" or "composer";
         }
 
         private static HttpClientHandler CreateHttpHandler(AppSettings settings)
