@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:services="clr-namespace:DevEnv.Services"
+        xmlns:app="clr-namespace:DevEnv"
         mc:Ignorable="d"
-        Title="DevEnv - 开发环境管理器"
+        Title="{x:Static app:AppInfo.ProductName}"
         Height="560" Width="860" MinHeight="420" MinWidth="720"
         Background="#F3F4F6"
         WindowStartupLocation="CenterScreen">
@@ -162,7 +163,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="DevEnv" FontSize="18" FontWeight="SemiBold" Foreground="#111827"/>
+                    <TextBlock Text="{x:Static app:AppInfo.ProductShortName}" FontSize="18" FontWeight="SemiBold" Foreground="#111827"/>
                     <TextBlock Text="绿色版开发环境 · 进程管理 · 免管理员权限"
                                FontSize="11" Foreground="#6B7280" Margin="0,2,0,0"/>
                 </StackPanel>

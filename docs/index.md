@@ -2,8 +2,8 @@
 layout: home
 
 hero:
-  name: DevEnv
-  text: Windows 开发环境管理器
+  name: 熔岩
+  text: 环境管理工具
   tagline: 绿色版 · 免安装 · 进程方式管理常用开发服务与小工具
   actions:
     - theme: brand

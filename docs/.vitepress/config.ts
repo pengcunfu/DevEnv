@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'DevEnv',
-  description: 'Windows 开发环境管理器帮助文档',
+  title: '熔岩环境管理工具',
+  description: '熔岩环境管理工具帮助文档',
   lang: 'zh-CN',
   base: '/devenv/',
   themeConfig: {
@@ -27,7 +27,7 @@ export default defineConfig({
     socialLinks: [{ icon: 'github', link: 'https://github.com/pengcunfu/devenv' }],
     footer: {
       message: 'MIT License',
-      copyright: 'Copyright © DevEnv Contributors',
+      copyright: 'Copyright © 熔岩环境管理工具 Contributors',
     },
   },
 })

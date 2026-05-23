@@ -59,7 +59,7 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.value }}"
-          $zipName = "DevEnv-$version-win-x64.zip"
+          $zipName = "LavaEnv-$version-win-x64.zip"
           $zipPath = Join-Path $env:RUNNER_TEMP $zipName
           $publishDir = Join-Path $env:RUNNER_TEMP 'publish'
           Push-Location $publishDir
@@ -74,7 +74,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.version.outputs.value) }}
-          name: DevEnv ${{ steps.version.outputs.value }} (Windows)
+          name: 熔岩环境管理工具 ${{ steps.version.outputs.value }} (Windows)
           draft: ${{ github.event_name == 'workflow_dispatch' }}
           prerelease: ${{ contains(steps.version.outputs.value, '-') }}
           files: ${{ env.ZIP_PATH }}

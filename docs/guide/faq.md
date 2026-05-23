@@ -4,7 +4,7 @@
 
 点击 **工具 → Hosts 文件编辑器** 后，在 UAC 对话框中选择 **是** 即可临时以管理员身份打开编辑器。若选择 **否** 或取消 UAC，则无法保存修改。
 
-也可右键 `DevEnv.exe` → **以管理员身份运行** 整个程序（一般不必）。
+也可右键 `DevEnv.exe` → **以管理员身份运行** 整个程序（一般不必；exe 文件名暂未改）。
 
 ## 修改 Hosts 后不生效
 
@@ -26,7 +26,7 @@ ipconfig /flushdns
 2. 关闭占用端口的其他程序，或修改该软件配置中的端口。
 3. 查看该软件日志目录中的错误信息。
 
-## 如何更新 DevEnv
+## 如何更新
 
 在 [Releases](https://github.com/pengcunfu/devenv/releases) 下载新版本 zip，解压覆盖或换新目录；`config.json` 与 `apps` 数据目录可保留后拷贝回去。
 

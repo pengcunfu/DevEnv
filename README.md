@@ -1,4 +1,4 @@
-# Windows 开发环境管理器 (DevEnv)
+# 熔岩环境管理工具 (LavaEnv)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/)
@@ -11,7 +11,7 @@
 
 ## 项目简介
 
-DevEnv 是一个基于 .NET 10.0 和 WPF 开发的 Windows 桌面应用程序，集成了多个实用的开发工具，为开发者提供一站式的开发环境管理解决方案。
+熔岩环境管理工具（仓库代号 DevEnv / 发布包 LavaEnv）是一款基于 .NET 10.0 和 WPF 的 Windows 桌面应用，集成常用开发工具，为开发者提供一站式环境管理。
 
 ### 5. 文件哈希计算器
 

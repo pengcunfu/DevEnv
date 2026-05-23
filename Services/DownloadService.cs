@@ -100,7 +100,7 @@ namespace DevEnv.Services
             {
                 Timeout = TimeSpan.FromSeconds(settings.Timeout)
             };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("DevEnv/1.0 (Windows NT 10.0; Win64; x64)");
+            client.DefaultRequestHeaders.UserAgent.ParseAdd($"LavaEnv/{AppInfo.Version} (Windows NT 10.0; Win64; x64)");
 
             var existingSize = File.Exists(record.SavePath) ? new FileInfo(record.SavePath).Length : 0L;
             long totalSize = 0;

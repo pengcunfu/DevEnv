@@ -331,7 +331,7 @@ namespace DevEnv.Services
 
         public async Task<(bool Success, string Message)> ConfigureNuGetMirrorAsync(MirrorSource mirror)
         {
-            var sourceName = mirror.Key == "official" ? "nuget.org" : $"DevEnv-{mirror.Key}";
+            var sourceName = mirror.Key == "official" ? "nuget.org" : $"Lava-{mirror.Key}";
             await RunCommandAsync("dotnet", $"nuget remove source {sourceName}");
 
             if (mirror.Key == "official")

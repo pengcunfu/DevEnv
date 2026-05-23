@@ -113,7 +113,7 @@ namespace DevEnv.Views
         private void ShowAbout()
         {
             MessageBox.Show(
-                "DevEnv - 开发环境管理器\n\n" +
+                $"{AppInfo.ProductName}\n\n" +
                 "核心理念：绿色版 · 免安装 · 无需管理员权限\n\n" +
                 "核心功能：\n" +
                 "• 绿色版进程管理 (MySQL/PostgreSQL/Redis/MongoDB/MinIO/Nginx)\n" +

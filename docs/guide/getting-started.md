@@ -11,9 +11,9 @@
 
 ## 安装
 
-1. 在 [GitHub Releases](https://github.com/pengcunfu/devenv/releases) 下载 `DevEnv-x.x.x-win-x64.zip`。
+1. 在 [GitHub Releases](https://github.com/pengcunfu/devenv/releases) 下载 `LavaEnv-x.x.x-win-x64.zip`（熔岩环境管理工具）。
 2. 解压到任意目录（路径尽量不含中文与空格）。
-3. 运行 `DevEnv.exe`。
+3. 运行 `DevEnv.exe`（程序内部项目名，界面显示为「熔岩」）。
 
 ## 主界面
 

@@ -305,7 +305,7 @@ namespace DevEnv.Services
                 results.Add(new InstalledEnvironment
                 {
                     Type = "Go",
-                    Name = "绿色版 (DevEnv)",
+                    Name = $"绿色版 ({AppInfo.ProductShortName})",
                     Version = version,
                     Path = Path.GetDirectoryName(portableGo) ?? AppPaths.AppsDir,
                     IsInPath = false
