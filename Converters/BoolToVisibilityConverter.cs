@@ -1,28 +1,27 @@
 using System;
 using System.Globalization;
-using System.Windows;
-using System.Windows.Data;
+using Avalonia.Data.Converters;
 
-namespace DevEnv.Converters
+namespace DevEnv.Converters;
+
+/// <summary>
+/// Converts bool to IsVisible (Avalonia uses bool instead of WPF Visibility enum).
+/// </summary>
+public class BoolToVisibilityConverter : IValueConverter
 {
-    public class BoolToVisibilityConverter : IValueConverter
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is bool boolValue)
-            {
-                return boolValue ? Visibility.Visible : Visibility.Collapsed;
-            }
-            return Visibility.Collapsed;
-        }
+        if (value is bool boolValue)
+            return boolValue;
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is Visibility visibility)
-            {
-                return visibility == Visibility.Visible;
-            }
-            return false;
-        }
+        return false;
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool boolValue)
+            return boolValue;
+
+        return false;
     }
 }

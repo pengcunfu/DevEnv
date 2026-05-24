@@ -1,0 +1,44 @@
+<Window x:Class="DevEnv.Views.SettingsWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="数据目录" Height="400" Width="620"
+        WindowStartupLocation="CenterScreen" CanResize="False">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="内置配置模板在源码 Resources/ 下，构建时复制；运行时数据与配置在 D:\devenv。"
+                       TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,12"/>
+
+            <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="目录结构" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <StackPanel>
+                        <TextBlock Name="TxtRoot" FontFamily="Consolas" Margin="0,0,0,4"/>
+                        <TextBlock Name="TxtConfig" FontFamily="Consolas" Margin="0,0,0,4"/>
+                        <TextBlock Name="TxtConfigTemplate" FontFamily="Consolas" Margin="0,0,0,4"/>
+                        <TextBlock Name="TxtCache" FontFamily="Consolas" Margin="0,0,0,4"/>
+                        <TextBlock Name="TxtApps" FontFamily="Consolas" Margin="0,0,0,4"/>
+                        <TextBlock Name="TxtHistory" FontFamily="Consolas"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="当前配置 (D:\devenv\config.json)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Name="TxtConfigSummary" TextWrapping="Wrap"/>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="打开数据目录" Width="100" Height="30" Margin="0,0,8,0" Click="BtnOpenRoot_Click"/>
+            <Button Content="打开 config.json" Width="110" Height="30" IsDefault="True" Click="BtnOpenConfig_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
+

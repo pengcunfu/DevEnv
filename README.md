@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/)
-[![WPF](https://img.shields.io/badge/WPF-Windows%20Presentation%20Foundation-blue.svg)](https://docs.microsoft.com/en-us/dotnet/desktop/wpf/)
+[![Avalonia](https://img.shields.io/badge/Avalonia-11.3-purple.svg)](https://avaloniaui.net/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows/)
 
 > 开源智能开发环境管理工具，帮助初级开发者与全栈工程师一键下载、配置和管理本地多语言开发环境。
@@ -12,7 +12,7 @@
 
 ## 项目简介
 
-熔岩环境管理工具（仓库代号 DevEnv / 发布包 LavaEnv）是一款基于 .NET 10.0 和 WPF 的开源 Windows 桌面应用。面向初级开发者、多语言开发者与全栈工程师，提供开发软件一键下载、镜像源配置、绿色版服务启停与环境扫描，降低本地开发环境的搭建与维护成本。
+熔岩环境管理工具（仓库代号 DevEnv / 发布包 LavaEnv）是一款基于 .NET 10.0 和 [Avalonia UI](https://avaloniaui.net/) 的开源桌面应用（当前主要面向 Windows，UI 层已具备跨平台扩展基础）。面向初级开发者、多语言开发者与全栈工程师，提供开发软件一键下载、镜像源配置、绿色版服务启停与环境扫描，降低本地开发环境的搭建与维护成本。
 
 ### 5. 文件哈希计算器
 
@@ -230,10 +230,10 @@ dotnet run
 ### 技术栈
 
 - **框架**：.NET 10.0
-- **UI 技术**：WPF (Windows Presentation Foundation)
+- **UI 技术**：Avalonia UI 11.3（Fluent 主题）
 - **架构模式**：MVVM (Model-View-ViewModel)
 - **异步编程**：async/await
-- **数据绑定**：WPF Data Binding
+- **数据绑定**：Avalonia 数据绑定
 - **命令模式**：ICommand 接口
 
 ### 项目结构
@@ -470,7 +470,7 @@ SOFTWARE.
 感谢以下开源项目和资源：
 
 - [.NET](https://dotnet.microsoft.com/) - 微软 .NET 平台
-- [WPF](https://docs.microsoft.com/en-us/dotnet/desktop/wpf/) - Windows Presentation Foundation
+- [Avalonia UI](https://avaloniaui.net/) - 跨平台 XAML UI 框架
 - 所有贡献者和测试用户的支持！
 
 ---

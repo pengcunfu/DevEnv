@@ -1,31 +1,9 @@
-<Window x:Class="DevEnv.Views.ImageConverterWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window x:Class="DevEnv.Views.ImageConverterWindow"
+        xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DevEnv"
-        mc:Ignorable="d"
-        Title="图像格式转换器" Height="600" Width="800"
+        xmlns:local="using:DevEnv" Title="图像格式转换器" Height="600" Width="800"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="CanResizeWithGrip">
-
-    <Window.Resources>
-        <!-- 转换状态样式 -->
-        <Style x:Key="StatusRunning" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="Orange"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
-
-        <Style x:Key="StatusSuccess" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="Green"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
-
-        <Style x:Key="StatusError" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="Red"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-        </Style>
-    </Window.Resources>
+       >
 
     <Grid Margin="15">
         <Grid.RowDefinitions>
@@ -36,8 +14,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 输入文件选择 -->
-        <GroupBox Grid.Row="0" Header="输入文件" Margin="0,0,0,10">
+        <Border Grid.Row="0" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,10">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="输入文件" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -66,10 +45,12 @@
                         Margin="5,0,0,0"
                         Click="SelectFolderButton_Click"/>
             </Grid>
-        </GroupBox>
+            </DockPanel>
+        </Border>
 
-        <!-- 输出设置 -->
-        <GroupBox Grid.Row="1" Header="输出设置" Margin="0,0,0,10">
+        <Border Grid.Row="1" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,10">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="输出设置" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -111,12 +92,12 @@
                            Grid.Column="0"
                            VerticalAlignment="Center"
                            Margin="5"
-                           Visibility="{Binding IsQualityVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                           IsVisible="{Binding IsQualityVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <Grid Grid.Row="1"
                       Grid.Column="1"
                       Margin="5"
-                      Visibility="{Binding IsQualityVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                      IsVisible="{Binding IsQualityVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
@@ -157,10 +138,12 @@
                         Margin="5,0,0,0"
                         Click="BrowseOutputButton_Click"/>
             </Grid>
-        </GroupBox>
+            </DockPanel>
+        </Border>
 
-        <!-- 转换选项 -->
-        <GroupBox Grid.Row="2" Header="转换选项" Margin="0,0,0,10">
+        <Border Grid.Row="2" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,10">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="转换选项" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -179,10 +162,12 @@
                           Margin="5"
                           IsChecked="{Binding OverwriteExisting}"/>
             </Grid>
-        </GroupBox>
+            </DockPanel>
+        </Border>
 
-        <!-- 日志输出 -->
-        <GroupBox Grid.Row="3" Header="转换日志" Margin="0,0,0,10">
+        <Border Grid.Row="3" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,10">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="转换日志" FontWeight="SemiBold" Margin="0,0,0,8"/>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -190,8 +175,7 @@
                 </Grid.RowDefinitions>
 
                 <ScrollViewer Grid.Row="0"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Auto">
+                             >
                     <TextBox x:Name="LogTextBox"
                              IsReadOnly="True"
                              Text="{Binding LogText}"
@@ -214,7 +198,8 @@
                     <TextBlock Text="{Binding ProgressText}" FontWeight="Bold"/>
                 </StackPanel>
             </Grid>
-        </GroupBox>
+            </DockPanel>
+        </Border>
 
         <!-- 操作按钮 -->
         <StackPanel Grid.Row="4"
@@ -251,6 +236,6 @@
                      Maximum="100"
                      Height="20"
                      Margin="0,10,0,45"
-                     Visibility="{Binding IsProgressVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                     IsVisible="{Binding IsProgressVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </Window>

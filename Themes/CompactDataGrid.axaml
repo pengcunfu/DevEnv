@@ -1,0 +1,96 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Styles.Resources>
+        <SolidColorBrush x:Key="GridLineBrush" Color="#F0F0F0"/>
+        <SolidColorBrush x:Key="GridHeaderBgBrush" Color="#FAFAFA"/>
+        <SolidColorBrush x:Key="GridHeaderFgBrush" Color="#9CA3AF"/>
+        <SolidColorBrush x:Key="GridRowHoverBrush" Color="#F9FAFB"/>
+        <SolidColorBrush x:Key="GridRowSelectedBrush" Color="#EFF6FF"/>
+
+        <ControlTheme x:Key="CompactGridButton" TargetType="Button">
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="MinWidth" Value="48"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#2563EB"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="3"/>
+        </ControlTheme>
+
+        <ControlTheme x:Key="CompactGridActionButton" TargetType="Button" BasedOn="{StaticResource CompactGridButton}">
+            <Setter Property="Foreground" Value="#059669"/>
+        </ControlTheme>
+
+        <ControlTheme x:Key="CompactGridDangerButton" TargetType="Button" BasedOn="{StaticResource CompactGridButton}">
+            <Setter Property="Foreground" Value="#DC2626"/>
+        </ControlTheme>
+
+        <ControlTheme x:Key="CompactGridComboBox" TargetType="ComboBox">
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="Background" Value="White"/>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <Style Selector="DataGridCell">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="10,0"/>
+    </Style>
+
+    <Style Selector="DataGridColumnHeader">
+        <Setter Property="Background" Value="{StaticResource GridHeaderBgBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource GridHeaderFgBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GridLineBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="DataGridRow">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="MinHeight" Value="32"/>
+    </Style>
+
+    <Style Selector="DataGridRow:pointerover">
+        <Setter Property="Background" Value="{StaticResource GridRowHoverBrush}"/>
+    </Style>
+
+    <Style Selector="DataGridRow:selected">
+        <Setter Property="Background" Value="{StaticResource GridRowSelectedBrush}"/>
+    </Style>
+
+    <Style Selector="DataGrid.compact-data-grid">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource GridLineBrush}"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+        <Setter Property="RowHeight" Value="32"/>
+        <Setter Property="ColumnHeaderHeight" Value="28"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="#374151"/>
+        <Setter Property="SelectionMode" Value="Single"/>
+    </Style>
+
+    <Style Selector="TextBlock.grid-text-primary">
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="#111827"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style Selector="TextBlock.grid-text-muted">
+        <Setter Property="Foreground" Value="#6B7280"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+</Styles>

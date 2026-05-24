@@ -1,38 +1,30 @@
 using System;
 using System.Globalization;
-using System.Windows.Data;
+using Avalonia.Data.Converters;
 
-namespace DevEnv.Converters
+namespace DevEnv.Converters;
+
+public class FileSizeConverter : IValueConverter
 {
-    public class FileSizeConverter : IValueConverter
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        if (value is long bytes)
         {
-            if (value is long bytes)
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
             {
-                return FormatFileSize(bytes);
-            }
-            return string.Empty;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static string FormatFileSize(long bytes)
-        {
-            string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
-            int counter = 0;
-            decimal number = bytes;
-
-            while (Math.Round(number / 1024) >= 1)
-            {
-                number /= 1024;
-                counter++;
+                order++;
+                len /= 1024;
             }
 
-            return $"{number:n2} {suffixes[counter]}";
+            return $"{len:0.##} {sizes[order]}";
         }
+
+        return "0 B";
     }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
 }

@@ -1,9 +1,10 @@
+﻿using DevEnv.UI;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows;
+using Avalonia.Controls;
 using DevEnv.Models;
 using DevEnv.Services;
 
@@ -38,7 +39,7 @@ namespace DevEnv.ViewModels
             var item = Processes.FirstOrDefault(p => p.Name == e.ProcessName);
             if (item != null)
             {
-                Application.Current.Dispatcher.Invoke(() => item.UpdateStatus(e.Status));
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => item.UpdateStatus(e.Status));
             }
         }
 
@@ -67,6 +68,7 @@ namespace DevEnv.ViewModels
         private bool _canStart;
         private bool _canStop;
         private bool _isRunning;
+        private bool _needsInstall;
 
         public ProcessItemViewModel(ProcessDefinition definition, ProcessManager processManager)
         {
@@ -110,10 +112,17 @@ namespace DevEnv.ViewModels
             private set { if (_isRunning != value) { _isRunning = value; OnPropertyChanged(); } }
         }
 
+        public bool NeedsInstall
+        {
+            get => _needsInstall;
+            private set { if (_needsInstall != value) { _needsInstall = value; OnPropertyChanged(); } }
+        }
+
         public void UpdateStatus(ProcessStatusInfo status)
         {
             StatusText = status.DisplayText;
             StatusColor = status.Color;
+            NeedsInstall = status.Status == ProcessState.NotConfigured;
 
             switch (status.Status)
             {
@@ -165,7 +174,7 @@ namespace DevEnv.ViewModels
 
         private static void ShowMessage(bool success, string message)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 MessageBox.Show(message, success ? "操作成功" : "操作失败",
                     MessageBoxButton.OK, success ? MessageBoxImage.Information : MessageBoxImage.Warning);
@@ -180,3 +189,5 @@ namespace DevEnv.ViewModels
         }
     }
 }
+
+

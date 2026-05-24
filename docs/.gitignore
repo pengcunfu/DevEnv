@@ -1,0 +1,5 @@
+node_modules/
+.vitepress/cache
+.vitepress/dist
+# Wrong path when scripts used "vitepress dev docs" from this directory
+docs/

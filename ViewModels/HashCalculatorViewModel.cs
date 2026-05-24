@@ -1,3 +1,4 @@
+﻿using DevEnv.UI;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -5,8 +6,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Input;
 using DevEnv.Services;
 using DevEnv.Commands;
 
@@ -117,16 +118,14 @@ namespace DevEnv.ViewModels
         {
             try
             {
-                var dialog = new Microsoft.Win32.OpenFileDialog
-                {
-                    Title = "选择要计算哈希的文件",
-                    Filter = "所有文件 (*.*)|*.*",
-                    Multiselect = false
-                };
+                var files = await FileDialogs.OpenFilesAsync(
+                    WindowDialogHelper.GetMainWindow(),
+                    "选择要计算哈希的文件",
+                    allowMultiple: false);
 
-                if (dialog.ShowDialog() == true)
+                if (files is { Length: > 0 })
                 {
-                    FilePath = dialog.FileName;
+                    FilePath = files[0];
                     StatusText = $"已选择文件: {Path.GetFileName(FilePath)}";
                 }
             }
@@ -140,7 +139,7 @@ namespace DevEnv.ViewModels
         {
             try
             {
-                var text = Clipboard.GetText();
+                var text = ClipboardHelper.GetText();
                 if (!string.IsNullOrEmpty(text))
                 {
                     // 移除引号（如果存在）
@@ -291,7 +290,7 @@ namespace DevEnv.ViewModels
             {
                 if (!string.IsNullOrEmpty(hash))
                 {
-                    Clipboard.SetText(hash);
+                    ClipboardHelper.SetText(hash);
                     StatusText = "哈希值已复制到剪贴板";
                 }
             }
@@ -346,3 +345,4 @@ namespace DevEnv.ViewModels
         #endregion
     }
 }
+

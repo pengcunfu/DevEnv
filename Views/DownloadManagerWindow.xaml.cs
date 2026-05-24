@@ -1,7 +1,8 @@
+﻿using DevEnv.UI;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
+using Avalonia.Controls;
 using DevEnv.Models;
 using DevEnv.Services;
 
@@ -11,7 +12,7 @@ namespace DevEnv.Views
     {
         private readonly ObservableCollection<DownloadRecord> _activeDownloads = new();
         private readonly ObservableCollection<DownloadRecord> _historyDownloads = new();
-        private readonly System.Windows.Threading.DispatcherTimer _refreshTimer;
+        private readonly DispatcherTimer _refreshTimer;
 
         public DownloadManagerWindow()
         {
@@ -19,10 +20,10 @@ namespace DevEnv.Views
             ActiveGrid.ItemsSource = _activeDownloads;
             HistoryGrid.ItemsSource = _historyDownloads;
 
-            AppServices.DownloadHistory.HistoryChanged += (_, _) => Dispatcher.Invoke(RefreshData);
-            AppServices.Download.ProgressChanged += (_, _) => Dispatcher.Invoke(RefreshData);
+            AppServices.DownloadHistory.HistoryChanged += (_, _) => Dispatcher.UIThread.Post(RefreshData);
+            AppServices.Download.ProgressChanged += (_, _) => Dispatcher.UIThread.Post(RefreshData);
 
-            _refreshTimer = new System.Windows.Threading.DispatcherTimer
+            _refreshTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
@@ -52,21 +53,21 @@ namespace DevEnv.Views
             TxtStatus.Text = $"活动下载 {stats.Downloading} 个，历史记录 {stats.Total} 条";
         }
 
-        private void BtnRefresh_Click(object sender, RoutedEventArgs e) => RefreshData();
+        private void BtnRefresh_Click(object? sender, RoutedEventArgs e) => RefreshData();
 
-        private void BtnClearCompleted_Click(object sender, RoutedEventArgs e)
+        private void BtnClearCompleted_Click(object? sender, RoutedEventArgs e)
         {
             AppServices.DownloadHistory.ClearCompleted();
             RefreshData();
         }
 
-        private void BtnClearFailed_Click(object sender, RoutedEventArgs e)
+        private void BtnClearFailed_Click(object? sender, RoutedEventArgs e)
         {
             AppServices.DownloadHistory.ClearFailed();
             RefreshData();
         }
 
-        private void BtnClearAll_Click(object sender, RoutedEventArgs e)
+        private void BtnClearAll_Click(object? sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("确定要清空所有下载历史吗？", "确认", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
@@ -75,25 +76,25 @@ namespace DevEnv.Views
             }
         }
 
-        private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)
+        private void BtnOpenFolder_Click(object? sender, RoutedEventArgs e)
         {
             var dir = AppServices.Config.Load().CacheDir;
             Directory.CreateDirectory(dir);
             Process.Start("explorer.exe", dir);
         }
 
-        private void BtnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Button button && button.Tag is string id)
+            if (sender is Button button && button.Tag is string id)
             {
                 AppServices.Download.CancelDownload(id);
                 RefreshData();
             }
         }
 
-        private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
+        private void BtnOpenFile_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Button button && button.Tag is string path)
+            if (sender is Button button && button.Tag is string path)
             {
                 if (File.Exists(path))
                     Process.Start("explorer.exe", $"/select,\"{path}\"");
@@ -122,3 +123,4 @@ namespace DevEnv.Views
         }
     }
 }
+

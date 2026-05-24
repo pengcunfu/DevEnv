@@ -1,5 +1,6 @@
-using System.Windows;
-using System.Windows.Controls;
+﻿using DevEnv.UI;
+using Avalonia.Controls;
+using Avalonia.Controls;
 using DevEnv.Models;
 using DevEnv.Services;
 
@@ -49,7 +50,6 @@ namespace DevEnv.Views
 
             MirrorList.ItemsSource = null;
             MirrorList.ItemsSource = mirrors;
-            MirrorList.DisplayMemberPath = "DisplayName";
 
             if (mirrors.Count > 0)
                 MirrorList.SelectedIndex = 0;
@@ -115,3 +115,5 @@ namespace DevEnv.Views
         };
     }
 }
+
+

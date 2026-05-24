@@ -45,7 +45,7 @@ namespace DevEnv.Services
 
             var exePath = ResolvePath(def.Executable);
             if (!File.Exists(exePath))
-                return new ProcessStatusInfo { Status = ProcessState.NotConfigured, DisplayText = "未安装", Color = "Orange" };
+                return new ProcessStatusInfo { Status = ProcessState.NotConfigured, DisplayText = "未安装", Color = "Gray" };
 
             if (_trackedPids.TryGetValue(name, out var pid) && IsProcessAlive(pid))
                 return new ProcessStatusInfo { Status = ProcessState.Running, DisplayText = $"运行中 (PID {pid})", Color = "Green", ProcessId = pid };
@@ -57,7 +57,7 @@ namespace DevEnv.Services
             if (externalPid.HasValue)
                 return new ProcessStatusInfo { Status = ProcessState.ExternalRunning, DisplayText = $"运行中 (PID {externalPid})", Color = "DodgerBlue", ProcessId = externalPid };
 
-            return new ProcessStatusInfo { Status = ProcessState.Stopped, DisplayText = "已停止", Color = "Gray" };
+            return new ProcessStatusInfo { Status = ProcessState.Stopped, DisplayText = "已停止", Color = "Red" };
         }
 
         public Task<(bool Success, string Message)> StartProcessAsync(string name)

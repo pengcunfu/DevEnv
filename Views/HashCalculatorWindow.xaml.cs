@@ -1,102 +1,82 @@
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
+﻿using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Media;
 using DevEnv.ViewModels;
 
-namespace DevEnv.Views
+namespace DevEnv.Views;
+
+public partial class HashCalculatorWindow : Window
 {
-    public partial class HashCalculatorWindow : Window
+    public HashCalculatorWindow()
     {
-        public HashCalculatorWindow()
-        {
-            InitializeComponent();
-            DataContext = new HashCalculatorViewModel();
+        InitializeComponent();
+        DataContext = new HashCalculatorViewModel();
+        HashTypeComboBox.SelectedIndex = 2;
+    }
 
-            // 设置默认选中的哈希算法
-            HashTypeComboBox.SelectedIndex = 2; // SHA-256
-        }
-
-        private void Border_DragEnter(object sender, DragEventArgs e)
+    private void Border_DragOver(object? sender, DragEventArgs e)
+    {
+        if (e.Data.Contains(DataFormats.Files))
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            e.DragEffects = DragDropEffects.Copy;
+            if (sender is Border border)
             {
-                e.Effects = DragDropEffects.Copy;
-                var border = sender as Border;
-                if (border != null)
-                {
-                    border.Background = System.Windows.Media.Brushes.LightBlue;
-                    border.Opacity = 0.8;
-                }
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
+                border.Background = Brushes.LightBlue;
+                border.Opacity = 0.8;
             }
         }
-
-        private void Border_DragLeave(object sender, DragEventArgs e)
+        else
         {
-            var border = sender as Border;
-            if (border != null)
-            {
-                border.Background = System.Windows.Media.Brushes.Transparent;
-                border.Opacity = 1.0;
-            }
+            e.DragEffects = DragDropEffects.None;
+        }
+    }
+
+    private void Border_DragLeave(object? sender, DragEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = Brushes.Transparent;
+            border.Opacity = 1.0;
+        }
+    }
+
+    private void Border_Drop(object? sender, DragEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = Brushes.Transparent;
+            border.Opacity = 1.0;
         }
 
-        private void Border_Drop(object sender, DragEventArgs e)
+        if (!e.Data.Contains(DataFormats.Files))
+            return;
+
+        var path = e.Data.GetFiles()?.FirstOrDefault()?.Path.LocalPath;
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        if (DataContext is not HashCalculatorViewModel viewModel)
+            return;
+
+        MainTabControl.SelectedItem = FileHashTab;
+        viewModel.FilePath = path;
+        viewModel.CalculateHashCommand.Execute(null);
+    }
+
+    private void Window_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (DataContext is not HashCalculatorViewModel viewModel)
+            return;
+
+        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
-            var border = sender as Border;
-            if (border != null)
-            {
-                border.Background = System.Windows.Media.Brushes.Transparent;
-                border.Opacity = 1.0;
-            }
-
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length > 0)
-                {
-                    var viewModel = DataContext as HashCalculatorViewModel;
-                    if (viewModel != null)
-                    {
-                        // 切换到文件哈希标签页
-                        MainTabControl.SelectedItem = FileHashTab;
-
-                        // 设置文件路径
-                        viewModel.FilePath = files[0];
-
-                        // 自动计算哈希
-                        viewModel.CalculateHashCommand.Execute(null);
-                    }
-                }
-            }
+            if (MainTabControl.SelectedItem == FileHashTab)
+                viewModel.PastePathCommand.Execute(null);
         }
-
-        protected override void OnKeyDown(KeyEventArgs e)
+        else if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)
+                 && viewModel.HashResults.Count > 0)
         {
-            base.OnKeyDown(e);
-
-            // Ctrl+V 粘贴文件路径
-            if (e.Key == Key.V && Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                var viewModel = DataContext as HashCalculatorViewModel;
-                if (viewModel != null && MainTabControl.SelectedItem == FileHashTab)
-                {
-                    viewModel.PastePathCommand.Execute(null);
-                }
-            }
-            // Ctrl+C 复制第一个哈希值
-            else if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                var viewModel = DataContext as HashCalculatorViewModel;
-                if (viewModel != null && viewModel.HashResults.Count > 0)
-                {
-                    viewModel.CopyHashCommand.Execute(viewModel.HashResults[0].Hash);
-                }
-            }
+            viewModel.CopyHashCommand.Execute(viewModel.HashResults[0].Hash);
         }
     }
 }

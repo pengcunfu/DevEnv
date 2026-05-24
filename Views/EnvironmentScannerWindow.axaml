@@ -1,0 +1,50 @@
+<Window x:Class="DevEnv.Views.EnvironmentScannerWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="&#x73AF;&#x5883;&#x626B;&#x63CF;"
+        Height="520" Width="820"
+        MinHeight="400" MinWidth="720" MaxHeight="560" MaxWidth="860"
+        Background="#F3F4F6"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="10,8" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Name="BtnScan" Content="&#x626B;&#x63CF;&#x7CFB;&#x7EDF;&#x73AF;&#x5883;" Theme="{StaticResource CompactGridActionButton}"
+                        Padding="12,0" Height="26" Click="BtnScan_Click"/>
+                <TextBlock Grid.Column="1" Name="TxtSummary" FontSize="11" Foreground="#6B7280"
+                           VerticalAlignment="Center" Margin="12,0,0,0"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="4,2">
+            <DataGrid Name="EnvGrid" Classes="compact-data-grid"
+                      AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="&#x7C7B;&#x578B;" Binding="{Binding Type}" Width="88"/>
+                    <DataGridTextColumn Header="&#x540D;&#x79F0;" Binding="{Binding Name}" Width="108"/>
+                    <DataGridTextColumn Header="&#x7248;&#x672C;" Binding="{Binding Version}" Width="120"/>
+                    <DataGridTextColumn Header="&#x8DEF;&#x5F84;" Binding="{Binding Path}" Width="*"/>
+                    <DataGridCheckBoxColumn Header="PATH" Binding="{Binding IsInPath}" Width="52"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Border Grid.Row="2" Margin="0,8,0,0" Padding="4,0">
+            <TextBlock Name="TxtStatus" Text="&#x70B9;&#x51FB;&#x300C;&#x626B;&#x63CF;&#x7CFB;&#x7EDF;&#x73AF;&#x5883;&#x300D;&#x5F00;&#x59CB;&#x68C0;&#x6D4B;"
+                       FontSize="11" Foreground="#6B7280"/>
+        </Border>
+    </Grid>
+</Window>

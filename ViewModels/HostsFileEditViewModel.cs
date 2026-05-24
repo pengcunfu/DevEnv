@@ -1,3 +1,4 @@
+﻿using DevEnv.UI;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -5,8 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Input;
 using DevEnv.Models;
 using DevEnv.Commands;
 using DevEnv.Views;
@@ -125,7 +126,7 @@ namespace DevEnv.ViewModels
                 {
                     if (!File.Exists(HostsFilePath))
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             MessageBox.Show("找不到 hosts 文件", "警告", MessageBoxButton.OK, MessageBoxImage.Warning);
                         });
@@ -133,7 +134,7 @@ namespace DevEnv.ViewModels
                     }
 
                     var content = File.ReadAllText(HostsFilePath);
-                    Application.Current.Dispatcher.Invoke(() =>
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         HostsText = content;
                         ParseHostsContent(content);
@@ -200,7 +201,7 @@ namespace DevEnv.ViewModels
 
                     File.WriteAllText(HostsFilePath, HostsText);
 
-                    Application.Current.Dispatcher.Invoke(() =>
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         MessageBox.Show("hosts 文件已保存", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                         // 重新解析
@@ -242,7 +243,7 @@ namespace DevEnv.ViewModels
                     // 写入文件
                     File.WriteAllLines(HostsFilePath, newLines);
 
-                    Application.Current.Dispatcher.Invoke(() =>
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         MessageBox.Show("hosts 文件已保存", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                         LoadHostsText();
@@ -262,7 +263,7 @@ namespace DevEnv.ViewModels
         public async Task AddEntry()
         {
             var dialog = new EditHostsEntryDialog();
-            if (dialog.ShowDialog() == true)
+            if (dialog.ShowDialogBool())
             {
                 var entry = new HostsEntry
                 {
@@ -279,7 +280,7 @@ namespace DevEnv.ViewModels
             if (SelectedEntry == null) return;
 
             var dialog = new EditHostsEntryDialog(SelectedEntry.Ip, SelectedEntry.Domain);
-            if (dialog.ShowDialog() == true)
+            if (dialog.ShowDialogBool())
             {
                 SelectedEntry.Ip = dialog.Ip;
                 SelectedEntry.Domain = dialog.Domain;
@@ -336,3 +337,5 @@ namespace DevEnv.ViewModels
 
     }
 }
+
+

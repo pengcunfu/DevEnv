@@ -1,6 +1,8 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
-using System.Windows;
+using Avalonia.Controls;
+using Avalonia.Media;
+using DevEnv.UI;
 
 namespace DevEnv.Views
 {
@@ -126,7 +128,7 @@ namespace DevEnv.Views
             {
                 if (!string.IsNullOrEmpty(TxtInput.Text))
                 {
-                    Clipboard.SetText(TxtInput.Text);
+                    ClipboardHelper.SetText(TxtInput.Text);
                     UpdateStatus("已复制输入内容到剪贴板", false);
                 }
                 else
@@ -146,7 +148,7 @@ namespace DevEnv.Views
             {
                 if (!string.IsNullOrEmpty(TxtOutput.Text))
                 {
-                    Clipboard.SetText(TxtOutput.Text);
+                    ClipboardHelper.SetText(TxtOutput.Text);
                     UpdateStatus("已复制输出内容到剪贴板", false);
                 }
                 else
@@ -163,7 +165,8 @@ namespace DevEnv.Views
         private void UpdateStatus(string message, bool isError)
         {
             TxtStatus.Text = message;
-            TxtStatus.Foreground = isError ? System.Windows.Media.Brushes.Red : System.Windows.Media.Brushes.Green;
+            TxtStatus.Foreground = isError ? Brushes.Red : Brushes.Green;
         }
     }
 }
+

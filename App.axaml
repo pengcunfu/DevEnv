@@ -1,0 +1,16 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="using:DevEnv.Converters"
+             x:Class="DevEnv.App"
+             RequestedThemeVariant="Light">
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <StyleInclude Source="avares://DevEnv/Themes/CompactDataGrid.axaml"/>
+    </Application.Styles>
+    <Application.Resources>
+        <converters:StringToBrushConverter x:Key="StringToBrushConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:FileSizeConverter x:Key="FileSizeConverter"/>
+    </Application.Resources>
+</Application>
