@@ -3,8 +3,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.VisualTree;
 using DevEnv.Models;
 using DevEnv.Services;
 
@@ -70,6 +70,7 @@ public partial class SoftwareDownloadWindow : Window
                         });
                     }
 
+                    softwareInfo.SelectedVersion = softwareInfo.Versions.FirstOrDefault();
                     _allSoftware.Add(softwareInfo);
                 }
             }
@@ -146,9 +147,7 @@ public partial class SoftwareDownloadWindow : Window
         if (sender is not Button button || button.Tag is not SoftwareInfo software)
             return;
 
-        var row = button.FindVisualParent<DataGridRow>();
-        var comboBox = row?.FindVisualChild<ComboBox>();
-        var version = comboBox?.SelectedItem as SoftwareVersion ?? software.Versions.FirstOrDefault();
+        var version = software.SelectedVersion ?? software.Versions.FirstOrDefault();
 
         if (version == null || string.IsNullOrWhiteSpace(version.Url))
         {
@@ -157,6 +156,11 @@ public partial class SoftwareDownloadWindow : Window
         }
 
         await StartDownloadAsync(software, version, button);
+    }
+
+    private static void VersionComboBox_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        e.Handled = true;
     }
 
     private async Task StartDownloadAsync(SoftwareInfo software, SoftwareVersion version, Button button)

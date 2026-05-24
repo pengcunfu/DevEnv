@@ -26,6 +26,15 @@
         </ControlTheme>
     </Window.Resources>
 
+    <Window.Styles>
+        <Style Selector="DataGrid#SoftwareDataGrid">
+            <Setter Property="RowHeight" Value="36"/>
+        </Style>
+        <Style Selector="DataGrid#SoftwareDataGrid DataGridCell">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Styles>
+
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -86,28 +95,25 @@
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="&#x8F6F;&#x4EF6;" Binding="{Binding Name}" Width="120" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="&#x5206;&#x7C7B;" Binding="{Binding Category}" Width="100" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="&#x63CF;&#x8FF0;" Binding="{Binding Description}" Width="*" MinWidth="120" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="&#x8F6F;&#x4EF6;" Binding="{Binding Name}" Width="108" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="&#x5206;&#x7C7B;" Binding="{Binding Category}" Width="112" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="&#x63CF;&#x8FF0;" Binding="{Binding Description}" Width="*" MinWidth="140" IsReadOnly="True"/>
 
-                    <DataGridTemplateColumn Header="&#x7248;&#x672C;" Width="108">
+                    <DataGridTemplateColumn Header="&#x7248;&#x672C;" Width="128" IsReadOnly="False">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <ComboBox Theme="{StaticResource CompactGridComboBox}"
+                                <ComboBox Classes="compact-grid-combo"
                                           ItemsSource="{Binding Versions}"
-                                          SelectedIndex="0"
-                                          Tag="{Binding}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Version}"/>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                                          SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                                          DisplayMemberBinding="{Binding Version}"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Center"
+                                          PointerPressed="VersionComboBox_PointerPressed"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="" Width="64">
+                    <DataGridTemplateColumn Header="&#x64CD;&#x4F5C;" Width="72">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Content="&#x4E0B;&#x8F7D;" Tag="{Binding}"

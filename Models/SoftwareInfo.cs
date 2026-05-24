@@ -17,5 +17,6 @@ namespace DevEnv.Models
         public string Icon { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public ObservableCollection<SoftwareVersion> Versions { get; set; } = [];
+        public SoftwareVersion? SelectedVersion { get; set; }
     }
 }
