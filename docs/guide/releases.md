@@ -16,7 +16,7 @@ ProgramBox 通过 [GitHub Releases](https://github.com/pengcunfu/devbox/releases
 | 文件 | 字段 |
 |------|------|
 | `VERSION` | 纯文本，如 `1.0.0` |
-| `ProgramBox.csproj` | `<Version>`、`<AssemblyVersion>`、`<FileVersion>`、`<InformationalVersion>` |
+| `DevBox/DevBox.csproj` | `<Version>`、`<AssemblyVersion>`、`<FileVersion>`、`<InformationalVersion>` |
 | `CHANGELOG.md` | `## [1.0.0] - YYYY-MM-DD` |
 
 Git 标签格式为 **`v` + 上述版本号**（例如 `v1.0.0`）。Release 工作流会校验：标签 ↔ `VERSION` ↔ `csproj` ↔ `CHANGELOG`，任一不一致则构建失败。
@@ -24,7 +24,7 @@ Git 标签格式为 **`v` + 上述版本号**（例如 `v1.0.0`）。Release 工
 ### 1. 更新版本与日志
 
 1. 将 `VERSION` 改为新版本号（如 `1.0.1`）
-2. 同步 `ProgramBox.csproj` 中所有版本属性（`AssemblyVersion` / `FileVersion` 一般为 `X.Y.Z.0`）
+2. 同步 `DevBox/DevBox.csproj` 中所有版本属性（`AssemblyVersion` / `FileVersion` 一般为 `X.Y.Z.0`）
 3. 在 `CHANGELOG.md` 增加 `## [1.0.1] - 日期` 并写好变更说明
 
 ### 2. 本地校验（推荐）
@@ -36,7 +36,7 @@ Git 标签格式为 **`v` + 上述版本号**（例如 `v1.0.0`）。Release 工
 ### 3. 提交并打标签
 
 ```bash
-git add VERSION ProgramBox.csproj CHANGELOG.md
+git add VERSION DevBox/DevBox.csproj CHANGELOG.md
 git commit -m "chore: release v1.0.1"
 git tag v1.0.1
 git push origin master

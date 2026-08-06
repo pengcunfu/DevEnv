@@ -35,12 +35,12 @@ npm run dev
 ```bash
 git clone https://github.com/pengcunfu/devbox.git
 cd devbox
-dotnet run -c Release
+dotnet run --project DevBox/DevBox.csproj -c Release
 ```
 
 ## 发版（维护者）
 
-1. 更新 `VERSION`、`ProgramBox.csproj`、`CHANGELOG.md`
+1. 更新 `VERSION`、`DevBox/DevBox.csproj`、`CHANGELOG.md`
 2. `git tag v1.0.0 && git push origin v1.0.0`
 3. GitHub Actions 自动构建 zip 并创建 Release
 

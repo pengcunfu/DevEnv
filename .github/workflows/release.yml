@@ -64,7 +64,7 @@ jobs:
           "@
           }
 
-          $csproj = Get-Content DevBox.csproj -Raw
+          $csproj = Get-Content DevBox/DevBox.csproj -Raw
           if ($csproj -notmatch '<Version>\s*([^\s<]+)\s*</Version>') {
             Fail 'Could not parse <Version> from DevBox.csproj'
           }
@@ -114,7 +114,7 @@ jobs:
 
       - name: Publish Windows x64
         run: |
-          dotnet publish DevBox.csproj `
+          dotnet publish DevBox/DevBox.csproj `
             -c Release `
             -r win-x64 `
             --self-contained true `

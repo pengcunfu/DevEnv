@@ -14,15 +14,15 @@ cd devbox
 
 dotnet restore
 dotnet build -c Release
-dotnet run -c Release
+dotnet run --project DevBox/DevBox.csproj -c Release
 ```
 
-编译产物位于 `bin/Release/net10.0/`。
+编译产物位于 `DevBox/bin/Release/net10.0/`。
 
 ## 本地发布（单文件）
 
 ```bash
-dotnet publish ProgramBox.csproj ^
+dotnet publish DevBox/DevBox.csproj ^
   -c Release ^
   -r win-x64 ^
   --self-contained true ^
@@ -31,14 +31,14 @@ dotnet publish ProgramBox.csproj ^
   -o ./publish/win-x64
 ```
 
-在 `publish/win-x64` 目录运行 `ProgramBox.exe`。
+在 `publish/win-x64` 目录运行 `DevBox.exe`。
 
 ## 修改版本号
 
 发布前请同步以下位置：
 
 1. 根目录 `VERSION`
-2. `ProgramBox.csproj` 中的 `<Version>` 等属性
+2. `DevBox/DevBox.csproj` 中的 `<Version>` 等属性
 3. `CHANGELOG.md` 对应版本条目
 
 应用内版本从程序集信息读取，无需改 XAML 硬编码。
