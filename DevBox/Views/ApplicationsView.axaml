@@ -24,7 +24,7 @@
                             BorderBrush="{DynamicResource PrimaryBrush}"
                             BorderThickness="2"
                             CornerRadius="8"
-                            Background="#F3E5F5">
+                            Background="#E3F2FD">
                         <StackPanel HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Spacing="6"
@@ -366,6 +366,14 @@
                     </Border>
                 </StackPanel>
             </ScrollViewer>
+        </TabItem>
+
+        <TabItem Header="系统工具">
+            <ContentControl x:Name="SystemToolsHost"/>
+        </TabItem>
+
+        <TabItem Header="设置">
+            <ContentControl x:Name="SettingsHost"/>
         </TabItem>
     </TabControl>
 </UserControl>

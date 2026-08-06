@@ -37,6 +37,8 @@ namespace ProgramBox.Views
 
             SetupDragDrop();
             LoadApplications();
+            SystemToolsHost.Content = new SystemToolsView(_dataManager);
+            SettingsHost.Content = new SettingsView(_dataManager);
         }
 
         private void SetupDragDrop()

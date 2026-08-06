@@ -11,9 +11,9 @@
         <Style>
             <!-- Global Colors -->
             <Style.Resources>
-                <SolidColorBrush x:Key="PrimaryBrush" Color="#673AB7"/>
-                <SolidColorBrush x:Key="PrimaryLightBrush" Color="#9C27B0"/>
-                <SolidColorBrush x:Key="AccentBrush" Color="#CDDC39"/>
+                <SolidColorBrush x:Key="PrimaryBrush" Color="#1565C0"/>
+                <SolidColorBrush x:Key="PrimaryLightBrush" Color="#1E88E5"/>
+                <SolidColorBrush x:Key="AccentBrush" Color="#64B5F6"/>
                 <SolidColorBrush x:Key="BackgroundBrush" Color="#FAFAFA"/>
                 <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
                 <SolidColorBrush x:Key="TextPrimaryBrush" Color="#212121"/>
@@ -85,7 +85,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Padding" Value="16,8"/>
             <Setter Property="Margin" Value="4,2"/>
-            <Setter Property="Background" Value="#E8EAF6"/>
+            <Setter Property="Background" Value="#E3F2FD"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>

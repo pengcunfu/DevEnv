@@ -9,15 +9,17 @@ using ProgramBox.Utils;
 
 namespace ProgramBox.Views
 {
-    public partial class SettingsWindow : Window
+    public partial class SettingsView : UserControl
     {
         private readonly JsonDataManager _dataManager;
 
-        public SettingsWindow(JsonDataManager dataManager)
+        public SettingsView(JsonDataManager dataManager)
         {
             InitializeComponent();
             _dataManager = dataManager;
             LoadSettings();
+            AboutVersionText.Text = $"版本 {VersionInfo.Display}";
+            DocUrlText.Text = VersionInfo.DocumentationUrl;
         }
 
         /// <summary>
@@ -80,7 +82,13 @@ namespace ProgramBox.Views
 
         private async void BrowsePathButton_Click(object? sender, RoutedEventArgs e)
         {
-            var folder = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            var folder = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 Title = "选择环境基础路径",
                 AllowMultiple = false
@@ -98,7 +106,6 @@ namespace ProgramBox.Views
             {
                 SaveSettings();
                 await AppHelper.ShowInfoAsync("设置已保存");
-                Close();
             }
             catch (Exception ex)
             {
@@ -106,9 +113,12 @@ namespace ProgramBox.Views
             }
         }
 
-        private void CancelButton_Click(object? sender, RoutedEventArgs e)
+        /// <summary>
+        /// 查看文档
+        /// </summary>
+        private void ViewDocumentationButton_Click(object? sender, RoutedEventArgs e)
         {
-            Close();
+            AppHelper.OpenInBrowser(VersionInfo.DocumentationUrl);
         }
 
         #endregion

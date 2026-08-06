@@ -16,7 +16,6 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -44,6 +43,8 @@
                         Width="46"
                         Height="32"
                         Padding="0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
                         Foreground="White"
@@ -54,76 +55,8 @@
             </Grid>
         </Border>
 
-        <!-- Menu Bar -->
-        <Menu Grid.Row="1" Background="{DynamicResource SurfaceBrush}">
-            <!-- File Menu -->
-            <MenuItem Header="_文件">
-                <MenuItem Header="_设置" Click="SettingsMenuItem_Click"/>
-                <Separator/>
-                <MenuItem Header="_退出" Click="ExitMenuItem_Click"/>
-            </MenuItem>
-
-            <!-- View Menu -->
-            <MenuItem Header="_视图">
-                <MenuItem Header="_应用程序" Click="ViewApplicationsMenuItem_Click"/>
-            </MenuItem>
-
-            <!-- System Tools Menu -->
-            <MenuItem Header="_系统工具">
-                <!-- System Management Submenu -->
-                <MenuItem Header="系统管理">
-                    <MenuItem Header="计算机管理" Click="ToolMenuItem_Click" Tag="computer"/>
-                    <MenuItem Header="服务" Click="ToolMenuItem_Click" Tag="server"/>
-                    <MenuItem Header="系统配置" Click="ToolMenuItem_Click" Tag="config"/>
-                    <MenuItem Header="注册表" Click="ToolMenuItem_Click" Tag="regedit"/>
-                    <MenuItem Header="环境变量" Click="ToolMenuItem_Click" Tag="env"/>
-                </MenuItem>
-
-                <Separator/>
-
-                <!-- Hardware & Devices Submenu -->
-                <MenuItem Header="硬件与设备">
-                    <MenuItem Header="设备管理器" Click="ToolMenuItem_Click" Tag="device"/>
-                    <MenuItem Header="磁盘管理" Click="ToolMenuItem_Click" Tag="disk"/>
-                    <MenuItem Header="声音设置" Click="ToolMenuItem_Click" Tag="sound"/>
-                    <MenuItem Header="显示设置" Click="ToolMenuItem_Click" Tag="display"/>
-                    <MenuItem Header="电源选项" Click="ToolMenuItem_Click" Tag="power"/>
-                </MenuItem>
-
-                <Separator/>
-
-                <!-- Network & Security Submenu -->
-                <MenuItem Header="网络与安全">
-                    <MenuItem Header="防火墙" Click="ToolMenuItem_Click" Tag="firewall"/>
-                    <MenuItem Header="本地安全策略" Click="ToolMenuItem_Click" Tag="security"/>
-                    <MenuItem Header="网络连接" Click="ToolMenuItem_Click" Tag="network"/>
-                    <MenuItem Header="用户账户控制" Click="ToolMenuItem_Click" Tag="uac"/>
-                </MenuItem>
-
-                <Separator/>
-
-                <!-- Performance & Monitoring Submenu -->
-                <MenuItem Header="性能与监控">
-                    <MenuItem Header="任务管理器" Click="ToolMenuItem_Click" Tag="task"/>
-                    <MenuItem Header="资源监视器" Click="ToolMenuItem_Click" Tag="res"/>
-                    <MenuItem Header="事件查看器" Click="ToolMenuItem_Click" Tag="event"/>
-                    <MenuItem Header="系统信息" Click="ToolMenuItem_Click" Tag="info"/>
-                    <MenuItem Header="计划任务" Click="ToolMenuItem_Click" Tag="planned_task"/>
-                </MenuItem>
-            </MenuItem>
-
-            <!-- Help Menu -->
-            <MenuItem Header="_帮助">
-                <MenuItem Header="查看文档" Click="ViewDocumentationButton_Click"/>
-                <Separator/>
-                <MenuItem Header="关于" Click="AboutMenuItem_Click"/>
-            </MenuItem>
-        </Menu>
-
-        <!-- Header removed as requested -->
-
         <!-- Main Content -->
-        <Grid Grid.Row="2" Background="{DynamicResource BackgroundBrush}" Margin="0">
+        <Grid Grid.Row="1" Background="{DynamicResource BackgroundBrush}" Margin="0">
                 <ContentControl x:Name="ContentArea"/>
                 
                 <!-- Default Content -->
@@ -173,7 +106,7 @@
         </Grid>
 
         <!-- Status Bar -->
-        <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" 
+        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" 
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Height="24">
             <Grid>
                 <Grid.ColumnDefinitions>
