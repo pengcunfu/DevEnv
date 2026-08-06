@@ -13,6 +13,11 @@ namespace ProgramBox.Views
     {
         private readonly JsonDataManager _dataManager;
 
+        public SettingsView()
+            : this(new JsonDataManager())
+        {
+        }
+
         public SettingsView(JsonDataManager dataManager)
         {
             InitializeComponent();

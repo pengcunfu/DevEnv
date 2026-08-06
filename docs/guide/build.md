@@ -17,7 +17,7 @@ dotnet build -c Release
 dotnet run --project DevBox/DevBox.csproj -c Release
 ```
 
-编译产物位于 `DevBox/bin/Release/net10.0/`。
+编译产物位于 `DevBox/bin/Release/net10.0-windows/`。
 
 ## 本地发布（单文件）
 

@@ -16,6 +16,11 @@ namespace ProgramBox.Views
 
         public bool Saved { get; private set; }
 
+        public WebEditWindow()
+            : this(new WebAtom())
+        {
+        }
+
         public WebEditWindow(WebAtom web)
         {
             InitializeComponent();

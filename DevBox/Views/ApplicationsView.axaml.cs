@@ -21,6 +21,11 @@ namespace ProgramBox.Views
         private readonly ObservableCollection<FolderAtom> _allFolders;
         private readonly ObservableCollection<FolderAtom> _filteredFolders;
 
+        public ApplicationsView()
+            : this(new JsonDataManager())
+        {
+        }
+
         public ApplicationsView(JsonDataManager dataManager)
         {
             InitializeComponent();

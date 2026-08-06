@@ -16,6 +16,11 @@ namespace ProgramBox.Views
 
         public bool Saved { get; private set; }
 
+        public FolderEditWindow()
+            : this(new FolderAtom())
+        {
+        }
+
         public FolderEditWindow(FolderAtom folder)
         {
             InitializeComponent();

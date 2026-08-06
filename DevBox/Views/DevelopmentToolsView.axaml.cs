@@ -12,6 +12,11 @@ namespace ProgramBox.Views
     {
         private readonly JsonDataManager _dataManager;
 
+        public DevelopmentToolsView()
+            : this(new JsonDataManager())
+        {
+        }
+
         public DevelopmentToolsView(JsonDataManager dataManager)
         {
             InitializeComponent();

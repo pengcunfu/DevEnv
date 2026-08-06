@@ -15,6 +15,11 @@ namespace ProgramBox.Views
         private readonly JsonDataManager _dataManager;
         private readonly ObservableCollection<WinToolAtom> _allTools;
 
+        public SystemToolsView()
+            : this(new JsonDataManager())
+        {
+        }
+
         public SystemToolsView(JsonDataManager dataManager)
         {
             InitializeComponent();
