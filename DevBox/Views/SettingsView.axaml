@@ -18,6 +18,9 @@
                     <CheckBox x:Name="TrayIconCheckBox"
                               Content="启用托盘（关闭窗口时隐藏到托盘，不退出程序）"/>
                     <CheckBox x:Name="SelfStartingCheckBox" Content="开机自启动"/>
+                    <TextBlock Text="登录 Windows 后自动启动 DevBox"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     
                     <StackPanel Spacing="8">
                         <TextBlock Text="界面语言" Classes="Body"/>

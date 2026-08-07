@@ -14,6 +14,16 @@ namespace ProgramBox.Utils
     public static class AppHelper
     {
         /// <summary>
+        /// 开机自启动注册表项名称
+        /// </summary>
+        public const string AutoStartAppName = "DevBox";
+
+        /// <summary>
+        /// 旧版本遗留的启动项名称（迁移/清理用）
+        /// </summary>
+        private const string LegacyAutoStartAppName = "ProgramBox";
+
+        /// <summary>
         /// 全局配置文件路径
         /// </summary>
         public static readonly string ConfigPath = GetFullPath("config.json");
@@ -216,7 +226,7 @@ namespace ProgramBox.Utils
         /// </summary>
         /// <param name="enable">是否启用</param>
         /// <param name="appName">应用程序名称</param>
-        public static void SetAutoStart(bool enable, string appName = "ProgramBox")
+        public static void SetAutoStart(bool enable, string appName = AutoStartAppName)
         {
             try
             {
@@ -228,11 +238,21 @@ namespace ProgramBox.Utils
                     if (enable)
                     {
                         var exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
-                        key.SetValue(appName, exePath);
+                        if (string.IsNullOrEmpty(exePath))
+                            return;
+
+                        // 路径带空格时需要用引号包裹，否则开机自启动会失败
+                        key.SetValue(appName, $"\"{exePath}\"");
                     }
                     else
                     {
                         key.DeleteValue(appName, false);
+                    }
+
+                    // 清理旧版本（ProgramBox）遗留的启动项，避免禁用后仍然自启
+                    if (!string.Equals(appName, LegacyAutoStartAppName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        key.DeleteValue(LegacyAutoStartAppName, false);
                     }
                 }
             }
@@ -247,7 +267,7 @@ namespace ProgramBox.Utils
         /// </summary>
         /// <param name="appName">应用程序名称</param>
         /// <returns>是否已设置自启动</returns>
-        public static bool IsAutoStartEnabled(string appName = "ProgramBox")
+        public static bool IsAutoStartEnabled(string appName = AutoStartAppName)
         {
             try
             {
@@ -259,6 +279,23 @@ namespace ProgramBox.Utils
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 启动时同步开机自启动状态（含旧版本 ProgramBox 启动项迁移）
+        /// </summary>
+        /// <param name="configEnabled">配置中记录的开关状态</param>
+        /// <returns>实际生效的开关状态（检测到旧版本启动项时会被置为 true）</returns>
+        public static bool SyncAutoStart(bool configEnabled)
+        {
+            // 旧版本曾以 ProgramBox 名称写入启动项：视为用户已开启自启动
+            if (!configEnabled && IsAutoStartEnabled(LegacyAutoStartAppName))
+            {
+                configEnabled = true;
+            }
+
+            SetAutoStart(configEnabled);
+            return configEnabled;
         }
 
         /// <summary>

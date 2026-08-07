@@ -17,7 +17,22 @@ namespace ProgramBox
             _dataManager = new JsonDataManager();
             VersionText.Text = $"版本 {VersionInfo.Current}";
             LoadData();
+            SyncAutoStartSetting();
             Closing += MainWindow_Closing;
+        }
+
+        /// <summary>
+        /// 启动时同步开机自启动状态，保证配置与注册表一致
+        /// </summary>
+        private void SyncAutoStartSetting()
+        {
+            var config = _dataManager.Data.Config;
+            var effective = AppHelper.SyncAutoStart(config.SelfStarting);
+            if (effective != config.SelfStarting)
+            {
+                config.SelfStarting = effective;
+                _dataManager.Save();
+            }
         }
 
         public void InitializeTray()
