@@ -6,8 +6,10 @@
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource BackgroundBrush}">
 
-    <StackPanel Margin="24" Spacing="16">
-        <TextBlock Text="编辑快捷方式" Classes="Title"/>
+    <Grid RowDefinitions="*,Auto" Margin="24">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16">
+                <TextBlock Text="编辑快捷方式" Classes="Title"/>
 
         <Border Classes="Card">
             <StackPanel Spacing="12">
@@ -51,13 +53,13 @@
                     </Grid>
                 </StackPanel>
             </StackPanel>
-        </Border>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
 
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Spacing="8">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
             <Button Content="取消" Click="CancelButton_Click" MinWidth="88"/>
             <Button Content="保存" Click="SaveButton_Click" MinWidth="88"/>
         </StackPanel>
-    </StackPanel>
+    </Grid>
 </Window>
