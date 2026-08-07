@@ -430,17 +430,20 @@ namespace ProgramBox.Views
             }
         }
 
-        private void OpenWebApplication_Click(object? sender, RoutedEventArgs e)
+        private void WebOpenMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is Button { Tag: WebAtom app })
+            if (sender is MenuItem { Tag: WebAtom app })
                 OpenWebApplication(app);
         }
 
-        private async void EditWebApplication_Click(object? sender, RoutedEventArgs e)
+        private async void WebEditMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is not Button { Tag: WebAtom app })
-                return;
+            if (sender is MenuItem { Tag: WebAtom app })
+                await EditWebApplicationAsync(app);
+        }
 
+        private async System.Threading.Tasks.Task EditWebApplicationAsync(WebAtom app)
+        {
             var owner = TopLevel.GetTopLevel(this) as Window;
             var dialog = new WebEditWindow(app);
             if (owner != null)
@@ -463,12 +466,10 @@ namespace ProgramBox.Views
                 _filteredWebApps.Add(item);
         }
 
-        private async void DeleteWebApplication_Click(object? sender, RoutedEventArgs e)
+        private async void WebDeleteMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is not Button { Tag: WebAtom app })
-                return;
-
-            await DeleteWebApplication(app);
+            if (sender is MenuItem { Tag: WebAtom app })
+                await DeleteWebApplication(app);
         }
 
         private async void AddWebApplicationButton_Click(object? sender, RoutedEventArgs e)

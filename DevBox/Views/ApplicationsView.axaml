@@ -171,28 +171,12 @@
 
         <TabItem Header="网站">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="添加网站..." Click="AddWebApplicationButton_Click"/>
+                    </ContextMenu>
+                </ScrollViewer.ContextMenu>
                 <StackPanel Margin="16">
-                    <Border Classes="Card"
-                            MinHeight="72"
-                            Margin="0,0,0,12"
-                            BorderBrush="#1565C0"
-                            BorderThickness="2"
-                            CornerRadius="8"
-                            Background="{DynamicResource ActiveNavBrush}">
-                        <StackPanel HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Spacing="6"
-                                    Margin="16">
-                            <TextBlock Text="添加快捷网站，自动获取标题与图标"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="#1565C0"
-                                       HorizontalAlignment="Center"/>
-                            <Button Content="添加网站..."
-                                    Click="AddWebApplicationButton_Click"
-                                    HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
 
                     <ItemsControl x:Name="WebApplicationsList">
                         <ItemsControl.ItemsPanel>
@@ -203,59 +187,39 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:WebAtom">
                                 <Border Classes="ToolCard"
-                                        Width="128"
-                                        Height="148"
+                                        Width="140"
+                                        Height="64"
                                         Tag="{Binding}"
                                         PointerPressed="WebCard_PointerPressed"
                                         ToolTip.Tip="{Binding Url}">
-                                    <Grid RowDefinitions="Auto,*,Auto">
-                                        <Border Grid.Row="0"
-                                                Width="48"
-                                                Height="48"
-                                                CornerRadius="8"
+                                    <Border.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="在浏览器中打开" Tag="{Binding}" Click="WebOpenMenu_Click"/>
+                                            <MenuItem Header="编辑标题与图标" Tag="{Binding}" Click="WebEditMenu_Click"/>
+                                            <MenuItem Header="移除" Tag="{Binding}" Click="WebDeleteMenu_Click"/>
+                                        </ContextMenu>
+                                    </Border.ContextMenu>
+                                    <Grid ColumnDefinitions="Auto,*" Margin="8">
+                                        <Border Grid.Column="0"
+                                                Width="40"
+                                                Height="40"
+                                                CornerRadius="6"
                                                 Background="{DynamicResource IconBackgroundBrush}"
-                                                HorizontalAlignment="Center"
-                                                Margin="0,0,0,6">
-                                            <Image Width="40"
-                                                   Height="40"
+                                                VerticalAlignment="Center">
+                                            <Image Width="32"
+                                                   Height="32"
                                                    Stretch="Uniform"
                                                    Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}"/>
                                         </Border>
-
-                                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       TextAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       MaxWidth="112"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2"
-                                                    Orientation="Horizontal"
-                                                    HorizontalAlignment="Center"
-                                                    Spacing="4"
-                                                    Margin="0,6,0,0">
-                                            <Button Content="🌐"
-                                                    ToolTip.Tip="在浏览器中打开"
-                                                    Click="OpenWebApplication_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                            <Button Content="✎"
-                                                    ToolTip.Tip="编辑标题与图标"
-                                                    Click="EditWebApplication_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                            <Button Content="✕"
-                                                    ToolTip.Tip="移除"
-                                                    Click="DeleteWebApplication_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Name}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   TextAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -274,7 +238,7 @@
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextAlignment="Center"
                                        Margin="0,0,0,8"/>
-                            <TextBlock Text="点击「添加网站」收藏常用网页"
+                            <TextBlock Text="右键空白区域添加网站"
                                        Classes="Body"
                                        TextAlignment="Center"/>
                         </StackPanel>
