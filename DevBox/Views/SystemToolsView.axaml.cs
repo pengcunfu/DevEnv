@@ -1,10 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using ProgramBox.Converters;
 using ProgramBox.Models;
 using ProgramBox.Utils;
 
@@ -117,6 +120,26 @@ namespace ProgramBox.Views
                 VerticalAlignment = VerticalAlignment.Center
             };
 
+            var iconHost = new Border
+            {
+                Width = 48,
+                Height = 48,
+                CornerRadius = new CornerRadius(8),
+                Background = new SolidColorBrush(Color.Parse("#EEEEEE")),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+
+            var icon = new Image
+            {
+                Width = 40,
+                Height = 40,
+                Stretch = Stretch.Uniform,
+                Source = LoadToolIcon(tool)
+            };
+
+            iconHost.Child = icon;
+
             var text = new TextBlock
             {
                 Text = tool.Name,
@@ -126,10 +149,24 @@ namespace ProgramBox.Views
                 MaxWidth = 120
             };
 
+            stackPanel.Children.Add(iconHost);
             stackPanel.Children.Add(text);
             card.Child = stackPanel;
 
             return card;
+        }
+
+        /// <summary>
+        /// 加载工具图标，缺失时回退到默认图标
+        /// </summary>
+        private static IImage? LoadToolIcon(WinToolAtom tool)
+        {
+            var converter = PathToBitmapConverter.Instance;
+            var icon = converter.Convert(tool.IconPath, typeof(IImage), null, System.Globalization.CultureInfo.InvariantCulture) as Bitmap;
+            if (icon != null)
+                return icon;
+
+            return converter.Convert("/Assets/Icons/win/default.png", typeof(IImage), null, System.Globalization.CultureInfo.InvariantCulture) as Bitmap;
         }
 
         #region 事件处理

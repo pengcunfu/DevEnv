@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -42,6 +43,9 @@ namespace ProgramBox.Utils
                 var json = File.ReadAllText(_jsonPath);
                 var data = JsonConvert.DeserializeObject<AppData>(json);
                 Data = data ?? new AppData();
+
+                // 补齐缺失的内置系统工具（兼容旧版本数据）
+                EnsureDefaultWindowsTools();
             }
             catch (Exception ex)
             {
@@ -70,21 +74,61 @@ namespace ProgramBox.Utils
             Data.InsAtomList.Add(new InsAtom("nginx", "Nginx服务管理", "管理Nginx Web服务器"));
 
             // 添加默认的Windows工具
-            Data.WinToolAtomList.Add(new WinToolAtom("disk", "磁盘管理", "管理磁盘分区和存储"));
-            Data.WinToolAtomList.Add(new WinToolAtom("device", "设备管理器", "管理硬件设备和驱动"));
-            Data.WinToolAtomList.Add(new WinToolAtom("task", "任务管理器", "查看和管理系统进程"));
-            Data.WinToolAtomList.Add(new WinToolAtom("planned_task", "计划任务", "管理系统定时任务"));
-            Data.WinToolAtomList.Add(new WinToolAtom("regedit", "注册表", "编辑Windows注册表"));
-            Data.WinToolAtomList.Add(new WinToolAtom("env", "环境变量", "管理系统环境变量"));
-            Data.WinToolAtomList.Add(new WinToolAtom("res", "资源监视器", "监控系统资源使用"));
-            Data.WinToolAtomList.Add(new WinToolAtom("config", "系统配置", "配置系统启动和服务"));
-            Data.WinToolAtomList.Add(new WinToolAtom("info", "系统信息", "查看系统详细信息"));
-            Data.WinToolAtomList.Add(new WinToolAtom("event", "事件查看器", "查看系统事件日志"));
-            Data.WinToolAtomList.Add(new WinToolAtom("firewall", "防火墙", "配置Windows防火墙"));
-            Data.WinToolAtomList.Add(new WinToolAtom("server", "服务", "管理Windows系统服务"));
-            Data.WinToolAtomList.Add(new WinToolAtom("computer", "计算机管理", "综合系统管理工具"));
-            Data.WinToolAtomList.Add(new WinToolAtom("security", "本地安全策略", "配置安全策略"));
-            Data.WinToolAtomList.Add(new WinToolAtom("control", "控制面板", "系统设置控制面板"));
+            foreach (var (key, name, description) in DefaultWindowsTools)
+            {
+                Data.WinToolAtomList.Add(new WinToolAtom(key, name, description));
+            }
+        }
+
+        /// <summary>
+        /// 内置系统工具默认列表（新增工具只需在此补充）
+        /// </summary>
+        private static readonly (string Key, string Name, string Description)[] DefaultWindowsTools =
+        {
+            ("disk", "磁盘管理", "管理磁盘分区和存储"),
+            ("device", "设备管理器", "管理硬件设备和驱动"),
+            ("sound", "声音设置", "调整系统声音输出设备"),
+            ("display", "显示设置", "调整屏幕分辨率与显示参数"),
+            ("power", "电源选项", "配置系统电源与休眠策略"),
+            ("task", "任务管理器", "查看和管理系统进程"),
+            ("planned_task", "计划任务", "管理系统定时任务"),
+            ("regedit", "注册表", "编辑Windows注册表"),
+            ("env", "环境变量", "管理系统环境变量"),
+            ("res", "资源监视器", "监控系统资源使用"),
+            ("config", "系统配置", "配置系统启动和服务"),
+            ("info", "系统信息", "查看系统详细信息"),
+            ("event", "事件查看器", "查看系统事件日志"),
+            ("firewall", "防火墙", "配置Windows防火墙"),
+            ("network", "网络连接", "查看和管理网络适配器"),
+            ("server", "服务", "管理Windows系统服务"),
+            ("computer", "计算机管理", "综合系统管理工具"),
+            ("security", "本地安全策略", "配置安全策略"),
+            ("uac", "用户账户控制", "调整用户账户控制设置"),
+            ("control", "控制面板", "系统设置控制面板")
+        };
+
+        /// <summary>
+        /// 补齐数据中缺失的内置系统工具
+        /// </summary>
+        private void EnsureDefaultWindowsTools()
+        {
+            var existingKeys = new HashSet<string>(
+                Data.WinToolAtomList.Select(t => t.Key),
+                StringComparer.OrdinalIgnoreCase);
+
+            var changed = false;
+            foreach (var (key, name, description) in DefaultWindowsTools)
+            {
+                if (existingKeys.Contains(key))
+                    continue;
+
+                Data.WinToolAtomList.Add(new WinToolAtom(key, name, description));
+                existingKeys.Add(key);
+                changed = true;
+            }
+
+            if (changed)
+                Save();
         }
 
         /// <summary>
