@@ -36,7 +36,7 @@
                     <StackPanel Spacing="8">
                         <TextBlock Text="图标" Classes="Body"/>
                         <Grid ColumnDefinitions="Auto,*">
-                            <Border Width="48" Height="48" CornerRadius="6" Background="#EEEEEE" Margin="0,0,12,0">
+                            <Border Width="48" Height="48" CornerRadius="6" Background="{DynamicResource IconBackgroundBrush}" Margin="0,0,12,0">
                                 <Image x:Name="IconPreview" Width="32" Height="32" Stretch="Uniform"/>
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">

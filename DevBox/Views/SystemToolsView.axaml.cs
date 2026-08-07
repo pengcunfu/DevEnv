@@ -125,7 +125,7 @@ namespace ProgramBox.Views
                 Width = 48,
                 Height = 48,
                 CornerRadius = new CornerRadius(8),
-                Background = new SolidColorBrush(Color.Parse("#EEEEEE")),
+                Background = GetIconBackgroundBrush(),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 8)
             };
@@ -154,6 +154,22 @@ namespace ProgramBox.Views
             card.Child = stackPanel;
 
             return card;
+        }
+
+        /// <summary>
+        /// 获取图标占位背景色（跟随深浅色主题）
+        /// </summary>
+        private static IBrush GetIconBackgroundBrush()
+        {
+            var app = Application.Current;
+            if (app != null
+                && app.TryFindResource("IconBackgroundBrush", app.RequestedThemeVariant, out var resource)
+                && resource is IBrush brush)
+            {
+                return brush;
+            }
+
+            return new SolidColorBrush(Color.Parse("#EEEEEE"));
         }
 
         /// <summary>

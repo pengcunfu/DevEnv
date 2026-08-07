@@ -1,26 +1,59 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="ProgramBox.App"
-             RequestedThemeVariant="Light">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             x:Class="ProgramBox.App">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <!-- 浅色主题（同时作为 Default 后备） -->
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="PrimaryBrush" Color="#1565C0"/>
+                    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#1E88E5"/>
+                    <SolidColorBrush x:Key="AccentBrush" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="BackgroundBrush" Color="#FAFAFA"/>
+                    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#212121"/>
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#757575"/>
+                    <SolidColorBrush x:Key="BorderBrush" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="HoverBrush" Color="#F5F5F5"/>
+                    <SolidColorBrush x:Key="ActiveNavBrush" Color="#E3F2FD"/>
+                    <SolidColorBrush x:Key="IconBackgroundBrush" Color="#EEEEEE"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PrimaryBrush" Color="#1565C0"/>
+                    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#1E88E5"/>
+                    <SolidColorBrush x:Key="AccentBrush" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="BackgroundBrush" Color="#FAFAFA"/>
+                    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#212121"/>
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#757575"/>
+                    <SolidColorBrush x:Key="BorderBrush" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="HoverBrush" Color="#F5F5F5"/>
+                    <SolidColorBrush x:Key="ActiveNavBrush" Color="#E3F2FD"/>
+                    <SolidColorBrush x:Key="IconBackgroundBrush" Color="#EEEEEE"/>
+                </ResourceDictionary>
+                <!-- 深色主题 -->
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="PrimaryBrush" Color="#1565C0"/>
+                    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#1E88E5"/>
+                    <SolidColorBrush x:Key="AccentBrush" Color="#64B5F6"/>
+                    <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
+                    <SolidColorBrush x:Key="SurfaceBrush" Color="#2D2D30"/>
+                    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E0E0E0"/>
+                    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9E9E9E"/>
+                    <SolidColorBrush x:Key="BorderBrush" Color="#3F3F46"/>
+                    <SolidColorBrush x:Key="HoverBrush" Color="#3A3D41"/>
+                    <SolidColorBrush x:Key="ActiveNavBrush" Color="#103D6B"/>
+                    <SolidColorBrush x:Key="IconBackgroundBrush" Color="#3A3D41"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
         
         <!-- Custom Styles -->
-        <Style>
-            <!-- Global Colors -->
-            <Style.Resources>
-                <SolidColorBrush x:Key="PrimaryBrush" Color="#1565C0"/>
-                <SolidColorBrush x:Key="PrimaryLightBrush" Color="#1E88E5"/>
-                <SolidColorBrush x:Key="AccentBrush" Color="#64B5F6"/>
-                <SolidColorBrush x:Key="BackgroundBrush" Color="#FAFAFA"/>
-                <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
-                <SolidColorBrush x:Key="TextPrimaryBrush" Color="#212121"/>
-                <SolidColorBrush x:Key="TextSecondaryBrush" Color="#757575"/>
-                <SolidColorBrush x:Key="BorderBrush" Color="#E0E0E0"/>
-            </Style.Resources>
-        </Style>
         
         <!-- Card Style -->
         <Style Selector="Border.Card">
@@ -75,7 +108,7 @@
         </Style>
         
         <Style Selector="Button.Navigation:pointerover">
-            <Setter Property="Background" Value="#F5F5F5"/>
+            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
         </Style>
         
         <!-- Active Navigation Button Style -->
@@ -85,7 +118,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Padding" Value="16,8"/>
             <Setter Property="Margin" Value="4,2"/>
-            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="Background" Value="{DynamicResource ActiveNavBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -104,7 +137,7 @@
         </Style>
         
         <Style Selector="Border.ToolCard:pointerover">
-            <Setter Property="Background" Value="#F5F5F5"/>
+            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
         </Style>
         
         <!-- 无边框窗口关闭按钮 -->

@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using ProgramBox.Utils;
 
 namespace ProgramBox.Views
@@ -63,6 +64,12 @@ namespace ProgramBox.Views
             config.SelfStarting = SelfStartingCheckBox.IsChecked ?? false;
             config.DarkMode = DarkModeCheckBox.IsChecked ?? false;
             config.BaseEnvPath = BaseEnvPathTextBox.Text ?? @"D:\ProgramBox\env";
+
+            // 立即应用深色/浅色主题
+            if (Application.Current != null)
+            {
+                Application.Current.RequestedThemeVariant = config.DarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
+            }
             
             if (LanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
             {

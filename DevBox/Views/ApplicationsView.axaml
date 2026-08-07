@@ -24,7 +24,7 @@
                             BorderBrush="{DynamicResource PrimaryBrush}"
                             BorderThickness="2"
                             CornerRadius="8"
-                            Background="#E3F2FD">
+                            Background="{DynamicResource ActiveNavBrush}">
                         <StackPanel HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Spacing="6"
@@ -64,7 +64,7 @@
                                                 Width="48"
                                                 Height="48"
                                                 CornerRadius="8"
-                                                Background="#EEEEEE"
+                                                Background="{DynamicResource IconBackgroundBrush}"
                                                 HorizontalAlignment="Center"
                                                 Margin="0,0,0,6">
                                             <Image Width="40"
@@ -184,7 +184,7 @@
                                                 Width="48"
                                                 Height="48"
                                                 CornerRadius="8"
-                                                Background="#EEEEEE"
+                                                Background="{DynamicResource IconBackgroundBrush}"
                                                 HorizontalAlignment="Center"
                                                 Margin="0,0,0,6">
                                             <Image Width="40"
@@ -263,7 +263,7 @@
                             BorderBrush="#1565C0"
                             BorderThickness="2"
                             CornerRadius="8"
-                            Background="#E3F2FD">
+                            Background="{DynamicResource ActiveNavBrush}">
                         <StackPanel HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Spacing="6"
@@ -298,7 +298,7 @@
                                                 Width="48"
                                                 Height="48"
                                                 CornerRadius="8"
-                                                Background="#EEEEEE"
+                                                Background="{DynamicResource IconBackgroundBrush}"
                                                 HorizontalAlignment="Center"
                                                 Margin="0,0,0,6">
                                             <Image Width="40"
