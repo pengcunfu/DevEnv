@@ -18,8 +18,7 @@ namespace ProgramBox
             None,
             Left,
             Right,
-            Top,
-            Bottom
+            Top
         }
 
         private const int EdgeDockThreshold = 8;
@@ -67,6 +66,7 @@ namespace ProgramBox
             _dockedEdge = DockEdge.None;
             _retracted = false;
             WindowResizeHelper.SuppressEdgeHitTest = false;
+            Topmost = false;
 
             Show();
             WindowState = WindowState.Normal;
@@ -156,8 +156,6 @@ namespace ProgramBox
                 return DockEdge.Right;
             if (winRect.Y <= area.Y + EdgeDockThreshold)
                 return DockEdge.Top;
-            if (area.Y + area.Height - (winRect.Y + winRect.Height) <= EdgeDockThreshold)
-                return DockEdge.Bottom;
 
             return DockEdge.None;
         }
@@ -168,8 +166,7 @@ namespace ProgramBox
             {
                 DockEdge.Left => new PixelPoint(area.X, winRect.Y),
                 DockEdge.Right => new PixelPoint(area.X + area.Width - winRect.Width, winRect.Y),
-                DockEdge.Top => new PixelPoint(winRect.X, area.Y),
-                _ => new PixelPoint(winRect.X, area.Y + area.Height - winRect.Height),
+                _ => new PixelPoint(winRect.X, area.Y),
             };
         }
 
@@ -206,12 +203,13 @@ namespace ProgramBox
             {
                 DockEdge.Left => new PixelPoint(area.X - winRect.Width + RetractStripSize, winRect.Y),
                 DockEdge.Right => new PixelPoint(area.X + area.Width - RetractStripSize, winRect.Y),
-                DockEdge.Top => new PixelPoint(winRect.X, area.Y - winRect.Height + RetractStripSize),
-                _ => new PixelPoint(winRect.X, area.Y + area.Height - RetractStripSize),
+                _ => new PixelPoint(winRect.X, area.Y - winRect.Height + RetractStripSize),
             };
 
             _retracted = true;
             WindowResizeHelper.SuppressEdgeHitTest = true;
+            // 收缩后置顶显示边缘条，避免被其他窗口遮挡导致悬停无效
+            Topmost = true;
             MoveWindowTo(target);
         }
 
@@ -230,6 +228,7 @@ namespace ProgramBox
             var target = ComputeDockedPosition(_dockedEdge, GetWindowRectOnScreen(screen), screen.WorkingArea);
             _retracted = false;
             WindowResizeHelper.SuppressEdgeHitTest = false;
+            Topmost = false;
             MoveWindowTo(target);
         }
 
