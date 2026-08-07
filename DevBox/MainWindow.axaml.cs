@@ -49,6 +49,43 @@ namespace ProgramBox
             PointerEntered += MainWindow_PointerEntered;
             PointerExited += MainWindow_PointerExited;
             RefreshEdgeAutoHideSettings();
+
+            HotkeyService.HotkeyPressed += OnHotkeyPressed;
+        }
+
+        /// <summary>
+        /// 全局快捷键：显示并居中主窗口
+        /// </summary>
+        private void OnHotkeyPressed()
+        {
+            ShowCentered();
+        }
+
+        public void ShowCentered()
+        {
+            // 解除靠边状态，避免恢复后立刻又贴边或收缩
+            _dockedEdge = DockEdge.None;
+            _retracted = false;
+            WindowResizeHelper.SuppressEdgeHitTest = false;
+
+            Show();
+            WindowState = WindowState.Normal;
+            CenterOnScreen();
+            Activate();
+        }
+
+        private void CenterOnScreen()
+        {
+            var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+            if (screen == null)
+                return;
+
+            var area = screen.WorkingArea;
+            var scale = screen.Scaling;
+            var width = Math.Max(1, (int)Math.Round(ClientSize.Width * scale));
+            var height = Math.Max(1, (int)Math.Round(ClientSize.Height * scale));
+
+            Position = new PixelPoint(area.X + (area.Width - width) / 2, area.Y + (area.Height - height) / 2);
         }
 
         protected override void OnOpened(EventArgs e)
@@ -56,7 +93,10 @@ namespace ProgramBox
             base.OnOpened(e);
 
             // 无边框窗口：挂接原生 WM_NCHITTEST，由系统接管边缘缩放与缩放光标
-            WindowResizeHelper.Attach(TryGetPlatformHandle()?.Handle ?? IntPtr.Zero);
+            var hwnd = TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+            WindowResizeHelper.Attach(hwnd);
+            HotkeyService.Attach(hwnd);
+            HotkeyService.ApplyHotkey(_dataManager.Data.Config.ShowWindowHotkey);
         }
 
         /// <summary>

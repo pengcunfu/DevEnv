@@ -13,6 +13,7 @@ namespace ProgramBox.Models
         private string _language = "zh-CN";
         private bool _darkMode = false;
         private bool _edgeAutoHide = false;
+        private string _showWindowHotkey = "Ctrl+Alt+D";
 
         /// <summary>
         /// 托盘图标显示
@@ -89,6 +90,19 @@ namespace ProgramBox.Models
             {
                 _edgeAutoHide = value;
                 OnPropertyChanged(nameof(EdgeAutoHide));
+            }
+        }
+
+        /// <summary>
+        /// 显示窗口的全局快捷键（空字符串表示禁用）
+        /// </summary>
+        public string ShowWindowHotkey
+        {
+            get => _showWindowHotkey;
+            set
+            {
+                _showWindowHotkey = value;
+                OnPropertyChanged(nameof(ShowWindowHotkey));
             }
         }
 

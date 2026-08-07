@@ -37,6 +37,43 @@
                 </StackPanel>
             </Border>
             
+            <!-- Hotkey Settings -->
+            <Border Classes="Card">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="快捷键" Classes="Subtitle"/>
+                    <TextBlock Text="按下快捷键可随时显示并居中 DevBox 窗口"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                        <TextBlock Grid.Column="0"
+                                   Text="显示窗口"
+                                   Classes="Body"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,0"/>
+                        <TextBox Grid.Column="1"
+                                 x:Name="HotkeyTextBox"
+                                 IsReadOnly="True"
+                                 Watermark="未设置快捷键"
+                                 Margin="0,0,8,0"/>
+                        <Button Grid.Column="2"
+                                x:Name="CaptureHotkeyButton"
+                                Content="录制"
+                                Click="CaptureHotkeyButton_Click"
+                                MinWidth="72"
+                                Margin="0,0,8,0"/>
+                        <Button Grid.Column="3"
+                                Content="清除"
+                                Click="ClearHotkeyButton_Click"
+                                MinWidth="72"/>
+                    </Grid>
+                    <TextBlock x:Name="HotkeyHintText"
+                               Classes="Body"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               IsVisible="False"
+                               Text="请按下新的快捷键组合（如 Ctrl+Alt+D），按 Esc 取消"/>
+                </StackPanel>
+            </Border>
+
             <!-- Appearance Settings -->
             <Border Classes="Card">
                 <StackPanel Spacing="16">

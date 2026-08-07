@@ -3,6 +3,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
@@ -13,6 +14,7 @@ namespace ProgramBox.Views
     public partial class SettingsView : UserControl
     {
         private readonly JsonDataManager _dataManager;
+        private bool _isCapturingHotkey;
 
         public SettingsView()
             : this(new JsonDataManager())
@@ -26,6 +28,7 @@ namespace ProgramBox.Views
             LoadSettings();
             AboutVersionText.Text = $"版本 {VersionInfo.Display}";
             DocUrlText.Text = VersionInfo.DocumentationUrl;
+            HotkeyTextBox.KeyDown += HotkeyTextBox_KeyDown;
         }
 
         /// <summary>
@@ -40,6 +43,7 @@ namespace ProgramBox.Views
             EdgeAutoHideCheckBox.IsChecked = config.EdgeAutoHide;
             DarkModeCheckBox.IsChecked = config.DarkMode;
             BaseEnvPathTextBox.Text = config.BaseEnvPath;
+            HotkeyTextBox.Text = config.ShowWindowHotkey;
             
             // 设置语言选择
             var languageItem = LanguageComboBox.Items.Cast<ComboBoxItem>()
@@ -66,6 +70,7 @@ namespace ProgramBox.Views
             config.EdgeAutoHide = EdgeAutoHideCheckBox.IsChecked ?? false;
             config.DarkMode = DarkModeCheckBox.IsChecked ?? false;
             config.BaseEnvPath = BaseEnvPathTextBox.Text ?? @"D:\ProgramBox\env";
+            config.ShowWindowHotkey = HotkeyTextBox.Text?.Trim() ?? string.Empty;
 
             // 立即应用深色/浅色主题
             if (Application.Current != null)
@@ -80,6 +85,7 @@ namespace ProgramBox.Views
             
             // 设置开机自启动
             AppHelper.SetAutoStart(config.SelfStarting);
+            HotkeyService.ApplyHotkey(config.ShowWindowHotkey);
 
             TrayIconService.ApplyTraySetting(config.TrayIcon);
 
@@ -113,6 +119,65 @@ namespace ProgramBox.Views
             {
                 BaseEnvPathTextBox.Text = folder[0].Path.LocalPath;
             }
+        }
+
+        private void CaptureHotkeyButton_Click(object? sender, RoutedEventArgs e)
+        {
+            _isCapturingHotkey = true;
+            CaptureHotkeyButton.IsEnabled = false;
+            HotkeyHintText.IsVisible = true;
+            HotkeyTextBox.Focus();
+
+            // 录制期间暂停全局快捷键，避免按下旧组合时窗口弹起打断录制
+            HotkeyService.ApplyHotkey(null);
+        }
+
+        private void ClearHotkeyButton_Click(object? sender, RoutedEventArgs e)
+        {
+            CancelHotkeyCapture();
+            HotkeyTextBox.Text = string.Empty;
+        }
+
+        private void HotkeyTextBox_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (!_isCapturingHotkey)
+                return;
+
+            e.Handled = true;
+
+            if (e.Key == Key.Escape)
+            {
+                CancelHotkeyCapture();
+                return;
+            }
+
+            // 仅按下修饰键时等待主键
+            if (e.Key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt
+                or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin)
+            {
+                return;
+            }
+
+            // 至少需要一个修饰键或功能键，避免注册裸字母键
+            var isFunctionKey = e.Key >= Key.F1 && e.Key <= Key.F24;
+            if (e.KeyModifiers == KeyModifiers.None && !isFunctionKey)
+                return;
+
+            HotkeyTextBox.Text = HotkeyService.FormatHotkey(e.KeyModifiers, e.Key);
+            CancelHotkeyCapture();
+        }
+
+        private void CancelHotkeyCapture()
+        {
+            if (!_isCapturingHotkey)
+                return;
+
+            _isCapturingHotkey = false;
+            CaptureHotkeyButton.IsEnabled = true;
+            HotkeyHintText.IsVisible = false;
+
+            // 恢复保存前的快捷键
+            HotkeyService.ApplyHotkey(_dataManager.Data.Config.ShowWindowHotkey);
         }
 
         private async void SaveButton_Click(object? sender, RoutedEventArgs e)
