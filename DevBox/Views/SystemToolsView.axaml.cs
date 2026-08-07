@@ -189,6 +189,9 @@ namespace ProgramBox.Views
 
         private void ToolCard_Click(object? sender, PointerPressedEventArgs e)
         {
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+                return;
+
             if (sender is Border border && border.Tag is string key)
             {
                 ExecuteSystemTool(key);

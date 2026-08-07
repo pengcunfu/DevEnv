@@ -64,6 +64,16 @@ namespace ProgramBox.Utils
             }
         }
 
+        public static string? SetCustomIcon(NativeAtom app, string imageFilePath)
+        {
+            if (!File.Exists(imageFilePath))
+                return null;
+
+            var cacheKey = $"exe_{IconCacheHelper.ComputeHash(app.ExecPath)}_custom";
+            IconCacheHelper.TryDeleteCachedIcon(app.IconPath);
+            return IconCacheHelper.CopyImageToCache(imageFilePath, cacheKey);
+        }
+
         public static void TryDeleteCachedIcon(string? iconPath)
             => IconCacheHelper.TryDeleteCachedIcon(iconPath);
 

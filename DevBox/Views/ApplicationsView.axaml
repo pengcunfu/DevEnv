@@ -39,6 +39,7 @@
                                     <Border.ContextMenu>
                                         <ContextMenu>
                                             <MenuItem Header="运行" Tag="{Binding}" Click="NativeRunMenu_Click"/>
+                                            <MenuItem Header="编辑别名与图标" Tag="{Binding}" Click="NativeEditMenu_Click"/>
                                             <MenuItem Header="在资源管理器中显示" Tag="{Binding}" Click="NativeExplorerMenu_Click"/>
                                             <MenuItem Header="移除" Tag="{Binding}" Click="NativeDeleteMenu_Click"/>
                                         </ContextMenu>

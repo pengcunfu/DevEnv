@@ -378,6 +378,36 @@ namespace ProgramBox.Views
                 RunApplication(app);
         }
 
+        private async void NativeEditMenu_Click(object? sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem { Tag: NativeAtom app })
+                await EditNativeApplicationAsync(app);
+        }
+
+        private async System.Threading.Tasks.Task EditNativeApplicationAsync(NativeAtom app)
+        {
+            var owner = TopLevel.GetTopLevel(this) as Window;
+            var dialog = new NativeEditWindow(app);
+            if (owner != null)
+                await dialog.ShowDialog(owner);
+            else
+                dialog.Show();
+
+            if (dialog.Saved)
+            {
+                _dataManager.Save();
+                RefreshNativeList();
+            }
+        }
+
+        private void RefreshNativeList()
+        {
+            var snapshot = _filteredNativeApps.ToList();
+            _filteredNativeApps.Clear();
+            foreach (var item in snapshot)
+                _filteredNativeApps.Add(item);
+        }
+
         private void NativeExplorerMenu_Click(object? sender, RoutedEventArgs e)
         {
             if (sender is MenuItem { Tag: NativeAtom app })

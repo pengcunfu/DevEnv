@@ -37,6 +37,7 @@ namespace ProgramBox.Views
             
             TrayIconCheckBox.IsChecked = config.TrayIcon;
             SelfStartingCheckBox.IsChecked = config.SelfStarting;
+            EdgeAutoHideCheckBox.IsChecked = config.EdgeAutoHide;
             DarkModeCheckBox.IsChecked = config.DarkMode;
             BaseEnvPathTextBox.Text = config.BaseEnvPath;
             
@@ -62,6 +63,7 @@ namespace ProgramBox.Views
             
             config.TrayIcon = TrayIconCheckBox.IsChecked ?? true;
             config.SelfStarting = SelfStartingCheckBox.IsChecked ?? false;
+            config.EdgeAutoHide = EdgeAutoHideCheckBox.IsChecked ?? false;
             config.DarkMode = DarkModeCheckBox.IsChecked ?? false;
             config.BaseEnvPath = BaseEnvPathTextBox.Text ?? @"D:\ProgramBox\env";
 
@@ -85,6 +87,7 @@ namespace ProgramBox.Views
                 && desktop.MainWindow is MainWindow mainWindow)
             {
                 mainWindow.RefreshTraySettings();
+                mainWindow.RefreshEdgeAutoHideSettings();
             }
             
             _dataManager.Save();

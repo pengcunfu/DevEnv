@@ -12,6 +12,7 @@ namespace ProgramBox.Models
         private string _baseEnvPath = @"D:\ProgramBox\env";
         private string _language = "zh-CN";
         private bool _darkMode = false;
+        private bool _edgeAutoHide = false;
 
         /// <summary>
         /// 托盘图标显示
@@ -75,6 +76,19 @@ namespace ProgramBox.Models
             {
                 _darkMode = value;
                 OnPropertyChanged(nameof(DarkMode));
+            }
+        }
+
+        /// <summary>
+        /// 靠边悬停隐藏
+        /// </summary>
+        public bool EdgeAutoHide
+        {
+            get => _edgeAutoHide;
+            set
+            {
+                _edgeAutoHide = value;
+                OnPropertyChanged(nameof(EdgeAutoHide));
             }
         }
 

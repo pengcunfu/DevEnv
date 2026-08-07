@@ -21,6 +21,11 @@
                     <TextBlock Text="登录 Windows 后自动启动 DevBox"
                                Classes="Body"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                    <CheckBox x:Name="EdgeAutoHideCheckBox" Content="靠边悬停隐藏"/>
+                    <TextBlock Text="窗口贴到屏幕边缘后自动隐藏，鼠标移到屏幕边缘即可恢复显示"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     
                     <StackPanel Spacing="8">
                         <TextBlock Text="界面语言" Classes="Body"/>

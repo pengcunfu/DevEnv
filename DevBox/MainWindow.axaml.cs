@@ -1,7 +1,10 @@
 using System;
+using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Input;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using ProgramBox.Utils;
 using ProgramBox.Views;
@@ -10,12 +13,30 @@ namespace ProgramBox
 {
     public partial class MainWindow : Window
     {
+        private enum DockEdge
+        {
+            None,
+            Left,
+            Right,
+            Top,
+            Bottom
+        }
+
+        private const int EdgeDockThreshold = 8;
+        private const int RetractStripSize = 8;
+
         private readonly JsonDataManager _dataManager;
         private readonly DispatcherTimer _statusTimer;
+
+        private bool _edgeAutoHideEnabled;
+        private bool _suppressPositionEvents;
+        private bool _retracted;
+        private DockEdge _dockedEdge = DockEdge.None;
 
         public MainWindow()
         {
             InitializeComponent();
+            TitleBarIcon.Source = AppIconHelper.LoadTitleIcon();
             _dataManager = new JsonDataManager();
             _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
             _statusTimer.Tick += (_, _) => ResetStatusText();
@@ -23,6 +44,164 @@ namespace ProgramBox
             LoadData();
             SyncAutoStartSetting();
             Closing += MainWindow_Closing;
+
+            PositionChanged += (_, _) => OnWindowPositionChanged();
+            PointerEntered += MainWindow_PointerEntered;
+            PointerExited += MainWindow_PointerExited;
+            RefreshEdgeAutoHideSettings();
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+
+            // 无边框窗口：挂接原生 WM_NCHITTEST，由系统接管边缘缩放与缩放光标
+            WindowResizeHelper.Attach(TryGetPlatformHandle()?.Handle ?? IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// 根据设置启用或禁用靠边悬停隐藏
+        /// </summary>
+        public void RefreshEdgeAutoHideSettings()
+        {
+            _edgeAutoHideEnabled = _dataManager.Data.Config.EdgeAutoHide;
+            if (_edgeAutoHideEnabled)
+            {
+                OnWindowPositionChanged();
+            }
+            else
+            {
+                RestoreFromEdge();
+            }
+        }
+
+        private void OnWindowPositionChanged()
+        {
+            if (_suppressPositionEvents || !_edgeAutoHideEnabled || WindowState == WindowState.Maximized)
+                return;
+
+            var screen = Screens.ScreenFromWindow(this);
+            if (screen == null)
+                return;
+
+            var winRect = GetWindowRectOnScreen(screen);
+            var edge = GetDockEdge(winRect, screen.WorkingArea);
+            if (edge == DockEdge.None)
+            {
+                _dockedEdge = DockEdge.None;
+                _retracted = false;
+                return;
+            }
+
+            // 收缩状态下保持收缩，等待鼠标悬停边缘条后恢复
+            if (_retracted)
+                return;
+
+            if (_dockedEdge != edge)
+                _dockedEdge = edge;
+        }
+
+        private PixelRect GetWindowRectOnScreen(Screen screen)
+        {
+            var width = Math.Max(1, (int)Math.Round(ClientSize.Width * screen.Scaling));
+            var height = Math.Max(1, (int)Math.Round(ClientSize.Height * screen.Scaling));
+            return new PixelRect(Position, new PixelSize(width, height));
+        }
+
+        private static DockEdge GetDockEdge(PixelRect winRect, PixelRect area)
+        {
+            if (winRect.X <= area.X + EdgeDockThreshold)
+                return DockEdge.Left;
+            if (area.X + area.Width - (winRect.X + winRect.Width) <= EdgeDockThreshold)
+                return DockEdge.Right;
+            if (winRect.Y <= area.Y + EdgeDockThreshold)
+                return DockEdge.Top;
+            if (area.Y + area.Height - (winRect.Y + winRect.Height) <= EdgeDockThreshold)
+                return DockEdge.Bottom;
+
+            return DockEdge.None;
+        }
+
+        private static PixelPoint ComputeDockedPosition(DockEdge edge, PixelRect winRect, PixelRect area)
+        {
+            return edge switch
+            {
+                DockEdge.Left => new PixelPoint(area.X, winRect.Y),
+                DockEdge.Right => new PixelPoint(area.X + area.Width - winRect.Width, winRect.Y),
+                DockEdge.Top => new PixelPoint(winRect.X, area.Y),
+                _ => new PixelPoint(winRect.X, area.Y + area.Height - winRect.Height),
+            };
+        }
+
+        private void MainWindow_PointerEntered(object? sender, PointerEventArgs e)
+        {
+            if (_edgeAutoHideEnabled)
+                RestoreFromEdge();
+        }
+
+        private void MainWindow_PointerExited(object? sender, PointerEventArgs e)
+        {
+            if (!_edgeAutoHideEnabled || _dockedEdge == DockEdge.None)
+                return;
+
+            if (OwnedWindows.Any(w => w.IsVisible))
+                return;
+
+            RetractToEdge();
+        }
+
+        private void RetractToEdge()
+        {
+            if (_dockedEdge == DockEdge.None || _retracted || WindowState == WindowState.Maximized)
+                return;
+
+            var screen = Screens.ScreenFromWindow(this);
+            if (screen == null)
+                return;
+
+            var winRect = GetWindowRectOnScreen(screen);
+            var area = screen.WorkingArea;
+
+            var target = _dockedEdge switch
+            {
+                DockEdge.Left => new PixelPoint(area.X - winRect.Width + RetractStripSize, winRect.Y),
+                DockEdge.Right => new PixelPoint(area.X + area.Width - RetractStripSize, winRect.Y),
+                DockEdge.Top => new PixelPoint(winRect.X, area.Y - winRect.Height + RetractStripSize),
+                _ => new PixelPoint(winRect.X, area.Y + area.Height - RetractStripSize),
+            };
+
+            _retracted = true;
+            MoveWindowTo(target);
+        }
+
+        private void RestoreFromEdge()
+        {
+            if (_dockedEdge == DockEdge.None || !_retracted)
+                return;
+
+            var screen = Screens.ScreenFromWindow(this);
+            if (screen == null)
+            {
+                _retracted = false;
+                return;
+            }
+
+            var target = ComputeDockedPosition(_dockedEdge, GetWindowRectOnScreen(screen), screen.WorkingArea);
+            _retracted = false;
+            MoveWindowTo(target);
+        }
+
+        private void MoveWindowTo(PixelPoint target)
+        {
+            _suppressPositionEvents = true;
+            try
+            {
+                Position = target;
+            }
+            finally
+            {
+                _suppressPositionEvents = false;
+            }
         }
 
         /// <summary>
@@ -93,22 +272,6 @@ namespace ProgramBox
             if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
                 BeginMoveDrag(e);
         }
-
-        private void ResizeWest(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.West, e);
-
-        private void ResizeEast(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.East, e);
-
-        private void ResizeNorth(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.North, e);
-
-        private void ResizeSouth(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.South, e);
-
-        private void ResizeNorthWest(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.NorthWest, e);
-
-        private void ResizeNorthEast(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.NorthEast, e);
-
-        private void ResizeSouthWest(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.SouthWest, e);
-
-        private void ResizeSouthEast(object? sender, PointerPressedEventArgs e) => BeginResizeDrag(WindowEdge.SouthEast, e);
 
         private void CloseWindowButton_Click(object? sender, RoutedEventArgs e)
         {

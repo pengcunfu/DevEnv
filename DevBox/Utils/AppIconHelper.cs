@@ -21,6 +21,26 @@ namespace ProgramBox.Utils
 
         public static WindowIcon? LoadForTray() => _trayIcon ??= LoadPngIcon(16) ?? LoadFallbackIcon(16);
 
+        /// <summary>
+        /// 加载标题栏用图标（Bitmap）
+        /// </summary>
+        public static Avalonia.Media.Imaging.Bitmap? LoadTitleIcon()
+        {
+            var bytes = ReadAssetBytes("icon.png");
+            if (bytes == null)
+                return null;
+
+            try
+            {
+                using var ms = new MemoryStream(bytes);
+                return new Avalonia.Media.Imaging.Bitmap(ms);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private static WindowIcon? LoadPngIcon(int size)
         {
             var bytes = ReadAssetBytes("icon.png");

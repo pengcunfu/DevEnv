@@ -27,12 +27,19 @@
                 <Border Grid.Column="0"
                         Background="Transparent"
                         PointerPressed="TitleBar_PointerPressed">
-                    <TextBlock Text="DevBox"
-                               Foreground="White"
-                               FontSize="13"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"
-                               Margin="12,0,0,0"/>
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Image x:Name="TitleBarIcon"
+                               Width="18"
+                               Height="18"
+                               Stretch="Uniform"
+                               Margin="10,0,8,0"/>
+                        <TextBlock Text="DevBox"
+                                   Foreground="White"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Border>
                 <Button Grid.Column="1"
                         x:Name="CloseWindowButton"
@@ -118,22 +125,5 @@
             </Grid>
         </Border>
 
-        <!-- 调整大小热区（四边 + 四角）：无边框窗口没有系统缩放边框，这里提供可拖拽缩放的边缘 -->
-        <Border Grid.RowSpan="3" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="6"
-                Background="Transparent" Cursor="SizeWestEast" PointerPressed="ResizeWest"/>
-        <Border Grid.RowSpan="3" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="6"
-                Background="Transparent" Cursor="SizeWestEast" PointerPressed="ResizeEast"/>
-        <Border Grid.RowSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="6"
-                Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="ResizeNorth"/>
-        <Border Grid.RowSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="6"
-                Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="ResizeSouth"/>
-        <Border Grid.RowSpan="3" HorizontalAlignment="Left" VerticalAlignment="Top" Width="12" Height="12"
-                Background="Transparent" Cursor="SizeAll" PointerPressed="ResizeNorthWest"/>
-        <Border Grid.RowSpan="3" HorizontalAlignment="Right" VerticalAlignment="Top" Width="12" Height="12"
-                Background="Transparent" Cursor="SizeAll" PointerPressed="ResizeNorthEast"/>
-        <Border Grid.RowSpan="3" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="12" Height="12"
-                Background="Transparent" Cursor="SizeAll" PointerPressed="ResizeSouthWest"/>
-        <Border Grid.RowSpan="3" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="12" Height="12"
-                Background="Transparent" Cursor="SizeAll" PointerPressed="ResizeSouthEast"/>
     </Grid>
 </Window>
