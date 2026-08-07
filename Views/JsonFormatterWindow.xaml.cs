@@ -17,7 +17,7 @@ namespace DevEnv.Views
         {
             try
             {
-                string input = TxtInput.Text;
+                string? input = TxtInput.Text;
                 if (string.IsNullOrWhiteSpace(input))
                 {
                     UpdateStatus("请输入 JSON 内容", true);
@@ -55,7 +55,7 @@ namespace DevEnv.Views
         {
             try
             {
-                string input = TxtInput.Text;
+                string? input = TxtInput.Text;
                 if (string.IsNullOrWhiteSpace(input))
                 {
                     UpdateStatus("请输入 JSON 内容", true);
@@ -93,7 +93,7 @@ namespace DevEnv.Views
         {
             try
             {
-                string input = TxtInput.Text;
+                string? input = TxtInput.Text;
                 if (string.IsNullOrWhiteSpace(input))
                 {
                     UpdateStatus("请输入 JSON 内容", true);

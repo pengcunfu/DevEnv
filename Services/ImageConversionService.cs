@@ -39,16 +39,16 @@ namespace DevEnv.Services
             };
         }
 
-        public async Task<List<(string InputFile, string OutputFile, bool Success, string ErrorMessage)>> ConvertImagesAsync(
+        public async Task<List<(string InputFile, string? OutputFile, bool Success, string? ErrorMessage)>> ConvertImagesAsync(
             List<string> inputFiles,
             string outputFormat,
-            string outputDirectory,
+            string? outputDirectory,
             int quality = 95,
             bool overwriteExisting = false,
-            IProgress<ImageConversionProgress> progress = null,
+            IProgress<ImageConversionProgress>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            var results = new List<(string InputFile, string OutputFile, bool Success, string ErrorMessage)>();
+            var results = new List<(string InputFile, string? OutputFile, bool Success, string? ErrorMessage)>();
             var supportedExtensions = _converters.Keys;
 
             for (int i = 0; i < inputFiles.Count; i++)
@@ -70,7 +70,10 @@ namespace DevEnv.Services
                     var outputExtension = GetFileExtension(outputFormat);
                     var fileName = Path.GetFileNameWithoutExtension(inputFile);
                     var outputFileName = $"{fileName}{outputExtension}";
-                    var outputFile = Path.Combine(outputDirectory, outputFileName);
+                    var targetDirectory = string.IsNullOrWhiteSpace(outputDirectory)
+                        ? Path.GetDirectoryName(inputFile) ?? Directory.GetCurrentDirectory()
+                        : outputDirectory;
+                    var outputFile = Path.Combine(targetDirectory, outputFileName);
 
                     // 检查文件是否已存在
                     if (!overwriteExisting && File.Exists(outputFile))
@@ -117,7 +120,7 @@ namespace DevEnv.Services
         {
             // 确保输出目录存在
             var directory = Path.GetDirectoryName(outputFile);
-            if (!Directory.Exists(directory))
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -100,6 +101,7 @@ namespace DevEnv.ViewModels
         public ICommand CalculateTextHashCommand { get; private set; }
         public ICommand CopyHashCommand { get; private set; }
 
+        [MemberNotNull(nameof(BrowseFileCommand), nameof(PastePathCommand), nameof(CalculateHashCommand), nameof(CalculateAllHashesCommand), nameof(CalculateTextHashCommand), nameof(CopyHashCommand))]
         private void InitializeCommands()
         {
             BrowseFileCommand = new RelayCommand(async () => await BrowseFileAsync(), () => CanCalculate);

@@ -269,7 +269,7 @@ public partial class SoftwareDownloadWindow : Window
     private void UpdateCount()
     {
         UpdateActiveDownloadCount();
-        if (!TxtCount.Text.Contains("活动下载"))
+        if (TxtCount.Text?.Contains("活动下载") != true)
             TxtCount.Text = $"共 {_filteredSoftware.Count} 项";
     }
 

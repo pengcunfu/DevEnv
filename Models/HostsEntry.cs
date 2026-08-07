@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -74,7 +75,7 @@ namespace DevEnv.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public static bool TryParse(string line, out HostsEntry? entry)
+        public static bool TryParse(string line, [NotNullWhen(true)] out HostsEntry? entry)
         {
             entry = null;
 

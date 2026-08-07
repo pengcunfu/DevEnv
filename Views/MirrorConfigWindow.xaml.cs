@@ -1,6 +1,5 @@
 ﻿using DevEnv.UI;
 using Avalonia.Controls;
-using Avalonia.Controls;
 using DevEnv.Models;
 using DevEnv.Services;
 

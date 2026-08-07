@@ -28,8 +28,8 @@ public partial class EditHostsEntryDialog : Window
         if (!ValidateInput())
             return;
 
-        Ip = IpTextBox.Text.Trim();
-        Domain = DomainTextBox.Text.Trim();
+        Ip = IpTextBox.Text?.Trim() ?? string.Empty;
+        Domain = DomainTextBox.Text?.Trim() ?? string.Empty;
         Close(true);
     }
 
@@ -37,8 +37,8 @@ public partial class EditHostsEntryDialog : Window
 
     private bool ValidateInput()
     {
-        var ip = IpTextBox.Text.Trim();
-        var domain = DomainTextBox.Text.Trim();
+        var ip = IpTextBox.Text?.Trim() ?? string.Empty;
+        var domain = DomainTextBox.Text?.Trim() ?? string.Empty;
 
         if (string.IsNullOrEmpty(ip))
         {
