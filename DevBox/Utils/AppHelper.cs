@@ -299,23 +299,16 @@ namespace ProgramBox.Utils
         }
 
         /// <summary>
-        /// 显示信息消息
+        /// 在底部状态条显示消息
         /// </summary>
-        public static async Task ShowInfoAsync(string message, string title = "信息")
+        public static Task ShowInfoAsync(string message, string title = "信息")
         {
-            var window = GetMainWindow();
-            if (window != null)
+            if (GetMainWindow() is MainWindow mainWindow)
             {
-                var messageBox = new Window
-                {
-                    Title = title,
-                    Width = 400,
-                    Height = 200,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Content = new TextBlock { Text = message, Margin = new Avalonia.Thickness(20) }
-                };
-                await messageBox.ShowDialog(window);
+                mainWindow.ShowStatusMessage(message);
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>

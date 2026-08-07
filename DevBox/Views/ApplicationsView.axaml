@@ -14,36 +14,13 @@
 
     <TabControl>
         <TabItem Header="本地应用">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer x:Name="NativeScrollArea" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="选择程序..." Click="BrowseExeButton_Click"/>
+                    </ContextMenu>
+                </ScrollViewer.ContextMenu>
                 <StackPanel Margin="16">
-                    <!-- 拖放区域 -->
-                    <Border x:Name="DropZone"
-                            Classes="Card"
-                            MinHeight="88"
-                            Margin="0,0,0,12"
-                            BorderBrush="{DynamicResource PrimaryBrush}"
-                            BorderThickness="2"
-                            CornerRadius="8"
-                            Background="{DynamicResource ActiveNavBrush}">
-                        <StackPanel HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Spacing="6"
-                                    Margin="16">
-                            <TextBlock Text="将 .exe 拖放到此处添加"
-                                       FontSize="15"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource PrimaryBrush}"
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock Text="自动保存路径与图标，单击卡片即可启动"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       HorizontalAlignment="Center"/>
-                            <Button Content="选择程序..."
-                                    Click="BrowseExeButton_Click"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Border>
 
                     <ItemsControl x:Name="NativeApplicationsList">
                         <ItemsControl.ItemsPanel>
@@ -54,59 +31,39 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:NativeAtom">
                                 <Border Classes="ToolCard"
-                                        Width="128"
-                                        Height="148"
+                                        Width="140"
+                                        Height="64"
                                         Tag="{Binding}"
                                         PointerPressed="NativeAppCard_PointerPressed"
                                         ToolTip.Tip="{Binding ExecPath}">
-                                    <Grid RowDefinitions="Auto,*,Auto">
-                                        <Border Grid.Row="0"
-                                                Width="48"
-                                                Height="48"
-                                                CornerRadius="8"
+                                    <Border.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="运行" Tag="{Binding}" Click="NativeRunMenu_Click"/>
+                                            <MenuItem Header="在资源管理器中显示" Tag="{Binding}" Click="NativeExplorerMenu_Click"/>
+                                            <MenuItem Header="移除" Tag="{Binding}" Click="NativeDeleteMenu_Click"/>
+                                        </ContextMenu>
+                                    </Border.ContextMenu>
+                                    <Grid ColumnDefinitions="Auto,*" Margin="8">
+                                        <Border Grid.Column="0"
+                                                Width="40"
+                                                Height="40"
+                                                CornerRadius="6"
                                                 Background="{DynamicResource IconBackgroundBrush}"
-                                                HorizontalAlignment="Center"
-                                                Margin="0,0,0,6">
-                                            <Image Width="40"
-                                                   Height="40"
+                                                VerticalAlignment="Center">
+                                            <Image Width="32"
+                                                   Height="32"
                                                    Stretch="Uniform"
                                                    Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}"/>
                                         </Border>
-
-                                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       TextAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       MaxWidth="112"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2"
-                                                    Orientation="Horizontal"
-                                                    HorizontalAlignment="Center"
-                                                    Spacing="4"
-                                                    Margin="0,6,0,0">
-                                            <Button Content="▶"
-                                                    ToolTip.Tip="运行"
-                                                    Click="RunApplication_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                            <Button Content="📁"
-                                                    ToolTip.Tip="在资源管理器中显示"
-                                                    Click="ShowInExplorer_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                            <Button Content="✕"
-                                                    ToolTip.Tip="移除"
-                                                    Click="DeleteNativeApplication_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Name}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   TextAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -125,7 +82,7 @@
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextAlignment="Center"
                                        Margin="0,0,0,8"/>
-                            <TextBlock Text="拖入 .exe 或点击上方「选择程序」"
+                            <TextBlock Text="右键空白区域选择程序，或直接拖入 .exe"
                                        Classes="Body"
                                        TextAlignment="Center"/>
                         </StackPanel>
@@ -135,35 +92,13 @@
         </TabItem>
 
         <TabItem Header="文件夹">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer x:Name="FolderScrollArea" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="选择文件夹..." Click="BrowseFolderButton_Click"/>
+                    </ContextMenu>
+                </ScrollViewer.ContextMenu>
                 <StackPanel Margin="16">
-                    <Border x:Name="FolderDropZone"
-                            Classes="Card"
-                            MinHeight="88"
-                            Margin="0,0,0,12"
-                            BorderBrush="#43A047"
-                            BorderThickness="2"
-                            CornerRadius="8"
-                            Background="#E8F5E9">
-                        <StackPanel HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Spacing="6"
-                                    Margin="16">
-                            <TextBlock Text="将文件夹拖放到此处"
-                                       FontSize="15"
-                                       FontWeight="SemiBold"
-                                       Foreground="#2E7D32"
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock Text="可设置别名与自定义图标，单击打开文件夹"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       HorizontalAlignment="Center"/>
-                            <Button Content="选择文件夹..."
-                                    Click="BrowseFolderButton_Click"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Border>
 
                     <ItemsControl x:Name="FolderShortcutsList">
                         <ItemsControl.ItemsPanel>
@@ -174,59 +109,39 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:FolderAtom">
                                 <Border Classes="ToolCard"
-                                        Width="128"
-                                        Height="148"
+                                        Width="140"
+                                        Height="64"
                                         Tag="{Binding}"
                                         PointerPressed="FolderCard_PointerPressed"
                                         ToolTip.Tip="{Binding FolderPath}">
-                                    <Grid RowDefinitions="Auto,*,Auto">
-                                        <Border Grid.Row="0"
-                                                Width="48"
-                                                Height="48"
-                                                CornerRadius="8"
+                                    <Border.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="打开" Tag="{Binding}" Click="FolderOpenMenu_Click"/>
+                                            <MenuItem Header="编辑别名与图标" Tag="{Binding}" Click="FolderEditMenu_Click"/>
+                                            <MenuItem Header="移除" Tag="{Binding}" Click="FolderDeleteMenu_Click"/>
+                                        </ContextMenu>
+                                    </Border.ContextMenu>
+                                    <Grid ColumnDefinitions="Auto,*" Margin="8">
+                                        <Border Grid.Column="0"
+                                                Width="40"
+                                                Height="40"
+                                                CornerRadius="6"
                                                 Background="{DynamicResource IconBackgroundBrush}"
-                                                HorizontalAlignment="Center"
-                                                Margin="0,0,0,6">
-                                            <Image Width="40"
-                                                   Height="40"
+                                                VerticalAlignment="Center">
+                                            <Image Width="32"
+                                                   Height="32"
                                                    Stretch="Uniform"
                                                    Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}"/>
                                         </Border>
-
-                                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       TextAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       MaxWidth="112"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2"
-                                                    Orientation="Horizontal"
-                                                    HorizontalAlignment="Center"
-                                                    Spacing="4"
-                                                    Margin="0,6,0,0">
-                                            <Button Content="📂"
-                                                    ToolTip.Tip="打开文件夹"
-                                                    Click="OpenFolder_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                            <Button Content="✎"
-                                                    ToolTip.Tip="编辑别名与图标"
-                                                    Click="EditFolder_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                            <Button Content="✕"
-                                                    ToolTip.Tip="移除"
-                                                    Click="DeleteFolder_Click"
-                                                    Tag="{Binding}"
-                                                    Padding="6,2"
-                                                    FontSize="11"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Name}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   TextAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -245,7 +160,7 @@
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextAlignment="Center"
                                        Margin="0,0,0,8"/>
-                            <TextBlock Text="拖入文件夹，用于快速打开工作目录、文档、项目等"
+                            <TextBlock Text="右键空白区域选择文件夹，或直接拖入文件夹"
                                        Classes="Body"
                                        TextAlignment="Center"/>
                         </StackPanel>

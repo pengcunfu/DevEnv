@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Input;
+using Avalonia.Threading;
 using ProgramBox.Utils;
 using ProgramBox.Views;
 
@@ -10,15 +11,34 @@ namespace ProgramBox
     public partial class MainWindow : Window
     {
         private readonly JsonDataManager _dataManager;
+        private readonly DispatcherTimer _statusTimer;
 
         public MainWindow()
         {
             InitializeComponent();
             _dataManager = new JsonDataManager();
+            _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+            _statusTimer.Tick += (_, _) => ResetStatusText();
             VersionText.Text = $"版本 {VersionInfo.Current}";
             LoadData();
             SyncAutoStartSetting();
             Closing += MainWindow_Closing;
+        }
+
+        /// <summary>
+        /// 在底部状态条显示消息，数秒后恢复默认文本
+        /// </summary>
+        public void ShowStatusMessage(string message)
+        {
+            StatusText.Text = message;
+            _statusTimer.Stop();
+            _statusTimer.Start();
+        }
+
+        private void ResetStatusText()
+        {
+            StatusText.Text = "就绪";
+            _statusTimer.Stop();
         }
 
         /// <summary>

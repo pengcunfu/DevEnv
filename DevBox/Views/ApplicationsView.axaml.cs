@@ -48,13 +48,14 @@ namespace ProgramBox.Views
 
         private void SetupDragDrop()
         {
-            DragDrop.SetAllowDrop(DropZone, true);
-            DropZone.AddHandler(DragDrop.DragOverEvent, OnNativeDragOver, RoutingStrategies.Bubble);
-            DropZone.AddHandler(DragDrop.DropEvent, OnNativeDrop, RoutingStrategies.Bubble);
+            // 整个列表区域都支持拖拽添加
+            DragDrop.SetAllowDrop(NativeScrollArea, true);
+            NativeScrollArea.AddHandler(DragDrop.DragOverEvent, OnNativeDragOver, RoutingStrategies.Bubble);
+            NativeScrollArea.AddHandler(DragDrop.DropEvent, OnNativeDrop, RoutingStrategies.Bubble);
 
-            DragDrop.SetAllowDrop(FolderDropZone, true);
-            FolderDropZone.AddHandler(DragDrop.DragOverEvent, OnFolderDragOver, RoutingStrategies.Bubble);
-            FolderDropZone.AddHandler(DragDrop.DropEvent, OnFolderDrop, RoutingStrategies.Bubble);
+            DragDrop.SetAllowDrop(FolderScrollArea, true);
+            FolderScrollArea.AddHandler(DragDrop.DragOverEvent, OnFolderDragOver, RoutingStrategies.Bubble);
+            FolderScrollArea.AddHandler(DragDrop.DropEvent, OnFolderDrop, RoutingStrategies.Bubble);
         }
 
         private void LoadApplications()
@@ -289,17 +290,20 @@ namespace ProgramBox.Views
             }
         }
 
-        private void OpenFolder_Click(object? sender, RoutedEventArgs e)
+        private void FolderOpenMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is Button { Tag: FolderAtom folder })
+            if (sender is MenuItem { Tag: FolderAtom folder })
                 OpenFolder(folder);
         }
 
-        private async void EditFolder_Click(object? sender, RoutedEventArgs e)
+        private async void FolderEditMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is not Button { Tag: FolderAtom folder })
-                return;
+            if (sender is MenuItem { Tag: FolderAtom folder })
+                await EditFolderAsync(folder);
+        }
 
+        private async System.Threading.Tasks.Task EditFolderAsync(FolderAtom folder)
+        {
             var owner = TopLevel.GetTopLevel(this) as Window;
             var dialog = new FolderEditWindow(folder);
             if (owner != null)
@@ -322,11 +326,14 @@ namespace ProgramBox.Views
                 _filteredFolders.Add(item);
         }
 
-        private async void DeleteFolder_Click(object? sender, RoutedEventArgs e)
+        private async void FolderDeleteMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is not Button { Tag: FolderAtom folder })
-                return;
+            if (sender is MenuItem { Tag: FolderAtom folder })
+                await RemoveFolder(folder);
+        }
 
+        private async System.Threading.Tasks.Task RemoveFolder(FolderAtom folder)
+        {
             IconCacheHelper.TryDeleteCachedIcon(folder.IconPath);
             _dataManager.RemoveFolderAtom(folder);
             _allFolders.Remove(folder);
@@ -365,23 +372,26 @@ namespace ProgramBox.Views
             }
         }
 
-        private void RunApplication_Click(object? sender, RoutedEventArgs e)
+        private void NativeRunMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is Button { Tag: NativeAtom app })
+            if (sender is MenuItem { Tag: NativeAtom app })
                 RunApplication(app);
         }
 
-        private void ShowInExplorer_Click(object? sender, RoutedEventArgs e)
+        private void NativeExplorerMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is Button { Tag: NativeAtom app })
+            if (sender is MenuItem { Tag: NativeAtom app })
                 AppHelper.OpenInExplorer(app.ExecPath);
         }
 
-        private async void DeleteNativeApplication_Click(object? sender, RoutedEventArgs e)
+        private async void NativeDeleteMenu_Click(object? sender, RoutedEventArgs e)
         {
-            if (sender is not Button { Tag: NativeAtom app })
-                return;
+            if (sender is MenuItem { Tag: NativeAtom app })
+                await RemoveNativeApplication(app);
+        }
 
+        private async System.Threading.Tasks.Task RemoveNativeApplication(NativeAtom app)
+        {
             NativeAppHelper.TryDeleteCachedIcon(app.IconPath);
             _dataManager.RemoveNativeAtom(app);
             _allNativeApps.Remove(app);
