@@ -140,7 +140,6 @@ namespace ProgramBox.Utils
             var showItem = new NativeMenuItem("显示主窗口");
             showItem.Click += (_, _) => ShowMainWindow();
             menu.Items.Add(showItem);
-            menu.Items.Add(new NativeMenuItemSeparator());
             var exitItem = new NativeMenuItem("退出");
             exitItem.Click += (_, _) => ExitApplication();
             menu.Items.Add(exitItem);
