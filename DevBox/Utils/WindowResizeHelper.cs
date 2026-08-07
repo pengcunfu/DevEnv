@@ -34,6 +34,12 @@ namespace ProgramBox.Utils
         private static WndProcDelegate? _procDelegate;
         private static IntPtr _originalProc;
 
+        /// <summary>
+        /// 收缩贴边期间置为 true：整条可见边缘条都作为客户区处理，
+        /// 保证悬停事件能到达 Avalonia（否则会被当作非客户区缩放边缘吞掉）。
+        /// </summary>
+        public static bool SuppressEdgeHitTest { get; set; }
+
         private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
@@ -60,6 +66,12 @@ namespace ProgramBox.Utils
         [DllImport("user32.dll")]
         private static extern uint GetDpiForWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
         [StructLayout(LayoutKind.Sequential)]
         private struct RECT
         {
@@ -67,6 +79,22 @@ namespace ProgramBox.Utils
             public int Top;
             public int Right;
             public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MONITORINFO
+        {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
         }
 
         /// <summary>
@@ -93,8 +121,9 @@ namespace ProgramBox.Utils
             if (msg == WM_NCHITTEST)
             {
                 var hit = HitTest(hWnd, lParam);
-                if (hit != HTCLIENT)
-                    return new IntPtr(hit);
+                // 一律返回我们自己的命中判定，不再转发给 Avalonia，
+                // 否则其扩展客户区处理可能覆盖我们的返回值，导致悬停事件丢失。
+                return new IntPtr(hit);
             }
 
             var result = CallWindowProc(_originalProc, hWnd, msg, wParam, lParam);
@@ -108,6 +137,7 @@ namespace ProgramBox.Utils
 
             return result;
         }
+
 
         private static void EnsureThickFrame(IntPtr hWnd)
         {
@@ -124,6 +154,10 @@ namespace ProgramBox.Utils
             if (IsZoomed(hWnd))
                 return HTCLIENT;
 
+            // 收缩贴边时不做边缘命中，让悬停恢复生效
+            if (SuppressEdgeHitTest)
+                return HTCLIENT;
+
             if (!GetWindowRect(hWnd, out var rect))
                 return HTCLIENT;
 
@@ -133,10 +167,19 @@ namespace ProgramBox.Utils
             var scale = Math.Max(1.0, GetDpiForWindow(hWnd) / 96.0);
             int thickness = Math.Max(4, (int)(ResizeBorderThickness * scale));
 
-            bool left = x >= rect.Left && x <= rect.Left + thickness;
-            bool right = x >= rect.Right - thickness && x <= rect.Right;
-            bool top = y >= rect.Top && y <= rect.Top + thickness;
-            bool bottom = y >= rect.Bottom - thickness && y <= rect.Bottom;
+            var area = GetMonitorWorkArea(x, y);
+
+            // 贴住屏幕（工作区）边缘的一侧不做缩放命中：
+            // 该侧本来无法拖拽缩放，且避免贴边悬停被当作非客户区而误触发 PointerExited
+            bool flushLeft = rect.Left <= area.Left + 1;
+            bool flushRight = rect.Right >= area.Right - 1;
+            bool flushTop = rect.Top <= area.Top + 1;
+            bool flushBottom = rect.Bottom >= area.Bottom - 1;
+
+            bool left = !flushLeft && x >= rect.Left && x <= rect.Left + thickness;
+            bool right = !flushRight && x >= rect.Right - thickness && x <= rect.Right;
+            bool top = !flushTop && y >= rect.Top && y <= rect.Top + thickness;
+            bool bottom = !flushBottom && y >= rect.Bottom - thickness && y <= rect.Bottom;
 
             if (left && top) return HTTOPLEFT;
             if (right && top) return HTTOPRIGHT;
@@ -148,6 +191,17 @@ namespace ProgramBox.Utils
             if (bottom) return HTBOTTOM;
 
             return HTCLIENT;
+        }
+
+        private static RECT GetMonitorWorkArea(int x, int y)
+        {
+            var monitor = MonitorFromPoint(new POINT { X = x, Y = y }, 2 /* MONITOR_DEFAULTTONEAREST */);
+            var info = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            if (monitor != IntPtr.Zero && GetMonitorInfo(monitor, ref info))
+                return info.rcWork;
+
+            // 取不到监视器信息时退化为宽松区域，不抑制任何边
+            return new RECT { Left = int.MinValue / 2, Top = int.MinValue / 2, Right = int.MaxValue / 2, Bottom = int.MaxValue / 2 };
         }
 
         private static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)

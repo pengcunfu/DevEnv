@@ -171,6 +171,7 @@ namespace ProgramBox
             };
 
             _retracted = true;
+            WindowResizeHelper.SuppressEdgeHitTest = true;
             MoveWindowTo(target);
         }
 
@@ -188,6 +189,7 @@ namespace ProgramBox
 
             var target = ComputeDockedPosition(_dockedEdge, GetWindowRectOnScreen(screen), screen.WorkingArea);
             _retracted = false;
+            WindowResizeHelper.SuppressEdgeHitTest = false;
             MoveWindowTo(target);
         }
 
