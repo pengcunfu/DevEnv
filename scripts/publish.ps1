@@ -36,7 +36,17 @@ if (Test-Path $versionPath) {
 }
 
 if (Test-Path $OutputDir) {
-    Remove-Item -Path $OutputDir -Recurse -Force
+    try {
+        Remove-Item -Path $OutputDir -Recurse -Force -ErrorAction Stop
+    }
+    catch {
+        Write-Error @"
+无法清理输出目录（文件可能被占用）: $OutputDir
+请先关闭正在运行的 DevBox.exe，再重新执行发布。
+$($_.Exception.Message)
+"@
+        exit 1
+    }
 }
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
