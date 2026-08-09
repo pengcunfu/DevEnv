@@ -1,5 +1,6 @@
 ﻿using System;
 using Avalonia;
+using ProgramBox.Utils;
 
 namespace ProgramBox
 {
@@ -9,8 +10,20 @@ namespace ProgramBox
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
-        public static void Main(string[] args) => BuildAvaloniaApp()
-            .StartWithClassicDesktopLifetime(args);
+        public static void Main(string[] args)
+        {
+            if (!SingleInstanceService.TryStartAsPrimary())
+                return;
+
+            try
+            {
+                BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            }
+            finally
+            {
+                SingleInstanceService.Dispose();
+            }
+        }
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()

@@ -28,6 +28,7 @@ namespace ProgramBox
                 var mainWindow = new MainWindow();
                 desktop.MainWindow = mainWindow;
                 mainWindow.InitializeTray();
+                SingleInstanceService.StartActivateListener(mainWindow);
             }
 
             base.OnFrameworkInitializationCompleted();
