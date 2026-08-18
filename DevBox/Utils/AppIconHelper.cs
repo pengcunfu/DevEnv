@@ -147,7 +147,6 @@ namespace ProgramBox.Utils
         private static IEnumerable<string> GetFilePaths(string fileName)
         {
             yield return Path.Combine(AppContext.BaseDirectory, "Resources", fileName);
-            yield return Path.Combine(AppHelper.GetFullPath("Resources"), fileName);
         }
     }
 }

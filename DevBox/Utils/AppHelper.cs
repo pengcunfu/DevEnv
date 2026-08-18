@@ -14,7 +14,12 @@ namespace ProgramBox.Utils
     public static class AppHelper
     {
         /// <summary>
-        /// 开机自启动注册表项名称
+        /// 软件提供商目录名
+        /// </summary>
+        public const string VendorName = "FNSoftware";
+
+        /// <summary>
+        /// 开机自启动注册表项名称 / 用户数据程序目录名
         /// </summary>
         public const string AutoStartAppName = "DevBox";
 
@@ -22,6 +27,11 @@ namespace ProgramBox.Utils
         /// 旧版本遗留的启动项名称（迁移/清理用）
         /// </summary>
         private const string LegacyAutoStartAppName = "ProgramBox";
+
+        /// <summary>
+        /// 用户数据目录：文档\FNSoftware\DevBox
+        /// </summary>
+        public static readonly string UserDataDirectory = ResolveUserDataDirectory();
 
         /// <summary>
         /// 全局配置文件路径
@@ -34,15 +44,69 @@ namespace ProgramBox.Utils
         public static readonly string JsonPath = GetFullPath("data.json");
 
         /// <summary>
-        /// 获取完整路径
+        /// 获取用户数据目录下的完整路径
         /// </summary>
         /// <param name="shortPath">相对路径</param>
         /// <returns>完整路径</returns>
         public static string GetFullPath(string shortPath)
         {
-            var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var appDirectory = Path.GetDirectoryName(appPath) ?? Environment.CurrentDirectory;
-            return Path.Combine(appDirectory, shortPath);
+            return Path.Combine(UserDataDirectory, shortPath);
+        }
+
+        private static string ResolveUserDataDirectory()
+        {
+            var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var directory = Path.Combine(documents, VendorName, AutoStartAppName);
+            Directory.CreateDirectory(directory);
+            MigrateLegacyUserData(directory);
+            return directory;
+        }
+
+        /// <summary>
+        /// 将旧版程序目录中的用户数据迁移到文档目录（仅当新位置尚无 data.json）
+        /// </summary>
+        private static void MigrateLegacyUserData(string destination)
+        {
+            try
+            {
+                if (File.Exists(Path.Combine(destination, "data.json")))
+                    return;
+
+                var legacyDir = AppContext.BaseDirectory;
+                if (string.IsNullOrWhiteSpace(legacyDir) ||
+                    string.Equals(Path.GetFullPath(legacyDir).TrimEnd(Path.DirectorySeparatorChar),
+                        Path.GetFullPath(destination).TrimEnd(Path.DirectorySeparatorChar),
+                        StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                CopyIfExists(Path.Combine(legacyDir, "data.json"), Path.Combine(destination, "data.json"));
+                CopyIfExists(Path.Combine(legacyDir, "config.json"), Path.Combine(destination, "config.json"));
+
+                var legacyIcons = Path.Combine(legacyDir, "icons");
+                var destIcons = Path.Combine(destination, "icons");
+                if (Directory.Exists(legacyIcons) && !Directory.Exists(destIcons))
+                    CopyDirectory(legacyIcons, destIcons);
+            }
+            catch
+            {
+                // 迁移失败不影响启动，将在新目录创建默认数据
+            }
+        }
+
+        private static void CopyIfExists(string source, string destination)
+        {
+            if (File.Exists(source) && !File.Exists(destination))
+                File.Copy(source, destination);
+        }
+
+        private static void CopyDirectory(string source, string destination)
+        {
+            Directory.CreateDirectory(destination);
+            foreach (var file in Directory.GetFiles(source))
+                File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: false);
+
+            foreach (var dir in Directory.GetDirectories(source))
+                CopyDirectory(dir, Path.Combine(destination, Path.GetFileName(dir)));
         }
 
         /// <summary>

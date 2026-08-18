@@ -43,6 +43,7 @@ namespace ProgramBox.Views
                 ("computer", "计算机管理"),
                 ("server", "服务"),
                 ("config", "系统配置"),
+                ("startup", "启动项管理"),
                 ("regedit", "注册表"),
                 ("env", "环境变量")
             };
@@ -245,8 +246,15 @@ namespace ProgramBox.Views
         {
             try
             {
+                if (string.Equals(key, "startup", StringComparison.OrdinalIgnoreCase))
+                {
+                    var owner = TopLevel.GetTopLevel(this) as Window;
+                    StartupManagerWindow.ShowOrActivate(owner);
+                    return;
+                }
+
                 WindowsToolsHelper.ExecuteWindowsTool(key);
-                
+
                 // 更新状态
                 var tool = _allTools.FirstOrDefault(t => t.Key == key);
                 if (tool != null)

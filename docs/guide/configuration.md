@@ -1,6 +1,8 @@
 # 配置说明
 
-配置文件位于 **与 `ProgramBox.exe` 相同的目录**。
+配置文件位于用户文档目录：**`文档\FNSoftware\DevBox\`**（`FNSoftware` 为软件提供商，`DevBox` 为程序目录）。
+
+旧版本若把 `data.json` 放在程序目录，首次启动会自动迁移到上述位置。
 
 ## config.json
 
@@ -34,9 +36,9 @@
 
 迁移到新机器时：
 
-1. 复制整个程序目录（含 `data.json`、`config.json`）
+1. 复制 `文档\FNSoftware\DevBox\` 下的 `data.json`、`config.json` 以及 `icons` 目录
 2. 根据新机器路径调整 `BaseEnvPath` 与各条目的可执行文件路径
 
 ## 备份建议
 
-定期备份 `data.json` 与 `config.json`；升级大版本前建议先备份再覆盖安装（解压新版本到同目录时保留这两个文件）。
+定期备份 `文档\FNSoftware\DevBox\` 下的 `data.json` 与 `config.json`。升级安装只需覆盖程序文件，用户数据不受影响。

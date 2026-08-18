@@ -263,6 +263,19 @@ function Draw-ToolGlyph {
             $Graphics.DrawLine($penWhite3, 32, 32, 42, 32)
             $Graphics.FillEllipse($white, 29.5, 29.5, 5, 5)
         }
+        'startup' {
+            # 火箭式开机：竖线 + 箭头
+            $Graphics.DrawLine($penWhite3, 32, 46, 32, 20)
+            $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+            $path.AddPolygon([System.Drawing.PointF[]]@(
+                (New-Object System.Drawing.PointF 32, 12),
+                (New-Object System.Drawing.PointF 42, 26),
+                (New-Object System.Drawing.PointF 22, 26)
+            ))
+            $Graphics.FillPath($white, $path)
+            $path.Dispose()
+            New-FilledRect -Graphics $Graphics -X 24 -Y 44 -Width 16 -Height 6 -Brush $white -Radius 2
+        }
         'control' {
             # 控制面板网格
             New-FilledRect -Graphics $Graphics -X 17 -Y 17 -Width 12 -Height 12 -Brush $white -Radius 3
@@ -337,6 +350,7 @@ $icons = @(
     @{ Name = 'event';        Color = '#455A64'; Glyph = 'event' },
     @{ Name = 'info';         Color = '#1E88E5'; Glyph = 'info' },
     @{ Name = 'planned_task'; Color = '#26A69A'; Glyph = 'planned_task' },
+    @{ Name = 'startup';      Color = '#00897B'; Glyph = 'startup' },
     @{ Name = 'control';      Color = '#546E7A'; Glyph = 'control' },
     @{ Name = 'default';      Color = '#78909C'; Glyph = 'default' }
 )

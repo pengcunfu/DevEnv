@@ -7,7 +7,7 @@ ProgramBox 通过 [GitHub Releases](https://github.com/pengcunfu/devbox/releases
 1. 打开 [Releases](https://github.com/pengcunfu/devbox/releases)
 2. 下载最新 `ProgramBox-x.y.z-win-x64.zip`
 3. 关闭正在运行的 ProgramBox
-4. 解压覆盖原目录（保留 `data.json`、`config.json`）或解压到新目录后迁移配置
+4. 解压覆盖原程序目录即可（用户数据在 `文档\FNSoftware\DevBox\`，不会随安装包覆盖）
 
 ## 维护者：如何发版
 
