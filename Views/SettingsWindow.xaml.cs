@@ -23,6 +23,7 @@ namespace DevEnv.Views
             TxtCache.Text = $"下载缓存:   {AppPaths.CacheDir}";
             TxtApps.Text = $"应用目录:   {AppPaths.AppsDir}";
             TxtHistory.Text = $"下载历史:   {AppPaths.DownloadHistoryFile}";
+            TxtConfigTitle.Text = $"当前配置 ({AppPaths.ConfigFile})";
 
             var settings = AppServices.Config.Load();
             TxtConfigSummary.Text =

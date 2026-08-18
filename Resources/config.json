@@ -1,6 +1,4 @@
 {
-  "cache_dir": "D:\\devenv\\cache",
-  "apps_dir": "D:\\devenv\\apps",
   "auto_extract_portable": true,
   "max_workers": 4,
   "chunk_size_mb": 1,

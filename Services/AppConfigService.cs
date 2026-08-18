@@ -22,7 +22,7 @@ namespace DevEnv.Services
         }
 
         /// <summary>
-        /// 运行时配置位于 D:\devenv\config.json；
+        /// 运行时配置位于文档\FNSoftware\DevEnv\config.json；
         /// 若不存在则从内置模板 Resources/config.json 复制。
         /// </summary>
         private void EnsureRuntimeConfig()

@@ -10,7 +10,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0">
-            <TextBlock Text="内置配置模板在源码 Resources/ 下，构建时复制；运行时数据与配置在 D:\devenv。"
+            <TextBlock Text="内置配置模板在源码 Resources/ 下，构建时复制；运行时数据与配置在「文档\FNSoftware\DevEnv」。"
                        TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,12"/>
 
             <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,10">
@@ -29,7 +29,7 @@
 
             <Border BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="4" Padding="10">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="当前配置 (D:\devenv\config.json)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Name="TxtConfigTitle" DockPanel.Dock="Top" FontWeight="SemiBold" Margin="0,0,0,8"/>
                     <TextBlock Name="TxtConfigSummary" TextWrapping="Wrap"/>
                 </DockPanel>
             </Border>

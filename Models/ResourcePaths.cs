@@ -8,7 +8,7 @@ namespace DevEnv.Models
         public const string ResourcesFolderName = "Resources";
         public const string SoftwareCatalogFile = "software_config.json";
         public const string ProcessesConfigFile = "processes_config.json";
-        /// <summary>默认配置模板，首次运行时复制到 D:\devenv\config.json</summary>
+        /// <summary>默认配置模板，首次运行时复制到文档\FNSoftware\DevEnv\config.json</summary>
         public const string DefaultConfigFile = "config.json";
         public const string Bundled7zrExe = "tools/7zr.exe";
 

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using DevEnv.Models;
 using DevEnv.Services;
 using DevEnv.ViewModels;
 
@@ -113,7 +114,7 @@ public partial class MainWindow : Window
             "• 软件下载与自动解压 (zip 绿色包)\n" +
             "• 环境扫描 (Java/Python/Node.js/Go/PHP/.NET)\n" +
             "• 镜像源配置 (pip/npm/pnpm/Yarn/Maven/Composer/Go/NuGet)\n" +
-            "• 数据目录: D:\\devenv (config.json 配置)\n" +
+            $"• 数据目录: {AppPaths.Root}\n" +
             "• JSON 格式化 / Hosts 编辑 / 哈希计算 / 图像转换\n\n" +
             $"版本: {AppInfo.Version}",
             "关于", MessageBoxButton.OK, MessageBoxImage.Information);

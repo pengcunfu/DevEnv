@@ -4,8 +4,8 @@
 
 ## [Unreleased]
 
-### Added
-- （在此记录尚未发布的改动）
+### Changed
+- 用户数据默认目录改为「文档\FNSoftware\DevEnv」（`FNSoftware` 为提供商，`DevEnv` 为程序目录）
 
 ## [1.0.0] - 2026-05-23
 
