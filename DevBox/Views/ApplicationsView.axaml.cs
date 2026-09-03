@@ -42,6 +42,7 @@ namespace ProgramBox.Views
 
             SetupDragDrop();
             LoadApplications();
+            DevEnvHost.Content = new DevelopmentServicesView();
             SystemToolsHost.Content = new SystemToolsView(_dataManager);
             SettingsHost.Content = new SettingsView(_dataManager);
         }

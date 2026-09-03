@@ -248,6 +248,10 @@
             </ScrollViewer>
         </TabItem>
 
+        <TabItem Header="开发环境">
+            <ContentControl x:Name="DevEnvHost"/>
+        </TabItem>
+
         <TabItem Header="系统工具">
             <ContentControl x:Name="SystemToolsHost"/>
         </TabItem>
