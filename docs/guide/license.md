@@ -10,7 +10,7 @@
 
 ## 你需要
 
-- 在副本或重要部分中包含 [LICENSE](https://github.com/pengcunfu/devbox/blob/master/LICENSE) 中的版权与许可声明
+- 在副本或重要部分中包含 [LICENSE](https://github.com/pengcunfu/DevBox.Net/blob/master/LICENSE) 中的版权与许可声明
 
 ## 免责声明
 
@@ -18,5 +18,5 @@
 
 ## 链接
 
-- 仓库：<https://github.com/pengcunfu/devbox>
-- 许可证文件：<https://github.com/pengcunfu/devbox/blob/master/LICENSE>
+- 仓库：<https://github.com/pengcunfu/DevBox.Net>
+- 许可证文件：<https://github.com/pengcunfu/DevBox.Net/blob/master/LICENSE>

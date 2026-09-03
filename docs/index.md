@@ -11,10 +11,10 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: 下载 v1.1.0
-      link: https://github.com/pengcunfu/devbox/releases/latest
+      link: https://github.com/pengcunfu/DevBox.Net/releases/latest
     - theme: alt
       text: GitHub
-      link: https://github.com/pengcunfu/devbox
+      link: https://github.com/pengcunfu/DevBox.Net
 
 features:
   - title: 开发环境
@@ -24,7 +24,7 @@ features:
   - title: 应用与服务
     details: 收藏本地/Web 工具，管理 MySQL、Redis、Nginx 等常见开发服务。
   - title: 开源免费
-    details: 基于 Avalonia 与 .NET 10，MIT 协议，源码托管于 pengcunfu/devbox。
+    details: 基于 Avalonia 与 .NET 10，MIT 协议，源码托管于 pengcunfu/DevBox.Net。
 ---
 
 ## 系统要求
@@ -45,5 +45,5 @@ features:
 
 ## 仓库
 
-- 源码：<https://github.com/pengcunfu/devbox>
-- 问题反馈：[Issues](https://github.com/pengcunfu/devbox/issues)
+- 源码：<https://github.com/pengcunfu/DevBox.Net>
+- 问题反馈：[Issues](https://github.com/pengcunfu/DevBox.Net/issues)

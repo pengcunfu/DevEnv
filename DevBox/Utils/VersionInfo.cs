@@ -4,9 +4,9 @@ namespace ProgramBox.Utils
 {
     public static class VersionInfo
     {
-        public const string DocumentationUrl = "https://pengcunfu.github.io/devbox/";
-        public const string RepositoryUrl = "https://github.com/pengcunfu/devbox";
-        public const string ReleasesUrl = "https://github.com/pengcunfu/devbox/releases";
+        public const string DocumentationUrl = "https://pengcunfu.github.io/DevBox.Net/";
+        public const string RepositoryUrl = "https://github.com/pengcunfu/DevBox.Net";
+        public const string ReleasesUrl = "https://github.com/pengcunfu/DevBox.Net/releases";
 
         public static string Current =>
             Assembly.GetExecutingAssembly()

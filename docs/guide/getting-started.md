@@ -2,7 +2,7 @@
 
 ## 下载与安装
 
-1. 打开 [GitHub Releases](https://github.com/pengcunfu/devbox/releases/latest)
+1. 打开 [GitHub Releases](https://github.com/pengcunfu/DevBox.Net/releases/latest)
 2. 下载 **DevBox-win-Setup.exe**（Windows 64 位安装器）
 3. 运行安装器，按提示安装（若缺少 .NET 10 Desktop Runtime，安装器会自动下载安装）
 
@@ -38,7 +38,7 @@
 未签名安装器可能被 Windows SmartScreen 提示，选择「仍要运行」即可；可添加信任或使用 [从源码构建](./build.md) 自行编译。
 
 **需要 32 位版本？**  
-当前 Release 仅提供 win-x64；如有需求可在 [Issues](https://github.com/pengcunfu/devbox/issues) 中反馈。
+当前 Release 仅提供 win-x64；如有需求可在 [Issues](https://github.com/pengcunfu/DevBox.Net/issues) 中反馈。
 
 ## 下一步
 

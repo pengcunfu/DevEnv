@@ -1,12 +1,12 @@
 import { defineConfig } from 'vitepress'
 
-// GitHub Pages 项目站点：https://pengcunfu.github.io/devbox/
-const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'devbox'
-const repo = 'pengcunfu/devbox'
+// GitHub Pages 项目站点：https://pengcunfu.github.io/DevBox.Net/
+const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'DevBox.Net'
+const repo = 'pengcunfu/DevBox.Net'
 const defaultBranch = 'master'
 
 export default defineConfig({
-  title: 'ProgramBox',
+  title: 'DevBox',
   description: 'Windows 开发环境管理工具（开源 MIT）',
   lang: 'zh-CN',
   base: `/${repoName}/`,
@@ -27,7 +27,7 @@ export default defineConfig({
       {
         text: '介绍',
         items: [
-          { text: '什么是 ProgramBox', link: '/' },
+          { text: '什么是 DevBox', link: '/' },
           { text: '快速开始', link: '/guide/getting-started' },
           { text: '开源协议', link: '/guide/license' },
         ],

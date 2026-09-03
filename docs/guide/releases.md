@@ -1,12 +1,12 @@
 # 版本发布
 
-DevBox 通过 [GitHub Releases](https://github.com/pengcunfu/devbox/releases) 以 **Velopack 安装器 + 自更新** 分发 Windows 64 位版本。
+DevBox 通过 [GitHub Releases](https://github.com/pengcunfu/DevBox.Net/releases) 以 **Velopack 安装器 + 自更新** 分发 Windows 64 位版本。
 
 ## 用户：如何安装与更新
 
 ### 首次安装
 
-1. 打开 [Releases](https://github.com/pengcunfu/devbox/releases)
+1. 打开 [Releases](https://github.com/pengcunfu/DevBox.Net/releases)
 2. 下载 `DevBox-win-Setup.exe`
 3. 运行安装器（缺少 .NET 10 Desktop Runtime 时安装器会自动安装）
 
@@ -53,7 +53,7 @@ git push origin master
 git push origin v1.1.1
 ```
 
-推送以 `v` 开头的标签（`v*.*.*`）会触发 [release.yml](https://github.com/pengcunfu/devbox/blob/master/.github/workflows/release.yml)：
+推送以 `v` 开头的标签（`v*.*.*`）会触发 [release.yml](https://github.com/pengcunfu/DevBox.Net/blob/master/.github/workflows/release.yml)：
 
 1. 校验 `VERSION` / `csproj` / `CHANGELOG` 与标签一致
 2. `dotnet publish`（win-x64，框架依赖单文件，版本号写入程序集）并校验 `DevBox.exe` 的 `ProductVersion`
@@ -80,7 +80,7 @@ Actions → **Release** → **Run workflow**，输入标签如 `v1.1.1`（须与
 | `DevBox-win-Portable.zip` | 免安装便携包（需手动解压，无自动更新） |
 | `RELEASES` | 更新清单（自更新客户端读取） |
 
-当前 **不提供** win-x86、MSI、商店包；如有需求请提 [Issue](https://github.com/pengcunfu/devbox/issues)。
+当前 **不提供** win-x86、MSI、商店包；如有需求请提 [Issue](https://github.com/pengcunfu/DevBox.Net/issues)。
 
 ## CI
 

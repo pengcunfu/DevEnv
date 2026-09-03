@@ -9,7 +9,7 @@
 ## 克隆与编译
 
 ```bash
-git clone https://github.com/pengcunfu/devbox.git
+git clone https://github.com/pengcunfu/DevBox.Net.git
 cd devbox
 
 dotnet restore
@@ -78,7 +78,7 @@ npm run build    # 输出到 docs/.vitepress/dist
 推送至 `master` 且变更 `docs/**` 时，GitHub Actions 会自动部署到 GitHub Pages。
 
 ::: info GitHub Pages 首次启用
-仓库 [Settings → Pages](https://github.com/pengcunfu/devbox/settings/pages) 中，**Build and deployment** 选择 **GitHub Actions**。
+仓库 [Settings → Pages](https://github.com/pengcunfu/DevBox.Net/settings/pages) 中，**Build and deployment** 选择 **GitHub Actions**。
 :::
 
-在线文档地址：**https://pengcunfu.github.io/devbox/**
+在线文档地址：**https://pengcunfu.github.io/DevBox.Net/**

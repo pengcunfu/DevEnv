@@ -14,7 +14,7 @@
     <Authors>FNSoftware</Authors>
     <Description>Windows 上的开发环境管理工具：多语言运行时切换、系统工具快捷入口、本地/Web 应用与服务集中管理。</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/pengcunfu/devbox</RepositoryUrl>
+    <RepositoryUrl>https://github.com/pengcunfu/DevBox.Net</RepositoryUrl>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>

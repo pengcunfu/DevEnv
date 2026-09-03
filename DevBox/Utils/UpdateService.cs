@@ -13,7 +13,7 @@ namespace ProgramBox.Utils
     /// </summary>
     public sealed class UpdateService
     {
-        private const string GithubRepo = "https://github.com/pengcunfu/devbox";
+        private const string GithubRepo = "https://github.com/pengcunfu/DevBox.Net";
         private const string FeedEnvVar = "DEVBOX_UPDATE_FEED";
 
         private readonly UpdateManager _manager;
