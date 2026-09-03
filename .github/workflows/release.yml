@@ -8,9 +8,18 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release tag（须与 VERSION 一致，如 v1.0.0）'
+        description: 'Release tag（须与 VERSION 一致，如 v1.1.0）'
         required: true
-        default: 'v1.0.0'
+        default: 'v1.1.0'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CSPROJ: DevBox/DevBox.csproj
+  APP_ID: DevBox
+  PRODUCT_NAME: DevBox
+  COMPANY_NAME: FNSoftware
+  FRAMEWORK: net10-x64-desktop
+  RUNTIME: win-x64
 
 concurrency:
   group: release-${{ github.workflow }}-${{ github.ref }}
@@ -110,27 +119,36 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # 框架依赖单文件（不捆绑 .NET 运行时；Setup.exe 依据 --framework 自动装缺失的 Desktop Runtime → 安装包小）
       - name: Publish Windows x64
+        shell: pwsh
         run: |
-          dotnet publish DevBox/DevBox.csproj `
+          dotnet publish ${{ env.CSPROJ }} `
             -c Release `
-            -r win-x64 `
-            --self-contained true `
+            -r ${{ env.RUNTIME }} `
+            --self-contained false `
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:DebugType=None `
+            -p:DebugSymbols=false `
             -p:Version=${{ steps.version.outputs.semver }} `
             -p:AssemblyVersion=${{ steps.version.outputs.assembly_version }} `
             -p:FileVersion=${{ steps.version.outputs.assembly_version }} `
             -p:InformationalVersion=${{ steps.version.outputs.semver }} `
-            -o ./publish/win-x64
+            -o ./artifacts/publish `
+            --nologo
+          if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 
-      - name: Verify built executable version
+      - name: Cleanup and verify built executable
         shell: pwsh
         run: |
+          Get-ChildItem artifacts/publish -Filter "*.xml" -File -ErrorAction SilentlyContinue |
+            Remove-Item -Force
+
           $expected = '${{ steps.version.outputs.semver }}'
-          $exe = Join-Path $PWD 'publish/win-x64/DevBox.exe'
+          $exe = Join-Path $PWD 'artifacts/publish/DevBox.exe'
           if (-not (Test-Path $exe)) {
             Write-Error "DevBox.exe not found at $exe"
             exit 1
@@ -142,63 +160,92 @@ jobs:
             exit 1
           }
           Write-Host "✓ DevBox.exe ProductVersion: $product"
+          $mb = [math]::Round(((Get-ChildItem artifacts/publish -Recurse -File | Measure-Object Length -Sum).Sum)/1MB,2)
+          Write-Host "publish 目录大小: $mb MB"
 
-      - name: Create zip archive
-        id: zip
-        shell: pwsh
-        run: |
-          $semver = '${{ steps.version.outputs.semver }}'
-          $zip = "ProgramBox-$semver-win-x64.zip"
-          if (Test-Path $zip) { Remove-Item $zip -Force }
-          Compress-Archive -Path ./publish/win-x64/* -DestinationPath "./$zip"
-          "path=$zip" >> $env:GITHUB_OUTPUT
-          Write-Host "✓ Created $zip"
-
+      # 发布说明：git describe 在无上一 tag / 浅克隆时退出码非 0，
+      # 必须用管道捕获 stdout 而非依赖 $LASTEXITCODE，最后显式 exit 0。
+      # RELEASE_NOTES.md 必须在 vpk pack 前存在（硬校验），先无条件写入。
       - name: Build release notes
         shell: pwsh
         run: |
-          $tag = '${{ steps.version.outputs.tag }}'
-          $semver = '${{ steps.version.outputs.semver }}'
-          $repo = '${{ github.repository }}'
-
-          $lines = [System.Collections.Generic.List[string]]::new()
-          $lines.Add("## ProgramBox $tag")
-          $lines.Add('')
-          $lines.Add('### 下载')
-          $lines.Add("- **ProgramBox-$semver-win-x64.zip** — Windows 64 位（自包含，解压即用）")
-          $lines.Add('')
-          $lines.Add('### 安装')
-          $lines.Add("1. 在 [Releases](https://github.com/$repo/releases) 下载 zip")
-          $lines.Add('2. 解压到任意目录')
-          $lines.Add('3. 运行 `DevBox.exe`')
-          $lines.Add('')
-          $lines.Add("文档：<https://pengcunfu.github.io/devbox/> · 源码：<https://github.com/$repo>")
-
-          if (Test-Path CHANGELOG.md) {
-            $changelog = Get-Content CHANGELOG.md -Raw
-            $escaped = [regex]::Escape($semver)
-            if ($changelog -match "(?s)## \[$escaped\][^\r\n]*\r?\n(.*?)(?=\r?\n## \[|\z)") {
-              $section = $Matches[1].Trim()
-              if ($section) {
-                $lines.Add('')
-                $lines.Add('### 更新内容')
-                $lines.Add('')
-                $lines.Add($section)
-              }
-            }
+          $version = '${{ steps.version.outputs.semver }}'
+          "## ${{ env.PRODUCT_NAME }} $version" | Set-Content RELEASE_NOTES.md
+          $prev = ""
+          git describe --tags --abbrev=0 "${{ github.sha }}~1" 2>$null | ForEach-Object { $prev = $_ }
+          if ($prev) {
+            git log --oneline "$prev..${{ github.sha }}" | Add-Content RELEASE_NOTES.md
+          } else {
+            "" | Add-Content RELEASE_NOTES.md
           }
+          exit 0
 
-          $lines -join "`n" | Out-File -FilePath release-notes.md -Encoding utf8NoBOM
+      - name: Install vpk CLI (matching Velopack NuGet version)
+        shell: pwsh
+        run: |
+          dotnet tool install -g vpk --version 1.2.0
+          dotnet tool list -g | Select-String vpk
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      # 下载上一版本用于生成 delta 增量包；首次发布无上一版本属正常，放行不 fail
+      - name: Download previous Velopack release (for delta)
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          vpk download github `
+            --repoUrl "https://github.com/${{ github.repository }}" `
+            --token "${{ secrets.GITHUB_TOKEN }}" `
+            --outputDir artifacts/velopack
+          if ($LASTEXITCODE -ne 0) { Write-Host "未找到上一 Velopack 版本，跳过 delta（首次发布属正常）" }
+
+      - name: vpk pack (Setup + full/delta nupkg + Portable.zip + RELEASES)
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          vpk pack `
+            -u "${{ env.APP_ID }}" `
+            -v ${{ steps.version.outputs.semver }} `
+            -r ${{ env.RUNTIME }} `
+            -p artifacts/publish `
+            -o artifacts/velopack `
+            -e ${{ env.APP_ID }}.exe `
+            --packTitle "${{ env.PRODUCT_NAME }}" `
+            --packAuthors "${{ env.COMPANY_NAME }}" `
+            -i DevBox/Resources/icon.ico `
+            --framework ${{ env.FRAMEWORK }} `
+            --releaseNotes RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }
+          if (-not (Test-Path "artifacts/velopack/${{ env.APP_ID }}-win-Setup.exe")) { throw "Velopack 安装包未生成" }
+          Get-ChildItem artifacts/velopack -File |
+            Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,2)}} |
+            Format-Table -AutoSize
+
+      - name: Upload to GitHub Release (tag trigger)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          vpk upload github `
+            --repoUrl "https://github.com/${{ github.repository }}" `
+            --token "${{ secrets.GITHUB_TOKEN }}" `
+            --outputDir artifacts/velopack `
+            --publish `
+            --releaseName "${{ env.PRODUCT_NAME }} ${{ steps.version.outputs.semver }}" `
+            --tag ${{ github.ref_name }}
+          if ($LASTEXITCODE -ne 0) { throw "vpk upload failed" }
+
+      - name: Set release body from RELEASE_NOTES.md (best effort)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          gh release edit ${{ github.ref_name }} `
+            --notes-file RELEASE_NOTES.md `
+            --repo ${{ github.repository }} 2>$null
+          if ($LASTEXITCODE -ne 0) { Write-Host "release body 更新跳过" }
+
+      # workflow_dispatch 手动触发时保留产物供下载
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: ProgramBox ${{ steps.version.outputs.tag }}
-          body_path: release-notes.md
-          files: ${{ steps.zip.outputs.path }}
-          draft: false
-          prerelease: ${{ steps.version.outputs.is_prerelease == 'true' }}
-          make_latest: ${{ steps.version.outputs.is_prerelease != 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ env.PRODUCT_NAME }}-${{ steps.version.outputs.semver }}
+          path: artifacts/velopack/**
+          retention-days: 30

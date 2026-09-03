@@ -1,14 +1,18 @@
 # 快速开始
 
-## 下载
+## 下载与安装
 
 1. 打开 [GitHub Releases](https://github.com/pengcunfu/devbox/releases/latest)
-2. 下载 **ProgramBox-&lt;version&gt;-win-x64.zip**（Windows 64 位）
-3. 解压到任意目录（建议路径不含中文与空格）
+2. 下载 **DevBox-win-Setup.exe**（Windows 64 位安装器）
+3. 运行安装器，按提示安装（若缺少 .NET 10 Desktop Runtime，安装器会自动下载安装）
+
+::: tip
+安装后在设置页「更新」中可检查并自动升级，无需重新下载安装包。
+:::
 
 ## 运行
 
-双击 `ProgramBox.exe` 即可启动。首次运行会在用户文档目录生成数据：
+安装完成后从开始菜单或桌面快捷方式启动 `DevBox`。首次运行会在用户文档目录生成数据：
 
 `文档\FNSoftware\DevBox\`
 
@@ -19,19 +23,19 @@
 | `icons\` | 应用/网站图标缓存 |
 
 ::: tip
-可将程序目录加入 PATH，或在桌面创建快捷方式，便于日常启动。
+用户数据保存在文档目录，升级 / 重装不会丢失。
 :::
 
 ## 界面概览
 
 - **主界面**：应用列表与快捷操作
 - **系统工具**：Tab 页内快速打开 Windows 管理程序
-- **设置**：托盘图标、开机自启、环境根目录、语言与深色模式，以及文档与关于
+- **设置**：托盘图标、开机自启、环境根目录、语言与深色模式、版本更新，以及文档与关于
 
 ## 常见问题
 
-**杀毒软件拦截？**  
-自包含单文件发布可能被误报，可添加信任或使用 [从源码构建](./build.md) 自行编译。
+**SmartScreen / 杀毒软件拦截？**  
+未签名安装器可能被 Windows SmartScreen 提示，选择「仍要运行」即可；可添加信任或使用 [从源码构建](./build.md) 自行编译。
 
 **需要 32 位版本？**  
 当前 Release 仅提供 win-x64；如有需求可在 [Issues](https://github.com/pengcunfu/devbox/issues) 中反馈。
@@ -40,4 +44,5 @@
 
 - [功能概览](./features.md)
 - [配置说明](./configuration.md)
+- [版本发布](./releases.md)
 - [开源协议](./license.md)

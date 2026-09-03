@@ -8,13 +8,17 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using ProgramBox.Utils;
+using Velopack;
 
 namespace ProgramBox.Views
 {
     public partial class SettingsView : UserControl
     {
         private readonly JsonDataManager _dataManager;
+        private readonly UpdateService _updateService = new();
         private bool _isCapturingHotkey;
+        private bool _isCheckingOrDownloading;
+        private UpdateInfo? _updateInfo;
 
         public SettingsView()
             : this(new JsonDataManager())
@@ -29,6 +33,17 @@ namespace ProgramBox.Views
             AboutVersionText.Text = $"版本 {VersionInfo.Display}";
             DocUrlText.Text = VersionInfo.DocumentationUrl;
             HotkeyTextBox.KeyDown += HotkeyTextBox_KeyDown;
+
+            // 非 Velopack 安装态（调试 / 旧版 zip）下 CurrentVersion 为 null，回退程序集版本显示
+            var installedVersion = _updateService.IsUpdateCapable
+                ? _updateService.CurrentVersion?.ToNormalizedString()
+                : null;
+            UpdateCurrentVersionText.Text = installedVersion is null ? VersionInfo.Display : $"v{installedVersion}";
+            if (!_updateService.IsUpdateCapable)
+            {
+                UpdateStatusText.Text = "当前为非安装版（调试运行或旧版 zip 安装），无法自动更新。请下载安装包安装后，即可通过应用内检查更新升级。";
+                GotoReleasesButton.IsVisible = true;
+            }
         }
 
         /// <summary>
@@ -199,6 +214,111 @@ namespace ProgramBox.Views
         private void ViewDocumentationButton_Click(object? sender, RoutedEventArgs e)
         {
             AppHelper.OpenInBrowser(VersionInfo.DocumentationUrl);
+        }
+
+        /// <summary>
+        /// 检查更新
+        /// </summary>
+        private async void CheckUpdateButton_Click(object? sender, RoutedEventArgs e)
+        {
+            if (!_updateService.IsUpdateCapable || _isCheckingOrDownloading)
+                return;
+
+            _isCheckingOrDownloading = true;
+            CheckUpdateButton.IsEnabled = false;
+            UpdateStatusText.Text = "正在检查更新…";
+            HideUpdateActions();
+            try
+            {
+                var info = await _updateService.CheckForUpdatesAsync();
+                if (info == null)
+                {
+                    UpdateStatusText.Text = $"已是最新版本 {UpdateCurrentVersionText.Text}";
+                }
+                else
+                {
+                    _updateInfo = info;
+                    var current = _updateService.CurrentVersion?.ToNormalizedString();
+                    UpdateStatusText.Text = current is null
+                        ? $"发现新版本 {info.TargetFullRelease.Version}"
+                        : $"发现新版本 {info.TargetFullRelease.Version}（当前 {current}）";
+                    DownloadUpdateButton.IsVisible = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText.Text = "检查更新失败";
+                await AppHelper.ShowErrorAsync($"检查更新失败: {ex.Message}");
+            }
+            finally
+            {
+                _isCheckingOrDownloading = false;
+                CheckUpdateButton.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 下载并更新（优先 delta 增量，失败自动回退完整包）
+        /// </summary>
+        private async void DownloadUpdateButton_Click(object? sender, RoutedEventArgs e)
+        {
+            if (_updateInfo is null || _isCheckingOrDownloading)
+                return;
+
+            _isCheckingOrDownloading = true;
+            CheckUpdateButton.IsEnabled = false;
+            DownloadUpdateButton.IsEnabled = false;
+            UpdateStatusText.Text = "正在下载更新…";
+            UpdateProgressBar.IsVisible = true;
+            var progress = new Progress<int>(p => UpdateProgressBar.Value = p);
+            try
+            {
+                var info = await _updateService.DownloadUpdatesAsync(_updateInfo, progress);
+                _updateInfo = info;
+                UpdateStatusText.Text = "下载完成，重启以应用更新";
+                RestartUpdateButton.IsVisible = true;
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText.Text = "下载更新失败";
+                await AppHelper.ShowErrorAsync($"下载更新失败: {ex.Message}");
+            }
+            finally
+            {
+                _isCheckingOrDownloading = false;
+                UpdateProgressBar.IsVisible = false;
+                DownloadUpdateButton.IsEnabled = true;
+                CheckUpdateButton.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 立即退出应用并应用已下载的更新，然后自动重启
+        /// </summary>
+        private void RestartUpdateButton_Click(object? sender, RoutedEventArgs e)
+        {
+            if (_updateInfo is null)
+                return;
+
+            _updateService.RestartAndApply(_updateInfo);
+        }
+
+        /// <summary>
+        /// 前往 Releases 下载安装包（非安装版提示用）
+        /// </summary>
+        private void GotoReleasesButton_Click(object? sender, RoutedEventArgs e)
+        {
+            AppHelper.OpenInBrowser(VersionInfo.ReleasesUrl);
+        }
+
+        /// <summary>
+        /// 隐藏更新操作按钮
+        /// </summary>
+        private void HideUpdateActions()
+        {
+            DownloadUpdateButton.IsVisible = false;
+            RestartUpdateButton.IsVisible = false;
+            GotoReleasesButton.IsVisible = false;
         }
 
         #endregion

@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: ProgramBox
+  name: DevBox
   text: Windows 开发环境管理
   tagline: 多语言运行时切换 · 系统工具 · 应用与服务集中管理 · MIT 开源
   actions:
@@ -10,7 +10,7 @@ hero:
       text: 快速开始
       link: /guide/getting-started
     - theme: alt
-      text: 下载 v1.0.0
+      text: 下载 v1.1.0
       link: https://github.com/pengcunfu/devbox/releases/latest
     - theme: alt
       text: GitHub
@@ -30,7 +30,7 @@ features:
 ## 系统要求
 
 - Windows 10 或更高版本（64 位）
-- 无需单独安装 .NET（发布包为自包含）
+- 安装包为框架依赖：若缺少 .NET 10 Desktop Runtime，安装器会自动安装
 
 ## 文档导航
 

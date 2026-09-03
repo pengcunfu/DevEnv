@@ -1,8 +1,10 @@
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using ProgramBox.Utils;
 
 namespace ProgramBox
@@ -29,6 +31,16 @@ namespace ProgramBox
                 desktop.MainWindow = mainWindow;
                 mainWindow.InitializeTray();
                 SingleInstanceService.StartActivateListener(mainWindow);
+
+                // Velopack 更新后重启：延迟到窗口就绪后在底部状态条提示
+                if (StartupHooks.UpdatedTo is { } updatedTo)
+                {
+                    Dispatcher.UIThread.Post(async () =>
+                    {
+                        await Task.Delay(800);
+                        await AppHelper.ShowInfoAsync($"已更新到 {updatedTo}");
+                    });
+                }
             }
 
             base.OnFrameworkInitializationCompleted();

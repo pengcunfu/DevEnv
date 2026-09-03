@@ -2,10 +2,17 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <InformationalVersion>1.1.0</InformationalVersion>
+    <!-- 版本号不带 git 提交哈希后缀，About / 更新提示中显示干净的 v1.1.0 -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Product>DevBox</Product>
+    <Company>FNSoftware</Company>
+    <Copyright>© 2026 FNSoftware. All rights reserved.</Copyright>
+    <Authors>FNSoftware</Authors>
+    <Description>Windows 上的开发环境管理工具：多语言运行时切换、系统工具快捷入口、本地/Web 应用与服务集中管理。</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/pengcunfu/devbox</RepositoryUrl>
     <Nullable>enable</Nullable>
@@ -32,6 +39,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
     <PackageReference Include="System.Management" Version="9.0.0" />
+    <!-- Velopack：安装器 + 增量自更新（vpk CLI 同版本 1.2.0，勿随意升级以免与 CI 不匹配） -->
+    <PackageReference Include="Velopack" Version="1.2.0" />
     <!-- 覆盖 Avalonia 传递依赖 Tmds.DBus.Protocol 到修复版，消除漏洞警告 NU1903（GHSA-xrw6-gwf8-vvr9） -->
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->

@@ -90,7 +90,7 @@ Write-Host "OK: $exe ($sizeMb MB)"
 Write-Host 'Note: target machine must have the matching .NET Desktop Runtime installed.'
 
 if ($Zip) {
-    $zipName = "ProgramBox-$semver-$Runtime.zip"
+    $zipName = "DevBox-$semver-$Runtime.zip"
     $zipPath = Join-Path $root $zipName
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
     Compress-Archive -Path (Join-Path $OutputDir '*') -DestinationPath $zipPath
