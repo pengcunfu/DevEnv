@@ -33,6 +33,7 @@
 - **熔岩环境**：绿色版进程管理、软件下载与镜像配置（见 [熔岩快速开始](./lava/getting-started.md)）
 - **熔岩翻译**：网页翻译站与 Alt+Space（见 [翻译快速开始](./translator/getting-started.md)）
 - **网络监控**：按进程查看连接与速率、测速与端口管理（见 [网络监控快速开始](./networkwatch/getting-started.md)）
+- **进程监控**：实时 CPU / 内存、搜索排序与结束进程（见 [进程监控快速开始](./processwatch/getting-started.md)）
 - **熔岩剪贴板**：文本/图片历史与全局热键（见 [剪贴板快速开始](./clipboard/getting-started.md)）
 - **系统工具**：Windows 管理程序快捷入口，以及 JSON / Hosts / 图像转换 / 哈希等实用工具
 - **设置**：托盘图标、开机自启、环境根目录、语言与深色模式、版本更新，以及文档与关于

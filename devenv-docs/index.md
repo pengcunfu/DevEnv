@@ -4,7 +4,7 @@ layout: home
 hero:
   name: DevBox
   text: Windows 开发环境管理
-  tagline: 应用与服务集中管理 · 熔岩绿色版环境 · 网络监控 · 剪贴板 · 系统工具 · MIT 开源
+  tagline: 应用与服务集中管理 · 熔岩绿色版环境 · 网络监控 · 进程监控 · 剪贴板 · 系统工具 · MIT 开源
   actions:
     - theme: brand
       text: 快速开始
@@ -25,6 +25,8 @@ features:
     details: WebView 内嵌多站点网页翻译，Alt+Space 一键填入剪贴板文本。
   - title: 网络监控
     details: 按进程查看连接与上下行速率，内置测速与端口管理。
+  - title: 进程监控
+    details: 实时查看进程 CPU / 内存，支持搜索排序与结束进程。
   - title: 熔岩剪贴板
     details: 文本与图片剪贴板历史，全局热键一键唤起。
   - title: 系统工具
@@ -47,6 +49,7 @@ features:
 | [熔岩环境](./guide/lava/getting-started.md) | 绿色版进程、下载、镜像配置 |
 | [熔岩翻译](./guide/translator/getting-started.md) | 网页翻译与 Alt+Space |
 | [网络监控](./guide/networkwatch/getting-started.md) | 进程流量、测速与端口管理 |
+| [进程监控](./guide/processwatch/getting-started.md) | 实时 CPU / 内存与结束进程 |
 | [熔岩剪贴板](./guide/clipboard/getting-started.md) | 剪贴板历史与全局热键 |
 | [配置说明](./guide/configuration.md) | `config.json` 与 `data.json` |
 | [从源码构建](./guide/build.md) | 开发者本地编译 |

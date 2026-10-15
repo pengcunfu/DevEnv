@@ -34,6 +34,7 @@
     <ProjectReference Include="..\DevEnv\DevEnv.csproj" />
     <ProjectReference Include="..\Translator\Translator\LavaTranslator.csproj" />
     <ProjectReference Include="..\NetworkWatch\NetworkWatch.csproj" />
+    <ProjectReference Include="..\ProcessWatch\ProcessWatch.csproj" />
     <ProjectReference Include="..\Clipboard\Clipboard.csproj" />
   </ItemGroup>
 

@@ -11,6 +11,7 @@ using DevEnv.Views;
 using LavaTranslator.Services;
 using LavaTranslator.Views;
 using NetworkWatch.Views;
+using ProcessWatch.Views;
 using ProgramBox.Models;
 using ProgramBox.Utils;
 
@@ -73,6 +74,9 @@ namespace ProgramBox.Views
         {
             if (MainSideNav.SelectedItem == NetworkWatchTab && NetworkWatchHost.Content is null)
                 NetworkWatchHost.Content = new NetworkWatchView();
+
+            if (MainSideNav.SelectedItem == ProcessWatchTab && ProcessWatchHost.Content is null)
+                ProcessWatchHost.Content = new ProcessWatchView();
         }
 
         /// <summary>显示主窗并切换到「熔岩翻译」Tab。</summary>

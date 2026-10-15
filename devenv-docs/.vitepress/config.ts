@@ -21,6 +21,7 @@ export default defineConfig({
       { text: '熔岩环境', link: '/guide/lava/getting-started' },
       { text: '熔岩翻译', link: '/guide/translator/getting-started' },
       { text: '网络监控', link: '/guide/networkwatch/getting-started' },
+      { text: '进程监控', link: '/guide/processwatch/getting-started' },
       { text: '熔岩剪贴板', link: '/guide/clipboard/getting-started' },
       { text: '下载', link: '/guide/releases' },
       {
@@ -65,6 +66,12 @@ export default defineConfig({
         text: '网络监控',
         items: [
           { text: '快速开始', link: '/guide/networkwatch/getting-started' },
+        ],
+      },
+      {
+        text: '进程监控',
+        items: [
+          { text: '快速开始', link: '/guide/processwatch/getting-started' },
         ],
       },
       {

@@ -13,6 +13,7 @@
 | `DevEnv/` | 熔岩环境模块（库）：绿色版进程管理、软件下载、环境扫描、镜像配置；JSON / Hosts / 图片转换 / 文件哈希等窗口也由本模块提供，入口在 DevBox「系统工具」 |
 | `Translator/Translator/` | 熔岩翻译模块（库）：WebView2 多站点网页翻译，`Alt+Space` 唤起 |
 | `NetworkWatch/` | 网络监控模块（库）：按进程查看连接与实时速率、端口管理、一键测速 |
+| `ProcessWatch/` | 进程监控模块（库）：实时 CPU / 内存、搜索排序、结束进程 |
 | `Clipboard/` | 熔岩剪贴板模块（库）：剪贴板历史，SQLite 持久化 |
 | `WinBootSelfStarting/` | 启动项管理的早期独立实现（WPF / net8.0），功能已由 DevBox 的启动项管理窗口承接，不在 `DevEnv.sln` 内 |
 | `devenv-docs/` | VitePress 在线文档站 → Cloudflare Pages，项目名 `devbox-docs`，站点 https://docs.devenv.cn/ |

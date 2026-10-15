@@ -264,6 +264,10 @@
             <ContentControl x:Name="NetworkWatchHost"/>
         </TabItem>
 
+        <TabItem x:Name="ProcessWatchTab" Header="进程监控">
+            <ContentControl x:Name="ProcessWatchHost"/>
+        </TabItem>
+
         <TabItem x:Name="ClipboardTab" Header="熔岩剪贴板">
             <ContentControl x:Name="ClipboardHost"/>
         </TabItem>
