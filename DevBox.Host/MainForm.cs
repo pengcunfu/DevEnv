@@ -278,14 +278,20 @@ public sealed class MainForm : Form
     {
         try
         {
-            var env = await CoreWebView2Environment.CreateAsync();
+            // 仅初始化主壳；翻译 / 剪贴板首次打开再创建（共享同一 Environment，复用浏览器进程）
+            var env = await WebView2EnvironmentFactory.GetSharedAsync();
+            _translator.AttachEnvironment(env);
+            _clipboardWindow.AttachEnvironment(env);
+
             await _webView.EnsureCoreWebView2Async(env);
-            await _translator.EnsureInitializedAsync(env);
-            await _clipboardWindow.EnsureInitializedAsync(env);
             // 主壳：无默认菜单/状态栏；允许外部拖入，由 DropBridge 取绝对路径后调 API
             WebView2Ui.ConfigureShell(
                 _webView,
+#if DEBUG
                 enableDevTools: true,
+#else
+                enableDevTools: false,
+#endif
                 customNativeMenu: false,
                 allowExternalDrop: true);
             await WebViewDropBridge.AttachAsync(_webView, HandleDroppedPathsAsync);
@@ -490,19 +496,22 @@ public sealed class MainForm : Form
     private void RestartProcess(bool asAdmin)
     {
         var processPath = Environment.ProcessPath;
-        var assemblyPath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
         string fileName;
         string arguments;
+        // `dotnet run`: ProcessPath is dotnet.exe → relaunch DevBox.dll under BaseDirectory.
+        // Published single-file: ProcessPath is DevBox.exe (do not use Assembly.Location — empty in single-file).
         if (processPath is not null
-            && Path.GetFileNameWithoutExtension(processPath).Equals("dotnet", StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrEmpty(assemblyPath))
+            && Path.GetFileNameWithoutExtension(processPath).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
         {
+            var dll = Path.Combine(AppContext.BaseDirectory, "DevBox.dll");
+            if (!File.Exists(dll))
+                return;
             fileName = processPath;
-            arguments = $"\"{assemblyPath}\"";
+            arguments = $"\"{dll}\"";
         }
         else
         {
-            fileName = processPath ?? assemblyPath ?? string.Empty;
+            fileName = processPath ?? string.Empty;
             arguments = string.Empty;
         }
 

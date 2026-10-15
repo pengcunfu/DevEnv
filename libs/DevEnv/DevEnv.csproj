@@ -17,7 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\**\*">
+    <!-- Exclude root icon.*: Host already ships Resources/icon.ico|png; NETSDK1152 on publish otherwise. -->
+    <Content Include="Resources\**\*" Exclude="Resources\icon.ico;Resources\icon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>

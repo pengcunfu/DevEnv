@@ -36,7 +36,7 @@ internal sealed class TranslatorHostController : IDisposable
         TextAlign = ContentAlignment.MiddleLeft,
         Padding = new Padding(8, 4, 0, 0),
     };
-    private readonly WebView2 _webView = new() { Dock = DockStyle.Fill };
+    private WebView2 _webView = new() { Dock = DockStyle.Fill };
 
     private readonly ConfigService _config = new();
     private CoreWebView2Environment? _env;
@@ -115,24 +115,26 @@ internal sealed class TranslatorHostController : IDisposable
             _siteCombo.Items.Add(new SiteItem(site.Id, site.Name));
     }
 
-    public async Task EnsureInitializedAsync(CoreWebView2Environment env)
+    public void AttachEnvironment(CoreWebView2Environment env) => _env = env;
+
+    public async Task EnsureInitializedAsync(CoreWebView2Environment? env = null)
     {
-        _env = env;
+        if (env is not null)
+            _env = env;
         if (_initialized)
             return;
 
-        // 独立用户数据目录，避免与主壳 WebView 配置互相干扰
-        var profile = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "DevBox",
-            "WebView2-Translator");
-        Directory.CreateDirectory(profile);
-        var translatorEnv = await CoreWebView2Environment.CreateAsync(null, profile);
-        await _webView.EnsureCoreWebView2Async(translatorEnv);
+        // 与主壳共用 Environment / 用户数据目录，复用 Chromium 浏览器进程
+        _env ??= await WebView2EnvironmentFactory.GetSharedAsync();
+        await _webView.EnsureCoreWebView2Async(_env);
 
         WebView2Ui.ConfigureShell(
             _webView,
+#if DEBUG
             enableDevTools: true,
+#else
+            enableDevTools: false,
+#endif
             customNativeMenu: true,
             allowExternalDrop: false);
         _webView.CoreWebView2.NavigationStarting += (_, _) => _ready = false;
@@ -167,6 +169,19 @@ internal sealed class TranslatorHostController : IDisposable
     {
         if (_window.Visible)
             _window.Hide();
+        // 关窗即销毁控件：比 about:blank 更能拆掉 renderer（翻译站很重）
+        TearDownWebView();
+    }
+
+    private void TearDownWebView()
+    {
+        if (!_initialized)
+            return;
+        _ready = false;
+        _loadedSiteId = null;
+        _readyTcs = null;
+        _initialized = false;
+        _webView = WebView2Recycle.Replace(_window, _webView);
     }
 
     /// <summary>Alt+Space：显示窗口；有剪贴板文本则 DOM 填充。</summary>
@@ -259,10 +274,7 @@ internal sealed class TranslatorHostController : IDisposable
     {
         if (_initialized)
             return;
-        if (_env is not null)
-            await EnsureInitializedAsync(_env);
-        else
-            await EnsureInitializedAsync(await CoreWebView2Environment.CreateAsync());
+        await EnsureInitializedAsync(_env);
     }
 
     private async Task FillAsync(string text)
@@ -472,7 +484,8 @@ internal sealed class TranslatorHostController : IDisposable
         _allowClose = true;
         try
         {
-            _webView.Dispose();
+            if (!_webView.IsDisposed)
+                _webView.Dispose();
             _window.Close();
             _window.Dispose();
         }

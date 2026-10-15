@@ -62,6 +62,12 @@ internal static class WebView2Ui
         settings.AreDevToolsEnabled = enableDevTools;
         settings.IsZoomControlEnabled = true;
         settings.AreBrowserAcceleratorKeysEnabled = true;
+        // 关掉无关能力，略减后台服务占用
+        settings.IsGeneralAutofillEnabled = false;
+        settings.IsPasswordAutosaveEnabled = false;
+        settings.IsPinchZoomEnabled = false;
+        settings.IsSwipeNavigationEnabled = false;
+        settings.AreHostObjectsAllowed = false;
 
         core.ContextMenuRequested -= OnContextMenuRequested;
         core.NavigationStarting -= OnNavigationStarting;

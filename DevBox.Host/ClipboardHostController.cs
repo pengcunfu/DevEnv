@@ -11,7 +11,7 @@ internal sealed class ClipboardHostController : IDisposable
 {
     private readonly Form _owner;
     private readonly Form _window;
-    private readonly WebView2 _webView = new() { Dock = DockStyle.Fill };
+    private WebView2 _webView = new() { Dock = DockStyle.Fill };
     private readonly string _sessionToken;
 
     private CoreWebView2Environment? _env;
@@ -53,23 +53,26 @@ internal sealed class ClipboardHostController : IDisposable
         _window.Controls.Add(_webView);
     }
 
-    public async Task EnsureInitializedAsync(CoreWebView2Environment env)
+    public void AttachEnvironment(CoreWebView2Environment env) => _env = env;
+
+    public async Task EnsureInitializedAsync(CoreWebView2Environment? env = null)
     {
-        _env = env;
+        if (env is not null)
+            _env = env;
         if (_initialized)
             return;
 
-        var profile = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "DevBox",
-            "WebView2-Clipboard");
-        Directory.CreateDirectory(profile);
-        var clipEnv = await CoreWebView2Environment.CreateAsync(null, profile);
-        await _webView.EnsureCoreWebView2Async(clipEnv);
+        // 与主壳共用 Environment，避免再开一套 Chromium 进程树
+        _env ??= await WebView2EnvironmentFactory.GetSharedAsync();
+        await _webView.EnsureCoreWebView2Async(_env);
 
         WebView2Ui.ConfigureShell(
             _webView,
+#if DEBUG
             enableDevTools: true,
+#else
+            enableDevTools: false,
+#endif
             customNativeMenu: false,
             allowExternalDrop: false);
 
@@ -105,6 +108,16 @@ internal sealed class ClipboardHostController : IDisposable
     {
         if (_window.Visible)
             _window.Hide();
+        TearDownWebView();
+    }
+
+    private void TearDownWebView()
+    {
+        if (!_initialized)
+            return;
+        _navigated = false;
+        _initialized = false;
+        _webView = WebView2Recycle.Replace(_window, _webView);
     }
 
     public async Task ApplyAsync(bool visible)
@@ -122,10 +135,7 @@ internal sealed class ClipboardHostController : IDisposable
     {
         if (_initialized)
             return;
-        if (_env is not null)
-            await EnsureInitializedAsync(_env);
-        else
-            await EnsureInitializedAsync(await CoreWebView2Environment.CreateAsync());
+        await EnsureInitializedAsync(_env);
     }
 
     private async Task<string> ResolveUiUrlAsync()
@@ -165,7 +175,8 @@ internal sealed class ClipboardHostController : IDisposable
         _allowClose = true;
         try
         {
-            _webView.Dispose();
+            if (!_webView.IsDisposed)
+                _webView.Dispose();
             _window.Close();
             _window.Dispose();
         }
