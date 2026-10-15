@@ -50,6 +50,7 @@ namespace ProgramBox
             {
                 _translatorHotkey?.Dispose();
                 _translatorHotkey = null;
+                _applicationsView?.Clipboard?.DisposeHotkey();
             };
 
             PositionChanged += (_, _) => OnWindowPositionChanged();
@@ -106,6 +107,7 @@ namespace ProgramBox
             HotkeyService.Attach(hwnd);
             HotkeyService.ApplyHotkey(_dataManager.Data.Config.ShowWindowHotkey);
             EnsureTranslatorHotkey();
+            _applicationsView?.Clipboard?.EnsureHotkey();
         }
 
         /// <summary>
@@ -376,6 +378,7 @@ namespace ProgramBox
             ContentArea.Content = view;
             DefaultContent.IsVisible = false;
             EnsureTranslatorHotkey();
+            view.Clipboard?.EnsureHotkey();
         }
 
         #region 事件处理 - Simplified without navigation

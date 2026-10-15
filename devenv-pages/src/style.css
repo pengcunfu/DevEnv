@@ -1,0 +1,464 @@
+/* 开发环境下载站 全局样式
+   紧凑 + 简约：全宽布局（无 max-width 限制）、扁平化、收紧间距与圆角
+   暗色模式通过 prefers-color-scheme 自动切换 */
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --text: #1f2937;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --badge-mirror-bg: #ecfdf5;
+  --badge-mirror-fg: #059669;
+  --badge-official-bg: #eff6ff;
+  --badge-official-fg: #2563eb;
+  --badge-github-bg: #f5f3ff;
+  --badge-github-fg: #7c3aed;
+  --badge-other-bg: #f3f4f6;
+  --badge-other-fg: #6b7280;
+  --radius: 6px;
+  --radius-sm: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --surface: #1f2937;
+    --text: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --border: #374151;
+    --badge-mirror-bg: #064e3b;
+    --badge-mirror-fg: #34d399;
+    --badge-official-bg: #1e3a8a;
+    --badge-official-fg: #93c5fd;
+    --badge-github-bg: #4c1d95;
+    --badge-github-fg: #c4b5fd;
+    --badge-other-bg: #374151;
+    --badge-other-fg: #d1d5db;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 移动端手势优化：消除双击缩放延迟 */
+a,
+button,
+select {
+  touch-action: manipulation;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  /* 禁止整页滚动，滚动统一交给 main（下载项列表） */
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+/* 应用外壳布局：整页不滚动，仅中间列表（main）内部滚动
+   header / nav / footer 各自定高固定，main 占满剩余高度并 overflow-y 滚动 */
+.site {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;  /* 回退：旧浏览器 */
+  height: 100dvh; /* 移动端地址栏收起/展开时保持满屏 */
+}
+
+/* 全宽容器：不再受 1120px 上限约束，仅保留左右留白 */
+.container {
+  padding: 0 16px;
+}
+
+/* ---- 页头 ---- */
+.site-header {
+  flex-shrink: 0;
+  z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.brand .subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  /* 搜索框宽度上限：避免全宽布局下横贯整个屏幕，属组件内部可用性约束 */
+  max-width: 480px;
+  justify-content: flex-end;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: var(--primary);
+}
+
+.site-link {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.site-link:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ---- 分类导航 ---- */
+/* 固定于页头下方，跟随页头一起不动 */
+.category-nav {
+  flex-shrink: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 导航内部复用 .container 的居中与左右留白，保证与下方内容左对齐 */
+/* 标签过多时允许自动换行，不横向滚动 */
+/* 用 .category-nav .nav-inner 提升优先级，避免 .container 的 padding 简写覆盖上下间距 */
+.category-nav .nav-inner {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 6px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.category-nav a {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.category-nav a:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.category-nav a.active,
+.category-nav a.active:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ---- 主体（唯一滚动容器） ---- */
+main.container {
+  flex: 1;
+  min-height: 0;    /* 关键：允许在 flex 布局中收缩，否则内容超高时溢出无法滚动 */
+  overflow-y: auto; /* 下载项列表在此内部滚动，页头/导航/页脚保持不动 */
+  padding: 14px 16px 32px;
+}
+
+.search-info {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.category {
+  /* 滚动容器顶部即导航栏之下，锚点跳转无需额外偏移 */
+  scroll-margin-top: 0;
+  margin-bottom: 22px;
+}
+
+.category-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.category-icon {
+  color: var(--primary);
+}
+
+.category-title .count {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 6px;
+}
+
+/* ---- 软件卡片 ---- */
+/* 全宽 + 更小的卡片下限 → 桌面端每行容纳更多卡片 */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+/* 扁平悬浮：仅描边变色，无阴影、无位移 */
+.card:hover {
+  border-color: var(--primary);
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.card .desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-height: 2.6em;
+}
+
+.version-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  width: 100%;
+  outline: none;
+}
+
+.file-name {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.remark {
+  color: #b45309;
+}
+
+@media (prefers-color-scheme: dark) {
+  .remark {
+    color: #fbbf24;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: var(--primary-dark);
+}
+
+/* ---- 来源徽章 ---- */
+.badge {
+  align-self: flex-start;
+  font-size: 11px;
+  line-height: 1.6;
+  border-radius: var(--radius-sm);
+  padding: 0 6px;
+}
+
+.badge.mirror {
+  background: var(--badge-mirror-bg);
+  color: var(--badge-mirror-fg);
+}
+
+.badge.official {
+  background: var(--badge-official-bg);
+  color: var(--badge-official-fg);
+}
+
+.badge.github {
+  background: var(--badge-github-bg);
+  color: var(--badge-github-fg);
+}
+
+.badge.other {
+  background: var(--badge-other-bg);
+  color: var(--badge-other-fg);
+}
+
+/* ---- 页脚 ---- */
+/* margin-top: auto 配合 .site 的 flex 纵向布局，将版权行钉在视口底部 */
+.site-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 14px 0;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.site-footer a {
+  color: var(--text);
+}
+
+.site-footer a:hover {
+  color: var(--primary);
+}
+
+/* ---- 移动端 ---- */
+@media (max-width: 640px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  main.container {
+    padding: 12px 12px 24px;
+  }
+
+  .header-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .brand h1 {
+    font-size: 16px;
+  }
+
+  .header-right {
+    max-width: none;
+    gap: 8px;
+  }
+
+  .search-input {
+    min-width: 0;
+    font-size: 16px; /* ≥16px 防止 iOS 聚焦输入时自动放大页面 */
+    padding: 8px 10px;
+  }
+
+  .site-link {
+    padding: 8px 10px;
+  }
+
+  .category {
+    margin-bottom: 20px;
+  }
+
+  .category-title {
+    font-size: 15px;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .btn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+  }
+}

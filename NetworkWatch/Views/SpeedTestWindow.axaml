@@ -1,0 +1,109 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NetworkWatch.Views.SpeedTestWindow"
+        Title="网络测速"
+        Height="560" Width="700"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        FontFamily="Segoe UI"
+        FontSize="13">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://NetworkWatch/Themes/NetworkWatch.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+
+  <Border Background="{DynamicResource NwBackgroundBrush}">
+    <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+          TextElement.Foreground="{DynamicResource NwTextBrush}">
+      <StackPanel Grid.Row="0" Margin="0,0,0,16">
+        <TextBlock Text="网络测速" FontSize="22" FontWeight="Bold"
+                   Foreground="{DynamicResource NwAccentBrush}"/>
+        <TextBlock Text="测量网络下载与上传速度，数据来自公共测速节点"
+                   Foreground="{DynamicResource NwMutedBrush}" Margin="0,4,0,0"/>
+      </StackPanel>
+
+      <Border Grid.Row="1" Background="{DynamicResource NwSurfaceBrush}"
+              BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1"
+              CornerRadius="8" Padding="16,12">
+        <Grid ColumnDefinitions="*,170,80">
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock x:Name="PhaseText" Text="就绪" FontSize="16" FontWeight="SemiBold"/>
+            <TextBlock x:Name="StatusText" Text="点击「开始测速」进行测试"
+                       Foreground="{DynamicResource NwMutedBrush}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Margin="24,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <TextBlock Text="当前速率" Foreground="{DynamicResource NwMutedBrush}" HorizontalAlignment="Right"/>
+            <TextBlock x:Name="SpeedText" Text="--" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource NwAccentBrush}" HorizontalAlignment="Right"/>
+          </StackPanel>
+          <StackPanel Grid.Column="2" Margin="24,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <TextBlock Text="用时" Foreground="{DynamicResource NwMutedBrush}" HorizontalAlignment="Right"/>
+            <TextBlock x:Name="ElapsedText" Text="0.0s" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Grid Grid.Row="2" Margin="0,14,0,0" ColumnDefinitions="*,Auto">
+        <ProgressBar x:Name="MainProgressBar" Height="12" Minimum="0" Maximum="100"/>
+        <TextBlock x:Name="PercentText" Grid.Column="1" Margin="12,0,0,0" Width="48"
+                   VerticalAlignment="Center" HorizontalAlignment="Right" Text="0%"/>
+      </Grid>
+
+      <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,14,0,0">
+        <Button x:Name="StartButton" Content="开始测速" Click="StartButton_Click"
+                Margin="0,0,10,0" Padding="22,9" FontWeight="SemiBold" MinWidth="120"/>
+        <Button x:Name="CancelButton" Content="取消" Click="CancelButton_Click" IsEnabled="False" MinWidth="80"/>
+      </StackPanel>
+
+      <Grid Grid.Row="4" Margin="0,18,0,0" ColumnDefinitions="*,12,*">
+        <Border Background="{DynamicResource NwPanelBrush}" BorderBrush="{DynamicResource NwBorderBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="18">
+          <StackPanel>
+            <TextBlock Text="下载速度" Foreground="{DynamicResource NwMutedBrush}" FontSize="14"/>
+            <TextBlock x:Name="DownloadValue" Text="--" FontSize="22" FontWeight="Bold"
+                       Foreground="{DynamicResource NwDownloadBrush}" Margin="0,8,0,0"/>
+            <TextBlock x:Name="DownloadDetailText" Foreground="{DynamicResource NwMutedBrush}"
+                       Margin="0,8,0,0" Text="下载 100 MB 测试数据"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Background="{DynamicResource NwPanelBrush}"
+                BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="18">
+          <StackPanel>
+            <TextBlock Text="上传速度" Foreground="{DynamicResource NwMutedBrush}" FontSize="14"/>
+            <TextBlock x:Name="UploadValue" Text="--" FontSize="22" FontWeight="Bold"
+                       Foreground="{DynamicResource NwUploadBrush}" Margin="0,8,0,0"/>
+            <TextBlock x:Name="UploadDetailText" Foreground="{DynamicResource NwMutedBrush}"
+                       Margin="0,8,0,0" Text="上传 100 MB 测试数据"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <Border Grid.Row="5" Margin="0,14,0,0" Padding="14,10"
+              Background="{DynamicResource NwSurfaceBrush}"
+              BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1" CornerRadius="8">
+        <Grid ColumnDefinitions="*,*,1.4*,*">
+          <StackPanel>
+            <TextBlock Text="延迟" Foreground="{DynamicResource NwMutedBrush}"/>
+            <TextBlock x:Name="PingValue" Text="--" FontWeight="SemiBold"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1">
+            <TextBlock Text="抖动" Foreground="{DynamicResource NwMutedBrush}"/>
+            <TextBlock x:Name="JitterValue" Text="--" FontWeight="SemiBold"/>
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="测速节点" Foreground="{DynamicResource NwMutedBrush}"/>
+            <TextBlock x:Name="ServerValue" Text="--" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+          <StackPanel Grid.Column="3">
+            <TextBlock Text="总用时" Foreground="{DynamicResource NwMutedBrush}"/>
+            <TextBlock x:Name="DurationValue" Text="--" FontWeight="SemiBold"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

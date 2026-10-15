@@ -32,6 +32,8 @@
   <ItemGroup>
     <ProjectReference Include="..\DevEnv\DevEnv.csproj" />
     <ProjectReference Include="..\Translator\Translator\LavaTranslator.csproj" />
+    <ProjectReference Include="..\NetworkWatch\NetworkWatch.csproj" />
+    <ProjectReference Include="..\Clipboard\Clipboard.csproj" />
   </ItemGroup>
 
   <!-- DevEnv 运行时资源（配置 / 7zr）复制到输出目录 -->
@@ -52,7 +54,7 @@
     <PackageReference Include="Avalonia.Controls.WebView" Version="12.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
-    <PackageReference Include="System.Management" Version="9.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.10" />
     <!-- Velopack：安装器 + 增量自更新（vpk CLI 同版本 1.2.0，勿随意升级以免与 CI 不匹配） -->
     <PackageReference Include="Velopack" Version="1.2.0" />
     <!-- 覆盖 Avalonia 传递依赖 Tmds.DBus.Protocol 到修复版，消除漏洞警告 NU1903（GHSA-xrw6-gwf8-vvr9） -->

@@ -1,0 +1,109 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NetworkWatch.Views.NetworkWatchView"
+             FontFamily="Segoe UI"
+             FontSize="13">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://NetworkWatch/Themes/NetworkWatch.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <Border Background="{DynamicResource NwBackgroundBrush}">
+    <Grid Margin="16" RowDefinitions="Auto,Auto,*,Auto"
+          TextElement.Foreground="{DynamicResource NwTextBrush}">
+      <StackPanel Grid.Row="0" Margin="0,0,0,12">
+        <TextBlock Text="NetworkWatch" FontSize="24" FontWeight="Bold"
+                   Foreground="{DynamicResource NwAccentBrush}"/>
+        <TextBlock Text="按进程监控 TCP/UDP 连接与上传、下载速率"
+                   Foreground="{DynamicResource NwMutedBrush}" Margin="0,4,0,0"/>
+      </StackPanel>
+
+      <Grid Grid.Row="1" Margin="0,0,0,12" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+        <TextBox x:Name="SearchBox" Grid.Column="0" PlaceholderText="搜索进程…"
+                 Margin="0,0,12,0" TextChanged="SearchBox_TextChanged"/>
+        <CheckBox x:Name="AutoSortCheckBox" Grid.Column="1" Content="按流量自动排序"
+                  IsChecked="True" Margin="0,0,12,0"
+                  IsCheckedChanged="AutoSortCheckBox_Changed"/>
+        <Button x:Name="PauseButton" Grid.Column="2" Content="暂停" Margin="0,0,8,0" Click="PauseButton_Click"/>
+        <Button x:Name="RefreshButton" Grid.Column="3" Content="立即刷新" Margin="0,0,8,0" Click="RefreshButton_Click"/>
+        <Button x:Name="SpeedTestButton" Grid.Column="4" Content="测速" Margin="0,0,8,0" Click="SpeedTestButton_Click"/>
+        <Button x:Name="PortManagerButton" Grid.Column="5" Content="端口管理" Margin="0,0,8,0" Click="PortManagerButton_Click"/>
+        <Button x:Name="ThemeButton" Grid.Column="6" Margin="0,0,8,0" Click="ThemeButton_Click"/>
+        <Button x:Name="AdminButton" Grid.Column="7" Content="管理员模式" Click="AdminButton_Click"/>
+      </Grid>
+
+      <Grid Grid.Row="2" ColumnDefinitions="1.2*,8,*">
+        <Border Grid.Column="0" Background="{DynamicResource NwPanelBrush}"
+                BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="8">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Text="进程列表" FontWeight="SemiBold" Margin="4,4,4,8"/>
+            <DataGrid x:Name="ProcessGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      SelectionChanged="ProcessGrid_SelectionChanged">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="进程" Binding="{Binding DisplayName}" Width="1.4*"/>
+                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70"/>
+                <DataGridTextColumn Header="连接数" Binding="{Binding ConnectionCount}" Width="70"/>
+                <DataGridTextColumn Header="下载" Binding="{Binding DownloadRateText}" Width="*"/>
+                <DataGridTextColumn Header="上传" Binding="{Binding UploadRateText}" Width="*"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </DockPanel>
+        </Border>
+
+        <Border Grid.Column="2" Background="{DynamicResource NwPanelBrush}"
+                BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="8">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Margin="4,4,4,8">
+              <TextBlock Text="连接详情" FontWeight="SemiBold"/>
+              <TextBlock x:Name="SelectedProcessText"
+                         Foreground="{DynamicResource NwMutedBrush}"
+                         Margin="0,4,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+            <DataGrid x:Name="ConnectionGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserReorderColumns="False">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="协议" Binding="{Binding Protocol}" Width="60"/>
+                <DataGridTextColumn Header="本地地址" Binding="{Binding LocalEndpoint}" Width="*"/>
+                <DataGridTextColumn Header="远程地址" Binding="{Binding RemoteEndpoint}" Width="*"/>
+                <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="100"/>
+                <DataGridTextColumn Header="下载" Binding="{Binding DownloadRateText}" Width="90"/>
+                <DataGridTextColumn Header="上传" Binding="{Binding UploadRateText}" Width="90"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </DockPanel>
+        </Border>
+      </Grid>
+
+      <Border Grid.Row="3" Margin="0,12,0,0" Padding="12,10"
+              Background="{DynamicResource NwSurfaceBrush}"
+              BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1" CornerRadius="8">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+          <TextBlock x:Name="StatusText" VerticalAlignment="Center"/>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="24,0">
+            <TextBlock Text="总下载: " Foreground="{DynamicResource NwMutedBrush}"/>
+            <TextBlock x:Name="TotalDownloadText"
+                       Foreground="{DynamicResource NwDownloadBrush}" FontWeight="SemiBold"/>
+          </StackPanel>
+          <StackPanel Grid.Column="2" Orientation="Horizontal">
+            <TextBlock Text="总上传: " Foreground="{DynamicResource NwMutedBrush}"/>
+            <TextBlock x:Name="TotalUploadText"
+                       Foreground="{DynamicResource NwUploadBrush}" FontWeight="SemiBold"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</UserControl>

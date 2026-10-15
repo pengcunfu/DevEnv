@@ -1,0 +1,8 @@
+.idea/
+.vscode/
+.cursor
+
+# 前端构建产物与依赖
+dist/
+node_modules/
+.wrangler/

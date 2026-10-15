@@ -1,0 +1,14 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Catppuccin Latte -->
+  <SolidColorBrush x:Key="NwBackgroundBrush" Color="#eff1f5"/>
+  <SolidColorBrush x:Key="NwPanelBrush" Color="#e6e9ef"/>
+  <SolidColorBrush x:Key="NwSurfaceBrush" Color="#ffffff"/>
+  <SolidColorBrush x:Key="NwBorderBrush" Color="#ccd0da"/>
+  <SolidColorBrush x:Key="NwTextBrush" Color="#4c4f69"/>
+  <SolidColorBrush x:Key="NwMutedBrush" Color="#6c6f85"/>
+  <SolidColorBrush x:Key="NwAccentBrush" Color="#1e66f5"/>
+  <SolidColorBrush x:Key="NwDownloadBrush" Color="#40a02b"/>
+  <SolidColorBrush x:Key="NwUploadBrush" Color="#df8e1d"/>
+  <SolidColorBrush x:Key="NwTrackBrush" Color="#ccd0da"/>
+</ResourceDictionary>

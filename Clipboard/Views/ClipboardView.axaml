@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ClipboardApp.Views.ClipboardView"
+             FontFamily="Microsoft YaHei"
+             FontSize="13">
+  <DockPanel Margin="8">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8" Spacing="8">
+      <TextBox x:Name="SearchBox" Width="220" PlaceholderText="搜索历史记录..."
+               TextChanged="RangeOrFilter_OnChanged"/>
+      <ComboBox x:Name="CategoryCombo" Width="90" SelectedIndex="0"
+                SelectionChanged="RangeOrFilter_OnChanged">
+        <ComboBoxItem Content="全部" Tag="all"/>
+        <ComboBoxItem Content="仅文本" Tag="text"/>
+        <ComboBoxItem Content="仅图片" Tag="image"/>
+      </ComboBox>
+      <ComboBox x:Name="RangeCombo" Width="110" SelectedIndex="0"
+                SelectionChanged="RangeOrFilter_OnChanged">
+        <ComboBoxItem Content="最近3天" Tag="3days"/>
+        <ComboBoxItem Content="今天" Tag="today"/>
+        <ComboBoxItem Content="最近一周" Tag="week"/>
+        <ComboBoxItem Content="最近一个月" Tag="month"/>
+        <ComboBoxItem Content="全部" Tag="all"/>
+      </ComboBox>
+      <ToggleButton x:Name="MonitorButton" Content="关闭监听" IsChecked="True"
+                    Width="90" Click="MonitorButton_OnClick"/>
+      <TextBlock x:Name="StatusLabel" Text="当前状态: 正在监听"
+                 Foreground="#4CAF50" VerticalAlignment="Center"/>
+      <Button Content="快捷键" Click="HotkeySettings_OnClick" Margin="8,0,0,0"/>
+    </StackPanel>
+
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0" Spacing="8">
+      <Button x:Name="ClearButton" Content="清空 ▾" MinWidth="70" Click="ClearButton_OnClick"/>
+      <Button Content="复制" MinWidth="70" Click="Copy_OnClick"/>
+      <Button Content="导出" MinWidth="70" Click="Export_OnClick"/>
+      <Button Content="关于" MinWidth="70" Click="About_OnClick"/>
+    </StackPanel>
+
+    <Grid ColumnDefinitions="3*,8,2*">
+      <DockPanel Grid.Column="0">
+        <TextBlock DockPanel.Dock="Top" Text="历史记录:" FontWeight="Bold" Margin="0,0,0,4"/>
+        <ListBox x:Name="HistoryList"
+                 BorderBrush="#CCCCCC" BorderThickness="1"
+                 SelectionChanged="HistoryList_OnSelectionChanged"
+                 DoubleTapped="HistoryList_OnDoubleTapped">
+          <ListBox.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="复制" Click="Copy_OnClick"/>
+              <MenuItem Header="另存为..." Click="SaveAsMenu_OnClick"/>
+              <Separator/>
+              <MenuItem Header="删除" Click="DeleteMenu_OnClick"/>
+            </ContextMenu>
+          </ListBox.ContextMenu>
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" FontSize="13"/>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <DockPanel Grid.Column="2">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+          <TextBlock Text="内容预览:" FontWeight="Bold" VerticalAlignment="Center"/>
+          <TextBlock x:Name="PreviewLangLabel" Margin="8,0,0,0"
+                     VerticalAlignment="Center" Foreground="#888888" FontStyle="Italic"/>
+        </DockPanel>
+        <Grid>
+          <TextBox x:Name="PreviewText"
+                   IsReadOnly="True"
+                   TextWrapping="Wrap"
+                   AcceptsReturn="True"
+                   IsVisible="False"
+                   FontFamily="Consolas, Courier New"
+                   FontSize="13"/>
+          <ScrollViewer x:Name="ImageScroll" IsVisible="False"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Auto"
+                        Background="White">
+            <Image x:Name="PreviewImage" Stretch="None"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </ScrollViewer>
+        </Grid>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</UserControl>

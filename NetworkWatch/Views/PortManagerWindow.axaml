@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NetworkWatch.Views.PortManagerWindow"
+        Title="端口管理"
+        Height="640" Width="1000"
+        WindowStartupLocation="CenterOwner"
+        MinHeight="420" MinWidth="720"
+        FontFamily="Segoe UI"
+        FontSize="13">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://NetworkWatch/Themes/NetworkWatch.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+
+  <Border Background="{DynamicResource NwBackgroundBrush}">
+    <Grid Margin="16" RowDefinitions="Auto,*,Auto"
+          TextElement.Foreground="{DynamicResource NwTextBrush}">
+      <Grid Grid.Row="0" Margin="0,0,0,12" ColumnDefinitions="*,Auto,Auto">
+        <TextBox x:Name="FilterBox" Grid.Column="0" PlaceholderText="过滤端口 / 地址 / 进程…"
+                 Margin="0,0,12,0" TextChanged="FilterBox_TextChanged"/>
+        <CheckBox x:Name="AutoRefreshCheckBox" Grid.Column="1" Content="自动刷新"
+                  Margin="0,0,12,0" IsCheckedChanged="AutoRefreshCheckBox_Changed"/>
+        <Button Grid.Column="2" Content="刷新" Click="RefreshButton_Click"/>
+      </Grid>
+
+      <Border Grid.Row="1" Background="{DynamicResource NwPanelBrush}"
+              BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1"
+              CornerRadius="8" Padding="8">
+        <DataGrid x:Name="ConnectionGrid"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Extended"
+                  CanUserReorderColumns="False"
+                  DoubleTapped="ConnectionGrid_DoubleTapped">
+          <DataGrid.ContextMenu>
+            <ContextMenu Opening="ConnectionGrid_ContextMenuOpening">
+              <MenuItem Header="查看详情" Click="ViewDetailMenuItem_Click"/>
+              <Separator/>
+              <MenuItem Header="终止进程" Click="KillMenuItem_Click"/>
+            </ContextMenu>
+          </DataGrid.ContextMenu>
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="协议" Binding="{Binding Protocol}" Width="60"/>
+            <DataGridTextColumn Header="本地地址" Binding="{Binding LocalAddress}" Width="*"/>
+            <DataGridTextColumn Header="本地端口" Binding="{Binding LocalPort}" Width="80"/>
+            <DataGridTextColumn Header="远程地址" Binding="{Binding RemoteAddress}" Width="*"/>
+            <DataGridTextColumn Header="远程端口" Binding="{Binding RemotePort}" Width="80"/>
+            <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="100"/>
+            <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70"/>
+            <DataGridTextColumn Header="进程" Binding="{Binding ProcessName}" Width="*"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </Border>
+
+      <Border Grid.Row="2" Margin="0,12,0,0" Padding="12,10"
+              Background="{DynamicResource NwSurfaceBrush}"
+              BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1" CornerRadius="8">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock x:Name="StatusText" VerticalAlignment="Center" Text="就绪"/>
+          <TextBlock x:Name="ElevationText" Grid.Column="1" VerticalAlignment="Center"
+                     Foreground="{DynamicResource NwMutedBrush}"/>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

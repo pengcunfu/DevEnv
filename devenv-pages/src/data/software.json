@@ -1,0 +1,958 @@
+{
+  "$schema": "../../schema/software.schema.json",
+  "sitename": "开发环境下载站",
+  "description": "常用开发环境与工具安装包下载导航（国内镜像加速）",
+  "categories": [
+    {
+      "name": "Java",
+      "softwares": [
+        {
+          "name": "OpenJDK",
+          "desc": "开源Java开发工具包",
+          "default_source": "清华镜像",
+          "versions": [
+            {
+              "version": "8",
+              "url": "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/8/jdk/x64/windows/OpenJDK8U-jdk_x64_windows_hotspot_8u504b01.zip",
+              "file_name": "OpenJDK8U-jdk_x64_windows_hotspot_8u504b01.zip"
+            },
+            {
+              "version": "11",
+              "url": "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/11/jdk/x64/windows/OpenJDK11U-jdk_x64_windows_hotspot_11.0.32.1_1.zip",
+              "file_name": "OpenJDK11U-jdk_x64_windows_hotspot_11.0.32.1_1.zip"
+            },
+            {
+              "version": "17",
+              "url": "https://mirrors.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/windows/OpenJDK17U-jdk_x64_windows_hotspot_17.0.20.1_1.zip",
+              "file_name": "OpenJDK17U-jdk_x64_windows_hotspot_17.0.20.1_1.zip"
+            }
+          ]
+        },
+        {
+          "name": "Maven",
+          "desc": "Java 项目构建与依赖管理工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "3.9.x",
+              "url": "https://maven.apache.org/download.cgi",
+              "file_name": "apache-maven-3.9.9-bin.zip",
+              "remark": "官方下载页（选择 bin.zip 包）"
+            },
+            {
+              "version": "3.9.x 阿里镜像",
+              "url": "https://mirrors.aliyun.com/apache/maven/maven-3/",
+              "file_name": "apache-maven-3.9.9-bin.zip",
+              "source": "阿里云",
+              "remark": "阿里云镜像目录（国内下载快）"
+            }
+          ]
+        }
+      ],
+      "id": "java"
+    },
+    {
+      "name": "Python",
+      "softwares": [
+        {
+          "name": "Python",
+          "desc": "主流Python解释器",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "3.8.18",
+              "url": "https://www.python.org/downloads/release/python-3818/",
+              "file_name": "python-3.8.18-amd64.exe",
+              "remark": "官方下载页（点开后选择对应安装包）"
+            },
+            {
+              "version": "3.10.14",
+              "url": "https://www.python.org/downloads/release/python-31014/",
+              "file_name": "python-3.10.14-amd64.exe",
+              "remark": "官方下载页（点开后选择对应安装包）"
+            },
+            {
+              "version": "3.12.3",
+              "url": "https://www.python.org/downloads/release/python-3123/",
+              "file_name": "python-3.12.3-amd64.exe",
+              "remark": "官方下载页（点开后选择对应安装包）"
+            }
+          ]
+        },
+        {
+          "name": "Anaconda",
+          "desc": "科学计算Python发行版",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "2023.09",
+              "url": "https://repo.anaconda.com/archive/",
+              "file_name": "Anaconda3-2023.09-Windows-x86_64.exe",
+              "remark": "官方归档目录"
+            },
+            {
+              "version": "2025.02",
+              "url": "https://www.anaconda.com/download",
+              "file_name": "Anaconda3-2025.02-Windows-x86_64.exe",
+              "remark": "官方下载页"
+            }
+          ]
+        }
+      ],
+      "id": "python"
+    },
+    {
+      "name": "PHP",
+      "softwares": [
+        {
+          "name": "PHP",
+          "desc": "主流PHP解释器",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "8.3.33",
+              "url": "https://windows.php.net/downloads/releases/php-8.3.33-Win32-vs16-x64.zip",
+              "file_name": "php-8.3.33-Win32-vs16-x64.zip"
+            },
+            {
+              "version": "8.1.34",
+              "url": "https://windows.php.net/downloads/releases/php-8.1.34-Win32-vs16-x64.zip",
+              "file_name": "php-8.1.34-Win32-vs16-x64.zip"
+            },
+            {
+              "version": "7.4.33",
+              "url": "https://windows.php.net/downloads/releases/php-7.4.33-Win32-vc15-x64.zip",
+              "file_name": "php-7.4.33-Win32-vc15-x64.zip"
+            }
+          ]
+        },
+        {
+          "name": "Composer",
+          "desc": "PHP依赖管理工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "2.7.6",
+              "url": "https://getcomposer.org/download/2.7.6/composer.phar",
+              "file_name": "composer.phar"
+            }
+          ]
+        }
+      ],
+      "id": "php"
+    },
+    {
+      "name": "Node.js",
+      "softwares": [
+        {
+          "name": "Node.js",
+          "desc": "JavaScript运行环境",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "18.20.2",
+              "url": "https://nodejs.org/en/download/",
+              "file_name": "node-v18.20.2-x64.msi",
+              "remark": "官方下载页"
+            },
+            {
+              "version": "20.12.2",
+              "url": "https://nodejs.org/en/download/",
+              "file_name": "node-v20.12.2-x64.msi",
+              "remark": "官方下载页"
+            }
+          ]
+        },
+        {
+          "name": "nvm-windows",
+          "desc": "Node多版本管理工具",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "1.1.12",
+              "url": "https://github.com/coreybutler/nvm-windows/releases",
+              "file_name": "nvm-setup.exe"
+            }
+          ]
+        }
+      ],
+      "id": "node-js"
+    },
+    {
+      "name": "WebServer",
+      "softwares": [
+        {
+          "name": "Apache",
+          "desc": "主流Web服务器",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "2.4.58",
+              "url": "https://www.apachelounge.com/download/VC15/binaries/httpd-2.4.58-win64-VS16.zip",
+              "file_name": "httpd-2.4.58-win64-VS16.zip"
+            }
+          ]
+        },
+        {
+          "name": "Nginx",
+          "desc": "高性能Web服务器",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "1.24.0",
+              "url": "https://nginx.org/download/nginx-1.24.0.zip",
+              "file_name": "nginx-1.24.0.zip"
+            },
+            {
+              "version": "1.25.2",
+              "url": "https://nginx.org/download/nginx-1.25.2.zip",
+              "file_name": "nginx-1.25.2.zip"
+            }
+          ]
+        },
+        {
+          "name": "Tomcat",
+          "desc": "Java Web应用服务器",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "9.0.121",
+              "url": "https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.121/bin/apache-tomcat-9.0.121-windows-x64.zip",
+              "file_name": "apache-tomcat-9.0.121-windows-x64.zip"
+            },
+            {
+              "version": "10.1.59",
+              "url": "https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.59/bin/apache-tomcat-10.1.59-windows-x64.zip",
+              "file_name": "apache-tomcat-10.1.59-windows-x64.zip"
+            }
+          ]
+        },
+        {
+          "name": "IIS",
+          "desc": "Windows 内置 Web 服务器（Internet Information Services）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "内置",
+              "url": "https://learn.microsoft.com/zh-cn/iis/",
+              "file_name": "（Windows 可选功能）",
+              "remark": "Windows 内置组件，通过『控制面板 → 启用或关闭 Windows 功能』安装"
+            }
+          ]
+        },
+        {
+          "name": "ARR",
+          "desc": "IIS 应用请求路由模块（反向代理 / 负载均衡扩展）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "3.0 (x64)",
+              "url": "https://go.microsoft.com/fwlink/?LinkID=615136",
+              "file_name": "ARR_3.0_x64_setup.exe",
+              "remark": "依赖 URL Rewrite，需先安装"
+            },
+            {
+              "version": "URL Rewrite (x64)",
+              "url": "https://go.microsoft.com/fwlink/?LinkID=615137",
+              "file_name": "rewrite_amd64.msi",
+              "remark": "ARR 前置依赖模块"
+            }
+          ]
+        }
+      ],
+      "id": "webserver"
+    },
+    {
+      "name": "Database",
+      "softwares": [
+        {
+          "name": "MySQL",
+          "desc": "主流关系型数据库",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "5.7.44",
+              "url": "https://cdn.mysql.com/archives/mysql-5.7/mysql-5.7.44-winx64.zip",
+              "file_name": "mysql-5.7.44-winx64.zip"
+            },
+            {
+              "version": "8.0.36",
+              "url": "https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.36-winx64.zip",
+              "file_name": "mysql-8.0.36-winx64.zip"
+            }
+          ]
+        },
+        {
+          "name": "PostgreSQL",
+          "desc": "强大的开源关系型数据库",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://www.postgresql.org/download/windows/",
+              "file_name": "postgresql-windows-x64.exe",
+              "remark": "官方 Windows 安装包下载页"
+            },
+            {
+              "version": "EDB 安装包",
+              "url": "https://www.enterprisedb.com/downloads/postgres-postgresql-downloads",
+              "file_name": "postgresql-16.x-windows-x64.exe",
+              "remark": "EDB 官方下载页（Windows 二进制）"
+            }
+          ]
+        },
+        {
+          "name": "SQLite",
+          "desc": "轻量级嵌入式关系型数据库",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://www.sqlite.org/download.html",
+              "file_name": "sqlite-tools-win-x64.zip",
+              "remark": "官方下载页（含命令行工具与 DLL）"
+            }
+          ]
+        }
+      ],
+      "id": "database"
+    },
+    {
+      "name": "Cache",
+      "softwares": [
+        {
+          "name": "Redis",
+          "desc": "高性能键值缓存数据库",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "7.4.6",
+              "url": "https://github.com/redis-windows/redis-windows/releases/download/7.4.6/Redis-7.4.6-Windows-x64-cygwin-with-Service.zip",
+              "file_name": "Redis-7.4.6-Windows-x64-cygwin-with-Service.zip"
+            }
+          ]
+        },
+        {
+          "name": "Redis Another Manager",
+          "desc": "Redis可视化管理工具",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "1.7.4",
+              "url": "https://github.com/qishibo/AnotherRedisDesktopManager/releases/download/v1.7.4/Another-Redis-Desktop-Manager-win-1.7.4-x64.exe",
+              "file_name": "Another-Redis-Desktop-Manager-win-1.7.4-x64.exe"
+            }
+          ]
+        },
+        {
+          "name": "Tiny RDM",
+          "desc": "跨平台 Redis 可视化桌面管理器（Tauri）",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://github.com/tiny-craft/tiny-rdm/releases",
+              "file_name": "TinyRDM-windows-x64.exe",
+              "remark": "GitHub Releases 页面"
+            }
+          ]
+        }
+      ],
+      "id": "cache"
+    },
+    {
+      "name": "DBTools",
+      "softwares": [
+        {
+          "name": "Navicat Premium",
+          "desc": "强大的多数据库管理工具（试用版/需授权）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "17",
+              "url": "https://www.navicat.com.cn/download/navicat-premium",
+              "file_name": "navicat17_premium_cs_x64.exe",
+              "remark": "官网下载页（需在页面选择并下载）"
+            }
+          ]
+        },
+        {
+          "name": "HeidiSQL",
+          "desc": "免费开源的MySQL/MariaDB/SQL Server/PostgreSQL管理工具",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "12.21.0.7344",
+              "url": "https://github.com/HeidiSQL/HeidiSQL/releases/download/v12.21/HeidiSQL_12.21.0.7344_Setup.exe",
+              "file_name": "HeidiSQL_12.21.0.7344_Setup.exe"
+            }
+          ]
+        },
+        {
+          "name": "DBeaver",
+          "desc": "免费开源的多数据库管理工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://dbeaver.io/files/dbeaver-ce-latest-windows-x86_64.zip",
+              "file_name": "dbeaver-ce-latest-windows-x86_64.zip"
+            }
+          ]
+        },
+        {
+          "name": "DBX",
+          "desc": "开源轻量级跨平台数据库管理工具（Tauri，支持 60+ 数据库）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://dbxio.com/cn",
+              "file_name": "DBX 桌面版安装包",
+              "remark": "官方站（含桌面版与 Docker 版）"
+            }
+          ]
+        }
+      ],
+      "id": "dbtools"
+    },
+    {
+      "name": "Go",
+      "icon": "go",
+      "softwares": [
+        {
+          "name": "Go",
+          "desc": "Google 出品的编译型编程语言",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://go.dev/dl/",
+              "file_name": "go-windows-amd64.zip",
+              "remark": "官方下载页"
+            },
+            {
+              "version": "最新版 国内镜像",
+              "url": "https://golang.google.cn/dl/",
+              "file_name": "go-windows-amd64.zip",
+              "source": "其他",
+              "remark": "Google 中国镜像（国内下载快）"
+            },
+            {
+              "version": "最新版 阿里镜像",
+              "url": "https://mirrors.aliyun.com/golang/",
+              "file_name": "go-windows-amd64.zip",
+              "source": "阿里云",
+              "remark": "阿里云镜像目录"
+            }
+          ]
+        }
+      ],
+      "id": "go"
+    },
+    {
+      "name": ".NET",
+      "icon": "dotnet",
+      "softwares": [
+        {
+          "name": ".NET SDK",
+          "desc": "微软跨平台开发框架（含 C#/F# 编译器与运行时）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "8.0 (LTS)",
+              "url": "https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0",
+              "file_name": "dotnet-sdk-8.0-win-x64.exe",
+              "remark": "官方下载页（长期支持版）"
+            },
+            {
+              "version": "10.0 (LTS)",
+              "url": "https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0",
+              "file_name": "dotnet-sdk-10.0-win-x64.exe",
+              "remark": "官方下载页（长期支持版）"
+            }
+          ]
+        },
+        {
+          "name": ".NET 运行时",
+          "desc": "运行 .NET 应用所需的运行时（不含 SDK）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "8.0 (LTS)",
+              "url": "https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0",
+              "file_name": "dotnet-runtime-8.0-win-x64.exe",
+              "remark": "官方下载页（选择 Runtime）"
+            }
+          ]
+        },
+        {
+          "name": "IIS ARR",
+          "desc": "IIS 应用请求路由模块（反向代理 / 负载均衡）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "3.0 (x64)",
+              "url": "https://go.microsoft.com/fwlink/?LinkID=615136",
+              "file_name": "ARR_3.0_x64_setup.exe",
+              "remark": "依赖 URL Rewrite，需先安装"
+            }
+          ]
+        },
+        {
+          "name": "IIS Rewrite",
+          "desc": "IIS URL 重写模块（Rewrite 规则）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "2.x (x64)",
+              "url": "https://go.microsoft.com/fwlink/?LinkID=615137",
+              "file_name": "rewrite_amd64.msi"
+            }
+          ]
+        }
+      ],
+      "id": "net"
+    },
+    {
+      "name": "Editors",
+      "icon": "editors",
+      "softwares": [
+        {
+          "name": "VSCode",
+          "desc": "微软出品的轻量级代码编辑器",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版 (x64)",
+              "url": "https://update.code.visualstudio.com/latest/win32-x64-user/stable",
+              "file_name": "VSCodeUserSetup-x64-latest.exe",
+              "remark": "官方最新版直链（User 安装）"
+            },
+            {
+              "version": "官方下载页",
+              "url": "https://code.visualstudio.com/download",
+              "file_name": "VSCodeSetup-x64.exe",
+              "remark": "可按平台/架构选择"
+            }
+          ]
+        },
+        {
+          "name": "Visual Studio",
+          "desc": "微软官方 Windows IDE（含免费 Community 版）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "Community 2022",
+              "url": "https://visualstudio.microsoft.com/zh-hans/downloads/",
+              "file_name": "vs_community.exe",
+              "remark": "官方下载页（Community 免费版）"
+            }
+          ]
+        },
+        {
+          "name": "Cursor",
+          "desc": "AI 原生代码编辑器（VSCode 分支）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://www.cursor.com/download",
+              "file_name": "CursorSetup-x64.exe",
+              "remark": "官方下载页（自动识别平台）"
+            }
+          ]
+        },
+        {
+          "name": "Android Studio",
+          "desc": "Google 官方的 Android 应用开发 IDE",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://developer.android.com/studio",
+              "file_name": "android-studio-x64.exe",
+              "remark": "官方下载页"
+            },
+            {
+              "version": "国内镜像",
+              "url": "https://developer.android.google.cn/studio",
+              "file_name": "android-studio-x64.exe",
+              "source": "其他",
+              "remark": "Google 中国开发者站（国内下载快）"
+            }
+          ]
+        },
+        {
+          "name": "HBuilderX",
+          "desc": "DCloud 出品的轻量级前端/小程序 IDE",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://www.dcloud.io/hbuilderx.html",
+              "file_name": "HBuilderX-windows.zip",
+              "remark": "官方下载页（Windows 为 zip 包）"
+            }
+          ]
+        },
+        {
+          "name": "JetBrains Toolbox",
+          "desc": "JetBrains 全家桶（IDEA/PyCharm/WebStorm…）统一安装管理",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://www.jetbrains.com/toolbox-app/download/",
+              "file_name": "JetBrainsToolboxInstaller.exe",
+              "remark": "官方下载页"
+            }
+          ]
+        },
+        {
+          "name": "微信开发者工具",
+          "desc": "微信小程序 / 小游戏官方开发调试工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "稳定版",
+              "url": "https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html",
+              "file_name": "微信开发者工具稳定版.exe",
+              "remark": "官方下载页（稳定版/预发布版）"
+            }
+          ]
+        }
+      ],
+      "id": "editors"
+    },
+    {
+      "name": "AITools",
+      "icon": "ai",
+      "softwares": [
+        {
+          "name": "Claude",
+          "desc": "Anthropic 出品的 AI 助手桌面端",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "Windows (x64)",
+              "url": "https://claude.ai/api/desktop/win32/x64/setup/latest/redirect",
+              "file_name": "Claude-Setup-x64.exe",
+              "remark": "官方最新版直链"
+            },
+            {
+              "version": "官方下载页",
+              "url": "https://claude.ai/download",
+              "file_name": "Claude-Setup.exe",
+              "remark": "支持 Windows/macOS/Linux"
+            }
+          ]
+        },
+        {
+          "name": "OpenAI Codex",
+          "desc": "OpenAI 出品的终端 AI 编码代理",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "最新版 (CLI)",
+              "url": "https://github.com/openai/codex",
+              "file_name": "npm install -g @openai/codex",
+              "remark": "GitHub 仓库，CLI 用 npm 安装"
+            }
+          ]
+        },
+        {
+          "name": "Pi",
+          "desc": "终端 AI 编码助手（可扩展的 agent harness）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://pi.dev/",
+              "file_name": "Pi 官方站",
+              "remark": "中文文档：pi-doc.com"
+            }
+          ]
+        },
+        {
+          "name": "Goose",
+          "desc": "Block（原 Square）开源的本地 AI 编码代理",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://block.github.io/goose/",
+              "file_name": "Goose 官方文档",
+              "remark": "GitHub 仓库：block/goose"
+            }
+          ]
+        },
+        {
+          "name": "AtomCode",
+          "desc": "国产开源终端 AI 编码助手（Claude Code 替代）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://atomcode.atomgit.com/",
+              "file_name": "AtomCode 官方站",
+              "remark": "开源，支持一键安装"
+            }
+          ]
+        },
+        {
+          "name": "OpenCode",
+          "desc": "开源的终端 AI 编码代理（sst 出品）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://opencode.ai/",
+              "file_name": "OpenCode 官方站",
+              "remark": "GitHub 仓库：sst/opencode"
+            }
+          ]
+        }
+      ],
+      "id": "aitools"
+    },
+    {
+      "name": "APITools",
+      "icon": "api",
+      "softwares": [
+        {
+          "name": "Apifox",
+          "desc": "API 设计、调试、Mock、测试一体化工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://apifox.com/",
+              "file_name": "ApifoxSetup.exe",
+              "remark": "官方下载页"
+            }
+          ]
+        },
+        {
+          "name": "ApiPost",
+          "desc": "国产 API 调试与协作工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://www.apipost.cn/",
+              "file_name": "ApiPost 安装包",
+              "remark": "官方下载页"
+            }
+          ]
+        },
+        {
+          "name": "JMeter",
+          "desc": "Apache 开源的性能与负载测试工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://jmeter.apache.org/download_jmeter.cgi",
+              "file_name": "apache-jmeter.zip",
+              "remark": "官方下载页（需 Java 环境）"
+            }
+          ]
+        }
+      ],
+      "id": "apitools"
+    },
+    {
+      "name": "DevTools",
+      "icon": "devtools",
+      "softwares": [
+        {
+          "name": "CMake",
+          "desc": "跨平台 C/C++ 构建工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://cmake.org/download/",
+              "file_name": "cmake-windows-x86_64.msi",
+              "remark": "官方下载页"
+            }
+          ]
+        },
+        {
+          "name": "FFmpeg",
+          "desc": "跨平台音视频处理工具集",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "Windows 构建",
+              "url": "https://www.gyan.dev/ffmpeg/builds/",
+              "file_name": "ffmpeg-release-full.7z",
+              "remark": "gyan 的 Windows 构建（权威）"
+            },
+            {
+              "version": "官方下载页",
+              "url": "https://ffmpeg.org/download.html",
+              "file_name": "ffmpeg 源码/二进制",
+              "remark": "官网下载页"
+            }
+          ]
+        },
+        {
+          "name": "Pandoc",
+          "desc": "万能文档格式转换器（Markdown/HTML/PDF/Word…）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://pandoc.org/installing.html",
+              "file_name": "pandoc-windows-x86_64.msi",
+              "remark": "官方安装说明页"
+            }
+          ]
+        },
+        {
+          "name": "UPX",
+          "desc": "可执行文件/程序压缩工具",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "5.2.1 (win64)",
+              "url": "https://github.com/upx/upx/releases/download/v5.2.1/upx-5.2.1-win64.zip",
+              "file_name": "upx-5.2.1-win64.zip"
+            },
+            {
+              "version": "最新版",
+              "url": "https://github.com/upx/upx/releases",
+              "file_name": "upx-最新版-win64.zip",
+              "remark": "GitHub Releases 页面"
+            }
+          ]
+        },
+        {
+          "name": "WinSW",
+          "desc": "Windows 服务封装器（将任意 exe 包装为系统服务）",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://github.com/winsw/winsw/releases",
+              "file_name": "WinSW-x64.exe",
+              "remark": "GitHub Releases 页面"
+            }
+          ]
+        },
+        {
+          "name": "WindTerm",
+          "desc": "免费开源的跨平台 SSH 终端工具",
+          "default_source": "GitHub",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://github.com/kingToolbox/WindTerm/releases",
+              "file_name": "WindTerm-windows.zip",
+              "remark": "GitHub Releases 页面"
+            }
+          ]
+        }
+      ],
+      "id": "devtools"
+    },
+    {
+      "name": "常用工具",
+      "icon": "utils",
+      "softwares": [
+        {
+          "name": "7-Zip",
+          "desc": "免费开源的高压缩率压缩软件",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "24.09 (x64)",
+              "url": "https://www.7-zip.org/a/7z2409-x64.exe",
+              "file_name": "7z2409-x64.exe"
+            },
+            {
+              "version": "官方下载页",
+              "url": "https://www.7-zip.org/download.html",
+              "file_name": "7z最新版-x64.exe",
+              "remark": "官方下载页（可看最新版）"
+            }
+          ]
+        },
+        {
+          "name": "UU远程",
+          "desc": "网易出品的远程桌面控制工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://uuyc.163.com/",
+              "file_name": "UU远程客户端",
+              "remark": "官方下载页"
+            }
+          ]
+        },
+        {
+          "name": "WPS Office",
+          "desc": "金山办公软件套件（文字/表格/演示）",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "最新版",
+              "url": "https://www.wps.cn/",
+              "file_name": "WPS Office 安装包",
+              "remark": "官方下载页"
+            }
+          ]
+        }
+      ],
+      "id": "common-tools"
+    },
+    {
+      "name": "打包工具",
+      "icon": "pack",
+      "softwares": [
+        {
+          "name": "Inno Setup",
+          "desc": "免费开源的 Windows 安装包制作工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "6.x 直链",
+              "url": "https://jrsoftware.org/download.php/is.exe",
+              "file_name": "innosetup-6.x.exe",
+              "remark": "官方直链（最新 6.x）"
+            },
+            {
+              "version": "官方下载页",
+              "url": "https://jrsoftware.org/isinfo.php",
+              "file_name": "innosetup-6.x.exe",
+              "remark": "官方下载页"
+            }
+          ]
+        },
+        {
+          "name": "NSIS",
+          "desc": "开源的可脚本化 Windows 安装包制作工具",
+          "default_source": "官网",
+          "versions": [
+            {
+              "version": "3.12",
+              "url": "https://prdownloads.sourceforge.net/nsis/nsis-3.12-setup.exe?download",
+              "file_name": "nsis-3.12-setup.exe",
+              "remark": "SourceForge 官方下载"
+            },
+            {
+              "version": "下载页",
+              "url": "https://nsis.sourceforge.io/Download",
+              "file_name": "nsis-最新版-setup.exe",
+              "remark": "官方下载页"
+            }
+          ]
+        }
+      ],
+      "id": "packaging"
+    }
+  ]
+}

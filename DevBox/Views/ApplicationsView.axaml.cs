@@ -6,8 +6,10 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using ClipboardApp.Views;
 using DevEnv.Views;
 using LavaTranslator.Views;
+using NetworkWatch.Views;
 using ProgramBox.Models;
 using ProgramBox.Utils;
 
@@ -25,6 +27,9 @@ namespace ProgramBox.Views
 
         /// <summary>熔岩翻译视图（供主窗注册 Alt+Space）。</summary>
         public TranslatorView? Translator { get; private set; }
+
+        /// <summary>熔岩剪贴板视图（启动即监听；热键唤起本 Tab）。</summary>
+        public ClipboardView? Clipboard { get; private set; }
 
         public ApplicationsView()
             : this(new JsonDataManager())
@@ -52,8 +57,20 @@ namespace ProgramBox.Views
             Translator = new TranslatorView();
             Translator.RequestActivateHost = ActivateTranslatorTab;
             TranslatorHost.Content = Translator;
+            // 剪贴板启动即创建，后台持续监听
+            Clipboard = new ClipboardView();
+            Clipboard.RequestActivateHost = ActivateClipboardTab;
+            ClipboardHost.Content = Clipboard;
+            // 网络监控延迟到首次选中 Tab 再创建，减轻启动成本
+            MainSideNav.SelectionChanged += OnMainSideNavSelectionChanged;
             SystemToolsHost.Content = new SystemToolsView(_dataManager);
             SettingsHost.Content = new SettingsView(_dataManager);
+        }
+
+        private void OnMainSideNavSelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (MainSideNav.SelectedItem == NetworkWatchTab && NetworkWatchHost.Content is null)
+                NetworkWatchHost.Content = new NetworkWatchView();
         }
 
         /// <summary>显示主窗并切换到「熔岩翻译」Tab。</summary>
@@ -63,6 +80,15 @@ namespace ProgramBox.Views
                 mainWindow.ShowCentered();
 
             MainSideNav.SelectedItem = TranslatorTab;
+        }
+
+        /// <summary>显示主窗并切换到「熔岩剪贴板」Tab。</summary>
+        public void ActivateClipboardTab()
+        {
+            if (TopLevel.GetTopLevel(this) is MainWindow mainWindow)
+                mainWindow.ShowCentered();
+
+            MainSideNav.SelectedItem = ClipboardTab;
         }
 
         private void SetupDragDrop()

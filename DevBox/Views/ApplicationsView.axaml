@@ -260,6 +260,14 @@
             <ContentControl x:Name="TranslatorHost"/>
         </TabItem>
 
+        <TabItem x:Name="NetworkWatchTab" Header="网络监控">
+            <ContentControl x:Name="NetworkWatchHost"/>
+        </TabItem>
+
+        <TabItem x:Name="ClipboardTab" Header="熔岩剪贴板">
+            <ContentControl x:Name="ClipboardHost"/>
+        </TabItem>
+
         <TabItem Header="系统工具">
             <ContentControl x:Name="SystemToolsHost"/>
         </TabItem>
