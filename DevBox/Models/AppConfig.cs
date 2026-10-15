@@ -13,6 +13,7 @@ namespace ProgramBox.Models
         private string _language = "zh-CN";
         private bool _darkMode = false;
         private bool _edgeAutoHide = false;
+        private bool _doubleClickToLaunch = false;
         private string _showWindowHotkey = "Ctrl+Alt+D";
 
         /// <summary>
@@ -90,6 +91,19 @@ namespace ProgramBox.Models
             {
                 _edgeAutoHide = value;
                 OnPropertyChanged(nameof(EdgeAutoHide));
+            }
+        }
+
+        /// <summary>
+        /// 是否双击启动快捷方式（false 为单击启动）
+        /// </summary>
+        public bool DoubleClickToLaunch
+        {
+            get => _doubleClickToLaunch;
+            set
+            {
+                _doubleClickToLaunch = value;
+                OnPropertyChanged(nameof(DoubleClickToLaunch));
             }
         }
 

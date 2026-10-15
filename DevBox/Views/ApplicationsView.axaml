@@ -31,9 +31,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:NativeAtom">
                                 <Border Classes="ToolCard"
-                                        Width="168"
-                                        MinHeight="52"
-                                        Height="NaN"
+                                        Width="240"
+                                        Height="56"
                                         Tag="{Binding}"
                                         PointerPressed="NativeAppCard_PointerPressed"
                                         ToolTip.Tip="{Binding ExecPath}">
@@ -111,8 +110,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:FolderAtom">
                                 <Border Classes="ToolCard"
-                                        Width="120"
-                                        Height="52"
+                                        Width="240"
+                                        Height="56"
                                         Tag="{Binding}"
                                         PointerPressed="FolderCard_PointerPressed"
                                         ToolTip.Tip="{Binding FolderPath}">
@@ -140,8 +139,8 @@
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                   TextAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
+                                                   TextAlignment="Left"
+                                                   TextWrapping="Wrap"
                                                    VerticalAlignment="Center"
                                                    Margin="6,0,0,0"/>
                                     </Grid>
@@ -189,8 +188,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:WebAtom">
                                 <Border Classes="ToolCard"
-                                        Width="120"
-                                        Height="52"
+                                        Width="240"
+                                        Height="56"
                                         Tag="{Binding}"
                                         PointerPressed="WebCard_PointerPressed"
                                         ToolTip.Tip="{Binding Url}">
@@ -218,8 +217,8 @@
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                   TextAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
+                                                   TextAlignment="Left"
+                                                   TextWrapping="Wrap"
                                                    VerticalAlignment="Center"
                                                    Margin="6,0,0,0"/>
                                     </Grid>

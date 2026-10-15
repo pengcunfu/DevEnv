@@ -281,7 +281,7 @@ namespace ProgramBox.Views
             if (e.Source is Button)
                 return;
 
-            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            if (!ShouldHandleLaunchClick(e))
                 return;
 
             if (sender is Border { Tag: FolderAtom folder })
@@ -363,7 +363,7 @@ namespace ProgramBox.Views
             if (e.Source is Button)
                 return;
 
-            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            if (!ShouldHandleLaunchClick(e))
                 return;
 
             if (sender is Border { Tag: NativeAtom app })
@@ -451,7 +451,7 @@ namespace ProgramBox.Views
             if (e.Source is Button)
                 return;
 
-            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            if (!ShouldHandleLaunchClick(e))
                 return;
 
             if (sender is Border { Tag: WebAtom app })
@@ -572,5 +572,18 @@ namespace ProgramBox.Views
         }
 
         #endregion
+
+        /// <summary>
+        /// 根据设置判断当前点击是否应启动快捷方式（单击或双击）
+        /// </summary>
+        private bool ShouldHandleLaunchClick(PointerPressedEventArgs e)
+        {
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+                return false;
+
+            return _dataManager.Data.Config.DoubleClickToLaunch
+                ? e.ClickCount >= 2
+                : e.ClickCount == 1;
+        }
     }
 }

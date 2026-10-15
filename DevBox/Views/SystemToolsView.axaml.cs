@@ -193,6 +193,10 @@ namespace ProgramBox.Views
             if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
                 return;
 
+            var requireDouble = _dataManager.Data.Config.DoubleClickToLaunch;
+            if (requireDouble ? e.ClickCount < 2 : e.ClickCount != 1)
+                return;
+
             if (sender is Border border && border.Tag is string key)
             {
                 ExecuteSystemTool(key);

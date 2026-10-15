@@ -26,6 +26,17 @@
                     <TextBlock Text="窗口贴到屏幕边缘后自动隐藏，鼠标移到屏幕边缘即可恢复显示"
                                Classes="Body"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="快捷方式启动方式" Classes="Body"/>
+                        <ComboBox x:Name="LaunchModeComboBox" Width="200" HorizontalAlignment="Left">
+                            <ComboBoxItem Content="单击启动" Tag="Single"/>
+                            <ComboBoxItem Content="双击启动" Tag="Double"/>
+                        </ComboBox>
+                        <TextBlock Text="控制本地应用、文件夹、网站以及系统工具卡片的打开方式"
+                                   Classes="Body"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
                     
                     <StackPanel Spacing="8">
                         <TextBlock Text="界面语言" Classes="Body"/>

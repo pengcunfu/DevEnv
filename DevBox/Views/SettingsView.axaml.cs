@@ -59,6 +59,11 @@ namespace ProgramBox.Views
             DarkModeCheckBox.IsChecked = config.DarkMode;
             BaseEnvPathTextBox.Text = config.BaseEnvPath;
             HotkeyTextBox.Text = config.ShowWindowHotkey;
+
+            var launchTag = config.DoubleClickToLaunch ? "Double" : "Single";
+            LaunchModeComboBox.SelectedItem = LaunchModeComboBox.Items.Cast<ComboBoxItem>()
+                .FirstOrDefault(item => item.Tag?.ToString() == launchTag)
+                ?? LaunchModeComboBox.Items[0];
             
             // 设置语言选择
             var languageItem = LanguageComboBox.Items.Cast<ComboBoxItem>()
@@ -86,6 +91,8 @@ namespace ProgramBox.Views
             config.DarkMode = DarkModeCheckBox.IsChecked ?? false;
             config.BaseEnvPath = BaseEnvPathTextBox.Text ?? @"D:\ProgramBox\env";
             config.ShowWindowHotkey = HotkeyTextBox.Text?.Trim() ?? string.Empty;
+            config.DoubleClickToLaunch = LaunchModeComboBox.SelectedItem is ComboBoxItem launchItem
+                && launchItem.Tag?.ToString() == "Double";
 
             // 立即应用深色/浅色主题
             if (Application.Current != null)
