@@ -495,14 +495,6 @@ public partial class ClipboardView : Avalonia.Controls.UserControl
         PreviewLangLabel.Text = string.Empty;
     }
 
-    private async void About_OnClick(object? sender, RoutedEventArgs e)
-    {
-        await CbDialog.ShowAsync(
-            OwnerWindow,
-            $"{UiText.AppName} v{VersionInfo.Version}\n\n{UiText.AboutBody}\n\n{UiText.Copyright}",
-            UiText.About);
-    }
-
     private async void HotkeySettings_OnClick(object? sender, RoutedEventArgs e)
     {
         var dialog = new HotkeySettingsWindow(_config.Config.HotkeyModifiers, _config.Config.HotkeyKey);

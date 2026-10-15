@@ -66,7 +66,7 @@
                 <TextBox Grid.Row="1" Grid.Column="1" Name="TxtSearch"
                          Height="26" FontSize="12" VerticalContentAlignment="Center"
                          Padding="8,0" Margin="0,0,8,0"
-                         Watermark="&#x8F93;&#x5165;&#x8F6F;&#x4EF6;&#x540D;&#x79F0;&#x6216;&#x5173;&#x952E;&#x8BCD;"
+                         PlaceholderText="&#x8F93;&#x5165;&#x8F6F;&#x4EF6;&#x540D;&#x79F0;&#x6216;&#x5173;&#x952E;&#x8BCD;"
                          TextChanged="TxtSearch_TextChanged"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="2" Text="&#x5206;&#x7C7B;"

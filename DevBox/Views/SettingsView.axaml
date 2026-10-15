@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:lt="using:LavaTranslator.Models"
              mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="480"
              x:Class="ProgramBox.Views.SettingsView"
              Background="{DynamicResource BackgroundBrush}">
@@ -64,7 +65,7 @@
                         <TextBox Grid.Column="1"
                                  x:Name="HotkeyTextBox"
                                  IsReadOnly="True"
-                                 Watermark="未设置快捷键"
+                                 PlaceholderText="未设置快捷键"
                                  Margin="0,0,8,0"/>
                         <Button Grid.Column="2"
                                 x:Name="CaptureHotkeyButton"
@@ -180,6 +181,20 @@
                 </StackPanel>
             </Border>
 
+            <!-- 熔岩翻译 -->
+            <Border Classes="Card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="熔岩翻译" Classes="Subtitle"/>
+                    <TextBlock Text="默认网页翻译引擎（在「熔岩翻译」Tab 中打开）"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <ComboBox x:Name="TranslatorEngineCombo"
+                              Width="200"
+                              HorizontalAlignment="Left"
+                              DisplayMemberBinding="{Binding Name, DataType=lt:WebTranslateSite}"/>
+                </StackPanel>
+            </Border>
+
             <!-- About -->
             <Border Classes="Card">
                 <StackPanel Spacing="12">
@@ -190,6 +205,52 @@
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <TextBlock Text="专为程序员设计的多语言开发环境管理工具，支持 Java、Node.js、Python、C++ 等多种开发环境。"
                                Classes="Body"
+                               TextWrapping="Wrap"/>
+
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,4"/>
+
+                    <TextBlock Text="熔岩翻译助手" Classes="Body" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="TranslatorAboutVersionText"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="已内嵌于程序盒子 · 基于 .NET 10 + Avalonia"
+                               Classes="Body"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="内嵌有道、搜狗、百度、谷歌、DeepL、必应、腾讯等网页翻译站"
+                               Classes="Body"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="快捷键：Alt+Space（Windows，剪贴板有内容时自动填入当前网页翻译站，并切换到本 Tab；否则显示 / 隐藏主窗口）"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="网页翻译需安装 Microsoft Edge WebView2 Runtime"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="开机自启与系统托盘请使用上方常规设置"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,4"/>
+
+                    <TextBlock Text="熔岩剪贴板" Classes="Body" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="ClipboardAboutVersionText"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="已内嵌于程序盒子 · 剪贴板历史管理"
+                               Classes="Body"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="自动记录文本与图片历史，支持搜索、导出；可在本 Tab 内配置唤起快捷键"
+                               Classes="Body"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="主要功能：自动记录 · 文本/图片 · 搜索 · 导出历史"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="版权所有 © 2026 Fireneb-炎序星图"
+                               Classes="Body"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
                                TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>

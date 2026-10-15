@@ -1,0 +1,12 @@
+.idea/
+.vscode/
+.cursor
+
+# 依赖与构建产物
+node_modules/
+dist/
+.vitepress/dist/
+.vitepress/cache/
+
+# Cloudflare Pages / Wrangler
+.wrangler/

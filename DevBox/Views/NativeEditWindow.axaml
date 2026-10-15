@@ -16,7 +16,7 @@
                         <StackPanel Spacing="6">
                             <TextBlock Text="显示名称（别名）" Classes="Body"/>
                             <TextBox x:Name="AliasTextBox"
-                                     Watermark="例如：编辑器、浏览器、某项目工具"/>
+                                     PlaceholderText="例如：编辑器、浏览器、某项目工具"/>
                         </StackPanel>
 
                         <StackPanel Spacing="6">

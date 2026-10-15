@@ -1,10 +1,6 @@
 using System.Text.Json;
 using Avalonia.Controls;
-using Avalonia.Input.Platform;
-using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Threading;
-using LavaTranslator.Infrastructure;
 using LavaTranslator.Models;
 using LavaTranslator.Services;
 
@@ -13,12 +9,11 @@ namespace LavaTranslator.Views;
 public partial class TranslatorView : UserControl
 {
     private readonly ConfigService _configService;
-    private bool _suppressWebSiteSync;
     private bool _webInitialized;
     private bool _webReady;
     private TaskCompletionSource<bool>? _webReadyTcs;
-    private int _mainTabIndex;
     private bool _attachedToVisual;
+    private string? _loadedSiteId;
 
     /// <summary>请求宿主切换到本 Tab 并显示主窗口（由 DevBox 注入）。</summary>
     public Action? RequestActivateHost { get; set; }
@@ -32,10 +27,7 @@ public partial class TranslatorView : UserControl
     {
         _configService = configService;
         InitializeComponent();
-        InitWebSites();
-        ApplyPlatformUi();
-        InitVersionDisplay();
-        SelectMainTab(0);
+        _configService.ConfigChanged += OnConfigChanged;
 
         AttachedToVisualTree += (_, _) =>
         {
@@ -43,11 +35,7 @@ public partial class TranslatorView : UserControl
                 return;
             _attachedToVisual = true;
             // 等视觉树就绪后再导航，避免 WebView2 过早初始化
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (!_webInitialized)
-                    NavigateSelectedWebSite();
-            }, DispatcherPriority.Loaded);
+            Dispatcher.UIThread.Post(NavigateSelectedWebSite, DispatcherPriority.Loaded);
         };
     }
 
@@ -55,82 +43,24 @@ public partial class TranslatorView : UserControl
     public void HandleHotkeyPressed()
         => Dispatcher.UIThread.Post(OnHotkeyPressed);
 
-    private void InitVersionDisplay()
-    {
-        var version = typeof(TranslatorView).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        VersionText.Text = $"v{version}";
-    }
+    private WebTranslateSite CurrentWebSite =>
+        WebTranslateCatalog.FindById(_configService.Current.General.LastWebSiteId)
+        ?? WebTranslateCatalog.All[0];
 
-    private void ApplyPlatformUi()
-    {
-        if (!OperatingSystem.IsWindows())
-            HotkeyHint.Text = "全局快捷键 Alt+Space 目前仅在 Windows 上可用。";
-    }
-
-    private void OnNavTabClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: string tag } && int.TryParse(tag, out var index))
-            SelectMainTab(index);
-        else if (sender is Button { Tag: int indexInt })
-            SelectMainTab(indexInt);
-    }
-
-    private void SelectMainTab(int index)
-    {
-        _mainTabIndex = index;
-
-        WebPage.IsVisible = index == 0;
-        SettingsPage.IsVisible = index == 1;
-        AboutPage.IsVisible = index == 2;
-
-        WebToolbar.IsVisible = index == 0;
-
-        SetNavTabSelected(TabWebButton, index == 0);
-        SetNavTabSelected(TabSettingsButton, index == 1);
-        SetNavTabSelected(TabAboutButton, index == 2);
-
-        if (index == 0 && !_webInitialized)
-            NavigateSelectedWebSite();
-    }
-
-    private static void SetNavTabSelected(Button button, bool selected)
-        => button.Classes.Set("selected", selected);
-
-    private void InitWebSites()
-    {
-        WebSiteCombo.ItemsSource = WebTranslateCatalog.All;
-        var lastId = _configService.Current.General.LastWebSiteId;
-        var site = WebTranslateCatalog.FindById(lastId) ?? WebTranslateCatalog.All[0];
-
-        _suppressWebSiteSync = true;
-        WebSiteCombo.SelectedItem = site;
-        _suppressWebSiteSync = false;
-    }
-
-    private WebTranslateSite? CurrentWebSite => WebSiteCombo.SelectedItem as WebTranslateSite;
-
-    private void OnWebSiteSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_suppressWebSiteSync)
-            return;
-
-        if (CurrentWebSite is not { } site)
-            return;
-
-        _configService.Current.General.LastWebSiteId = site.Id;
-        _configService.Save();
-        NavigateSelectedWebSite();
-    }
+    private void OnConfigChanged(object? sender, EventArgs e)
+        => Dispatcher.UIThread.Post(NavigateSelectedWebSite);
 
     private void NavigateSelectedWebSite()
     {
-        if (CurrentWebSite is not { } site)
+        var site = CurrentWebSite;
+        if (_webInitialized && string.Equals(_loadedSiteId, site.Id, StringComparison.OrdinalIgnoreCase))
             return;
 
         try
         {
             WebView.Source = site.HomeUrl;
             _webInitialized = true;
+            _loadedSiteId = site.Id;
             SetStatus($"已加载 {site.Name}");
         }
         catch (Exception ex)
@@ -196,7 +126,6 @@ public partial class TranslatorView : UserControl
         }
 
         RequestActivateHost?.Invoke();
-        SelectMainTab(0);
         await FillWebSiteAsync(text);
     }
 
@@ -219,17 +148,14 @@ public partial class TranslatorView : UserControl
 
     private async Task FillWebSiteAsync(string text)
     {
-        if (CurrentWebSite is not { } site)
-        {
-            SetStatus("未选择网页翻译站点", isWarning: true);
-            return;
-        }
+        var site = CurrentWebSite;
 
         if (!_webReady || WebView.Source is not { } source || !SamePage(source, site.HomeUrl))
         {
             SetStatus($"正在打开 {site.Name}…");
             WebView.Source = site.HomeUrl;
             _webInitialized = true;
+            _loadedSiteId = site.Id;
             if (!await WaitWebReadyAsync(TimeSpan.FromSeconds(25)))
             {
                 SetStatus("网页加载超时，请稍后重试", isWarning: true);
@@ -317,13 +243,6 @@ public partial class TranslatorView : UserControl
         return ReferenceEquals(winner, tcs.Task) && tcs.Task.Result;
     }
 
-    private void SetStatus(string message, bool isWarning = false, bool isError = false)
-    {
-        StatusText.Text = message;
-        var brushKey = isError ? "DangerBrush" : isWarning ? "WarningBrush" : "TextMutedBrush";
-        if (TryGetResource(brushKey, ActualThemeVariant, out var resource) && resource is IBrush brush)
-            StatusText.Foreground = brush;
-        else
-            StatusText.Foreground = isError ? Brushes.IndianRed : isWarning ? Brushes.DarkOrange : Brushes.Gray;
-    }
+    // 内嵌于 DevBox 时不再显示底部状态条；保留调用点便于排查流程。
+    private static void SetStatus(string message, bool isWarning = false, bool isError = false) { }
 }

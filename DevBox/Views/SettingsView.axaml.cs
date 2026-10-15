@@ -7,6 +7,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using LavaTranslator.Models;
+using LavaTranslator.Services;
+using LavaTranslator.Views;
 using ProgramBox.Utils;
 using Velopack;
 
@@ -15,6 +18,7 @@ namespace ProgramBox.Views
     public partial class SettingsView : UserControl
     {
         private readonly JsonDataManager _dataManager;
+        private readonly ConfigService _translatorConfig;
         private readonly UpdateService _updateService = new();
         private bool _isCapturingHotkey;
         private bool _isCheckingOrDownloading;
@@ -25,12 +29,16 @@ namespace ProgramBox.Views
         {
         }
 
-        public SettingsView(JsonDataManager dataManager)
+        public SettingsView(JsonDataManager dataManager, ConfigService? translatorConfig = null)
         {
             InitializeComponent();
             _dataManager = dataManager;
+            _translatorConfig = translatorConfig ?? new ConfigService();
             LoadSettings();
             AboutVersionText.Text = $"版本 {VersionInfo.Display}";
+            var translatorVersion = typeof(TranslatorView).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+            TranslatorAboutVersionText.Text = $"v{translatorVersion}";
+            ClipboardAboutVersionText.Text = $"v{ClipboardApp.VersionInfo.Version}";
             DocUrlText.Text = VersionInfo.DocumentationUrl;
             HotkeyTextBox.KeyDown += HotkeyTextBox_KeyDown;
 
@@ -76,6 +84,11 @@ namespace ProgramBox.Views
             {
                 LanguageComboBox.SelectedIndex = 0;
             }
+
+            TranslatorEngineCombo.ItemsSource = WebTranslateCatalog.All;
+            var site = WebTranslateCatalog.FindById(_translatorConfig.Current.General.LastWebSiteId)
+                       ?? WebTranslateCatalog.All[0];
+            TranslatorEngineCombo.SelectedItem = site;
         }
 
         /// <summary>
@@ -103,6 +116,12 @@ namespace ProgramBox.Views
             if (LanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
             {
                 config.Language = selectedItem.Tag?.ToString() ?? "zh-CN";
+            }
+
+            if (TranslatorEngineCombo.SelectedItem is WebTranslateSite engine)
+            {
+                _translatorConfig.Current.General.LastWebSiteId = engine.Id;
+                _translatorConfig.Save();
             }
             
             // 设置开机自启动

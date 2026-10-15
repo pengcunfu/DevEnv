@@ -16,7 +16,7 @@
                 <StackPanel Spacing="6">
                     <TextBlock Text="显示标题" Classes="Body"/>
                     <TextBox x:Name="TitleTextBox"
-                             Watermark="网站在列表中显示的名称"/>
+                             PlaceholderText="网站在列表中显示的名称"/>
                 </StackPanel>
 
                 <StackPanel Spacing="6">

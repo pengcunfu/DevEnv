@@ -32,7 +32,6 @@
       <Button x:Name="ClearButton" Content="清空 ▾" MinWidth="70" Click="ClearButton_OnClick"/>
       <Button Content="复制" MinWidth="70" Click="Copy_OnClick"/>
       <Button Content="导出" MinWidth="70" Click="Export_OnClick"/>
-      <Button Content="关于" MinWidth="70" Click="About_OnClick"/>
     </StackPanel>
 
     <Grid ColumnDefinitions="3*,8,2*">

@@ -22,7 +22,7 @@
 
                 <TextBox Grid.Column="1" 
                        x:Name="SearchBox"
-                       Watermark="搜索工具..."
+                       PlaceholderText="搜索工具..."
                        Width="200"
                        VerticalAlignment="Top"
                        TextChanged="SearchBox_TextChanged"/>

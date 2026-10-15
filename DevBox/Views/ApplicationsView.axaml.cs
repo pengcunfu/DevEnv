@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using ClipboardApp.Views;
 using DevEnv.Views;
+using LavaTranslator.Services;
 using LavaTranslator.Views;
 using NetworkWatch.Views;
 using ProgramBox.Models;
@@ -54,7 +55,8 @@ namespace ProgramBox.Views
             LoadApplications();
             DevEnvHost.Content = new DevelopmentServicesView();
             LavaEnvHost.Content = new DevEnvView();
-            Translator = new TranslatorView();
+            var translatorConfig = new ConfigService();
+            Translator = new TranslatorView(translatorConfig);
             Translator.RequestActivateHost = ActivateTranslatorTab;
             TranslatorHost.Content = Translator;
             // 剪贴板启动即创建，后台持续监听
@@ -64,7 +66,7 @@ namespace ProgramBox.Views
             // 网络监控延迟到首次选中 Tab 再创建，减轻启动成本
             MainSideNav.SelectionChanged += OnMainSideNavSelectionChanged;
             SystemToolsHost.Content = new SystemToolsView(_dataManager);
-            SettingsHost.Content = new SettingsView(_dataManager);
+            SettingsHost.Content = new SettingsView(_dataManager, translatorConfig);
         }
 
         private void OnMainSideNavSelectionChanged(object? sender, SelectionChangedEventArgs e)

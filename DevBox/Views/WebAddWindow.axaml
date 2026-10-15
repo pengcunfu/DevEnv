@@ -16,7 +16,7 @@
                 <StackPanel Spacing="6">
                     <TextBlock Text="网址" Classes="Body"/>
                     <TextBox x:Name="UrlTextBox"
-                             Watermark="https://example.com"/>
+                             PlaceholderText="https://example.com"/>
                 </StackPanel>
 
                 <Button x:Name="FetchButton"
@@ -27,7 +27,7 @@
                 <StackPanel x:Name="PreviewPanel" IsVisible="False" Spacing="12">
                     <StackPanel Spacing="6">
                         <TextBlock Text="显示标题" Classes="Body"/>
-                        <TextBox x:Name="TitleTextBox" Watermark="网站在列表中显示的名称"/>
+                        <TextBox x:Name="TitleTextBox" PlaceholderText="网站在列表中显示的名称"/>
                     </StackPanel>
 
                     <StackPanel Spacing="6">
