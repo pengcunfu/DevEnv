@@ -28,7 +28,7 @@ features:
   - title: 熔岩剪贴板
     details: 文本与图片剪贴板历史，全局热键一键唤起。
   - title: 系统工具
-    details: 一键打开任务管理器、服务、注册表、环境变量等常用 Windows 管理工具。
+    details: Windows 管理工具快捷入口，以及 JSON / Hosts / 图像转换 / 哈希等实用工具。
   - title: 开源免费
     details: 基于 Avalonia 与 .NET 10，MIT 协议，源码托管于 pengcunfu/DevBox.Net。
 ---
@@ -44,7 +44,7 @@ features:
 |------|------|
 | [快速开始](./guide/getting-started.md) | 下载、安装与首次使用 |
 | [功能概览](./guide/features.md) | 各模块能做什么 |
-| [熔岩环境](./guide/lava/getting-started.md) | 绿色版进程、下载、小工具 |
+| [熔岩环境](./guide/lava/getting-started.md) | 绿色版进程、下载、镜像配置 |
 | [熔岩翻译](./guide/translator/getting-started.md) | 网页翻译与 Alt+Space |
 | [网络监控](./guide/networkwatch/getting-started.md) | 进程流量、测速与端口管理 |
 | [熔岩剪贴板](./guide/clipboard/getting-started.md) | 剪贴板历史与全局热键 |

@@ -32,14 +32,13 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
-  <!-- 独立入口已停用，嵌入 DevBox 使用 -->
+  <!-- 独立入口已停用，嵌入 DevBox；主题由 Lava.UI / DevBox 统一提供 -->
   <ItemGroup>
     <Compile Remove="Program.cs" />
     <Compile Remove="App.axaml.cs" />
     <AvaloniaXaml Remove="App.axaml" />
     <Compile Remove="MainWindow.axaml.cs" />
     <AvaloniaXaml Remove="MainWindow.axaml" />
-    <!-- 嵌入后不使用独立托盘 / Velopack 更新 -->
     <Compile Remove="Infrastructure\TrayIconService.cs" />
     <Compile Remove="Services\UpdateService.cs" />
   </ItemGroup>

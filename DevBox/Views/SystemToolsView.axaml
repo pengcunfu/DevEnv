@@ -17,7 +17,7 @@
                 
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="系统工具" Classes="Title"/>
-                    <TextBlock Text="快速访问Windows系统管理工具" Classes="Body"/>
+                    <TextBlock Text="快速访问 Windows 系统管理工具与常用小工具" Classes="Body"/>
                 </StackPanel>
 
                 <TextBox Grid.Column="1" 
@@ -30,6 +30,12 @@
 
             <!-- Categories -->
             <StackPanel Spacing="12">
+                <!-- Utility Tools -->
+                <StackPanel>
+                    <TextBlock Text="实用工具" Classes="Subtitle" Margin="0,0,0,6"/>
+                    <WrapPanel x:Name="UtilityPanel"/>
+                </StackPanel>
+
                 <!-- System Management -->
                 <StackPanel>
                     <TextBlock Text="系统管理" Classes="Subtitle" Margin="0,0,0,6"/>

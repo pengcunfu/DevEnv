@@ -50,7 +50,7 @@ export default defineConfig({
           { text: '快速开始', link: '/guide/lava/getting-started' },
           { text: '进程管理', link: '/guide/lava/processes' },
           { text: '下载与环境', link: '/guide/lava/download' },
-          { text: '小工具', link: '/guide/lava/tools' },
+          { text: '工具菜单', link: '/guide/lava/tools' },
           { text: '数据目录', link: '/guide/lava/data-directory' },
           { text: '常见问题', link: '/guide/lava/faq' },
         ],

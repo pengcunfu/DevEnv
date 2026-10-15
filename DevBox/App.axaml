@@ -17,7 +17,6 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-        <StyleInclude Source="avares://DevEnv/Themes/CompactDataGrid.axaml"/>
         <StyleInclude Source="avares://Lava.UI/Themes/Index.axaml"/>
     </Application.Styles>
 </Application>

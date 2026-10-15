@@ -44,9 +44,6 @@ public partial class DevEnvView : UserControl
 
     private void OpenAppsDir_Click(object? sender, RoutedEventArgs e) => _viewModel.OpenAppsDirectory();
 
-    private void OpenJsonFormatter_Click(object? sender, RoutedEventArgs e)
-        => ShowOwnedWindow(new JsonFormatterWindow());
-
     private void OpenSoftwareDownloader_Click(object? sender, RoutedEventArgs e)
         => OpenSoftwareDownload();
 
@@ -67,23 +64,6 @@ public partial class DevEnvView : UserControl
 
     private void OpenSettings_Click(object? sender, RoutedEventArgs e)
         => ShowOwnedWindow(new SettingsWindow());
-
-    private void OpenHostsFileEditor_Click(object? sender, RoutedEventArgs e)
-    {
-        if (ElevationHelper.IsAdministrator())
-        {
-            ShowOwnedWindow(new HostsFileEditWindow());
-            return;
-        }
-
-        ElevationHelper.TryRunElevated(ElevationHelper.EditHostsArgument);
-    }
-
-    private void OpenImageConverter_Click(object? sender, RoutedEventArgs e)
-        => ShowOwnedWindow(new ImageConverterWindow());
-
-    private void OpenHashCalculator_Click(object? sender, RoutedEventArgs e)
-        => ShowOwnedWindow(new HashCalculatorWindow());
 
     private void OpenEnvironmentVariables_Click(object? sender, RoutedEventArgs e)
     {
@@ -118,8 +98,7 @@ public partial class DevEnvView : UserControl
             "• 软件下载与自动解压 (zip 绿色包)\n" +
             "• 环境扫描 (Java/Python/Node.js/Go/PHP/.NET)\n" +
             "• 镜像源配置 (pip/npm/pnpm/Yarn/Maven/Composer/Go/NuGet)\n" +
-            $"• 数据目录: {AppPaths.Root}\n" +
-            "• JSON 格式化 / Hosts 编辑 / 哈希计算 / 图像转换\n\n" +
+            $"• 数据目录: {AppPaths.Root}\n\n" +
             $"版本: {AppInfo.Version}",
             "关于", MessageBoxButton.OK, MessageBoxImage.Information);
     }

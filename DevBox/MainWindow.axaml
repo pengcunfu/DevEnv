@@ -97,7 +97,7 @@
                             <Border Classes="Card" Cursor="Hand" PointerPressed="SystemCard_Click">
                                 <StackPanel HorizontalAlignment="Center" Margin="8">
                                     <TextBlock Text="系统工具" Classes="Subtitle" TextAlignment="Center"/>
-                                    <TextBlock Text="快速访问Windows系统管理工具" Classes="Body" TextAlignment="Center"/>
+                                    <TextBlock Text="快速访问系统管理与常用小工具" Classes="Body" TextAlignment="Center"/>
                                 </StackPanel>
                             </Border>
 

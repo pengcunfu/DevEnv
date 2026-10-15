@@ -105,7 +105,11 @@ namespace ProgramBox.Utils
             ("computer", "计算机管理", "综合系统管理工具"),
             ("security", "本地安全策略", "配置安全策略"),
             ("uac", "用户账户控制", "调整用户账户控制设置"),
-            ("control", "控制面板", "系统设置控制面板")
+            ("control", "控制面板", "系统设置控制面板"),
+            ("json_formatter", "JSON 格式化器", "格式化或压缩 JSON 文本"),
+            ("hosts_editor", "Hosts 文件编辑器", "编辑系统 Hosts 文件（需管理员）"),
+            ("image_converter", "图像格式转换器", "批量转换图片格式"),
+            ("hash_calculator", "文件哈希计算器", "计算文件或文本的 MD5 / SHA 等哈希")
         };
 
         /// <summary>

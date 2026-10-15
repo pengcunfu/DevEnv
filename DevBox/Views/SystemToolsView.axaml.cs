@@ -7,6 +7,9 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using DevEnv.Services;
+using DevEnv.UI;
+using DevEnv.Views;
 using ProgramBox.Converters;
 using ProgramBox.Models;
 using ProgramBox.Utils;
@@ -37,6 +40,15 @@ namespace ProgramBox.Views
         /// </summary>
         private void OrganizeToolsByCategory()
         {
+            // 实用工具（内嵌小工具）
+            var utilityTools = new[]
+            {
+                ("json_formatter", "JSON 格式化器"),
+                ("hosts_editor", "Hosts 文件编辑器"),
+                ("image_converter", "图像格式转换器"),
+                ("hash_calculator", "文件哈希计算器")
+            };
+
             // 系统管理工具
             var systemManagementTools = new[]
             {
@@ -77,6 +89,7 @@ namespace ProgramBox.Views
                 ("planned_task", "计划任务")
             };
 
+            CreateToolCards(UtilityPanel, utilityTools);
             CreateToolCards(SystemManagementPanel, systemManagementTools);
             CreateToolCards(HardwarePanel, hardwareTools);
             CreateToolCards(NetworkSecurityPanel, networkSecurityTools);
@@ -231,6 +244,7 @@ namespace ProgramBox.Views
                 t.Key.ToLower().Contains(searchText) ||
                 t.Description.ToLower().Contains(searchText)).ToArray();
 
+            UtilityPanel.Children.Clear();
             SystemManagementPanel.Children.Clear();
             HardwarePanel.Children.Clear();
             NetworkSecurityPanel.Children.Clear();
@@ -239,7 +253,7 @@ namespace ProgramBox.Views
             foreach (var tool in filtered)
             {
                 var card = CreateToolCard(tool);
-                SystemManagementPanel.Children.Add(card);
+                UtilityPanel.Children.Add(card);
             }
         }
 
@@ -257,6 +271,9 @@ namespace ProgramBox.Views
                     return;
                 }
 
+                if (TryOpenUtilityTool(key))
+                    return;
+
                 WindowsToolsHelper.ExecuteWindowsTool(key);
 
                 // 更新状态
@@ -270,6 +287,44 @@ namespace ProgramBox.Views
             {
                 _ = AppHelper.ShowErrorAsync($"启动工具失败: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 打开内嵌实用工具窗口；未识别时返回 false
+        /// </summary>
+        private bool TryOpenUtilityTool(string key)
+        {
+            var owner = TopLevel.GetTopLevel(this) as Window
+                ?? WindowDialogHelper.GetMainWindow();
+
+            switch (key.ToLowerInvariant())
+            {
+                case "json_formatter":
+                    new JsonFormatterWindow().ShowOwned(owner);
+                    return true;
+                case "hosts_editor":
+                    OpenHostsFileEditor(owner);
+                    return true;
+                case "image_converter":
+                    new ImageConverterWindow().ShowOwned(owner);
+                    return true;
+                case "hash_calculator":
+                    new HashCalculatorWindow().ShowOwned(owner);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static void OpenHostsFileEditor(Window? owner)
+        {
+            if (ElevationHelper.IsAdministrator())
+            {
+                new HostsFileEditWindow().ShowOwned(owner);
+                return;
+            }
+
+            ElevationHelper.TryRunElevated(ElevationHelper.EditHostsArgument);
         }
 
         #endregion

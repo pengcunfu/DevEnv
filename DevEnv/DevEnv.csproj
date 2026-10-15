@@ -35,14 +35,13 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Resources\icon.png" />
-    <AvaloniaResource Include="Themes\**\*.axaml" />
     <Content Include="Resources\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 
-  <!-- 独立入口已停用，嵌入 DevBox 使用 -->
+  <!-- 独立入口已停用，嵌入 DevBox；主题由 Lava.UI / DevBox 统一提供 -->
   <ItemGroup>
     <Compile Remove="Program.cs" />
     <Compile Remove="App.axaml.cs" />

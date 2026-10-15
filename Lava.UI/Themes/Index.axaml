@@ -9,4 +9,5 @@
   <StyleInclude Source="avares://Lava.UI/Themes/Controls/Navigation.axaml"/>
   <StyleInclude Source="avares://Lava.UI/Themes/Controls/Surfaces.axaml"/>
   <StyleInclude Source="avares://Lava.UI/Themes/Controls/Scroll.axaml"/>
+  <StyleInclude Source="avares://Lava.UI/Themes/Controls/DataGrid.axaml"/>
 </Styles>

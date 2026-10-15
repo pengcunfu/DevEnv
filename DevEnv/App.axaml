@@ -3,14 +3,20 @@
              xmlns:converters="using:DevEnv.Converters"
              x:Class="DevEnv.App"
              RequestedThemeVariant="Light">
-    <Application.Styles>
-        <FluentTheme />
-        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-        <StyleInclude Source="avares://DevEnv/Themes/CompactDataGrid.axaml"/>
-    </Application.Styles>
-    <Application.Resources>
-        <converters:StringToBrushConverter x:Key="StringToBrushConverter"/>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <converters:FileSizeConverter x:Key="FileSizeConverter"/>
-    </Application.Resources>
+  <!-- 独立入口已停用；若重新启用，主题统一走 Lava.UI -->
+  <Application.Resources>
+    <ResourceDictionary>
+      <converters:StringToBrushConverter x:Key="StringToBrushConverter"/>
+      <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+      <converters:FileSizeConverter x:Key="FileSizeConverter"/>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Lava.UI/Themes/Tokens.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+    <StyleInclude Source="avares://Lava.UI/Themes/Index.axaml"/>
+  </Application.Styles>
 </Application>

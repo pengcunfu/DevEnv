@@ -4,7 +4,7 @@
         Title="&#x8F6F;&#x4EF6;&#x4E0B;&#x8F7D;"
         Height="520" Width="820"
         MinHeight="400" MinWidth="720" MaxHeight="560" MaxWidth="860"
-        Background="#F3F4F6"
+        Background="{DynamicResource BackgroundBrush}"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <ControlTheme x:Key="FilterButton" TargetType="Button">
@@ -12,17 +12,17 @@
             <Setter Property="MinWidth" Value="56"/>
             <Setter Property="Padding" Value="10,0"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="#374151"/>
-            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="4"/>
         </ControlTheme>
 
         <ControlTheme x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource FilterButton}">
-            <Setter Property="Background" Value="#2563EB"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#2563EB"/>
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
         </ControlTheme>
     </Window.Resources>
 
