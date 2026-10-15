@@ -23,11 +23,6 @@
                                Classes="Body"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                    <CheckBox x:Name="EdgeAutoHideCheckBox" Content="靠边悬停隐藏"/>
-                    <TextBlock Text="窗口贴到屏幕边缘后自动隐藏，鼠标移到屏幕边缘即可恢复显示"
-                               Classes="Body"
-                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-
                     <StackPanel Spacing="8">
                         <TextBlock Text="快捷方式启动方式" Classes="Body"/>
                         <ComboBox x:Name="LaunchModeComboBox" Width="200" HorizontalAlignment="Left">

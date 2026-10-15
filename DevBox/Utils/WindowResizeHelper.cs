@@ -34,12 +34,6 @@ namespace ProgramBox.Utils
         private static WndProcDelegate? _procDelegate;
         private static IntPtr _originalProc;
 
-        /// <summary>
-        /// 收缩贴边期间置为 true：整条可见边缘条都作为客户区处理，
-        /// 保证悬停事件能到达 Avalonia（否则会被当作非客户区缩放边缘吞掉）。
-        /// </summary>
-        public static bool SuppressEdgeHitTest { get; set; }
-
         private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
@@ -152,10 +146,6 @@ namespace ProgramBox.Utils
         {
             // 最大化时不允许边缘缩放
             if (IsZoomed(hWnd))
-                return HTCLIENT;
-
-            // 收缩贴边时不做边缘命中，让悬停恢复生效
-            if (SuppressEdgeHitTest)
                 return HTCLIENT;
 
             if (!GetWindowRect(hWnd, out var rect))

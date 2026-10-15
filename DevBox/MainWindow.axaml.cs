@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -14,26 +13,10 @@ namespace ProgramBox
 {
     public partial class MainWindow : Window
     {
-        private enum DockEdge
-        {
-            None,
-            Left,
-            Right,
-            Top
-        }
-
-        private const int EdgeDockThreshold = 8;
-        private const int RetractStripSize = 8;
-
         private readonly JsonDataManager _dataManager;
         private readonly DispatcherTimer _statusTimer;
         private ApplicationsView? _applicationsView;
         private IGlobalHotkey? _translatorHotkey;
-
-        private bool _edgeAutoHideEnabled;
-        private bool _suppressPositionEvents;
-        private bool _retracted;
-        private DockEdge _dockedEdge = DockEdge.None;
 
         public MainWindow()
         {
@@ -53,11 +36,6 @@ namespace ProgramBox
                 _applicationsView?.Clipboard?.DisposeHotkey();
             };
 
-            PositionChanged += (_, _) => OnWindowPositionChanged();
-            PointerEntered += MainWindow_PointerEntered;
-            PointerExited += MainWindow_PointerExited;
-            RefreshEdgeAutoHideSettings();
-
             HotkeyService.HotkeyPressed += OnHotkeyPressed;
         }
 
@@ -71,12 +49,6 @@ namespace ProgramBox
 
         public void ShowCentered()
         {
-            // 解除靠边状态，避免恢复后立刻又贴边或收缩
-            _dockedEdge = DockEdge.None;
-            _retracted = false;
-            WindowResizeHelper.SuppressEdgeHitTest = false;
-            Topmost = false;
-
             Show();
             WindowState = WindowState.Normal;
             CenterOnScreen();
@@ -122,152 +94,6 @@ namespace ProgramBox
             _translatorHotkey.HotkeyPressed += (_, _) =>
                 _applicationsView.Translator.HandleHotkeyPressed();
             _translatorHotkey.RegisterAltSpace();
-        }
-
-        /// <summary>
-        /// 根据设置启用或禁用靠边悬停隐藏
-        /// </summary>
-        public void RefreshEdgeAutoHideSettings()
-        {
-            _edgeAutoHideEnabled = _dataManager.Data.Config.EdgeAutoHide;
-            if (_edgeAutoHideEnabled)
-            {
-                OnWindowPositionChanged();
-            }
-            else
-            {
-                RestoreFromEdge();
-            }
-        }
-
-        private void OnWindowPositionChanged()
-        {
-            if (_suppressPositionEvents || !_edgeAutoHideEnabled || WindowState == WindowState.Maximized)
-                return;
-
-            var screen = Screens.ScreenFromWindow(this);
-            if (screen == null)
-                return;
-
-            var winRect = GetWindowRectOnScreen(screen);
-            var edge = GetDockEdge(winRect, screen.WorkingArea);
-            if (edge == DockEdge.None)
-            {
-                _dockedEdge = DockEdge.None;
-                _retracted = false;
-                return;
-            }
-
-            // 收缩状态下保持收缩，等待鼠标悬停边缘条后恢复
-            if (_retracted)
-                return;
-
-            if (_dockedEdge != edge)
-                _dockedEdge = edge;
-        }
-
-        private PixelRect GetWindowRectOnScreen(Screen screen)
-        {
-            var width = Math.Max(1, (int)Math.Round(ClientSize.Width * screen.Scaling));
-            var height = Math.Max(1, (int)Math.Round(ClientSize.Height * screen.Scaling));
-            return new PixelRect(Position, new PixelSize(width, height));
-        }
-
-        private static DockEdge GetDockEdge(PixelRect winRect, PixelRect area)
-        {
-            if (winRect.X <= area.X + EdgeDockThreshold)
-                return DockEdge.Left;
-            if (area.X + area.Width - (winRect.X + winRect.Width) <= EdgeDockThreshold)
-                return DockEdge.Right;
-            if (winRect.Y <= area.Y + EdgeDockThreshold)
-                return DockEdge.Top;
-
-            return DockEdge.None;
-        }
-
-        private static PixelPoint ComputeDockedPosition(DockEdge edge, PixelRect winRect, PixelRect area)
-        {
-            return edge switch
-            {
-                DockEdge.Left => new PixelPoint(area.X, winRect.Y),
-                DockEdge.Right => new PixelPoint(area.X + area.Width - winRect.Width, winRect.Y),
-                _ => new PixelPoint(winRect.X, area.Y),
-            };
-        }
-
-        private void MainWindow_PointerEntered(object? sender, PointerEventArgs e)
-        {
-            if (_edgeAutoHideEnabled)
-                RestoreFromEdge();
-        }
-
-        private void MainWindow_PointerExited(object? sender, PointerEventArgs e)
-        {
-            if (!_edgeAutoHideEnabled || _dockedEdge == DockEdge.None)
-                return;
-
-            if (OwnedWindows.Any(w => w.IsVisible))
-                return;
-
-            RetractToEdge();
-        }
-
-        private void RetractToEdge()
-        {
-            if (_dockedEdge == DockEdge.None || _retracted || WindowState == WindowState.Maximized)
-                return;
-
-            var screen = Screens.ScreenFromWindow(this);
-            if (screen == null)
-                return;
-
-            var winRect = GetWindowRectOnScreen(screen);
-            var area = screen.WorkingArea;
-
-            var target = _dockedEdge switch
-            {
-                DockEdge.Left => new PixelPoint(area.X - winRect.Width + RetractStripSize, winRect.Y),
-                DockEdge.Right => new PixelPoint(area.X + area.Width - RetractStripSize, winRect.Y),
-                _ => new PixelPoint(winRect.X, area.Y - winRect.Height + RetractStripSize),
-            };
-
-            _retracted = true;
-            WindowResizeHelper.SuppressEdgeHitTest = true;
-            // 收缩后置顶显示边缘条，避免被其他窗口遮挡导致悬停无效
-            Topmost = true;
-            MoveWindowTo(target);
-        }
-
-        private void RestoreFromEdge()
-        {
-            if (_dockedEdge == DockEdge.None || !_retracted)
-                return;
-
-            var screen = Screens.ScreenFromWindow(this);
-            if (screen == null)
-            {
-                _retracted = false;
-                return;
-            }
-
-            var target = ComputeDockedPosition(_dockedEdge, GetWindowRectOnScreen(screen), screen.WorkingArea);
-            _retracted = false;
-            WindowResizeHelper.SuppressEdgeHitTest = false;
-            Topmost = false;
-            MoveWindowTo(target);
-        }
-
-        private void MoveWindowTo(PixelPoint target)
-        {
-            _suppressPositionEvents = true;
-            try
-            {
-                Position = target;
-            }
-            finally
-            {
-                _suppressPositionEvents = false;
-            }
         }
 
         /// <summary>
