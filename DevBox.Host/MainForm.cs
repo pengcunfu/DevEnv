@@ -13,13 +13,15 @@ public sealed class MainForm : Form
 {
     private readonly DevBoxApiHost _api;
     private readonly Panel _content = new() { Dock = DockStyle.Fill };
-    private readonly WebView2 _webView = new() { Dock = DockStyle.Fill };
+    private WebView2 _webView = new() { Dock = DockStyle.Fill };
     private readonly TranslatorHostController _translator;
     private readonly ClipboardHostController _clipboardWindow;
     private readonly NotifyIcon _tray;
     private readonly System.Windows.Forms.Timer _clipboardTimer = new() { Interval = 400 };
     private GlobalHotkeys? _hotkeys;
     private bool _exiting;
+    private bool _mainWebViewReady;
+    private bool _mainWebViewInitializing;
     private string? _lastClipboardSignature;
 
     public MainForm(DevBoxApiHost api)
@@ -60,9 +62,9 @@ public sealed class MainForm : Form
             Visible = true,
             Icon = appIcon ?? SystemIcons.Application,
         };
-        _tray.DoubleClick += (_, _) => ShowFromTray();
+        _tray.DoubleClick += (_, _) => BeginInvoke(async () => await ShowFromTrayAsync());
         var menu = new ContextMenuStrip();
-        menu.Items.Add("显示主窗口", null, (_, _) => ShowFromTray());
+        menu.Items.Add("显示主窗口", null, (_, _) => BeginInvoke(async () => await ShowFromTrayAsync()));
         menu.Items.Add("退出", null, (_, _) => ExitApp());
         _tray.ContextMenuStrip = menu;
 
@@ -97,25 +99,19 @@ public sealed class MainForm : Form
         {
             BeginInvoke(async () =>
             {
-                ShowFromTray();
                 if (string.Equals(tab, "translator", StringComparison.OrdinalIgnoreCase))
                 {
                     await ShowTranslatorWindowAsync(new TranslatorRequest { Visible = true });
-                    if (_webView.CoreWebView2 is not null)
-                        _ = _webView.CoreWebView2.ExecuteScriptAsync(
-                            "window.location.hash = '#/translator'; window.dispatchEvent(new Event('devbox-activate-tab'));");
                     return;
                 }
 
                 if (string.Equals(tab, "clipboard", StringComparison.OrdinalIgnoreCase))
                 {
                     await ShowClipboardWindowAsync(visible: true);
-                    if (_webView.CoreWebView2 is not null)
-                        _ = _webView.CoreWebView2.ExecuteScriptAsync(
-                            "window.location.hash = '#/clipboard'; window.dispatchEvent(new Event('devbox-activate-tab'));");
                     return;
                 }
 
+                await ShowFromTrayAsync();
                 if (!string.IsNullOrWhiteSpace(tab) && _webView.CoreWebView2 is not null)
                     _ = _webView.CoreWebView2.ExecuteScriptAsync(
                         $"window.location.hash = '#/{tab}'; window.dispatchEvent(new Event('devbox-activate-tab'));");
@@ -179,8 +175,21 @@ public sealed class MainForm : Form
         FormClosing += OnFormClosing;
         // 句柄创建/重建时都要（重新）注册；WebView2 等可能触发 RecreateHandle
         HandleCreated += (_, _) => EnsureHotkeys(forceRebind: true);
-        Shown += (_, _) => EnsureHotkeys(forceRebind: false);
-        Load += async (_, _) => await InitializeWebViewsAsync();
+        Shown += (_, _) =>
+        {
+            EnsureHotkeys(forceRebind: false);
+            if (Visible && !_mainWebViewReady && !_exiting)
+                BeginInvoke(async () => await EnsureMainWebViewAsync());
+        };
+        // 启动时只挂共享 Environment；主壳 WebView 等窗口真正显示再创建
+        Load += async (_, _) =>
+        {
+            var env = await WebView2EnvironmentFactory.GetSharedAsync();
+            _translator.AttachEnvironment(env);
+            _clipboardWindow.AttachEnvironment(env);
+            if (Visible)
+                await EnsureMainWebViewAsync();
+        };
 
         _clipboardTimer.Tick += (_, _) => PollClipboard();
         _clipboardTimer.Start();
@@ -254,13 +263,17 @@ public sealed class MainForm : Form
         if (added == 0)
             return;
 
-        if (_webView.CoreWebView2 is not null)
+        if (Visible)
         {
-            await _webView.CoreWebView2.ExecuteScriptAsync(
-                "window.dispatchEvent(new Event('devbox-shortcuts-changed'));");
-            var tab = addedFolders > 0 && addedApps == 0 ? "folders" : "apps";
-            await _webView.CoreWebView2.ExecuteScriptAsync(
-                $"window.location.hash = '#/{tab}'; window.dispatchEvent(new Event('devbox-activate-tab'));");
+            await EnsureMainWebViewAsync();
+            if (_webView.CoreWebView2 is not null)
+            {
+                await _webView.CoreWebView2.ExecuteScriptAsync(
+                    "window.dispatchEvent(new Event('devbox-shortcuts-changed'));");
+                var tab = addedFolders > 0 && addedApps == 0 ? "folders" : "apps";
+                await _webView.CoreWebView2.ExecuteScriptAsync(
+                    $"window.location.hash = '#/{tab}'; window.dispatchEvent(new Event('devbox-activate-tab'));");
+            }
         }
 
         _tray.ShowBalloonTip(2000, "程序盒子", $"已添加 {added} 项", ToolTipIcon.Info);
@@ -274,17 +287,26 @@ public sealed class MainForm : Form
         return client;
     }
 
-    private async Task InitializeWebViewsAsync()
+    /// <summary>主壳 WebView：仅在窗口可见时创建；进托盘后销毁，后台不常驻 Chromium。</summary>
+    private async Task EnsureMainWebViewAsync()
     {
+        if (_exiting || _mainWebViewReady)
+            return;
+        if (_mainWebViewInitializing)
+        {
+            while (_mainWebViewInitializing && !_mainWebViewReady && !_exiting)
+                await Task.Delay(50);
+            return;
+        }
+
+        _mainWebViewInitializing = true;
         try
         {
-            // 仅初始化主壳；翻译 / 剪贴板首次打开再创建（共享同一 Environment，复用浏览器进程）
             var env = await WebView2EnvironmentFactory.GetSharedAsync();
             _translator.AttachEnvironment(env);
             _clipboardWindow.AttachEnvironment(env);
 
             await _webView.EnsureCoreWebView2Async(env);
-            // 主壳：无默认菜单/状态栏；允许外部拖入，由 DropBridge 取绝对路径后调 API
             WebView2Ui.ConfigureShell(
                 _webView,
 #if DEBUG
@@ -306,7 +328,8 @@ public sealed class MainForm : Form
             else
                 ShowBootstrapPage();
 
-            // WebView2 初始化后可能重建窗口句柄，补注册热键
+            _mainWebViewReady = true;
+            WebView2EnvironmentFactory.AddRef();
             EnsureHotkeys(forceRebind: true);
         }
         catch (Exception ex)
@@ -317,6 +340,19 @@ public sealed class MainForm : Form
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
         }
+        finally
+        {
+            _mainWebViewInitializing = false;
+        }
+    }
+
+    private void SuspendMainWebView()
+    {
+        if (!_mainWebViewReady)
+            return;
+        _mainWebViewReady = false;
+        _webView = WebView2Recycle.Replace(_content, _webView);
+        WebView2EnvironmentFactory.Release();
     }
 
     private static async Task<bool> IsUiDevServerUpAsync()
@@ -409,14 +445,17 @@ public sealed class MainForm : Form
     {
         Hide();
         ShowInTaskbar = false;
+        // 后台只保留 API / 热键 / 剪贴板轮询；拆掉主壳 WebView
+        SuspendMainWebView();
     }
 
-    private void ShowFromTray()
+    private async Task ShowFromTrayAsync()
     {
         Show();
         ShowInTaskbar = true;
         WindowState = FormWindowState.Normal;
         Activate();
+        await EnsureMainWebViewAsync();
     }
 
     private void EnsureHotkeys(bool forceRebind)
@@ -427,7 +466,7 @@ public sealed class MainForm : Form
         if (_hotkeys is null)
         {
             _hotkeys = new GlobalHotkeys(Handle);
-            _hotkeys.ShowWindowPressed += () => BeginInvoke(ShowFromTray);
+            _hotkeys.ShowWindowPressed += () => BeginInvoke(async () => await ShowFromTrayAsync());
             _hotkeys.TranslatorPressed += () => BeginInvoke(async () =>
             {
                 await ShowTranslatorWindowAsync(new TranslatorRequest
@@ -584,7 +623,13 @@ public sealed class MainForm : Form
             _hotkeys?.Dispose();
             _clipboardTimer.Dispose();
             _tray.Dispose();
-            _webView.Dispose();
+            if (_mainWebViewReady)
+            {
+                _mainWebViewReady = false;
+                WebView2EnvironmentFactory.Release();
+            }
+            if (!_webView.IsDisposed)
+                _webView.Dispose();
             _translator.Dispose();
             _clipboardWindow.Dispose();
         }

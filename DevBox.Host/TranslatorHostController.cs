@@ -149,6 +149,7 @@ internal sealed class TranslatorHostController : IDisposable
                 SetStatus("网页加载失败，请检查网络或 WebView2 运行时", error: true);
         };
         _initialized = true;
+        WebView2EnvironmentFactory.AddRef();
 
         var site = CurrentSite();
         SelectCombo(site.Id);
@@ -182,6 +183,7 @@ internal sealed class TranslatorHostController : IDisposable
         _readyTcs = null;
         _initialized = false;
         _webView = WebView2Recycle.Replace(_window, _webView);
+        WebView2EnvironmentFactory.Release();
     }
 
     /// <summary>Alt+Space：显示窗口；有剪贴板文本则 DOM 填充。</summary>
@@ -484,6 +486,11 @@ internal sealed class TranslatorHostController : IDisposable
         _allowClose = true;
         try
         {
+            if (_initialized)
+            {
+                _initialized = false;
+                WebView2EnvironmentFactory.Release();
+            }
             if (!_webView.IsDisposed)
                 _webView.Dispose();
             _window.Close();

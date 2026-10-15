@@ -3,18 +3,18 @@ using Microsoft.Web.WebView2.Core;
 namespace DevBox.Host;
 
 /// <summary>
-/// 全进程共用一个 WebView2 Environment / 用户数据目录，便于浏览器进程复用，
-/// 避免主壳 / 翻译 / 剪贴板各开一套 Chromium（进程数与内存成倍涨）。
+/// 全进程共用一个 WebView2 Environment / 用户数据目录，便于浏览器进程复用。
+/// 用引用计数：没有任何 WebView 在用时丢掉共享实例，方便后台休眠时 Chromium 退出。
 /// </summary>
 internal static class WebView2EnvironmentFactory
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static CoreWebView2Environment? _shared;
     private static string? _userDataFolder;
+    private static int _activeWebViews;
 
     /// <summary>
     /// 面向托盘工具的精简 Chromium 参数：关掉扩展/同步/后台联网等，并启用 low-end 模式压缓存。
-    /// 不禁用 GPU（滚动与合成体感更差，收益不稳定）。
     /// </summary>
     private static readonly string BrowserArgs = string.Join(' ',
         "--enable-low-end-device-mode",
@@ -73,5 +73,20 @@ internal static class WebView2EnvironmentFactory
         {
             Gate.Release();
         }
+    }
+
+    /// <summary>某个 WebView 已成功 EnsureCoreWebView2。</summary>
+    public static void AddRef() => Interlocked.Increment(ref _activeWebViews);
+
+    /// <summary>某个 WebView 已销毁；计数归零时释放共享 Environment，便于进程退出。</summary>
+    public static void Release()
+    {
+        if (Interlocked.Decrement(ref _activeWebViews) > 0)
+            return;
+
+        Interlocked.Exchange(ref _activeWebViews, 0);
+        _shared = null;
+        // 催促回收；Chromium 子进程通常在最后一个控制器销毁后陆续退出
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: false);
     }
 }

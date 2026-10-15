@@ -77,6 +77,7 @@ internal sealed class ClipboardHostController : IDisposable
             allowExternalDrop: false);
 
         _initialized = true;
+        WebView2EnvironmentFactory.AddRef();
     }
 
     public async Task ShowAsync()
@@ -118,6 +119,7 @@ internal sealed class ClipboardHostController : IDisposable
         _navigated = false;
         _initialized = false;
         _webView = WebView2Recycle.Replace(_window, _webView);
+        WebView2EnvironmentFactory.Release();
     }
 
     public async Task ApplyAsync(bool visible)
@@ -175,6 +177,11 @@ internal sealed class ClipboardHostController : IDisposable
         _allowClose = true;
         try
         {
+            if (_initialized)
+            {
+                _initialized = false;
+                WebView2EnvironmentFactory.Release();
+            }
             if (!_webView.IsDisposed)
                 _webView.Dispose();
             _window.Close();
