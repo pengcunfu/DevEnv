@@ -1,15 +1,16 @@
 import { defineConfig } from 'vitepress'
 
-// GitHub Pages 项目站点：https://pengcunfu.github.io/DevBox.Net/
-const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'DevBox.Net'
+// Cloudflare Pages：https://docs.devenv.cn/
 const repo = 'pengcunfu/DevBox.Net'
 const defaultBranch = 'master'
 
 export default defineConfig({
   title: 'DevBox',
-  description: 'Windows 开发环境管理工具（开源 MIT）',
+  description: 'Windows 开发环境管理工具（开源 MIT）· 含熔岩绿色版环境管理',
   lang: 'zh-CN',
-  base: `/${repoName}/`,
+  // Pages 根路径部署（非 GitHub Pages 子路径）
+  base: '/',
+  outDir: 'dist',
   cleanUrls: true,
   lastUpdated: true,
   themeConfig: {
@@ -17,6 +18,7 @@ export default defineConfig({
     nav: [
       { text: '指南', link: '/guide/getting-started' },
       { text: '功能', link: '/guide/features' },
+      { text: '熔岩环境', link: '/guide/lava/getting-started' },
       { text: '下载', link: '/guide/releases' },
       {
         text: 'GitHub',
@@ -37,6 +39,17 @@ export default defineConfig({
         items: [
           { text: '功能概览', link: '/guide/features' },
           { text: '配置说明', link: '/guide/configuration' },
+        ],
+      },
+      {
+        text: '熔岩环境',
+        items: [
+          { text: '快速开始', link: '/guide/lava/getting-started' },
+          { text: '进程管理', link: '/guide/lava/processes' },
+          { text: '下载与环境', link: '/guide/lava/download' },
+          { text: '小工具', link: '/guide/lava/tools' },
+          { text: '数据目录', link: '/guide/lava/data-directory' },
+          { text: '常见问题', link: '/guide/lava/faq' },
         ],
       },
       {

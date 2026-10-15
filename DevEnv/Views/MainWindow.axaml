@@ -1,0 +1,243 @@
+﻿<Window x:Class="DevEnv.Views.MainWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:services="using:DevEnv.Services"
+        xmlns:app="using:DevEnv" Title="{x:Static app:AppInfo.ProductName}"
+        Height="560" Width="860" MinHeight="420" MinWidth="720"
+        Background="#F3F4F6"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <ControlTheme x:Key="ToolbarButton" TargetType="Button">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="MinWidth" Value="72"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#374151"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </ControlTheme>
+
+        <ControlTheme x:Key="ActionButton" TargetType="Button">
+            <Setter Property="MinWidth" Value="56"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </ControlTheme>
+
+        <ControlTheme x:Key="StartButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#ECFDF5"/>
+            <Setter Property="Foreground" Value="#047857"/>
+            <Setter Property="BorderBrush" Value="#A7F3D0"/>
+        </ControlTheme>
+
+        <ControlTheme x:Key="StopButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#FEF2F2"/>
+            <Setter Property="Foreground" Value="#B91C1C"/>
+            <Setter Property="BorderBrush" Value="#FECACA"/>
+        </ControlTheme>
+
+        <ControlTheme x:Key="InstallButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#EFF6FF"/>
+            <Setter Property="Foreground" Value="#2563EB"/>
+            <Setter Property="BorderBrush" Value="#BFDBFE"/>
+        </ControlTheme>
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.footer-link">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.footer-link:pointerover">
+            <Setter Property="Foreground" Value="#6B7280"/>
+        </Style>
+        <Style Selector="Button.toolbar-nav:pointerover">
+            <Setter Property="Background" Value="#F3F4F6"/>
+        </Style>
+        <Style Selector="Button.toolbar-nav:pressed">
+            <Setter Property="Background" Value="#E5E7EB"/>
+        </Style>
+        <Style Selector="Border.process-row:pointerover">
+            <Setter Property="Background" Value="#F9FAFB"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶栏 -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="14,12" Margin="0,0,0,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{x:Static app:AppInfo.ProductShortName}"
+                               FontSize="17" FontWeight="SemiBold" Foreground="#111827"/>
+                    <TextBlock Text="绿色版开发环境 · 进程管理 · 免管理员权限"
+                               FontSize="11" Foreground="#6B7280" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <Border Grid.Column="1" Background="#F9FAFB" BorderBrush="#E5E7EB"
+                        BorderThickness="1" CornerRadius="6" Padding="3" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Classes="toolbar-nav" Content="软件下载" Theme="{StaticResource ToolbarButton}"
+                                Click="OpenSoftwareDownloader_Click"/>
+                        <Rectangle Width="1" Height="16" Fill="#E5E7EB" Margin="2,0"/>
+                        <Button Classes="toolbar-nav" Content="下载管理" Theme="{StaticResource ToolbarButton}"
+                                Click="OpenDownloadManager_Click"/>
+                        <Button Classes="toolbar-nav" Content="环境扫描" Theme="{StaticResource ToolbarButton}"
+                                Click="OpenEnvironmentScanner_Click"/>
+                        <Button Classes="toolbar-nav" Content="镜像配置" Theme="{StaticResource ToolbarButton}"
+                                Click="OpenMirrorConfig_Click"/>
+                        <Rectangle Width="1" Height="16" Fill="#E5E7EB" Margin="2,0"/>
+                        <Button x:Name="ToolsMenuButton"
+                                Classes="toolbar-nav"
+                                Content="工具 ▾"
+                                Theme="{StaticResource ToolbarButton}"
+                                Margin="0"
+                                Click="ToolsMenuButton_Click">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="JSON 格式化器" Click="OpenJsonFormatter_Click"/>
+                                    <MenuItem Header="Hosts 文件编辑器" Click="OpenHostsFileEditor_Click">
+                                        <MenuItem.Icon>
+                                            <Image Source="{x:Static services:UiIcons.UacShield}"
+                                                   Width="16" Height="16"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="图像格式转换器" Click="OpenImageConverter_Click"/>
+                                    <MenuItem Header="文件哈希计算器" Click="OpenHashCalculator_Click"/>
+                                    <MenuItem Header="-" />
+                                    <MenuItem Header="环境变量" Click="OpenEnvironmentVariables_Click"/>
+                                    <MenuItem Header="应用目录" Click="OpenAppsDir_Click"/>
+                                    <MenuItem Header="数据目录" Click="OpenSettings_Click"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 进程列表 -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="12,10">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock DockPanel.Dock="Left" Text="本地服务" FontSize="13"
+                               FontWeight="SemiBold" Foreground="#111827" VerticalAlignment="Center"/>
+                    <TextBlock DockPanel.Dock="Right" Text="下载绿色包后解压到应用目录即可启停"
+                               FontSize="11" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                </DockPanel>
+
+                <Border Grid.Row="1" Background="#F9FAFB" BorderBrush="#F0F0F0"
+                        BorderThickness="0,0,0,1" Padding="10,6" Margin="0,0,0,4">
+                    <Grid ColumnDefinitions="120,*,140,128">
+                        <TextBlock Grid.Column="0" Text="程序" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
+                        <TextBlock Grid.Column="1" Text="说明" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280"/>
+                        <TextBlock Grid.Column="2" Text="状态" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="操作" FontSize="11" FontWeight="SemiBold" Foreground="#6B7280" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="2"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Processes}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Classes="process-row"
+                                        Background="White"
+                                        BorderBrush="#E5E7EB"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10,8"
+                                        Margin="0,0,0,4">
+                                    <Grid ColumnDefinitions="120,*,140,128">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayName}"
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="#111827"
+                                                   VerticalAlignment="Center"/>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Description}"
+                                                   FontSize="11" Foreground="#6B7280"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,0,8,0"
+                                                   ToolTip.Tip="{Binding Description}"/>
+
+                                        <StackPanel Grid.Column="2"
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+                                            <Ellipse Width="8" Height="8" Margin="0,0,6,0"
+                                                     Fill="{Binding StatusColor, Converter={StaticResource StringToBrushConverter}}"/>
+                                            <TextBlock Text="{Binding StatusText}"
+                                                       FontSize="11" FontWeight="Medium"
+                                                       Foreground="{Binding StatusColor, Converter={StaticResource StringToBrushConverter}}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="108"
+                                                       ToolTip.Tip="{Binding StatusText}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="3"
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Spacing="6">
+                                            <Button Content="启动"
+                                                    Theme="{StaticResource StartButton}"
+                                                    Click="StartProcess_Click"
+                                                    Tag="{Binding}"
+                                                    IsVisible="{Binding CanStart}"/>
+                                            <Button Content="停止"
+                                                    Theme="{StaticResource StopButton}"
+                                                    Click="StopProcess_Click"
+                                                    Tag="{Binding}"
+                                                    IsVisible="{Binding CanStop}"/>
+                                            <Button Content="去下载"
+                                                    Theme="{StaticResource InstallButton}"
+                                                    Click="OpenSoftwareDownload_Click"
+                                                    IsVisible="{Binding NeedsInstall}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <TextBlock Text="无需管理员权限 · 绿色版解压即用 · 进程方式启动"
+                       FontSize="10" Foreground="#9CA3AF"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Classes="footer-link"
+                       HorizontalAlignment="Left"
+                       Text="官方文档"
+                       Tapped="OpenDocs_Click"
+                       ToolTip.Tip="在浏览器中打开帮助文档"/>
+            <TextBlock Classes="footer-link"
+                       HorizontalAlignment="Right"
+                       Text="{Binding AppVersion, StringFormat=v{0}}"
+                       Tapped="Version_Click"
+                       ToolTip.Tip="点击查看关于"/>
+        </Grid>
+    </Grid>
+</Window>

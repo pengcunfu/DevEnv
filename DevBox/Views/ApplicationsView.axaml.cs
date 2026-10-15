@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using DevEnv.Views;
 using ProgramBox.Models;
 using ProgramBox.Utils;
 
@@ -43,6 +44,7 @@ namespace ProgramBox.Views
             SetupDragDrop();
             LoadApplications();
             DevEnvHost.Content = new DevelopmentServicesView();
+            LavaEnvHost.Content = new DevEnvView();
             SystemToolsHost.Content = new SystemToolsView(_dataManager);
             SettingsHost.Content = new SettingsView(_dataManager);
         }

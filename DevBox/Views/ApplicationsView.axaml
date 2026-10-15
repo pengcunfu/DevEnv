@@ -252,6 +252,10 @@
             <ContentControl x:Name="DevEnvHost"/>
         </TabItem>
 
+        <TabItem Header="熔岩环境">
+            <ContentControl x:Name="LavaEnvHost"/>
+        </TabItem>
+
         <TabItem Header="系统工具">
             <ContentControl x:Name="SystemToolsHost"/>
         </TabItem>

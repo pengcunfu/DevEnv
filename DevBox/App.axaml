@@ -1,9 +1,13 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:devenvConverters="using:DevEnv.Converters"
              x:Class="ProgramBox.App">
 
     <Application.Resources>
         <ResourceDictionary>
+            <devenvConverters:StringToBrushConverter x:Key="StringToBrushConverter"/>
+            <devenvConverters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <devenvConverters:FileSizeConverter x:Key="FileSizeConverter"/>
             <ResourceDictionary.ThemeDictionaries>
                 <!-- 浅色主题（同时作为 Default 后备） -->
                 <ResourceDictionary x:Key="Default">
@@ -53,6 +57,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <StyleInclude Source="avares://DevEnv/Themes/CompactDataGrid.axaml"/>
 
         <!-- Custom Styles -->
         

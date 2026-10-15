@@ -1,0 +1,89 @@
+<Window x:Class="DevEnv.Views.DownloadManagerWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="&#x4E0B;&#x8F7D;&#x7BA1;&#x7406;"
+        Height="520" Width="820"
+        MinHeight="400" MinWidth="720" MaxHeight="560" MaxWidth="860"
+        Background="#F3F4F6"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="10,8" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#x4E0B;&#x8F7D;&#x7BA1;&#x7406;" FontSize="15" FontWeight="SemiBold" Foreground="#111827"
+                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <Button Name="BtnRefresh" Content="&#x5237;&#x65B0;" Theme="{StaticResource CompactGridButton}" Margin="0,0,4,0" Click="BtnRefresh_Click"/>
+                <Button Name="BtnClearCompleted" Content="&#x6E05;&#x9664;&#x5DF2;&#x5B8C;&#x6210;" Theme="{StaticResource CompactGridButton}" Margin="0,0,4,0" Click="BtnClearCompleted_Click"/>
+                <Button Name="BtnClearFailed" Content="&#x6E05;&#x9664;&#x5931;&#x8D25;" Theme="{StaticResource CompactGridButton}" Margin="0,0,4,0" Click="BtnClearFailed_Click"/>
+                <Button Name="BtnClearAll" Content="&#x6E05;&#x7A7A;&#x5386;&#x53F2;" Theme="{StaticResource CompactGridDangerButton}" Margin="0,0,4,0" Click="BtnClearAll_Click"/>
+                <Button Name="BtnOpenFolder" Content="&#x6253;&#x5F00;&#x76EE;&#x5F55;" Theme="{StaticResource CompactGridButton}" Click="BtnOpenFolder_Click"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1"
+                CornerRadius="8" Padding="4,2">
+            <TabControl Name="TabControl" BorderThickness="0" Background="Transparent" Padding="4,2,4,0">
+                <TabItem Header="&#x6D3B;&#x52A8;&#x4E0B;&#x8F7D;" FontSize="12">
+                    <DataGrid Name="ActiveGrid" Classes="compact-data-grid"
+                              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
+                              VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="&#x8F6F;&#x4EF6;" Binding="{Binding SoftwareName}" Width="100"/>
+                            <DataGridTextColumn Header="&#x7248;&#x672C;" Binding="{Binding Version}" Width="72"/>
+                            <DataGridTextColumn Header="&#x6587;&#x4EF6;" Binding="{Binding FileName}" Width="*"/>
+                            <DataGridTextColumn Header="&#x72B6;&#x6001;" Binding="{Binding StatusText}" Width="72"/>
+                            <DataGridTextColumn Header="&#x8FDB;&#x5EA6;" Binding="{Binding Progress, StringFormat={}{0}%}" Width="52"/>
+                            <DataGridTextColumn Header="&#x901F;&#x5EA6;" Binding="{Binding SpeedText}" Width="80"/>
+                            <DataGridTemplateColumn Header="" Width="52">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="&#x53D6;&#x6D88;" Tag="{Binding Id}" Theme="{StaticResource CompactGridDangerButton}" Click="BtnCancel_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem Header="&#x4E0B;&#x8F7D;&#x5386;&#x53F2;" FontSize="12">
+                    <DataGrid Name="HistoryGrid" Classes="compact-data-grid"
+                              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
+                              VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="&#x8F6F;&#x4EF6;" Binding="{Binding SoftwareName}" Width="100"/>
+                            <DataGridTextColumn Header="&#x7248;&#x672C;" Binding="{Binding Version}" Width="72"/>
+                            <DataGridTextColumn Header="&#x6587;&#x4EF6;" Binding="{Binding FileName}" Width="*"/>
+                            <DataGridTextColumn Header="&#x72B6;&#x6001;" Binding="{Binding StatusText}" Width="72"/>
+                            <DataGridTextColumn Header="&#x65F6;&#x95F4;" Binding="{Binding StartTime, StringFormat=MM-dd HH:mm}" Width="88"/>
+                            <DataGridTemplateColumn Header="" Width="52">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="&#x6253;&#x5F00;" Tag="{Binding SavePath}" Theme="{StaticResource CompactGridButton}" Click="BtnOpenFile_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem Header="&#x7EDF;&#x8BA1;" FontSize="12">
+                    <StackPanel Margin="12,8">
+                        <TextBlock Name="TxtStatsTotal" FontSize="12" Foreground="#374151" Margin="0,4"/>
+                        <TextBlock Name="TxtStatsCompleted" FontSize="12" Foreground="#374151" Margin="0,4"/>
+                        <TextBlock Name="TxtStatsFailed" FontSize="12" Foreground="#374151" Margin="0,4"/>
+                        <TextBlock Name="TxtStatsDownloading" FontSize="12" Foreground="#374151" Margin="0,4"/>
+                        <TextBlock Name="TxtStatsBytes" FontSize="12" Foreground="#374151" Margin="0,4"/>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+        </Border>
+
+        <Border Grid.Row="2" Margin="0,8,0,0" Padding="4,0">
+            <TextBlock Name="TxtStatus" Text="&#x5C31;&#x7EEA;" FontSize="11" Foreground="#6B7280"/>
+        </Border>
+    </Grid>
+</Window>

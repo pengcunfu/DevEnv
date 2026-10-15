@@ -4,7 +4,7 @@ namespace ProgramBox.Utils
 {
     public static class VersionInfo
     {
-        public const string DocumentationUrl = "https://pengcunfu.github.io/DevBox.Net/";
+        public const string DocumentationUrl = "https://docs.devenv.cn/";
         public const string RepositoryUrl = "https://github.com/pengcunfu/DevBox.Net";
         public const string ReleasesUrl = "https://github.com/pengcunfu/DevBox.Net/releases";
 

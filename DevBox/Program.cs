@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using Avalonia;
+using DevEnv.Services;
 using ProgramBox.Utils;
 using Velopack;
 
@@ -21,7 +23,11 @@ namespace ProgramBox
                 .OnRestarted(v => StartupHooks.UpdatedTo = v.ToNormalizedString())
                 .Run();
 
-            if (!SingleInstanceService.TryStartAsPrimary())
+            // Hosts 提权编辑：允许与主实例并存的独立进程
+            var editHosts = args.Any(a =>
+                string.Equals(a, ElevationHelper.EditHostsArgument, StringComparison.OrdinalIgnoreCase));
+
+            if (!editHosts && !SingleInstanceService.TryStartAsPrimary())
                 return;
 
             try
@@ -30,7 +36,8 @@ namespace ProgramBox
             }
             finally
             {
-                SingleInstanceService.Dispose();
+                if (!editHosts)
+                    SingleInstanceService.Dispose();
             }
         }
 

@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <RootNamespace>DevEnv</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>熔岩环境管理工具</Product>
+    <AssemblyTitle>熔岩环境管理工具</AssemblyTitle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.6" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.6" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.6" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.Windows.Input" />
+    <Using Include="Avalonia.Interactivity" />
+    <Using Include="Avalonia.Threading" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Resources\icon.png" />
+    <AvaloniaResource Include="Themes\**\*.axaml" />
+    <Content Include="Resources\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- 独立入口已停用，嵌入 DevBox 使用 -->
+  <ItemGroup>
+    <Compile Remove="Program.cs" />
+    <Compile Remove="App.axaml.cs" />
+    <AvaloniaXaml Remove="App.axaml" />
+    <Compile Remove="Views\MainWindow.xaml.cs" />
+    <AvaloniaXaml Remove="Views\MainWindow.axaml" />
+  </ItemGroup>
+
+</Project>

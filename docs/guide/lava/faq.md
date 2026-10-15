@@ -1,0 +1,40 @@
+# 熔岩环境 · 常见问题
+
+## 找不到「熔岩环境」？
+
+请确认使用的是已嵌入熔岩模块的 DevBox 版本。左侧导航应包含 **熔岩环境** Tab；若没有，请升级到最新 [Release](https://github.com/pengcunfu/DevBox.Net/releases/latest)。
+
+## 无法编辑 Hosts 文件
+
+点击 **工具 → Hosts 文件编辑器** 后，在 UAC 对话框中选择 **是** 即可临时以管理员身份打开编辑器。若选择 **否** 或取消 UAC，则无法保存修改。
+
+也可右键 DevBox 快捷方式 → **以管理员身份运行** 整个程序（一般不必）。
+
+## 修改 Hosts 后不生效
+
+在管理员命令提示符中执行：
+
+```bat
+ipconfig /flushdns
+```
+
+然后重启浏览器或相关应用。
+
+## 服务显示「未安装」
+
+表示应用目录中还没有对应绿色包。请使用 **软件下载** 安装，或手动将绿色版解压到 `apps` 下正确子目录（需与配置一致）。
+
+## 启动失败或端口冲突
+
+1. 用 `netstat -ano | findstr :端口号` 查看端口占用。
+2. 关闭占用端口的其他程序，或修改该软件配置中的端口。
+3. 查看该软件日志目录中的错误信息。
+
+## 以前独立安装的 DevEnv / LavaEnv 怎么办？
+
+熔岩已并入 DevBox，不再单独发布 exe。可将原数据目录内容复制到 `文档\FNSoftware\DevEnv\`，再在 DevBox 的「熔岩环境」中继续使用。详见 [数据目录](./data-directory.md)。
+
+## 文档与反馈
+
+- 帮助文档：<https://docs.devenv.cn/guide/lava/getting-started>
+- 问题反馈：<https://github.com/pengcunfu/DevBox.Net/issues>

@@ -30,6 +30,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DevEnv\DevEnv.csproj" />
+  </ItemGroup>
+
+  <!-- DevEnv 运行时资源（配置 / 7zr）复制到输出目录 -->
+  <ItemGroup>
+    <Content Include="..\DevEnv\Resources\**\*">
+      <Link>Resources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.6" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.6" />

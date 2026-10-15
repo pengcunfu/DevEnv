@@ -35,6 +35,17 @@
 - Web：Nginx、Apache
 - 消息：RabbitMQ、Kafka 等
 
+## 熔岩环境
+
+内嵌于左侧 **熔岩环境** Tab（原独立「熔岩 / DevEnv」应用），面向绿色版本地服务：
+
+- **进程管理**：MySQL / Redis / Nginx 等一键启停，无需注册 Windows 服务
+- **软件下载**：内置源下载 zip / 7z 等并解压到应用目录
+- **环境扫描与镜像**：检测本机运行时，配置 pip / npm 等镜像
+- **小工具**：JSON 格式化、Hosts 编辑、图像转换、文件哈希等
+
+详见 [熔岩环境 · 快速开始](./lava/getting-started.md)。
+
 ## 其他
 
 - 系统托盘与可选开机自启

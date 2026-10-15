@@ -2,7 +2,7 @@
 
 [![Release](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/release/pengcunfu/DevBox.Net?label=release)](https://github.com/pengcunfu/DevBox.Net/releases/latest)
-[![Docs](https://img.shields.io/badge/docs-VitePress-blue)](https://pengcunfu.github.io/DevBox.Net/)
+[![Docs](https://img.shields.io/badge/docs-docs.devenv.cn-blue)](https://docs.devenv.cn/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pengcunfu/DevBox.Net/blob/master/LICENSE)
 
 Windows 上的开发环境管理工具：多语言运行时切换、系统工具快捷入口、本地/Web 应用与服务集中管理。
@@ -15,14 +15,15 @@ Windows 上的开发环境管理工具：多语言运行时切换、系统工具
 
 ## 文档
 
-完整使用与发版说明见在线文档：**https://pengcunfu.github.io/DevBox.Net/**
+完整使用与发版说明见在线文档：**https://docs.devenv.cn/**
 
-本地预览文档：
+本地预览 / 部署文档：
 
 ```bash
 cd docs
 npm install
-npm run dev
+npm run dev       # 本地预览
+npm run deploy    # 构建并部署到 Cloudflare Pages（首次会浏览器登录）
 ```
 
 ## 技术栈
@@ -44,7 +45,7 @@ dotnet run --project DevBox/DevBox.csproj -c Release
 2. `git tag v1.1.0 && git push origin v1.1.0`
 3. GitHub Actions 自动构建安装包 / 更新包 / 便携包并创建 Release
 
-详见 [版本发布](https://pengcunfu.github.io/DevBox.Net/guide/releases)。
+详见 [版本发布](https://docs.devenv.cn/guide/releases)。
 
 ## 参与贡献
 

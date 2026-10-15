@@ -66,19 +66,23 @@ vpk pack -u DevBox -v 1.1.0 -r win-x64 ^
 
 应用内版本从程序集信息读取，无需改 XAML 硬编码。
 
-## 文档站点（VitePress）
+## 文档站点（VitePress → Cloudflare Pages）
+
+项目名：`devbox-docs` · 线上地址：**https://docs.devenv.cn/**（备用 `https://devbox-docs.pages.dev/`）
 
 ```bash
 cd docs
 npm install
-npm run dev      # 本地预览 http://localhost:5173/devbox/
-npm run build    # 输出到 docs/.vitepress/dist
+npm run dev       # 本地预览 http://localhost:5173/
+npm run build     # 输出到 docs/dist
+npm run deploy    # 构建并部署（等价于 .\deploy.ps1）
 ```
 
-推送至 `master` 且变更 `docs/**` 时，GitHub Actions 会自动部署到 GitHub Pages。
-
-::: info GitHub Pages 首次启用
-仓库 [Settings → Pages](https://github.com/pengcunfu/DevBox.Net/settings/pages) 中，**Build and deployment** 选择 **GitHub Actions**。
+::: tip 本地一键部署
+`docs/deploy.ps1` 会检查 Cloudflare 登录（未登录自动 `wrangler login`）、必要时创建 Pages 项目，再部署 `dist/`。也可使用 API Token：设置 `CLOUDFLARE_API_TOKEN`（建议同时设置 `CLOUDFLARE_ACCOUNT_ID`）。
 :::
 
-在线文档地址：**https://pengcunfu.github.io/DevBox.Net/**
+推送至 `master`/`main` 且变更 `docs/**` 时，GitHub Actions 会调用 wrangler 部署到同一 Pages 项目。仓库需配置 Secrets：
+
+- `CLOUDFLARE_API_TOKEN`（Cloudflare Pages: Edit）
+- `CLOUDFLARE_ACCOUNT_ID`

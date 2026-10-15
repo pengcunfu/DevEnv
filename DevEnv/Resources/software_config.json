@@ -1,0 +1,405 @@
+{
+  "Java": [
+    {
+      "name": "OpenJDK",
+      "desc": "开源 Java 开发工具包 (绿色 zip，Adoptium)",
+      "icon": "Icons/java.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "8u452",
+          "url": "https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u452-b09/OpenJDK8U-jdk_x64_windows_hotspot_8u452b09.zip",
+          "file_name": "OpenJDK8U-jdk_x64_windows_hotspot_8u452b09.zip"
+        },
+        {
+          "version": "11u27",
+          "url": "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.27%2B6/OpenJDK11U-jdk_x64_windows_hotspot_11.0.27_6.zip",
+          "file_name": "OpenJDK11U-jdk_x64_windows_hotspot_11.0.27_6.zip"
+        },
+        {
+          "version": "17u15",
+          "url": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.15%2B6/OpenJDK17U-jdk_x64_windows_hotspot_17.0.15_6.zip",
+          "file_name": "OpenJDK17U-jdk_x64_windows_hotspot_17.0.15_6.zip"
+        }
+      ]
+    }
+  ],
+  "Python": [
+    {
+      "name": "Python",
+      "desc": "Python 嵌入式绿色版 (免安装)",
+      "icon": "Icons/python.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "3.10.11",
+          "url": "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip",
+          "file_name": "python-3.10.11-embed-amd64.zip"
+        },
+        {
+          "version": "3.12.3",
+          "url": "https://www.python.org/ftp/python/3.12.3/python-3.12.3-embed-amd64.zip",
+          "file_name": "python-3.12.3-embed-amd64.zip"
+        }
+      ]
+    }
+  ],
+  "Node.js": [
+    {
+      "name": "Node.js",
+      "desc": "Node.js 绿色 zip 版 (免安装)",
+      "icon": "Icons/nodejs.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "18.20.2",
+          "url": "https://nodejs.org/dist/v18.20.2/node-v18.20.2-win-x64.zip",
+          "file_name": "node-v18.20.2-win-x64.zip"
+        },
+        {
+          "version": "20.12.2",
+          "url": "https://nodejs.org/dist/v20.12.2/node-v20.12.2-win-x64.zip",
+          "file_name": "node-v20.12.2-win-x64.zip"
+        }
+      ]
+    }
+  ],
+  "Go": [
+    {
+      "name": "Go",
+      "desc": "Go 语言官方绿色 zip 版 (解压即用，含 go/bin/go.exe)",
+      "icon": "Icons/go.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "1.22.12",
+          "url": "https://go.dev/dl/go1.22.12.windows-amd64.zip",
+          "file_name": "go1.22.12.windows-amd64.zip"
+        },
+        {
+          "version": "1.23.10",
+          "url": "https://go.dev/dl/go1.23.10.windows-amd64.zip",
+          "file_name": "go1.23.10.windows-amd64.zip"
+        },
+        {
+          "version": "1.24.3",
+          "url": "https://go.dev/dl/go1.24.3.windows-amd64.zip",
+          "file_name": "go1.24.3.windows-amd64.zip"
+        }
+      ]
+    }
+  ],
+  "WebServer": [
+    {
+      "name": "Nginx",
+      "desc": "高性能 Web 服务器 (绿色 zip)",
+      "icon": "Icons/nginx.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "1.24.0",
+          "url": "https://nginx.org/download/nginx-1.24.0.zip",
+          "file_name": "nginx-1.24.0.zip"
+        }
+      ]
+    },
+    {
+      "name": "Tomcat",
+      "desc": "Java Web 应用服务器 (绿色 zip)",
+      "icon": "Icons/tomcat.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "9.0.102",
+          "url": "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.102/bin/apache-tomcat-9.0.102-windows-x64.zip",
+          "file_name": "apache-tomcat-9.0.102-windows-x64.zip"
+        }
+      ]
+    }
+  ],
+  "Database": [
+    {
+      "name": "MySQL",
+      "desc": "MySQL 绿色 zip 版 (解压即用)",
+      "icon": "Icons/mysql.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "8.0.44",
+          "url": "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-8.0.44-winx64.zip",
+          "file_name": "mysql-8.0.44-winx64.zip"
+        }
+      ]
+    },
+    {
+      "name": "PostgreSQL",
+      "desc": "PostgreSQL 绿色 zip 版 (EDB 二进制，解压即用)",
+      "icon": "Icons/postgresql.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "16.6",
+          "url": "https://get.enterprisedb.com/postgresql/postgresql-16.6-1-windows-x64-binaries.zip",
+          "file_name": "postgresql-16.6-1-windows-x64-binaries.zip"
+        }
+      ]
+    }
+  ],
+  "Cache": [
+    {
+      "name": "Redis",
+      "desc": "Redis Windows 绿色 zip 版",
+      "icon": "Icons/redis.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "7.4.6",
+          "url": "https://github.com/redis-windows/redis-windows/releases/download/7.4.6/Redis-7.4.6-Windows-x64-cygwin-with-Service.zip",
+          "file_name": "Redis-7.4.6-Windows-x64-cygwin-with-Service.zip"
+        }
+      ]
+    },
+    {
+      "name": "MongoDB",
+      "desc": "MongoDB 社区版绿色 zip",
+      "icon": "Icons/mongodb.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "7.0.8",
+          "url": "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.8.zip",
+          "file_name": "mongodb-windows-x86_64-7.0.8.zip"
+        }
+      ]
+    }
+  ],
+  "ObjectStorage": [
+    {
+      "name": "MinIO",
+      "desc": "MinIO 单文件绿色版",
+      "icon": "Icons/minio.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "RELEASE.2024-03-30",
+          "url": "https://dl.min.io/server/minio/release/windows-amd64/minio.exe",
+          "file_name": "minio.exe"
+        }
+      ]
+    }
+  ],
+  "MessageQueue": [
+    {
+      "name": "Kafka",
+      "desc": "Apache Kafka 官方二进制 (tgz，解压即用，KRaft 模式，需 Java)",
+      "icon": "Icons/kafka.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "3.9.2",
+          "url": "https://downloads.apache.org/kafka/3.9.2/kafka_2.13-3.9.2.tgz",
+          "file_name": "kafka_2.13-3.9.2.tgz"
+        },
+        {
+          "version": "3.9.0",
+          "url": "https://archive.apache.org/dist/kafka/3.9.0/kafka_2.13-3.9.0.tgz",
+          "file_name": "kafka_2.13-3.9.0.tgz"
+        }
+      ]
+    }
+  ],
+  "PHP": [
+    {
+      "name": "PHP",
+      "desc": "PHP 绿色 zip 版",
+      "icon": "Icons/php.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "8.3.31",
+          "url": "https://windows.php.net/downloads/releases/php-8.3.31-Win32-vs16-x64.zip",
+          "file_name": "php-8.3.31-Win32-vs16-x64.zip"
+        },
+        {
+          "version": "7.4.33",
+          "url": "https://windows.php.net/downloads/releases/archives/php-7.4.33-Win32-vc15-x64.zip",
+          "file_name": "php-7.4.33-Win32-vc15-x64.zip"
+        }
+      ]
+    },
+    {
+      "name": "Composer",
+      "desc": "PHP 依赖管理 (单文件)",
+      "icon": "Icons/composer.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "2.7.6",
+          "url": "https://getcomposer.org/download/2.7.6/composer.phar",
+          "file_name": "composer.phar"
+        }
+      ]
+    }
+  ],
+  "DevTools": [
+    {
+      "name": "7-Zip",
+      "desc": "7-Zip 绿色版 (Extra 控制台包，含 7z.exe，解压即用)",
+      "icon": "Icons/7zip.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "26.01",
+          "url": "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-extra.7z",
+          "file_name": "7z2601-extra.7z"
+        },
+        {
+          "version": "24.09",
+          "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-extra.7z",
+          "file_name": "7z2409-extra.7z"
+        }
+      ]
+    },
+    {
+      "name": "Git",
+      "desc": "Git 便携版 (7z 自解压包，下载后自动解压)",
+      "icon": "Icons/git.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "2.49.0",
+          "url": "https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/PortableGit-2.49.0-64-bit.7z.exe",
+          "file_name": "PortableGit-2.49.0-64-bit.7z.exe"
+        }
+      ]
+    },
+    {
+      "name": "Apache Maven",
+      "desc": "Maven 绿色 zip 版",
+      "icon": "Icons/maven.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "3.9.9",
+          "url": "https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip",
+          "file_name": "apache-maven-3.9.9-bin.zip"
+        }
+      ]
+    }
+  ],
+  "IDE": [
+    {
+      "name": "Cursor",
+      "desc": "Cursor AI 代码编辑器 (最新 Windows 用户安装包)",
+      "icon": "Icons/cursor.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "3.5.33",
+          "url": "https://downloads.cursor.com/production/aac81804b986d739acab348ed96b8bea6e83cc57/win32/x64/user-setup/CursorUserSetup-x64-3.5.33.exe",
+          "file_name": "CursorUserSetup-x64-3.5.33.exe"
+        },
+        {
+          "version": "3.5.17",
+          "url": "https://downloads.cursor.com/production/d5b2fc092e16007956c9e5047f76097b9e626cab/win32/x64/user-setup/CursorUserSetup-x64-3.5.17.exe",
+          "file_name": "CursorUserSetup-x64-3.5.17.exe"
+        }
+      ]
+    },
+    {
+      "name": "Visual Studio Code",
+      "desc": "VS Code 便携 zip 版 (最新 stable)",
+      "icon": "Icons/vscode.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "latest",
+          "url": "https://update.code.visualstudio.com/latest/win32-x64-archive/stable",
+          "file_name": "VSCode-win32-x64.zip"
+        }
+      ]
+    },
+    {
+      "name": "IntelliJ IDEA",
+      "desc": "IntelliJ IDEA 绿色 zip 版",
+      "icon": "Icons/intellij.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "2024.1",
+          "url": "https://download.jetbrains.com/idea/ideaIU-2024.1.win.zip",
+          "file_name": "ideaIU-2024.1.win.zip"
+        }
+      ]
+    }
+  ],
+  "VisualStudio": [
+    {
+      "name": "Visual Studio 2026 Community",
+      "desc": "VS 2026 Community 在线安装引导程序 (Stable 通道，需联网安装)",
+      "icon": "Icons/visualstudio.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "Stable",
+          "url": "https://aka.ms/vs/18/Stable/vs_community.exe",
+          "file_name": "vs_community.exe"
+        }
+      ]
+    },
+    {
+      "name": "Visual Studio 2026 Professional",
+      "desc": "VS 2026 Professional 在线安装引导程序 (Stable 通道)",
+      "icon": "Icons/visualstudio.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "Stable",
+          "url": "https://aka.ms/vs/18/Stable/vs_professional.exe",
+          "file_name": "vs_professional.exe"
+        }
+      ]
+    },
+    {
+      "name": "Visual Studio 2026 Build Tools",
+      "desc": "VS 2026 Build Tools 在线安装引导程序 (仅编译工具)",
+      "icon": "Icons/visualstudio.png",
+      "portable": false,
+      "versions": [
+        {
+          "version": "Stable",
+          "url": "https://aka.ms/vs/18/Stable/vs_buildtools.exe",
+          "file_name": "vs_buildtools.exe"
+        }
+      ]
+    }
+  ],
+  "DBTools": [
+    {
+      "name": "DBeaver",
+      "desc": "DBeaver 社区版绿色 zip",
+      "icon": "Icons/dbeaver.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "25.0.0",
+          "url": "https://github.com/dbeaver/dbeaver/releases/download/25.0.0/dbeaver-ce-25.0.0-win32.win32.x86_64.zip",
+          "file_name": "dbeaver-ce-25.0.0-win32.win32.x86_64.zip"
+        }
+      ]
+    },
+    {
+      "name": "HeidiSQL",
+      "desc": "HeidiSQL 便携 zip 版",
+      "icon": "Icons/heidisql.png",
+      "portable": true,
+      "versions": [
+        {
+          "version": "12.10",
+          "url": "https://www.heidisql.com/downloads/releases/HeidiSQL_12.10_64_Portable.zip",
+          "file_name": "HeidiSQL_12.10_64_Portable.zip"
+        }
+      ]
+    }
+  ]
+}
