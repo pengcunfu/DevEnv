@@ -1,7 +1,0 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Fluent ScrollBarSize is overridden via tokens; keep placeholder for future tweaks -->
-  <Style Selector="ScrollViewer">
-    <Setter Property="AllowAutoHide" Value="True"/>
-  </Style>
-</Styles>

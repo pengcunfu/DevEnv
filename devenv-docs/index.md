@@ -32,7 +32,7 @@ features:
   - title: 系统工具
     details: Windows 管理工具快捷入口，以及 JSON / Hosts / 图像转换 / 哈希等实用工具。
   - title: 开源免费
-    details: 基于 Avalonia 与 .NET 10，MIT 协议，源码托管于 pengcunfu/DevBox.Net。
+    details: 基于 .NET 10 + WebView2 + React，MIT 协议，源码托管于 pengcunfu/DevBox.Net。
 ---
 
 ## 系统要求

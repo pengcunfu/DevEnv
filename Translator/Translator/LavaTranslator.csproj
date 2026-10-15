@@ -12,35 +12,24 @@
     <Product>Translator</Product>
     <Company>FireNeb-炎序星图</Company>
     <Copyright>© 2026 FireNeb-炎序星图. All rights reserved.</Copyright>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Controls.WebView" Version="12.0.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Lava.UI\Lava.UI.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
-  </ItemGroup>
-
-  <!-- 独立入口已停用，嵌入 DevBox；主题由 Lava.UI / DevBox 统一提供 -->
+  <!-- Avalonia UI 已退役：只保留 Models / WebFillAutomation / ConfigService 等供 Host/Api 使用 -->
   <ItemGroup>
     <Compile Remove="Program.cs" />
     <Compile Remove="App.axaml.cs" />
-    <AvaloniaXaml Remove="App.axaml" />
     <Compile Remove="MainWindow.axaml.cs" />
-    <AvaloniaXaml Remove="MainWindow.axaml" />
+    <Compile Remove="Views\**" />
     <Compile Remove="Infrastructure\TrayIconService.cs" />
+    <Compile Remove="Infrastructure\GlobalHotkey.cs" />
+    <Compile Remove="Infrastructure\DialogHelper.cs" />
+    <Compile Remove="Infrastructure\AppIcon.cs" />
     <Compile Remove="Services\UpdateService.cs" />
+    <None Remove="App.axaml" />
+    <None Remove="MainWindow.axaml" />
+    <None Remove="Views\**" />
+    <None Remove="**\*.axaml" />
+    <None Remove="Assets\**" />
   </ItemGroup>
 
 </Project>

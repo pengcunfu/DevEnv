@@ -6,23 +6,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>NetworkWatch</RootNamespace>
-    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.1" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.24" />
     <PackageReference Include="System.Management" Version="10.0.10" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Lava.UI\Lava.UI.csproj" />
-  </ItemGroup>
-
-  <!-- 停用 WPF 入口与旧 XAML；主题统一由 Lava.UI / DevBox 控制 -->
+  <!-- Avalonia / 旧 WPF 入口已退役 -->
   <ItemGroup>
     <Compile Remove="App.xaml.cs" />
     <Compile Remove="AssemblyInfo.cs" />
@@ -30,13 +21,16 @@
     <Compile Remove="SpeedTestWindow.xaml.cs" />
     <Compile Remove="PortManagerWindow.xaml.cs" />
     <Compile Remove="ProcessDetailWindow.xaml.cs" />
-    <AvaloniaXaml Remove="App.xaml" />
+    <Compile Remove="Views\**" />
+    <Compile Remove="UI\**" />
     <Page Remove="**\*.xaml" />
     <None Remove="App.xaml" />
     <None Remove="MainWindow.xaml" />
     <None Remove="SpeedTestWindow.xaml" />
     <None Remove="PortManagerWindow.xaml" />
     <None Remove="ProcessDetailWindow.xaml" />
+    <None Remove="Views\**" />
+    <None Remove="**\*.axaml" />
   </ItemGroup>
 
 </Project>

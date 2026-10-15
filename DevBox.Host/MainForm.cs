@@ -135,6 +135,8 @@ public sealed class MainForm : Form
             _exiting = true;
             _clipboardTimer.Stop();
             _tray.Visible = false;
+            _translator.PrepareForExit();
+            _clipboardWindow.PrepareForExit();
         };
         HostCallbacks.OnShowWindowHotkeyChanged = hotkey =>
         {
@@ -332,9 +334,9 @@ public sealed class MainForm : Form
             <style>body{font-family:Segoe UI,sans-serif;background:#f3f4f6;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
             .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:28px 32px;max-width:520px}
             code{background:#f3f4f6;padding:2px 6px;border-radius:4px}</style></head>
-            <body><div class="card"><h1>程序盒子 · 新壳已启动</h1>
+            <body><div class="card"><h1>程序盒子</h1>
             <p>API：<code>{{ApiConstants.ApiBaseUrl}}</code></p>
-            <p>请运行 <code>make ui</code> 启动 HMR（:35173），然后刷新。</p></div></body></html>
+            <p>开发模式请运行 <code>make ui</code> 启动 HMR（:35173），或先 <code>npm run build</code> 生成 wwwroot。</p></div></body></html>
             """;
         _webView.CoreWebView2.NavigateToString(html);
     }
@@ -552,6 +554,9 @@ public sealed class MainForm : Form
         _hotkeys?.Dispose();
         _tray.Visible = false;
         _tray.Dispose();
+        // Owned 子窗的 FormClosing 若 Cancel，会连带取消主窗 Close / Application.Exit
+        _translator.PrepareForExit();
+        _clipboardWindow.PrepareForExit();
         Close();
         Application.Exit();
     }

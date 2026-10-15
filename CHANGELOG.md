@@ -9,12 +9,19 @@
 ### Added
 
 - 「进程监控」Tab：实时查看本机进程 CPU / 内存占用，支持搜索、按 CPU / 内存 / 名称排序、暂停刷新，以及结束进程、结束进程树、在资源管理器中定位
-- 开始技术栈迁移：`DevBox.Host`（WinForms + WebView2）+ `DevBox.Api`（本机 HTTP :35174）+ `ui/`（React + Vite HMR :35173 + axios）；`make run-host` / `make ui`
-- 新壳已接通：无边框/托盘/单实例、本地应用·文件夹·网站、设置、系统工具、进程监控、网络监控快照、熔岩环境启停、剪贴板历史、翻译站 WebView2
+- 主壳切换为 `DevBox.Host`（WinForms + WebView2）+ `DevBox.Api`（本机 HTTP :35174）+ `ui/`（React + Vite；开发 HMR :35173，发版构建进 `wwwroot`）
+- 翻译 / 剪贴板改为独立 WebView2 窗口；系统菜单位于页面内；熔岩环境下载分「进行中 / 历史」Tab
 
 ### Changed
 
 - JSON 格式化器、Hosts 文件编辑器、图像格式转换器、文件哈希计算器从「熔岩环境 → 工具」移至「系统工具 → 实用工具」
+- 默认入口改为 `make run`（Host）；版本号与发布脚本指向 `DevBox.Host/DevBox.Host.csproj`
+- 文档站 CI / `make docs` 改指 `devenv-docs/`
+
+### Removed
+
+- 移除 Avalonia 主程序 `DevBox/` 与共享控件库 `Lava.UI/`
+- 内嵌模块不再编译 Avalonia UI；只保留供 API / Host 使用的 Services / Models
 
 ## [1.2.0] - 2026-10-15
 

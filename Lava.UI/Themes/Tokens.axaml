@@ -1,8 +1,0 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <ResourceDictionary.ThemeDictionaries>
-    <ResourceInclude x:Key="Default" Source="avares://Lava.UI/Themes/Tokens.Light.axaml"/>
-    <ResourceInclude x:Key="Light" Source="avares://Lava.UI/Themes/Tokens.Light.axaml"/>
-    <ResourceInclude x:Key="Dark" Source="avares://Lava.UI/Themes/Tokens.Dark.axaml"/>
-  </ResourceDictionary.ThemeDictionaries>
-</ResourceDictionary>

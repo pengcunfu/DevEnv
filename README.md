@@ -28,20 +28,27 @@ npm run deploy    # 构建并部署到 Cloudflare Pages（首次会浏览器登�
 
 ## 技术栈
 
-- .NET 10 · Avalonia UI 12
+- .NET 10 · WinForms + WebView2 宿主 · React（Vite）
 - Windows 10+（x64）
 
 ## 从源码运行
 
 ```bash
 git clone https://github.com/pengcunfu/DevBox.Net.git
-cd devbox
-dotnet run --project DevBox/DevBox.csproj -c Release
+cd DevBox.Net
+
+# 终端 1：宿主 + 本机 API (:35174)
+make run CONFIG=Debug
+
+# 终端 2：React HMR (:35173)
+make ui
 ```
+
+发布版会把 `ui/` 构建进 `wwwroot`，无需单独跑 Vite。
 
 ## 发版（维护者）
 
-1. 更新 `VERSION`、`DevBox/DevBox.csproj`、`CHANGELOG.md`
+1. 更新 `VERSION`、`DevBox.Host/DevBox.Host.csproj`、`CHANGELOG.md`
 2. `git tag v1.2.0 && git push origin v1.2.0`
 3. GitHub Actions 自动构建安装包 / 更新包 / 便携包并创建 Release
 

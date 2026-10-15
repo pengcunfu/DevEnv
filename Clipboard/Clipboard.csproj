@@ -14,36 +14,24 @@
     <Company>Fireneb-炎序星图</Company>
     <Product>Clipboard</Product>
     <Copyright>Copyright © 2026 Fireneb-炎序星图</Copyright>
-    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\icon.png" />
-    <AvaloniaResource Include="Assets\icon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Win32" Version="12.1.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Lava.UI\Lava.UI.csproj" />
-  </ItemGroup>
-
-  <!-- 停用 WPF 入口、独立 exe 更新器与旧 XAML -->
+  <!-- Avalonia / 独立入口已退役：只保留 Models / Services 供 DevBox.Api 使用 -->
   <ItemGroup>
     <Compile Remove="App.xaml.cs" />
     <Compile Remove="Program.cs" />
     <Compile Remove="AssemblyInfo.cs" />
     <Compile Remove="MainWindow.xaml.cs" />
     <Compile Remove="GlobalUsings.cs" />
-    <Compile Remove="Dialogs\AboutDialog.xaml.cs" />
-    <Compile Remove="Dialogs\HotkeySettingsDialog.xaml.cs" />
-    <Compile Remove="Dialogs\UpdateProgressDialog.xaml.cs" />
+    <Compile Remove="GlobalUsings.Avalonia.cs" />
+    <Compile Remove="Dialogs\**" />
+    <Compile Remove="Views\**" />
+    <Compile Remove="UI\**" />
+    <Compile Remove="Services\HotkeyService.cs" />
     <Compile Remove="Services\UpdateService.cs" />
     <Compile Remove="Services\Updater.cs" />
     <Compile Remove="Services\AutostartService.cs" />
@@ -52,6 +40,9 @@
     <None Remove="App.xaml" />
     <None Remove="MainWindow.xaml" />
     <None Remove="Dialogs\**\*.xaml" />
+    <None Remove="Views\**" />
+    <None Remove="**\*.axaml" />
+    <None Remove="Assets\**" />
   </ItemGroup>
 
 </Project>

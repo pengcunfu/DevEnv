@@ -37,8 +37,8 @@ endif
 # ============================================================
 APP_ID      := DevBox
 COMPANY     := FNSoftware
-CSPROJ      := DevBox/DevBox.csproj
-ICON        := DevBox/Resources/icon.ico
+CSPROJ      := DevBox.Host/DevBox.Host.csproj
+ICON        := DevBox.Host/Resources/icon.ico
 RUNTIME     := win-x64
 FRAMEWORK   := net10-x64-desktop
 VPK_VER     := 1.2.0
@@ -61,22 +61,19 @@ ARGS   ?=
 # ============================================================
 .DEFAULT_GOAL := help
 
-.PHONY: help run run-host ui publish installer verify release docs clean
-
-HOST_CSPROJ := DevBox.Host/DevBox.Host.csproj
+.PHONY: help run ui publish installer verify release docs clean
 
 help:
 	@echo "DevBox - available commands"
 	@echo "$(if $(VER),  current version: $(VER),[warn] VERSION file missing)"
 	@echo ""
-	@echo "  make run          Run Avalonia app from source ($(CONFIG)) [legacy]"
-	@echo "  make run-host     Run WinForms+WebView2 host (API :35174)"
+	@echo "  make run          Run WinForms+WebView2 host (API :35174, $(CONFIG))"
 	@echo "  make ui           Run React Vite HMR UI (:35173)"
-	@echo "  make publish      Single-file framework-dependent publish -> $(PUBLISH_DIR)/"
+	@echo "  make publish      Build ui/wwwroot + single-file publish -> $(PUBLISH_DIR)/"
 	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
-	@echo "  make verify       Check VERSION / DevBox.csproj / CHANGELOG agree"
+	@echo "  make verify       Check VERSION / DevBox.Host.csproj / CHANGELOG agree"
 	@echo "  make release      verify, then tag v<VER> and push (starts the CI release)"
-	@echo "  make docs         VitePress dev server for docs/ (npm install on first run)"
+	@echo "  make docs         VitePress dev server for devenv-docs/ (npm install on first run)"
 	@echo "  make clean        Remove root bin/ obj/ publish output/ RELEASE_NOTES.md DevBox-*.zip"
 	@echo ""
 	@echo "  make publish ARGS=-Zip    also emit DevBox-<ver>-$(RUNTIME).zip"
@@ -90,14 +87,9 @@ help:
 #  keystrokes while adding a layer that goes stale. Type those directly.
 # ------------------------------------------------------------
 
-# Fixed project path + configuration: nobody should have to remember
-# `--project DevBox/DevBox.csproj` or which config the README uses.
+# WinForms + WebView2 host + local API on 127.0.0.1:35174
 run:
 	@dotnet run --project $(CSPROJ) -c $(CONFIG)
-
-# New shell: WinForms + WebView2 + local API on 127.0.0.1:35174
-run-host:
-	@dotnet run --project $(HOST_CSPROJ) -c $(CONFIG)
 
 # React UI with Vite HMR on 127.0.0.1:35173 (proxy /api -> 35174)
 ui:
@@ -159,9 +151,9 @@ release: verify
 # site base is /DevBox.Net/ (docs/.vitepress/config), so vitepress's own banner
 # is the only reliable place to read it from.
 docs:
-	@[ -d docs/node_modules ] || { echo "docs deps missing - running npm install (first run only)"; cd docs && npm install; }
+	@[ -d devenv-docs/node_modules ] || { echo "docs deps missing - running npm install (first run only)"; cd devenv-docs && npm install; }
 	@echo "[ok] starting vitepress dev"
-	@cd docs && npm run dev
+	@cd devenv-docs && npm run dev
 
 # Only removes what this makefile produces, and only gitignored paths.
 # publish/ is left alone apart from the two generated subdirs: the icon

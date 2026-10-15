@@ -1,7 +1,7 @@
-# 框架依赖发布（不捆绑 .NET 运行时）。目标机需已安装对应 .NET Desktop Runtime。
-# 用法: .\scripts\publish.ps1
-#       .\scripts\publish.ps1 -Zip
-#       .\scripts\publish.ps1 -Runtime win-x64 -Configuration Release
+# Framework-dependent publish (does not bundle .NET runtime). Target needs matching Desktop Runtime.
+# Usage: .\scripts\publish.ps1
+#        .\scripts\publish.ps1 -Zip
+#        .\scripts\publish.ps1 -Runtime win-x64 -Configuration Release
 
 param(
     [ValidateSet('Debug', 'Release')]
@@ -13,13 +13,16 @@ param(
 
     [switch]$Zip,
 
-    [switch]$NoSingleFile
+    [switch]$NoSingleFile,
+
+    [switch]$SkipUi
 )
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$project = Join-Path $root 'DevBox\DevBox.csproj'
+$project = Join-Path $root 'DevBox.Host\DevBox.Host.csproj'
 $versionPath = Join-Path $root 'VERSION'
+$uiDir = Join-Path $root 'ui'
 
 if (-not (Test-Path $project)) {
     Write-Error "Project not found: $project"
@@ -41,14 +44,36 @@ if (Test-Path $OutputDir) {
     }
     catch {
         Write-Error @"
-无法清理输出目录（文件可能被占用）: $OutputDir
-请先关闭正在运行的 DevBox.exe，再重新执行发布。
+Unable to clean output directory (files may be in use): $OutputDir
+Close any running DevBox.exe, then retry.
 $($_.Exception.Message)
 "@
         exit 1
     }
 }
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+
+# Build React UI into wwwroot next to the published exe (API serves static files from there).
+if (-not $SkipUi) {
+    if (-not (Test-Path (Join-Path $uiDir 'package.json'))) {
+        Write-Error "UI project not found: $uiDir"
+        exit 1
+    }
+    Push-Location $uiDir
+    try {
+        if (-not (Test-Path 'node_modules')) {
+            Write-Host 'ui deps missing - running npm install'
+            npm install
+            if ($LASTEXITCODE -ne 0) { throw "npm install failed with exit code $LASTEXITCODE" }
+        }
+        Write-Host 'Building UI (npm run build)...'
+        npm run build
+        if ($LASTEXITCODE -ne 0) { throw "npm run build failed with exit code $LASTEXITCODE" }
+    }
+    finally {
+        Pop-Location
+    }
+}
 
 $publishArgs = @(
     'publish', $project,
@@ -81,7 +106,20 @@ if (-not (Test-Path $exe)) {
     exit 1
 }
 
-# 去掉调试符号，减小分发包体积
+# Copy Vite dist -> wwwroot beside the exe (single-file publish keeps loose content next to exe).
+if (-not $SkipUi) {
+    $dist = Join-Path $uiDir 'dist'
+    $wwwroot = Join-Path $OutputDir 'wwwroot'
+    if (-not (Test-Path (Join-Path $dist 'index.html'))) {
+        Write-Error "UI build missing index.html at $dist"
+        exit 1
+    }
+    if (Test-Path $wwwroot) { Remove-Item $wwwroot -Recurse -Force }
+    Copy-Item -Path $dist -Destination $wwwroot -Recurse
+    Write-Host "OK: wwwroot copied from ui/dist"
+}
+
+# Strip PDBs to shrink the distribution package
 Get-ChildItem -Path $OutputDir -Filter '*.pdb' -Recurse -ErrorAction SilentlyContinue |
     Remove-Item -Force
 

@@ -1,4 +1,4 @@
-# 本地发版前校验：VERSION、DevBox/DevBox.csproj、CHANGELOG、可选 Git 标签
+# 本地发版前校验：VERSION、DevBox.Host/DevBox.Host.csproj、CHANGELOG、可选 Git 标签
 # 用法: .\scripts\verify-version.ps1
 #       .\scripts\verify-version.ps1 -Tag v1.0.0
 
@@ -12,7 +12,7 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 function Fail($msg) { Write-Error $msg; exit 1 }
 
 $versionPath = Join-Path $root 'VERSION'
-$csprojPath = Join-Path $root 'DevBox\DevBox.csproj'
+$csprojPath = Join-Path $root 'DevBox.Host\DevBox.Host.csproj'
 $changelogPath = Join-Path $root 'CHANGELOG.md'
 
 if (-not (Test-Path $versionPath)) { Fail 'Missing VERSION' }

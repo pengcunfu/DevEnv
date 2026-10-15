@@ -26,7 +26,7 @@ DevBox 通过 [GitHub Releases](https://github.com/pengcunfu/DevBox.Net/releases
 | 文件 | 字段 |
 |------|------|
 | `VERSION` | 纯文本，如 `1.2.0` |
-| `DevBox/DevBox.csproj` | `<Version>`、`<AssemblyVersion>`、`<FileVersion>`、`<InformationalVersion>` |
+| `DevBox.Host/DevBox.Host.csproj` | `<Version>`、`<AssemblyVersion>`、`<FileVersion>`、`<InformationalVersion>` |
 | `CHANGELOG.md` | `## [1.2.0] - YYYY-MM-DD` |
 
 Git 标签格式为 **`v` + 上述版本号**（例如 `v1.2.0`）。Release 工作流会校验：标签 ↔ `VERSION` ↔ `csproj` ↔ `CHANGELOG`，任一不一致则构建失败。
@@ -34,7 +34,7 @@ Git 标签格式为 **`v` + 上述版本号**（例如 `v1.2.0`）。Release 工
 ### 1. 更新版本与日志
 
 1. 将 `VERSION` 改为新版本号（如 `1.2.1`）
-2. 同步 `DevBox/DevBox.csproj` 中所有版本属性（`AssemblyVersion` / `FileVersion` 一般为 `X.Y.Z.0`）
+2. 同步 `DevBox.Host/DevBox.Host.csproj` 中所有版本属性（`AssemblyVersion` / `FileVersion` 一般为 `X.Y.Z.0`）
 3. 在 `CHANGELOG.md` 增加 `## [1.2.1] - 日期` 并写好变更说明
 
 ### 2. 本地校验（推荐）
@@ -46,7 +46,7 @@ Git 标签格式为 **`v` + 上述版本号**（例如 `v1.2.0`）。Release 工
 ### 3. 提交并打标签
 
 ```bash
-git add VERSION DevBox/DevBox.csproj CHANGELOG.md
+git add VERSION DevBox.Host/DevBox.Host.csproj CHANGELOG.md
 git commit -m "chore: release v1.1.1"
 git tag v1.1.1
 git push origin master
@@ -56,7 +56,7 @@ git push origin v1.1.1
 推送以 `v` 开头的标签（`v*.*.*`）会触发 [release.yml](https://github.com/pengcunfu/DevBox.Net/blob/master/.github/workflows/release.yml)：
 
 1. 校验 `VERSION` / `csproj` / `CHANGELOG` 与标签一致
-2. `dotnet publish`（win-x64，框架依赖单文件，版本号写入程序集）并校验 `DevBox.exe` 的 `ProductVersion`
+2. 构建 `ui/` → `wwwroot`，再 `dotnet publish`（win-x64，框架依赖单文件）并校验 `DevBox.exe` 的 `ProductVersion`
 3. `vpk download` 拉取上一版本 → `vpk pack` 生成安装包 / 增量更新包 / 便携包 / 更新清单
 4. `vpk upload` 上传到 GitHub Release（tag 触发）；`workflow_dispatch` 手动触发仅构建产物，不发布
 
@@ -85,4 +85,4 @@ Actions → **Release** → **Run workflow**，输入标签如 `v1.1.1`（须与
 ## CI
 
 - **Release**：推送 `v*.*.*` 标签时自动构建并发布
-- **Docs**：推送 `docs/**` 时部署 VitePress 到 Cloudflare Pages（`docs.devenv.cn`）
+- **Docs**：推送 `devenv-docs/**` 时部署 VitePress 到 Cloudflare Pages（`docs.devenv.cn`）

@@ -5,7 +5,6 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <RootNamespace>DevEnv</RootNamespace>
     <Version>1.0.0</Version>
     <Product>熔岩环境管理工具</Product>
@@ -13,41 +12,31 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.1" />
-    <!-- ImageSharp 4.x 需商业许可；改用 Apache-2.0 的 Magick.NET（规避 NU1902/NU1903） -->
+    <!-- ImageSharp 4.x 需商业许可；改用 Apache-2.0 的 Magick.NET -->
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.17.2" />
-    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lava.UI\Lava.UI.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="System.Windows.Input" />
-    <Using Include="Avalonia.Interactivity" />
-    <Using Include="Avalonia.Threading" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AvaloniaResource Include="Resources\icon.png" />
     <Content Include="Resources\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 
-  <!-- 独立入口已停用，嵌入 DevBox；主题由 Lava.UI / DevBox 统一提供 -->
+  <!-- Avalonia UI 已退役：只保留 Services / Models / 引导逻辑供 DevBox.Api 使用 -->
   <ItemGroup>
     <Compile Remove="Program.cs" />
     <Compile Remove="App.axaml.cs" />
-    <AvaloniaXaml Remove="App.axaml" />
-    <Compile Remove="Views\MainWindow.xaml.cs" />
-    <AvaloniaXaml Remove="Views\MainWindow.axaml" />
+    <Compile Remove="Views\**" />
+    <Compile Remove="ViewModels\**" />
+    <Compile Remove="UI\**" />
+    <Compile Remove="Converters\**" />
+    <Compile Remove="Commands\**" />
+    <Compile Remove="Services\UiIcons.cs" />
+    <EmbeddedResource Remove="Views\**" />
+    <None Remove="App.axaml" />
+    <None Remove="Views\**\*.axaml" />
+    <None Remove="Views\**\*.xaml" />
   </ItemGroup>
 
 </Project>

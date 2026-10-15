@@ -1,6 +1,6 @@
 name: Release
 
-# 发版前请同步：VERSION、DevBox.csproj（Version 等）、CHANGELOG.md，再打标签 vX.Y.Z
+# 发版前请同步：VERSION、DevBox.Host.csproj（Version 等）、CHANGELOG.md，再打标签 vX.Y.Z
 on:
   push:
     tags:
@@ -14,12 +14,14 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
-  CSPROJ: DevBox/DevBox.csproj
+  NODE_VERSION: '20'
+  CSPROJ: DevBox.Host/DevBox.Host.csproj
   APP_ID: DevBox
   PRODUCT_NAME: DevBox
   COMPANY_NAME: FNSoftware
   FRAMEWORK: net10-x64-desktop
   RUNTIME: win-x64
+  ICON: DevBox.Host/Resources/icon.ico
 
 concurrency:
   group: release-${{ github.workflow }}-${{ github.ref }}
@@ -69,22 +71,22 @@ jobs:
             Git tag:     $tag ($semver)
             VERSION:     $versionFile
 
-          Before releasing, set VERSION, DevBox.csproj <Version>, and CHANGELOG ## [$semver], then commit and tag again.
+          Before releasing, set VERSION, DevBox.Host.csproj <Version>, and CHANGELOG ## [$semver], then commit and tag again.
           "@
           }
 
-          $csproj = Get-Content DevBox/DevBox.csproj -Raw
+          $csproj = Get-Content DevBox.Host/DevBox.Host.csproj -Raw
           if ($csproj -notmatch '<Version>\s*([^\s<]+)\s*</Version>') {
-            Fail 'Could not parse <Version> from DevBox.csproj'
+            Fail 'Could not parse <Version> from DevBox.Host.csproj'
           }
           $csprojVersion = $Matches[1]
           if ($csprojVersion -ne $semver) {
             Fail @"
           Version mismatch:
             Git tag:           $semver
-            DevBox.csproj: $csprojVersion
+            DevBox.Host.csproj: $csprojVersion
 
-          Update <Version> in DevBox.csproj to match the tag.
+          Update <Version> in DevBox.Host.csproj to match the tag.
           "@
           }
 
@@ -121,7 +123,20 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      # 框架依赖单文件（不捆绑 .NET 运行时；Setup.exe 依据 --framework 自动装缺失的 Desktop Runtime → 安装包小）
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Build React UI
+        working-directory: ui
+        run: |
+          npm ci
+          npm run build
+
+      # Framework-dependent single-file (Setup.exe installs missing Desktop Runtime via --framework)
       - name: Publish Windows x64
         shell: pwsh
         run: |
@@ -140,6 +155,10 @@ jobs:
             -o ./artifacts/publish `
             --nologo
           if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
+          Copy-Item -Path ui/dist -Destination artifacts/publish/wwwroot -Recurse
+          if (-not (Test-Path artifacts/publish/wwwroot/index.html)) {
+            throw "wwwroot/index.html missing after UI copy"
+          }
 
       - name: Cleanup and verify built executable
         shell: pwsh
@@ -210,7 +229,7 @@ jobs:
             -e ${{ env.APP_ID }}.exe `
             --packTitle "${{ env.PRODUCT_NAME }}" `
             --packAuthors "${{ env.COMPANY_NAME }}" `
-            -i DevBox/Resources/icon.ico `
+            -i ${{ env.ICON }} `
             --framework ${{ env.FRAMEWORK }} `
             --releaseNotes RELEASE_NOTES.md
           if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }

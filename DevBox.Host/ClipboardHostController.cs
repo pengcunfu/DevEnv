@@ -16,7 +16,8 @@ internal sealed class ClipboardHostController : IDisposable
 
     private CoreWebView2Environment? _env;
     private bool _initialized;
-    private bool _closingToHide;
+    /// <summary>为 true 时允许真正关闭（进程退出）；否则点关闭只隐藏。</summary>
+    private bool _allowClose;
     private bool _navigated;
 
     public bool IsVisible => _window.Visible;
@@ -42,7 +43,8 @@ internal sealed class ClipboardHostController : IDisposable
 
         _window.FormClosing += (_, e) =>
         {
-            if (_closingToHide)
+            // 点关闭只隐藏；进程退出须先 PrepareForExit，否则 Cancel 会连带卡住主窗退出
+            if (_allowClose)
                 return;
             e.Cancel = true;
             Hide();
@@ -155,9 +157,12 @@ internal sealed class ClipboardHostController : IDisposable
         }
     }
 
+    /// <summary>允许窗口真正关闭。主窗 Exit 前必须调用，否则 owned form 的 Cancel 会阻止主窗关闭。</summary>
+    public void PrepareForExit() => _allowClose = true;
+
     public void Dispose()
     {
-        _closingToHide = true;
+        _allowClose = true;
         try
         {
             _webView.Dispose();
