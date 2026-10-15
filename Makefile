@@ -73,7 +73,7 @@ help:
 	@echo "  make verify       Check VERSION / DevBox.csproj / CHANGELOG agree"
 	@echo "  make release      verify, then tag v<VER> and push (starts the CI release)"
 	@echo "  make docs         VitePress dev server for docs/ (npm install on first run)"
-	@echo "  make clean        Remove bin/ obj/ publish output/ RELEASE_NOTES.md DevBox-*.zip"
+	@echo "  make clean        Remove root bin/ obj/ publish output/ RELEASE_NOTES.md DevBox-*.zip"
 	@echo ""
 	@echo "  make publish ARGS=-Zip    also emit DevBox-<ver>-$(RUNTIME).zip"
 	@echo "  make run CONFIG=Debug     run a Debug build"
@@ -154,5 +154,5 @@ docs:
 # publish/ is left alone apart from the two generated subdirs: the icon
 # scripts write publish/_icon_check, which is not ours to delete.
 clean:
-	@rm -rf DevBox/bin DevBox/obj "$(PUBLISH_DIR)" "$(VPACK_DIR)" artifacts RELEASE_NOTES.md DevBox-*.zip
+	@rm -rf bin obj "$(PUBLISH_DIR)" "$(VPACK_DIR)" artifacts RELEASE_NOTES.md DevBox-*.zip
 	@echo "[ok] cleaned build output"

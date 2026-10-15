@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    统一各 csproj 的 bin / obj 到仓库根目录，避免散落在子项目下。
+    布局：bin/<ProjectName>/<Configuration>/…  obj/<ProjectName>/…
+  -->
+  <PropertyGroup>
+    <_RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))</_RepoRoot>
+    <BaseIntermediateOutputPath>$(_RepoRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <BaseOutputPath>$(_RepoRoot)bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>
