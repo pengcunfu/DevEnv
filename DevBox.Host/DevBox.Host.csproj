@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>DevBox.Host</RootNamespace>
+    <AssemblyName>DevBox</AssemblyName>
+    <Product>程序盒子</Product>
+    <Company>FNSoftware</Company>
+    <Version>1.2.0</Version>
+    <ApplicationIcon>..\DevBox\Resources\icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WebView2 package also ships Wpf.dll which pulls WindowsBase 5.x; WinForms host only needs WinForms. -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3537.50" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DevBox.Api\DevBox.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\DevBox\Resources\icon.ico" Link="Resources\icon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\DevBox\Resources\icon.png" Link="Resources\icon.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Resources\icons\win\*.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

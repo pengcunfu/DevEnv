@@ -9,6 +9,8 @@
 ### Added
 
 - 「进程监控」Tab：实时查看本机进程 CPU / 内存占用，支持搜索、按 CPU / 内存 / 名称排序、暂停刷新，以及结束进程、结束进程树、在资源管理器中定位
+- 开始技术栈迁移：`DevBox.Host`（WinForms + WebView2）+ `DevBox.Api`（本机 HTTP :35174）+ `ui/`（React + Vite HMR :35173 + axios）；`make run-host` / `make ui`
+- 新壳已接通：无边框/托盘/单实例、本地应用·文件夹·网站、设置、系统工具、进程监控、网络监控快照、熔岩环境启停、剪贴板历史、翻译站 WebView2
 
 ### Changed
 
