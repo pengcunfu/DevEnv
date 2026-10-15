@@ -28,9 +28,9 @@
     </UserControl.Styles>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24">
+        <StackPanel Margin="12">
             <!-- Header -->
-            <StackPanel Margin="0,0,0,24">
+            <StackPanel Margin="0,0,0,10">
                 <TextBlock Text="开发环境" Classes="Title"/>
                 <TextBlock Text="以进程模式启动 / 停止本地数据库与缓存服务" Classes="Body"/>
             </StackPanel>

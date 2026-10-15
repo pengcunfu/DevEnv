@@ -123,18 +123,18 @@ namespace ProgramBox.Views
 
             var iconHost = new Border
             {
-                Width = 48,
-                Height = 48,
-                CornerRadius = new CornerRadius(8),
+                Width = 36,
+                Height = 36,
+                CornerRadius = new CornerRadius(6),
                 Background = GetIconBackgroundBrush(),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 8)
+                Margin = new Thickness(0, 0, 0, 4)
             };
 
             var icon = new Image
             {
-                Width = 40,
-                Height = 40,
+                Width = 28,
+                Height = 28,
                 Stretch = Stretch.Uniform,
                 Source = LoadToolIcon(tool)
             };
@@ -144,10 +144,10 @@ namespace ProgramBox.Views
             var text = new TextBlock
             {
                 Text = tool.Name,
-                FontSize = 12,
+                FontSize = 11,
                 TextAlignment = TextAlignment.Center,
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 120
+                MaxWidth = 88
             };
 
             stackPanel.Children.Add(iconHost);

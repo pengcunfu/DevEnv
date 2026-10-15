@@ -19,9 +19,14 @@ namespace ProgramBox.Utils
         public const string VendorName = "FNSoftware";
 
         /// <summary>
-        /// 开机自启动注册表项名称 / 用户数据程序目录名
+        /// 用户数据程序目录名（保持英文路径）
         /// </summary>
-        public const string AutoStartAppName = "DevBox";
+        public const string AppDirectoryName = "DevBox";
+
+        /// <summary>
+        /// 开机自启动注册表项显示名称
+        /// </summary>
+        public const string AutoStartAppName = "程序盒子";
 
         /// <summary>
         /// 旧版本遗留的启动项名称（迁移/清理用）
@@ -56,7 +61,7 @@ namespace ProgramBox.Utils
         private static string ResolveUserDataDirectory()
         {
             var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var directory = Path.Combine(documents, VendorName, AutoStartAppName);
+            var directory = Path.Combine(documents, VendorName, AppDirectoryName);
             Directory.CreateDirectory(directory);
             MigrateLegacyUserData(directory);
             return directory;

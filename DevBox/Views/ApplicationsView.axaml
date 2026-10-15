@@ -12,7 +12,7 @@
         <converters:PathToBitmapConverter x:Key="PathToBitmap"/>
     </UserControl.Resources>
 
-    <TabControl>
+    <TabControl TabStripPlacement="Left" Classes="SideNav">
         <TabItem Header="本地应用">
             <ScrollViewer x:Name="NativeScrollArea" VerticalScrollBarVisibility="Auto">
                 <ScrollViewer.ContextMenu>
@@ -20,7 +20,7 @@
                         <MenuItem Header="选择程序..." Click="BrowseExeButton_Click"/>
                     </ContextMenu>
                 </ScrollViewer.ContextMenu>
-                <StackPanel Margin="16">
+                <StackPanel Margin="12">
 
                     <ItemsControl x:Name="NativeApplicationsList">
                         <ItemsControl.ItemsPanel>
@@ -31,8 +31,9 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:NativeAtom">
                                 <Border Classes="ToolCard"
-                                        Width="140"
-                                        Height="64"
+                                        Width="168"
+                                        MinHeight="52"
+                                        Height="NaN"
                                         Tag="{Binding}"
                                         PointerPressed="NativeAppCard_PointerPressed"
                                         ToolTip.Tip="{Binding ExecPath}">
@@ -44,27 +45,27 @@
                                             <MenuItem Header="移除" Tag="{Binding}" Click="NativeDeleteMenu_Click"/>
                                         </ContextMenu>
                                     </Border.ContextMenu>
-                                    <Grid ColumnDefinitions="Auto,*" Margin="8">
+                                    <Grid ColumnDefinitions="Auto,*" Margin="6">
                                         <Border Grid.Column="0"
-                                                Width="40"
-                                                Height="40"
-                                                CornerRadius="6"
+                                                Width="32"
+                                                Height="32"
+                                                CornerRadius="4"
                                                 Background="{DynamicResource IconBackgroundBrush}"
                                                 VerticalAlignment="Center">
-                                            <Image Width="32"
-                                                   Height="32"
+                                            <Image Width="24"
+                                                   Height="24"
                                                    Stretch="Uniform"
                                                    Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}"/>
                                         </Border>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Name}"
-                                                   FontSize="13"
+                                                   FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                   TextAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
+                                                   TextAlignment="Left"
+                                                   TextWrapping="Wrap"
                                                    VerticalAlignment="Center"
-                                                   Margin="8,0,0,0"/>
+                                                   Margin="6,0,0,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -75,14 +76,14 @@
                             Classes="Card"
                             IsVisible="False"
                             HorizontalAlignment="Center"
-                            Padding="32"
-                            Margin="0,24,0,0">
+                            Padding="20"
+                            Margin="0,16,0,0">
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="暂无本地应用程序"
                                        Classes="Subtitle"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextAlignment="Center"
-                                       Margin="0,0,0,8"/>
+                                       Margin="0,0,0,4"/>
                             <TextBlock Text="右键空白区域选择程序，或直接拖入 .exe"
                                        Classes="Body"
                                        TextAlignment="Center"/>
@@ -99,7 +100,7 @@
                         <MenuItem Header="选择文件夹..." Click="BrowseFolderButton_Click"/>
                     </ContextMenu>
                 </ScrollViewer.ContextMenu>
-                <StackPanel Margin="16">
+                <StackPanel Margin="12">
 
                     <ItemsControl x:Name="FolderShortcutsList">
                         <ItemsControl.ItemsPanel>
@@ -110,8 +111,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:FolderAtom">
                                 <Border Classes="ToolCard"
-                                        Width="140"
-                                        Height="64"
+                                        Width="120"
+                                        Height="52"
                                         Tag="{Binding}"
                                         PointerPressed="FolderCard_PointerPressed"
                                         ToolTip.Tip="{Binding FolderPath}">
@@ -122,27 +123,27 @@
                                             <MenuItem Header="移除" Tag="{Binding}" Click="FolderDeleteMenu_Click"/>
                                         </ContextMenu>
                                     </Border.ContextMenu>
-                                    <Grid ColumnDefinitions="Auto,*" Margin="8">
+                                    <Grid ColumnDefinitions="Auto,*" Margin="6">
                                         <Border Grid.Column="0"
-                                                Width="40"
-                                                Height="40"
-                                                CornerRadius="6"
+                                                Width="32"
+                                                Height="32"
+                                                CornerRadius="4"
                                                 Background="{DynamicResource IconBackgroundBrush}"
                                                 VerticalAlignment="Center">
-                                            <Image Width="32"
-                                                   Height="32"
+                                            <Image Width="24"
+                                                   Height="24"
                                                    Stretch="Uniform"
                                                    Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}"/>
                                         </Border>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Name}"
-                                                   FontSize="13"
+                                                   FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                                    TextAlignment="Center"
                                                    TextTrimming="CharacterEllipsis"
                                                    VerticalAlignment="Center"
-                                                   Margin="8,0,0,0"/>
+                                                   Margin="6,0,0,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -153,14 +154,14 @@
                             Classes="Card"
                             IsVisible="False"
                             HorizontalAlignment="Center"
-                            Padding="32"
-                            Margin="0,24,0,0">
+                            Padding="20"
+                            Margin="0,16,0,0">
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="暂无文件夹快捷方式"
                                        Classes="Subtitle"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextAlignment="Center"
-                                       Margin="0,0,0,8"/>
+                                       Margin="0,0,0,4"/>
                             <TextBlock Text="右键空白区域选择文件夹，或直接拖入文件夹"
                                        Classes="Body"
                                        TextAlignment="Center"/>
@@ -177,7 +178,7 @@
                         <MenuItem Header="添加网站..." Click="AddWebApplicationButton_Click"/>
                     </ContextMenu>
                 </ScrollViewer.ContextMenu>
-                <StackPanel Margin="16">
+                <StackPanel Margin="12">
 
                     <ItemsControl x:Name="WebApplicationsList">
                         <ItemsControl.ItemsPanel>
@@ -188,8 +189,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:WebAtom">
                                 <Border Classes="ToolCard"
-                                        Width="140"
-                                        Height="64"
+                                        Width="120"
+                                        Height="52"
                                         Tag="{Binding}"
                                         PointerPressed="WebCard_PointerPressed"
                                         ToolTip.Tip="{Binding Url}">
@@ -200,27 +201,27 @@
                                             <MenuItem Header="移除" Tag="{Binding}" Click="WebDeleteMenu_Click"/>
                                         </ContextMenu>
                                     </Border.ContextMenu>
-                                    <Grid ColumnDefinitions="Auto,*" Margin="8">
+                                    <Grid ColumnDefinitions="Auto,*" Margin="6">
                                         <Border Grid.Column="0"
-                                                Width="40"
-                                                Height="40"
-                                                CornerRadius="6"
+                                                Width="32"
+                                                Height="32"
+                                                CornerRadius="4"
                                                 Background="{DynamicResource IconBackgroundBrush}"
                                                 VerticalAlignment="Center">
-                                            <Image Width="32"
-                                                   Height="32"
+                                            <Image Width="24"
+                                                   Height="24"
                                                    Stretch="Uniform"
                                                    Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}"/>
                                         </Border>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Name}"
-                                                   FontSize="13"
+                                                   FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                                    TextAlignment="Center"
                                                    TextTrimming="CharacterEllipsis"
                                                    VerticalAlignment="Center"
-                                                   Margin="8,0,0,0"/>
+                                                   Margin="6,0,0,0"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -231,14 +232,14 @@
                             Classes="Card"
                             IsVisible="False"
                             HorizontalAlignment="Center"
-                            Padding="32"
-                            Margin="0,24,0,0">
+                            Padding="20"
+                            Margin="0,16,0,0">
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="暂无快捷网站"
                                        Classes="Subtitle"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextAlignment="Center"
-                                       Margin="0,0,0,8"/>
+                                       Margin="0,0,0,4"/>
                             <TextBlock Text="右键空白区域添加网站"
                                        Classes="Body"
                                        TextAlignment="Center"/>

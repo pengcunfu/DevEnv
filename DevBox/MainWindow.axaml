@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="540"
         x:Class="ProgramBox.MainWindow"
-        Title="DevBox"
+        Title="程序盒子"
         Width="960" Height="540"
         MinWidth="800" MinHeight="480"
         WindowStartupLocation="CenterScreen"
@@ -22,7 +22,9 @@
 
         <!-- 自定义标题栏（仅关闭，无最小化/最大化） -->
         <Border Grid.Row="0"
-                Background="{DynamicResource PrimaryBrush}">
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="*,Auto">
                 <Border Grid.Column="0"
                         Background="Transparent"
@@ -34,8 +36,8 @@
                                Height="18"
                                Stretch="Uniform"
                                Margin="10,0,8,0"/>
-                        <TextBlock Text="DevBox"
-                                   Foreground="White"
+                        <TextBlock Text="程序盒子"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                    FontSize="13"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center"/>
@@ -54,7 +56,7 @@
                         VerticalContentAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
-                        Foreground="White"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
                         FontSize="14"
                         CornerRadius="0"
                         VerticalAlignment="Stretch"
@@ -72,7 +74,7 @@
                         <!-- Welcome Section -->
                         <Border Classes="Card" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="欢迎使用 DevBox" Classes="Title"/>
+                                <TextBlock Text="欢迎使用 程序盒子" Classes="Title"/>
                                 <TextBlock Text="专为程序员设计的多语言开发环境管理工具" Classes="Body" Margin="0,0,0,16"/>
                                 <StackPanel Orientation="Horizontal" Spacing="16">
                                     <Button Content="开始使用" Click="GetStartedButton_Click"/>

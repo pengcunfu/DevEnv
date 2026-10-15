@@ -7,18 +7,18 @@
              Background="{DynamicResource BackgroundBrush}">
     
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24" Spacing="24">
+        <StackPanel Margin="12" Spacing="12">
             <TextBlock Text="设置" Classes="Title"/>
             
             <!-- General Settings -->
             <Border Classes="Card">
-                <StackPanel Spacing="16">
+                <StackPanel Spacing="10">
                     <TextBlock Text="常规设置" Classes="Subtitle"/>
                     
                     <CheckBox x:Name="TrayIconCheckBox"
                               Content="启用托盘（关闭窗口时隐藏到托盘，不退出程序）"/>
                     <CheckBox x:Name="SelfStartingCheckBox" Content="开机自启动"/>
-                    <TextBlock Text="登录 Windows 后自动启动 DevBox"
+                    <TextBlock Text="登录 Windows 后自动启动程序盒子"
                                Classes="Body"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
 
@@ -39,9 +39,9 @@
             
             <!-- Hotkey Settings -->
             <Border Classes="Card">
-                <StackPanel Spacing="16">
+                <StackPanel Spacing="10">
                     <TextBlock Text="快捷键" Classes="Subtitle"/>
-                    <TextBlock Text="按下快捷键可随时显示并居中 DevBox 窗口"
+                    <TextBlock Text="按下快捷键可随时显示并居中程序盒子窗口"
                                Classes="Body"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <Grid ColumnDefinitions="Auto,*,Auto,Auto">
@@ -76,7 +76,7 @@
 
             <!-- Appearance Settings -->
             <Border Classes="Card">
-                <StackPanel Spacing="16">
+                <StackPanel Spacing="10">
                     <TextBlock Text="外观设置" Classes="Subtitle"/>
                     
                     <CheckBox x:Name="DarkModeCheckBox" Content="深色模式"/>
@@ -85,7 +85,7 @@
             
             <!-- Environment Path Settings -->
             <Border Classes="Card">
-                <StackPanel Spacing="16">
+                <StackPanel Spacing="10">
                     <TextBlock Text="环境路径" Classes="Subtitle"/>
                     
                     <StackPanel Spacing="8">
@@ -104,7 +104,7 @@
 
             <!-- Update Settings -->
             <Border Classes="Card">
-                <StackPanel Spacing="16">
+                <StackPanel Spacing="10">
                     <TextBlock Text="更新" Classes="Subtitle"/>
 
                     <Grid ColumnDefinitions="Auto,*,Auto">
@@ -173,7 +173,7 @@
             <Border Classes="Card">
                 <StackPanel Spacing="12">
                     <TextBlock Text="关于" Classes="Subtitle"/>
-                    <TextBlock Text="DevBox" Classes="Body" FontWeight="SemiBold"/>
+                    <TextBlock Text="程序盒子" Classes="Body" FontWeight="SemiBold"/>
                     <TextBlock x:Name="AboutVersionText"
                                Classes="Body"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>

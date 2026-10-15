@@ -59,50 +59,50 @@
         <!-- Card Style -->
         <Style Selector="Border.Card">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
-            <Setter Property="Margin" Value="8"/>
-            <Setter Property="BoxShadow" Value="0 2 8 0 #19000000"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="BoxShadow" Value="0 1 4 0 #14000000"/>
         </Style>
         
         <!-- Title Text Style -->
         <Style Selector="TextBlock.Title">
-            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
         </Style>
         
         <!-- Subtitle Text Style -->
         <Style Selector="TextBlock.Subtitle">
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
         
         <!-- Body Text Style -->
         <Style Selector="TextBlock.Body">
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
         
         <!-- Section Header Style -->
         <Style Selector="TextBlock.SectionHeader">
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="Margin" Value="16,16,16,8"/>
+            <Setter Property="Margin" Value="8,8,8,4"/>
         </Style>
         
         <!-- Navigation Button Style -->
         <Style Selector="Button.Navigation">
-            <Setter Property="Height" Value="48"/>
+            <Setter Property="Height" Value="36"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="2,1"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
@@ -114,27 +114,55 @@
         
         <!-- Active Navigation Button Style -->
         <Style Selector="Button.ActiveNavigation">
-            <Setter Property="Height" Value="48"/>
+            <Setter Property="Height" Value="36"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="2,1"/>
             <Setter Property="Background" Value="{DynamicResource ActiveNavBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
+
+        <!-- 左侧导航 Tab -->
+        <Style Selector="TabControl.SideNav">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+        </Style>
+        <Style Selector="TabControl.SideNav /template/ ItemsPresenter#PART_ItemsPresenter">
+            <Setter Property="Margin" Value="0,4,0,4"/>
+        </Style>
+        <Style Selector="TabControl.SideNav > TabItem">
+            <Setter Property="MinWidth" Value="108"/>
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="2,1"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+        <Style Selector="TabControl.SideNav > TabItem:selected">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="{DynamicResource ActiveNavBrush}"/>
+        </Style>
+        <Style Selector="TabControl.SideNav > TabItem:pointerover">
+            <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+        </Style>
+        <Style Selector="TabControl.SideNav > TabItem:selected:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ActiveNavBrush}"/>
+        </Style>
         
         <!-- Tool Card Style -->
         <Style Selector="Border.ToolCard">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
-            <Setter Property="Margin" Value="8"/>
-            <Setter Property="Width" Value="140"/>
-            <Setter Property="Height" Value="120"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Height" Value="88"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BoxShadow" Value="0 2 8 0 #19000000"/>
+            <Setter Property="BoxShadow" Value="0 1 4 0 #14000000"/>
         </Style>
         
         <Style Selector="Border.ToolCard:pointerover">
@@ -144,19 +172,21 @@
         <!-- 无边框窗口关闭按钮 -->
         <Style Selector="Button.TitleBarClose:pointerover">
             <Setter Property="Background" Value="#C62828"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="Button.TitleBarClose:pressed">
             <Setter Property="Background" Value="#B71C1C"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
 
         <!-- Environment Card Style -->
         <Style Selector="Border.EnvironmentCard">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
-            <Setter Property="Margin" Value="8,4"/>
-            <Setter Property="MinHeight" Value="80"/>
-            <Setter Property="BoxShadow" Value="0 2 8 0 #19000000"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="MinHeight" Value="64"/>
+            <Setter Property="BoxShadow" Value="0 1 4 0 #14000000"/>
         </Style>
     </Application.Styles>
 </Application>

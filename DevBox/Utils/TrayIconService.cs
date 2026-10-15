@@ -130,7 +130,7 @@ namespace ProgramBox.Utils
             _trayIcon = new TrayIcon
             {
                 Icon = icon,
-                ToolTipText = "DevBox",
+                ToolTipText = "程序盒子",
                 IsVisible = true
             };
 
