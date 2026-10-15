@@ -5,7 +5,7 @@
 ## 源码位置
 
 ```
-Clipboard/
+libs/Clipboard/
 ├── Models/
 └── Services/          # HistoryStore / HistoryService / ConfigService 等
 ```

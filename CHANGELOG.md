@@ -17,11 +17,13 @@
 - JSON 格式化器、Hosts 文件编辑器、图像格式转换器、文件哈希计算器从「熔岩环境 → 工具」移至「系统工具 → 实用工具」
 - 默认入口改为 `make run`（Host）；版本号与发布脚本指向 `DevBox.Host/DevBox.Host.csproj`
 - 文档站 CI / `make docs` 改指 `devenv-docs/`
+- 逻辑库统一迁至 `libs/`（`Clipboard` / `DevEnv` / `NetworkWatch` / `ProcessWatch` / `Translator`）
 
 ### Removed
 
 - 移除 Avalonia 主程序 `DevBox/` 与共享控件库 `Lava.UI/`
-- 内嵌模块不再编译 Avalonia UI；只保留供 API / Host 使用的 Services / Models
+- 内嵌模块迁至 `libs/`，并删除 Views / UI / `*.axaml` 等停用界面源文件；只保留供 API / Host 使用的 Services / Models
+- 删除未引用的独立项目 `WinBootSelfStarting/`（启动项已由 `DevBox.Api` 承接）与对应过时文档
 
 ## [1.2.0] - 2026-10-15
 

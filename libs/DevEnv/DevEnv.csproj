@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DevEnv</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>熔岩环境管理工具</Product>
+    <AssemblyTitle>熔岩环境管理工具</AssemblyTitle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ImageSharp 4.x 需商业许可；改用 Apache-2.0 的 Magick.NET -->
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.17.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

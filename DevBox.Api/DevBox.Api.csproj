@@ -15,11 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ProcessWatch\ProcessWatch.csproj" />
-    <ProjectReference Include="..\NetworkWatch\NetworkWatch.csproj" />
-    <ProjectReference Include="..\DevEnv\DevEnv.csproj" />
-    <ProjectReference Include="..\Clipboard\Clipboard.csproj" />
-    <ProjectReference Include="..\Translator\Translator\LavaTranslator.csproj" />
+    <ProjectReference Include="..\libs\ProcessWatch\ProcessWatch.csproj" />
+    <ProjectReference Include="..\libs\NetworkWatch\NetworkWatch.csproj" />
+    <ProjectReference Include="..\libs\DevEnv\DevEnv.csproj" />
+    <ProjectReference Include="..\libs\Clipboard\Clipboard.csproj" />
+    <ProjectReference Include="..\libs\Translator\LavaTranslator.csproj" />
   </ItemGroup>
 
 </Project>
