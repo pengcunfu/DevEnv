@@ -12,7 +12,7 @@
         <converters:PathToBitmapConverter x:Key="PathToBitmap"/>
     </UserControl.Resources>
 
-    <TabControl TabStripPlacement="Left" Classes="SideNav">
+    <TabControl x:Name="MainSideNav" TabStripPlacement="Left" Classes="SideNav">
         <TabItem Header="本地应用">
             <ScrollViewer x:Name="NativeScrollArea" VerticalScrollBarVisibility="Auto">
                 <ScrollViewer.ContextMenu>
@@ -254,6 +254,10 @@
 
         <TabItem Header="熔岩环境">
             <ContentControl x:Name="LavaEnvHost"/>
+        </TabItem>
+
+        <TabItem x:Name="TranslatorTab" Header="熔岩翻译">
+            <ContentControl x:Name="TranslatorHost"/>
         </TabItem>
 
         <TabItem Header="系统工具">

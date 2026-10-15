@@ -5,7 +5,7 @@
 [![Docs](https://img.shields.io/badge/docs-docs.devenv.cn-blue)](https://docs.devenv.cn/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pengcunfu/DevBox.Net/blob/master/LICENSE)
 
-Windows 上的开发环境管理工具：多语言运行时切换、系统工具快捷入口、本地/Web 应用与服务集中管理。
+Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿色版环境、熔岩网页翻译、系统工具快捷入口。
 
 **当前版本：1.1.0** · 开源协议：[MIT](LICENSE)
 

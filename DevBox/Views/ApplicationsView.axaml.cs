@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using DevEnv.Views;
+using LavaTranslator.Views;
 using ProgramBox.Models;
 using ProgramBox.Utils;
 
@@ -21,6 +22,9 @@ namespace ProgramBox.Views
         private readonly ObservableCollection<WebAtom> _filteredWebApps;
         private readonly ObservableCollection<FolderAtom> _allFolders;
         private readonly ObservableCollection<FolderAtom> _filteredFolders;
+
+        /// <summary>熔岩翻译视图（供主窗注册 Alt+Space）。</summary>
+        public TranslatorView? Translator { get; private set; }
 
         public ApplicationsView()
             : this(new JsonDataManager())
@@ -45,8 +49,20 @@ namespace ProgramBox.Views
             LoadApplications();
             DevEnvHost.Content = new DevelopmentServicesView();
             LavaEnvHost.Content = new DevEnvView();
+            Translator = new TranslatorView();
+            Translator.RequestActivateHost = ActivateTranslatorTab;
+            TranslatorHost.Content = Translator;
             SystemToolsHost.Content = new SystemToolsView(_dataManager);
             SettingsHost.Content = new SettingsView(_dataManager);
+        }
+
+        /// <summary>显示主窗并切换到「熔岩翻译」Tab。</summary>
+        public void ActivateTranslatorTab()
+        {
+            if (TopLevel.GetTopLevel(this) is MainWindow mainWindow)
+                mainWindow.ShowCentered();
+
+            MainSideNav.SelectedItem = TranslatorTab;
         }
 
         private void SetupDragDrop()
@@ -97,19 +113,16 @@ namespace ProgramBox.Views
 
         private static bool HasExecutableFiles(DragEventArgs e)
         {
-            if (!e.Data.Contains(DataFormats.Files))
+            if (!e.DataTransfer.Contains(DataFormat.File))
                 return false;
 
-            return e.Data.GetFiles()?.Any(f =>
+            return e.DataTransfer.TryGetFiles()?.Any(f =>
                 f.Path.LocalPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) == true;
         }
 
         private static async System.Threading.Tasks.Task<string[]> GetExecutablePathsFromDragAsync(DragEventArgs e)
         {
-            if (!e.Data.Contains(DataFormats.Files))
-                return Array.Empty<string>();
-
-            var files = e.Data.GetFiles();
+            var files = e.DataTransfer.TryGetFiles();
             if (files == null)
                 return Array.Empty<string>();
 
@@ -203,18 +216,15 @@ namespace ProgramBox.Views
 
         private static bool HasDirectories(DragEventArgs e)
         {
-            if (!e.Data.Contains(DataFormats.Files))
+            if (!e.DataTransfer.Contains(DataFormat.File))
                 return false;
 
-            return e.Data.GetFiles()?.Any(f => Directory.Exists(f.Path.LocalPath)) == true;
+            return e.DataTransfer.TryGetFiles()?.Any(f => Directory.Exists(f.Path.LocalPath)) == true;
         }
 
         private static async System.Threading.Tasks.Task<string[]> GetDirectoryPathsFromDragAsync(DragEventArgs e)
         {
-            if (!e.Data.Contains(DataFormats.Files))
-                return Array.Empty<string>();
-
-            var files = e.Data.GetFiles();
+            var files = e.DataTransfer.TryGetFiles();
             if (files == null)
                 return Array.Empty<string>();
 

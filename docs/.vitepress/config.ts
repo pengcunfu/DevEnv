@@ -19,6 +19,7 @@ export default defineConfig({
       { text: '指南', link: '/guide/getting-started' },
       { text: '功能', link: '/guide/features' },
       { text: '熔岩环境', link: '/guide/lava/getting-started' },
+      { text: '熔岩翻译', link: '/guide/translator/getting-started' },
       { text: '下载', link: '/guide/releases' },
       {
         text: 'GitHub',
@@ -50,6 +51,12 @@ export default defineConfig({
           { text: '小工具', link: '/guide/lava/tools' },
           { text: '数据目录', link: '/guide/lava/data-directory' },
           { text: '常见问题', link: '/guide/lava/faq' },
+        ],
+      },
+      {
+        text: '熔岩翻译',
+        items: [
+          { text: '快速开始', link: '/guide/translator/getting-started' },
         ],
       },
       {

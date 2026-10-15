@@ -46,6 +46,16 @@
 
 详见 [熔岩环境 · 快速开始](./lava/getting-started.md)。
 
+## 熔岩翻译
+
+内嵌于左侧 **熔岩翻译** Tab：
+
+- WebView2 打开有道 / 搜狗 / 百度 / 谷歌 / DeepL / 必应 / 腾讯等站点
+- **Alt+Space**：剪贴板有内容时自动填入当前站点
+- 配置目录：`%USERPROFILE%\.lava_translator\`
+
+详见 [熔岩翻译 · 快速开始](./translator/getting-started.md)。
+
 ## 其他
 
 - 系统托盘与可选开机自启

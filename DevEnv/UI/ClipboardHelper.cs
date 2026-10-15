@@ -8,7 +8,7 @@ public static class ClipboardHelper
     public static async Task<string?> GetTextAsync(Window? owner = null)
     {
         var clipboard = GetClipboard(owner);
-        return clipboard is null ? null : await clipboard.GetTextAsync();
+        return clipboard is null ? null : await clipboard.TryGetTextAsync();
     }
 
     public static string? GetText(Window? owner = null)

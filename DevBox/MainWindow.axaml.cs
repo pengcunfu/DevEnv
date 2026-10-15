@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Input;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using LavaTranslator.Infrastructure;
 using ProgramBox.Utils;
 using ProgramBox.Views;
 
@@ -26,6 +27,8 @@ namespace ProgramBox
 
         private readonly JsonDataManager _dataManager;
         private readonly DispatcherTimer _statusTimer;
+        private ApplicationsView? _applicationsView;
+        private IGlobalHotkey? _translatorHotkey;
 
         private bool _edgeAutoHideEnabled;
         private bool _suppressPositionEvents;
@@ -43,6 +46,11 @@ namespace ProgramBox
             LoadData();
             SyncAutoStartSetting();
             Closing += MainWindow_Closing;
+            Closed += (_, _) =>
+            {
+                _translatorHotkey?.Dispose();
+                _translatorHotkey = null;
+            };
 
             PositionChanged += (_, _) => OnWindowPositionChanged();
             PointerEntered += MainWindow_PointerEntered;
@@ -97,6 +105,21 @@ namespace ProgramBox
             WindowResizeHelper.Attach(hwnd);
             HotkeyService.Attach(hwnd);
             HotkeyService.ApplyHotkey(_dataManager.Data.Config.ShowWindowHotkey);
+            EnsureTranslatorHotkey();
+        }
+
+        /// <summary>
+        /// 注册熔岩翻译 Alt+Space（与 DevBox 显示窗口热键并存）
+        /// </summary>
+        private void EnsureTranslatorHotkey()
+        {
+            if (_translatorHotkey != null || _applicationsView?.Translator == null)
+                return;
+
+            _translatorHotkey = GlobalHotkey.Create(this);
+            _translatorHotkey.HotkeyPressed += (_, _) =>
+                _applicationsView.Translator.HandleHotkeyPressed();
+            _translatorHotkey.RegisterAltSpace();
         }
 
         /// <summary>
@@ -349,8 +372,10 @@ namespace ProgramBox
         private void ShowApplications()
         {
             var view = new ApplicationsView(_dataManager);
+            _applicationsView = view;
             ContentArea.Content = view;
             DefaultContent.IsVisible = false;
+            EnsureTranslatorHotkey();
         }
 
         #region 事件处理 - Simplified without navigation

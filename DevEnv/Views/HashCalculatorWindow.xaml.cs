@@ -16,7 +16,7 @@ public partial class HashCalculatorWindow : Window
 
     private void Border_DragOver(object? sender, DragEventArgs e)
     {
-        if (e.Data.Contains(DataFormats.Files))
+        if (e.DataTransfer.Contains(DataFormat.File))
         {
             e.DragEffects = DragDropEffects.Copy;
             if (sender is Border border)
@@ -48,10 +48,10 @@ public partial class HashCalculatorWindow : Window
             border.Opacity = 1.0;
         }
 
-        if (!e.Data.Contains(DataFormats.Files))
+        if (!e.DataTransfer.Contains(DataFormat.File))
             return;
 
-        var path = e.Data.GetFiles()?.FirstOrDefault()?.Path.LocalPath;
+        var path = e.DataTransfer.TryGetFiles()?.FirstOrDefault()?.Path.LocalPath;
         if (string.IsNullOrEmpty(path))
             return;
 
