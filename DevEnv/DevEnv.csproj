@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Lava.UI\Lava.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="System.Windows.Input" />
     <Using Include="Avalonia.Interactivity" />
     <Using Include="Avalonia.Threading" />

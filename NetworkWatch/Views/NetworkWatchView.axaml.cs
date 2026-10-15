@@ -30,8 +30,6 @@ public partial class NetworkWatchView : UserControl
     {
         InitializeComponent();
         ProcessGrid.ItemsSource = _filteredProcesses;
-        ThemeService.LoadSaved();
-        UpdateThemeButton();
 
         AttachedToVisualTree += (_, _) => StartMonitor();
         DetachedFromLogicalTree += (_, _) => StopMonitor();
@@ -211,15 +209,6 @@ public partial class NetworkWatchView : UserControl
             await NwDialog.ShowAsync(OwnerWindow, $"刷新失败: {ex.Message}", "网络监控");
         }
     }
-
-    private void ThemeButton_Click(object? sender, RoutedEventArgs e)
-    {
-        ThemeService.Toggle();
-        UpdateThemeButton();
-    }
-
-    private void UpdateThemeButton() =>
-        ThemeButton.Content = ThemeService.Current == AppTheme.Dark ? "深色" : "浅色";
 
     private void SpeedTestButton_Click(object? sender, RoutedEventArgs e)
     {

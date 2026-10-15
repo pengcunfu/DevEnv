@@ -1,0 +1,12 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    Lava.UI · shadcn-inspired theme layer.
+    Load after FluentTheme. Tokens live in Application.Resources ThemeDictionaries.
+  -->
+  <StyleInclude Source="avares://Lava.UI/Themes/Controls/Buttons.axaml"/>
+  <StyleInclude Source="avares://Lava.UI/Themes/Controls/Inputs.axaml"/>
+  <StyleInclude Source="avares://Lava.UI/Themes/Controls/Navigation.axaml"/>
+  <StyleInclude Source="avares://Lava.UI/Themes/Controls/Surfaces.axaml"/>
+  <StyleInclude Source="avares://Lava.UI/Themes/Controls/Scroll.axaml"/>
+</Styles>

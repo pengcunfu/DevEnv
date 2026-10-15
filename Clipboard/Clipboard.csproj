@@ -30,6 +30,10 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Lava.UI\Lava.UI.csproj" />
+  </ItemGroup>
+
   <!-- 停用 WPF 入口、独立 exe 更新器与旧 XAML -->
   <ItemGroup>
     <Compile Remove="App.xaml.cs" />

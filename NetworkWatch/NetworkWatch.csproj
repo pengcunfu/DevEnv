@@ -19,10 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Themes\**\*.axaml" />
+    <ProjectReference Include="..\Lava.UI\Lava.UI.csproj" />
   </ItemGroup>
 
-  <!-- 停用 WPF 入口与旧 XAML -->
+  <!-- 停用 WPF 入口与旧 XAML；主题统一由 Lava.UI / DevBox 控制 -->
   <ItemGroup>
     <Compile Remove="App.xaml.cs" />
     <Compile Remove="AssemblyInfo.cs" />
@@ -37,9 +37,6 @@
     <None Remove="SpeedTestWindow.xaml" />
     <None Remove="PortManagerWindow.xaml" />
     <None Remove="ProcessDetailWindow.xaml" />
-    <None Remove="Themes\Dark.xaml" />
-    <None Remove="Themes\Light.xaml" />
-    <None Remove="Themes\Shared.xaml" />
   </ItemGroup>
 
 </Project>

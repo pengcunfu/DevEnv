@@ -5,12 +5,12 @@
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <ResourceInclude Source="avares://Translator/Themes/Modern.axaml"/>
+        <ResourceInclude Source="avares://Lava.UI/Themes/Tokens.axaml"/>
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>
   <Application.Styles>
     <FluentTheme />
-    <StyleInclude Source="avares://Translator/Themes/Controls.axaml"/>
+    <StyleInclude Source="avares://Lava.UI/Themes/Index.axaml"/>
   </Application.Styles>
 </Application>

@@ -48,7 +48,7 @@ dotnet publish DevBox/DevBox.csproj ^
 
 ```bash
 dotnet tool install -g vpk --version 1.2.0
-vpk pack -u DevBox -v 1.1.0 -r win-x64 ^
+vpk pack -u DevBox -v 1.2.0 -r win-x64 ^
   -p ./publish/win-x64 -o ./publish/velopack ^
   -e DevBox.exe --packTitle DevBox --packAuthors FNSoftware ^
   -i DevBox/Resources/icon.ico --framework net10-x64-desktop

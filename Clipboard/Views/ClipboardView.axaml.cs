@@ -166,13 +166,19 @@ public partial class ClipboardView : Avalonia.Controls.UserControl
         {
             MonitorButton.Content = UiText.StopListening;
             StatusLabel.Text = UiText.StatusListening;
-            StatusLabel.Foreground = Avalonia.Media.Brushes.ForestGreen;
+            if (TryGetResource("SuccessBrush", ActualThemeVariant, out var ok) && ok is Avalonia.Media.IBrush okBrush)
+                StatusLabel.Foreground = okBrush;
+            else
+                StatusLabel.Foreground = Avalonia.Media.Brushes.ForestGreen;
         }
         else
         {
             MonitorButton.Content = UiText.StartListening;
             StatusLabel.Text = UiText.StatusIdle;
-            StatusLabel.Foreground = Avalonia.Media.Brushes.Gray;
+            if (TryGetResource("TextSecondaryBrush", ActualThemeVariant, out var idle) && idle is Avalonia.Media.IBrush idleBrush)
+                StatusLabel.Foreground = idleBrush;
+            else
+                StatusLabel.Foreground = Avalonia.Media.Brushes.Gray;
         }
     }
 

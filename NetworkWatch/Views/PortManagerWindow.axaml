@@ -5,30 +5,20 @@
         Height="640" Width="1000"
         WindowStartupLocation="CenterOwner"
         MinHeight="420" MinWidth="720"
-        FontFamily="Segoe UI"
-        FontSize="13">
-  <Window.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceInclude Source="avares://NetworkWatch/Themes/NetworkWatch.axaml"/>
-      </ResourceDictionary.MergedDictionaries>
-    </ResourceDictionary>
-  </Window.Resources>
-
-  <Border Background="{DynamicResource NwBackgroundBrush}">
+        FontSize="13"
+        Background="{DynamicResource BackgroundBrush}">
+  <Border Background="{DynamicResource BackgroundBrush}">
     <Grid Margin="16" RowDefinitions="Auto,*,Auto"
-          TextElement.Foreground="{DynamicResource NwTextBrush}">
+          TextElement.Foreground="{DynamicResource ForegroundBrush}">
       <Grid Grid.Row="0" Margin="0,0,0,12" ColumnDefinitions="*,Auto,Auto">
         <TextBox x:Name="FilterBox" Grid.Column="0" PlaceholderText="过滤端口 / 地址 / 进程…"
                  Margin="0,0,12,0" TextChanged="FilterBox_TextChanged"/>
         <CheckBox x:Name="AutoRefreshCheckBox" Grid.Column="1" Content="自动刷新"
                   Margin="0,0,12,0" IsCheckedChanged="AutoRefreshCheckBox_Changed"/>
-        <Button Grid.Column="2" Content="刷新" Click="RefreshButton_Click"/>
+        <Button Grid.Column="2" Content="刷新" Classes="outline" Click="RefreshButton_Click"/>
       </Grid>
 
-      <Border Grid.Row="1" Background="{DynamicResource NwPanelBrush}"
-              BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1"
-              CornerRadius="8" Padding="8">
+      <Border Grid.Row="1" Classes="Card" Padding="8">
         <DataGrid x:Name="ConnectionGrid"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
@@ -55,13 +45,11 @@
         </DataGrid>
       </Border>
 
-      <Border Grid.Row="2" Margin="0,12,0,0" Padding="12,10"
-              Background="{DynamicResource NwSurfaceBrush}"
-              BorderBrush="{DynamicResource NwBorderBrush}" BorderThickness="1" CornerRadius="8">
+      <Border Grid.Row="2" Classes="Card" Margin="0,12,0,0" Padding="12,10">
         <Grid ColumnDefinitions="*,Auto">
           <TextBlock x:Name="StatusText" VerticalAlignment="Center" Text="就绪"/>
           <TextBlock x:Name="ElevationText" Grid.Column="1" VerticalAlignment="Center"
-                     Foreground="{DynamicResource NwMutedBrush}"/>
+                     Classes="muted"/>
         </Grid>
       </Border>
     </Grid>

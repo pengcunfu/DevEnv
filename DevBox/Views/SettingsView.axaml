@@ -65,11 +65,13 @@
                         <Button Grid.Column="2"
                                 x:Name="CaptureHotkeyButton"
                                 Content="录制"
+                                Classes="outline"
                                 Click="CaptureHotkeyButton_Click"
                                 MinWidth="72"
                                 Margin="0,0,8,0"/>
                         <Button Grid.Column="3"
                                 Content="清除"
+                                Classes="outline"
                                 Click="ClearHotkeyButton_Click"
                                 MinWidth="72"/>
                     </Grid>
@@ -103,7 +105,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox x:Name="BaseEnvPathTextBox" Grid.Column="0" Margin="0,0,8,0"/>
-                            <Button Grid.Column="1" Content="浏览..." Click="BrowsePathButton_Click"/>
+                            <Button Grid.Column="1" Content="浏览..." Classes="outline" Click="BrowsePathButton_Click"/>
                         </Grid>
                     </StackPanel>
                 </StackPanel>
@@ -128,6 +130,7 @@
                         <Button Grid.Column="2"
                                 x:Name="CheckUpdateButton"
                                 Content="检查更新"
+                                Classes="outline"
                                 Click="CheckUpdateButton_Click"
                                 MinWidth="96"/>
                     </Grid>
@@ -165,7 +168,7 @@
                     <TextBlock Text="文档" Classes="Subtitle"/>
                     <TextBlock Text="查看在线文档：使用说明、发版说明等" Classes="Body"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="查看文档" Click="ViewDocumentationButton_Click"/>
+                        <Button Content="查看文档" Classes="outline" Click="ViewDocumentationButton_Click"/>
                         <TextBlock x:Name="DocUrlText"
                                    Classes="Body"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
@@ -252,7 +255,7 @@
             
             <!-- Action Buttons -->
             <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Right">
-                <Button Content="保存" Click="SaveButton_Click"/>
+                <Button Content="保存" Classes="accent" Click="SaveButton_Click"/>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

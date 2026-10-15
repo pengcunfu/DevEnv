@@ -10,7 +10,7 @@ hero:
       text: 快速开始
       link: /guide/getting-started
     - theme: alt
-      text: 下载 v1.1.0
+      text: 下载 v1.2.0
       link: https://github.com/pengcunfu/DevBox.Net/releases/latest
     - theme: alt
       text: GitHub

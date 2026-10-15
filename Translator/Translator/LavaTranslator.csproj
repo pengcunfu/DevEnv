@@ -25,8 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Lava.UI\Lava.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
-    <AvaloniaResource Include="Themes\**\*.axaml" />
   </ItemGroup>
 
   <!-- 独立入口已停用，嵌入 DevBox 使用 -->
