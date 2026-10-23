@@ -40,6 +40,7 @@
 
 ### Fixed
 
+- 添加网站时粘贴 `ftp://` / `file://` 等非 http(s) 地址不再被拼成 `https://ftp//…` 这类假地址，改为直接判定为无效网址
 - 单文件发布时 `Resources/tools/7zr.exe` 与 `icon.ico` 会被打进 exe bundle，导致安装包内解压 7z / tar.gz 失败；这些资源现标记为排除单文件打包，稳定输出到 `Resources/`
 
 ### Removed

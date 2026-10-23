@@ -20,8 +20,16 @@ public static class WebMetadataHelper
         if (string.IsNullOrWhiteSpace(input))
             return null;
         var trimmed = input.Trim();
-        if (!trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-            && !trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+
+        // 用户可能粘贴任意协议：非 http(s) 的直接拒绝，
+        // 否则 ftp://example.com 会被拼成 https://ftp//example.com 这种假地址。
+        var hasScheme = trimmed.Contains("://", StringComparison.Ordinal);
+        var isHttp = trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        if (hasScheme && !isHttp)
+            return null;
+
+        if (!isHttp)
             trimmed = "https://" + trimmed;
         if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
             return null;
