@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DevBox.Core</RootNamespace>
+    <AssemblyName>DevBox.Core</AssemblyName>
+    <Description>应用服务层：数据持久化、熔岩/网络/进程/剪贴板/翻译等业务编排，供 WPF 宿主进程内直调。</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProcessWatch\ProcessWatch.csproj" />
+    <ProjectReference Include="..\NetworkWatch\NetworkWatch.csproj" />
+    <ProjectReference Include="..\LavaEnv\LavaEnv.csproj" />
+    <ProjectReference Include="..\Clipboard\Clipboard.csproj" />
+    <ProjectReference Include="..\Translator\LavaTranslator.csproj" />
+  </ItemGroup>
+
+</Project>
