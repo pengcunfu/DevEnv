@@ -49,9 +49,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\icon.ico" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Resources\icon.png" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Resources\icons\win\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <!-- 运行时按 exe 旁的 Resources/ 读取，必须排除在单文件 bundle 之外 -->
+    <Content Include="Resources\icon.ico" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="Resources\icon.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="Resources\icons\win\*.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 
 </Project>

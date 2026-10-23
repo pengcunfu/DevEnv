@@ -18,6 +18,7 @@
 
 ### Changed
 
+- **目录结构整合**：`Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` / `MenuManager` 六个独立工程并入 `DevBox.Core` 与 `DevBox.Host`，解决方案只保留这两个工程；模块命名空间统一为 `DevBox.Core.<模块>.*`，配置与用户数据路径保持不变
 - **技术栈切换为原生 WPF**：主界面、设置、系统工具、熔岩、网络 / 进程监控、剪贴板全部改为 WPF 原生界面（CommunityToolkit.Mvvm + 两套主题，浅色 / 深色）
 - `DevBox.Api` 重命名为 `DevBox.Core`，从「本机 Minimal API `:35174`」改为**进程内直调的应用服务层**（26 个 `*Endpoints` → 12 个服务类 + 强类型模型）；不再起 HTTP 服务、不再有会话 token 与 `wwwroot`
 - **删除 `ui/`（React + Vite）**：`make ui` 目标、`publish.ps1` 的 npm/wwwroot 步骤、CI 的 Node 阶段全部移除；构建与运行不再需要 Node.js
@@ -35,6 +36,10 @@
 - 文档站 CI / `make docs` 改指文档站目录
 - 逻辑库统一迁至 `libs/`（`Clipboard` / `DevEnv` / `NetworkWatch` / `ProcessWatch` / `Translator`）
 
+### Fixed
+
+- 单文件发布时 `Resources/tools/7zr.exe` 与 `icon.ico` 会被打进 exe bundle，导致安装包内解压 7z / tar.gz 失败；这些资源现标记为排除单文件打包，稳定输出到 `Resources/`
+
 ### Removed
 
 - 移除本机 HTTP API：`:35174` 端口、会话 token 鉴权、`wwwroot` 静态资源托管（图片不再经 HTTP，直接绑本地文件）
@@ -42,6 +47,7 @@
 - 移除 Avalonia 主程序 `DevBox/` 与共享控件库 `Lava.UI/`
 - 内嵌模块迁至 `libs/`，并删除 Views / UI / `*.axaml` 等停用界面源文件；只保留供服务层 / Host 使用的 Services / Models
 - 删除未引用的独立项目 `WinBootSelfStarting/`（启动项已由 `DevBox.Core` 承接）与对应过时文档
+- 删除独立工程 `Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` 与独立应用 `MenuManager`（含其独立 sln、About 对话框）；功能已并入 `DevBox.Core` 与 `DevBox.Host`，右键菜单配置路径仍为 `文档\FNSoftware\MenuManager\menu_configs.json`
 
 ## [1.2.0] - 2026-10-15
 

@@ -27,6 +27,9 @@
       <Link>Resources\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <!-- 必须留在 exe 旁边：ResourcePaths 按 BaseDirectory/Resources 读取；
+           否则单文件打包会把 7zr.exe 等 PE 资源收进 bundle。 -->
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
   </ItemGroup>
 

@@ -10,17 +10,12 @@
 | 路径 | 角色 |
 |------|------|
 | `DevBox.Host/` | 主程序（`WinExe`，WPF）：全部界面、托盘、全局热键、剪贴板轮询、Velopack 安装与自更新；**程序集名 / 进程名为 `DevEnv`**（产出 `DevEnv.exe`） |
-| `DevBox.Core/` | 应用服务层（普通类库）：数据持久化、熔岩 / 网络 / 进程 / 剪贴板 / 翻译 / 更新等业务编排；界面**进程内直调**，没有 HTTP |
-| `LavaEnv/` | 熔岩环境模块（库，程序集名 `LavaEnv`）：绿色版进程管理、软件下载、环境扫描、镜像配置；实用工具逻辑供 API 调用 |
-| `Translator/` | 熔岩翻译模块（库）：多站点网页翻译配置与 DOM 填充脚本；独立翻译窗由 Host 用 WebView2 承载 |
-| `NetworkWatch/` | 网络监控模块（库）：按进程查看连接与实时速率、端口管理、一键测速 |
-| `ProcessWatch/` | 进程监控模块（库）：实时 CPU / 内存、搜索排序、结束进程 |
-| `Clipboard/` | 熔岩剪贴板模块（库）：剪贴板历史，SQLite 持久化；独立窗由 Host 托管 |
+| `DevBox.Core/` | 应用服务层（普通类库）：数据持久化，以及熔岩 / 网络 / 进程 / 剪贴板 / 翻译 / 右键菜单 / 更新等业务编排，按功能分 `LavaEnv/`、`NetworkWatch/`、`ProcessWatch/`、`Clipboard/`、`Translator/` 子目录；界面**进程内直调**，没有 HTTP |
 | `website/` | VitePress 在线文档站 → Cloudflare Pages，项目名 `devbox-docs`，站点 https://docs.devenv.cn/ |
 | `docs/` | 子项目说明文档（纯 Markdown，**不是**文档站，别往里放构建配置） |
 | `scripts/` | 发布与版本校验的 PowerShell 脚本 |
 
-**内嵌模块一律以 `Library` 形式与 `MenuManager` 一起放在仓库根目录，由 `DevBox.Core` / Host 引用**。不要在这些库里恢复独立 `Program.cs` / UI，也不要新增独立入口。
+**功能模块是 `DevBox.Core` / `DevBox.Host` 工程内的子目录，不再有独立工程**。新功能按 `DevBox.Core/<模块>/{Models,Services}` + `DevBox.Host/{Views,ViewModels,Windows}` 放置，命名空间与目录一致（`DevBox.Core.<模块>.*` / `DevBox.Host.*`）。不要恢复独立 `Program.cs`、独立 `sln` 或独立入口。
 
 ## 常用命令
 
@@ -44,7 +39,7 @@ cd website && npm run deploy      # 文档站构建并部署
 4. **版本号有三处单一事实来源，必须同改**：`VERSION`、`DevBox.Host/DevBox.Host.csproj`（`Version` / `AssemblyVersion` / `FileVersion` / `InformationalVersion`，后两者形如 `X.Y.Z.0`）、`CHANGELOG.md` 里的 `## [x.y.z] - 日期`。改完跑 `make verify`；CI 会重复校验同一件事，不一致就构建失败。
 5. **不要改回子项目的 `bin`/`obj`**。根 `Directory.Build.props` 已把两者统一到 `bin/<项目名>/`、`obj/<项目名>/`，别在任何 csproj 里再覆盖 `BaseOutputPath` / `BaseIntermediateOutputPath`。该文件对 `*_wpftmp` 工程（WPF 标记编译的临时工程）必须跳过重定向，否则会报 `NETSDK1004` 找不到 `project.assets.json`。
 6. **产品显示名与程序标识不是一回事**：界面文案 / `Product` / 托盘用「程序盒子」；程序集名、进程名、Velopack `APP_ID`、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录与命名空间仍为 `DevBox.Host` / `DevBox.Core`，改文案时不要改成「DevBox」进程名。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
-7. **构建产物不入库**。`website/` 的 `.gitignore` 已忽略 `node_modules`、`dist` 等；`LavaEnv/Resources/tools/7zr.exe` 是**故意入库**的例外（缺了它，CI 全新克隆构建出的安装包无法解压 7z / tar.gz）。
+7. **构建产物不入库**。`website/` 的 `.gitignore` 已忽略 `node_modules`、`dist` 等；`DevBox.Core/LavaEnv/Resources/tools/7zr.exe` 是**故意入库**的例外（缺了它，CI 全新克隆构建出的安装包无法解压 7z / tar.gz）。
 8. **全局热键跟随宿主生命周期**：主窗句柄就绪后注册，窗口关闭时释放；句柄重建时需 `Rebind` 补注册。
 9. **改功能就同步文档**：模块级改动更新 `website/guide/` 下对应指南与 `CHANGELOG.md`；发版流程见 `website/guide/releases.md`。
 10. **WPF 与 WinForms 同名类型必须显式别名**。`DevBox.Host` 同时开了 `UseWPF` 与 `UseWindowsForms`（后者只为托盘与文件对话框），并已 `<Using Remove="System.Windows.Forms" />`；需要时写 `using Forms = System.Windows.Forms;`、`using WpfClipboard = System.Windows.Clipboard;`，**不要**裸写 `using System.Windows.Forms;`。

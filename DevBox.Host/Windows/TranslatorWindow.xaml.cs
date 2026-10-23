@@ -14,7 +14,7 @@ namespace DevBox.Host.Windows;
 
 /// <summary>
 /// 熔岩翻译独立窗：WPF 外壳 + WebView2 承载翻译站（DOM 填充必须真实浏览器）。
-/// DOM 填充脚本沿用 libs/Translator 的 <c>WebFillAutomation</c>，未作改动。
+/// DOM 填充脚本使用 Core 的 Translator 模块 <c>WebFillAutomation</c>，未作改动。
 /// </summary>
 public partial class TranslatorWindow : Window
 {
