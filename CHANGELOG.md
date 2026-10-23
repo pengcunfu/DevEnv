@@ -8,7 +8,7 @@
 
 ### Added
 
-- 新增 `DevEnv.Tests` 单元测试工程（xunit 2.9 + Microsoft.NET.Test.Sdk）：只引用 `DevEnv.Core`，覆盖流量 / 字节格式化、文件与文本哈希、JSON 兼容字符串转换、翻译站点目录、`OperationResult`；`make test` 一键执行，Release 工作流在打包前先跑测试，测试不过不出安装包
+- 新增 `DevEnv.Tests` 单元测试工程（xunit 2.9 + Microsoft.NET.Test.Sdk）：只引用 `DevEnv.Core`，覆盖流量 / 字节格式化、文件与文本哈希、JSON 兼容字符串转换、Hosts 解析、网址规范化、剪贴板条目与时间戳、翻译站点目录、镜像源、熔岩默认设置，并校验随程序发布的 `processes_config.json` / `software_config.json` 本身可解析；`make test` 一键执行，Release 工作流在打包前先跑测试，测试不过不出安装包
 - 集成 MenuManager 功能：新增「右键菜单管理」工具，可切换 Win11 右键菜单形态（一级 / 完整二级），并管理「用 XXX 打开」右键菜单项；与 MenuManager 共用 `文档\FNSoftware\MenuManager\menu_configs.json`，配置互通
 - 「工具」菜单下的 JSON 格式化器 / Hosts 编辑器 / 图像转换器 / 哈希计算器 / 启动项管理 / 右键菜单管理改为**独立非模态窗口**，同一工具只保留一个窗口实例
 - 深色主题：浅 / 深两套调色板 + 运行时切换，控件样式只写一份（颜色走 `DynamicResource`）
