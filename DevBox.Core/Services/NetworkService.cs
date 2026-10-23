@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using DevBox.Core.Models;
-using DevEnv.Services;
+using DevBox.Core.LavaEnv.Services;
 using DevBox.Core.NetworkWatch.Models;
 using DevBox.Core.NetworkWatch.Services;
 

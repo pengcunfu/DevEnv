@@ -6,7 +6,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using DevBox.Core;
 using DevBox.Core.Services;
-using DevEnv.Services;
+using DevBox.Core.LavaEnv.Services;
 using DevBox.Host.Infrastructure;
 using DevBox.Host.Themes;
 using DevBox.Host.Windows;

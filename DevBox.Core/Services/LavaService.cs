@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using DevBox.Core.Models;
-using DevEnv;
-using DevEnv.Models;
-using DevEnv.Services;
-using LavaAppServices = DevEnv.Services.AppServices;
+using DevBox.Core.LavaEnv;
+using DevBox.Core.LavaEnv.Models;
+using DevBox.Core.LavaEnv.Services;
+using LavaAppServices = DevBox.Core.LavaEnv.Services.AppServices;
 
 namespace DevBox.Core.Services;
 
@@ -57,24 +57,24 @@ public sealed class LavaService
 
     public OperationResult OpenDataRoot()
     {
-        DevEnv.Models.AppPaths.EnsureDirectories();
-        return OpenDirectory(DevEnv.Models.AppPaths.Root);
+        DevBox.Core.LavaEnv.Models.LavaPaths.EnsureDirectories();
+        return OpenDirectory(DevBox.Core.LavaEnv.Models.LavaPaths.Root);
     }
 
     public OperationResult OpenConfigFile()
     {
-        DevEnv.Models.AppPaths.EnsureDirectories();
+        DevBox.Core.LavaEnv.Models.LavaPaths.EnsureDirectories();
         _ = LavaAppServices.Config.Load();
-        if (!File.Exists(DevEnv.Models.AppPaths.ConfigFile))
+        if (!File.Exists(DevBox.Core.LavaEnv.Models.LavaPaths.ConfigFile))
             return OperationResult.Fail("配置文件不存在");
-        return StartProcess(DevEnv.Models.AppPaths.ConfigFile);
+        return StartProcess(DevBox.Core.LavaEnv.Models.LavaPaths.ConfigFile);
     }
 
     public OperationResult OpenCacheDirectory()
     {
         var dir = LavaAppServices.Config.Load().CacheDir;
         if (string.IsNullOrWhiteSpace(dir))
-            dir = DevEnv.Models.AppPaths.CacheDir;
+            dir = DevBox.Core.LavaEnv.Models.LavaPaths.CacheDir;
         return OpenDirectory(dir);
     }
 
@@ -280,15 +280,15 @@ public sealed class LavaService
 
     public LavaDataInfo GetDataInfo()
     {
-        DevEnv.Models.AppPaths.EnsureDirectories();
+        DevBox.Core.LavaEnv.Models.LavaPaths.EnsureDirectories();
         var settings = LavaAppServices.Config.Load();
         return new LavaDataInfo
         {
-            Root = DevEnv.Models.AppPaths.Root,
-            ConfigFile = DevEnv.Models.AppPaths.ConfigFile,
-            CacheDir = string.IsNullOrWhiteSpace(settings.CacheDir) ? DevEnv.Models.AppPaths.CacheDir : settings.CacheDir,
-            AppsDir = string.IsNullOrWhiteSpace(settings.AppsDir) ? DevEnv.Models.AppPaths.AppsDir : settings.AppsDir,
-            HistoryFile = DevEnv.Models.AppPaths.DownloadHistoryFile,
+            Root = DevBox.Core.LavaEnv.Models.LavaPaths.Root,
+            ConfigFile = DevBox.Core.LavaEnv.Models.LavaPaths.ConfigFile,
+            CacheDir = string.IsNullOrWhiteSpace(settings.CacheDir) ? DevBox.Core.LavaEnv.Models.LavaPaths.CacheDir : settings.CacheDir,
+            AppsDir = string.IsNullOrWhiteSpace(settings.AppsDir) ? DevBox.Core.LavaEnv.Models.LavaPaths.AppsDir : settings.AppsDir,
+            HistoryFile = DevBox.Core.LavaEnv.Models.LavaPaths.DownloadHistoryFile,
             Settings = new LavaSettingsInfo
             {
                 AutoExtractPortable = settings.AutoExtractPortable,

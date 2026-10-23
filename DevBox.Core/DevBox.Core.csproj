@@ -10,6 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- ImageSharp 4.x 需商业许可；改用 Apache-2.0 的 Magick.NET -->
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.17.2" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.24" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -19,7 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LavaEnv\LavaEnv.csproj" />
+    <!-- 熔岩内置资源随 Core 复制到宿主输出目录（ResourcePaths 按 BaseDirectory/Resources 读取）。
+         7zr.exe 故意入库：缺了它，全新克隆构建出的安装包无法解压 7z / tar.gz。 -->
+    <Content Include="LavaEnv\Resources\**\*" Exclude="LavaEnv\Resources\icon.ico;LavaEnv\Resources\icon.png">
+      <Link>Resources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

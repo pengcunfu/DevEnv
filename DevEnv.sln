@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.00000.00
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LavaEnv", "LavaEnv\LavaEnv.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBox.Core", "DevBox.Core\DevBox.Core.csproj", "{B8C9D0E1-F2A3-4567-1234-6789ABCDEF01}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBox.Host", "DevBox.Host\DevBox.Host.csproj", "{C9D0E1F2-A3B4-5678-2345-789ABCDEF012}"
@@ -15,10 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B8C9D0E1-F2A3-4567-1234-6789ABCDEF01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B8C9D0E1-F2A3-4567-1234-6789ABCDEF01}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8C9D0E1-F2A3-4567-1234-6789ABCDEF01}.Release|Any CPU.ActiveCfg = Release|Any CPU

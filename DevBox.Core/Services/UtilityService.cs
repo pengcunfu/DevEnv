@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using DevBox.Core.Models;
-using DevEnv.Services;
+using DevBox.Core.LavaEnv.Services;
 
 namespace DevBox.Core.Services;
 

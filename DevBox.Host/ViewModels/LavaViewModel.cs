@@ -5,8 +5,8 @@ using CommunityToolkit.Mvvm.Input;
 using DevBox.Core.Models;
 using DevBox.Core.Services;
 using DevBox.Host.Infrastructure;
-using DevEnv;
-using DevEnv.Models;
+using DevBox.Core.LavaEnv;
+using DevBox.Core.LavaEnv.Models;
 
 namespace DevBox.Host.ViewModels;
 

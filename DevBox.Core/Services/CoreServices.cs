@@ -1,5 +1,5 @@
-using DevEnv;
-using DevEnv.Services;
+using DevBox.Core.LavaEnv;
+using DevBox.Core.LavaEnv.Services;
 
 namespace DevBox.Core.Services;
 
@@ -42,6 +42,6 @@ public static class CoreServices
         }
 
         DevEnvBootstrap.EnsureInitialized();
-        DevEnv.Services.AppServices.ProcessManager.StartMonitoring();
+        DevBox.Core.LavaEnv.Services.AppServices.ProcessManager.StartMonitoring();
     }
 }
