@@ -1,0 +1,31 @@
+<Window x:Class="DevEnv.Host.Windows.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="关于程序盒子"
+        Width="440"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ChromeBrush}">
+    <DockPanel Margin="18">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="确定" Width="84" Height="28" IsDefault="True" IsCancel="True" Click="OnCloseClick" />
+        </StackPanel>
+        <StackPanel>
+            <TextBlock Text="程序盒子" FontSize="17" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" />
+            <TextBlock x:Name="VersionText" Margin="0,4,0,0" Style="{DynamicResource PageHintStyle}" />
+            <TextBlock Margin="0,12,0,0"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       Text="专为程序员设计的多语言开发环境管理工具，支持 Java、Node.js、Python、C++ 等多种开发环境。" />
+            <Border Margin="0,14,0,0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" />
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock Text="熔岩翻译 · Alt+Space" Style="{DynamicResource MutedTextStyle}" />
+                <TextBlock Margin="0,4,0,0" Text="熔岩剪贴板 · Ctrl+Space" Style="{DynamicResource MutedTextStyle}" />
+                <TextBlock Margin="0,4,0,0" Text="显示窗口 · 可在设置中配置" Style="{DynamicResource MutedTextStyle}" />
+            </StackPanel>
+            <TextBlock Margin="0,12,0,0" Text="© FNSoftware" Style="{DynamicResource MutedTextStyle}" />
+        </StackPanel>
+    </DockPanel>
+</Window>

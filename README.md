@@ -45,7 +45,7 @@ make run CONFIG=Debug
 
 ## 发版（维护者）
 
-1. 更新 `VERSION`、`DevBox.Host/DevBox.Host.csproj`、`CHANGELOG.md`
+1. 更新 `VERSION`、`DevEnv/DevEnv.csproj`、`CHANGELOG.md`
 2. `git tag v1.2.0 && git push origin v1.2.0`
 3. GitHub Actions 自动构建安装包 / 更新包 / 便携包并创建 Release
 

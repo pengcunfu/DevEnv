@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$resDir = Join-Path $root 'DevBox.Host\Resources'
+$resDir = Join-Path $root 'DevEnv.Host\Resources'
 $docsLogo = Join-Path $root 'website\public\logo.svg'
 New-Item -ItemType Directory -Force -Path $resDir | Out-Null
 

@@ -9,13 +9,13 @@
 
 | 路径 | 角色 |
 |------|------|
-| `DevBox.Host/` | 主程序（`WinExe`，WPF）：全部界面、托盘、全局热键、剪贴板轮询、Velopack 安装与自更新；**程序集名 / 进程名为 `DevEnv`**（产出 `DevEnv.exe`） |
-| `DevBox.Core/` | 应用服务层（普通类库）：数据持久化，以及熔岩 / 网络 / 进程 / 剪贴板 / 翻译 / 右键菜单 / 更新等业务编排，按功能分 `LavaEnv/`、`NetworkWatch/`、`ProcessWatch/`、`Clipboard/`、`Translator/` 子目录；界面**进程内直调**，没有 HTTP |
+| `DevEnv/` | 主程序（`WinExe`，WPF）：全部界面、托盘、全局热键、剪贴板轮询、Velopack 安装与自更新；**程序集名 / 进程名为 `DevEnv`**（产出 `DevEnv.exe`） |
+| `DevEnv.Core/` | 应用服务层（普通类库）：数据持久化，以及熔岩 / 网络 / 进程 / 剪贴板 / 翻译 / 右键菜单 / 更新等业务编排，按功能分 `LavaEnv/`、`NetworkWatch/`、`ProcessWatch/`、`Clipboard/`、`Translator/` 子目录；界面**进程内直调**，没有 HTTP |
 | `website/` | VitePress 在线文档站 → Cloudflare Pages，项目名 `devbox-docs`，站点 https://docs.devenv.cn/ |
 | `docs/` | 子项目说明文档（纯 Markdown，**不是**文档站，别往里放构建配置） |
 | `scripts/` | 发布与版本校验的 PowerShell 脚本 |
 
-**功能模块是 `DevBox.Core` / `DevBox.Host` 工程内的子目录，不再有独立工程**。新功能按 `DevBox.Core/<模块>/{Models,Services}` + `DevBox.Host/{Views,ViewModels,Windows}` 放置，命名空间与目录一致（`DevBox.Core.<模块>.*` / `DevBox.Host.*`）。不要恢复独立 `Program.cs`、独立 `sln` 或独立入口。
+**功能模块是 `DevEnv.Core` / `DevEnv` 工程内的子目录，不再有独立工程**。新功能按 `DevEnv.Core/<模块>/{Models,Services}` + `DevEnv/{Views,ViewModels,Windows}` 放置，命名空间与目录一致（`DevEnv.Core.<模块>.*` / `DevEnv.Host.*`）。不要恢复独立 `Program.cs`、独立 `sln` 或独立入口。
 
 ## 常用命令
 
@@ -36,13 +36,13 @@ cd website && npm run deploy      # 文档站构建并部署
 1. **提交信息用中文**，格式为「`类型: 标题`」加详细正文（正文逐条写清改了什么、为什么、影响范围）。类型沿用仓库历史：`功能:` `修复:` `重构:` `性能:` `文档:` `样式:` `测试:` `杂项:`。
 2. **提交信息里绝不能出现 AI 署名或生成标记**——`Co-Authored-By:`、`Generated with ...`、`Signed-off-by:` 一律不加，无论用哪个工具执行。工具默认会加，必须手动去掉。
 3. **`Makefile` 必须保持纯 ASCII**。GNU Make 在 Windows 上会转码 makefile 里的非 ASCII 文本，UTF-8 注释和字符串在 `make help` 里会变成乱码。自检：`LC_ALL=C grep -c '[^ -~\t]' Makefile` 结果必须是 `0`。中文说明写到脚本或文档里，不要写进 Makefile。
-4. **版本号有三处单一事实来源，必须同改**：`VERSION`、`DevBox.Host/DevBox.Host.csproj`（`Version` / `AssemblyVersion` / `FileVersion` / `InformationalVersion`，后两者形如 `X.Y.Z.0`）、`CHANGELOG.md` 里的 `## [x.y.z] - 日期`。改完跑 `make verify`；CI 会重复校验同一件事，不一致就构建失败。
+4. **版本号有三处单一事实来源，必须同改**：`VERSION`、`DevEnv/DevEnv.csproj`（`Version` / `AssemblyVersion` / `FileVersion` / `InformationalVersion`，后两者形如 `X.Y.Z.0`）、`CHANGELOG.md` 里的 `## [x.y.z] - 日期`。改完跑 `make verify`；CI 会重复校验同一件事，不一致就构建失败。
 5. **不要改回子项目的 `bin`/`obj`**。根 `Directory.Build.props` 已把两者统一到 `bin/<项目名>/`、`obj/<项目名>/`，别在任何 csproj 里再覆盖 `BaseOutputPath` / `BaseIntermediateOutputPath`。该文件对 `*_wpftmp` 工程（WPF 标记编译的临时工程）必须跳过重定向，否则会报 `NETSDK1004` 找不到 `project.assets.json`。
-6. **产品显示名与程序标识不是一回事**：界面文案 / `Product` / 托盘用「程序盒子」；程序集名、进程名、Velopack `APP_ID`、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录与命名空间仍为 `DevBox.Host` / `DevBox.Core`，改文案时不要改成「DevBox」进程名。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
-7. **构建产物不入库**。`website/` 的 `.gitignore` 已忽略 `node_modules`、`dist` 等；`DevBox.Core/LavaEnv/Resources/tools/7zr.exe` 是**故意入库**的例外（缺了它，CI 全新克隆构建出的安装包无法解压 7z / tar.gz）。
+6. **产品显示名与程序标识不是一回事**：界面文案 / `Product` / 托盘用「程序盒子」；程序集名、进程名、Velopack `APP_ID`、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录为 `DevEnv` / `DevEnv.Core`，命名空间为 `DevEnv.Host` / `DevEnv.Core`。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
+7. **构建产物不入库**。`website/` 的 `.gitignore` 已忽略 `node_modules`、`dist` 等；`DevEnv.Core/LavaEnv/Resources/tools/7zr.exe` 是**故意入库**的例外（缺了它，CI 全新克隆构建出的安装包无法解压 7z / tar.gz）。
 8. **全局热键跟随宿主生命周期**：主窗句柄就绪后注册，窗口关闭时释放；句柄重建时需 `Rebind` 补注册。
 9. **改功能就同步文档**：模块级改动更新 `website/guide/` 下对应指南与 `CHANGELOG.md`；发版流程见 `website/guide/releases.md`。
-10. **WPF 与 WinForms 同名类型必须显式别名**。`DevBox.Host` 同时开了 `UseWPF` 与 `UseWindowsForms`（后者只为托盘与文件对话框），并已 `<Using Remove="System.Windows.Forms" />`；需要时写 `using Forms = System.Windows.Forms;`、`using WpfClipboard = System.Windows.Clipboard;`，**不要**裸写 `using System.Windows.Forms;`。
+10. **WPF 与 WinForms 同名类型必须显式别名**。`DevEnv.Host` 同时开了 `UseWPF` 与 `UseWindowsForms`（后者只为托盘与文件对话框），并已 `<Using Remove="System.Windows.Forms" />`；需要时写 `using Forms = System.Windows.Forms;`、`using WpfClipboard = System.Windows.Clipboard;`，**不要**裸写 `using System.Windows.Forms;`。
 11. **颜色一律走主题资源**。界面颜色只能用 `Themes/Palette.*.xaml` 里的 key（控件样式已统一用 `DynamicResource`），不要在 XAML 里写死颜色，否则深色主题会露白。
 12. **页面级 XAML 异常是静默的**。视图加载失败不会弹窗，只会整页不显示；排查先看 `%LOCALAPPDATA%\DevEnv\crash.log`。
 13. **工具一律开独立非模态窗口**。`工具` 菜单下的各项走 `Infrastructure/ToolWindowHost`，不嵌入主窗内容区；新增工具时在 `ToolWindowHost.Tools` 注册即可，每工具只保留一个窗口实例。

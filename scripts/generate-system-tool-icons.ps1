@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 if (-not $OutDir) {
-    $OutDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'DevBox.Host\Resources\icons\win'
+    $OutDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'DevEnv.Host\Resources\icons\win'
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null

@@ -1,6 +1,6 @@
 name: Release
 
-# 发版前请同步：VERSION、DevBox.Host.csproj（Version 等）、CHANGELOG.md，再打标签 vX.Y.Z
+# 发版前请同步：VERSION、DevEnv.csproj（Version 等）、CHANGELOG.md，再打标签 vX.Y.Z
 on:
   push:
     tags:
@@ -14,13 +14,13 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
-  CSPROJ: DevBox.Host/DevBox.Host.csproj
+  CSPROJ: DevEnv/DevEnv.csproj
   APP_ID: DevEnv
   PRODUCT_NAME: DevEnv
   COMPANY_NAME: FNSoftware
   FRAMEWORK: net10-x64-desktop
   RUNTIME: win-x64
-  ICON: DevBox.Host/Resources/icon.ico
+  ICON: DevEnv/Resources/icon.ico
 
 concurrency:
   group: release-${{ github.workflow }}-${{ github.ref }}
@@ -70,22 +70,22 @@ jobs:
             Git tag:     $tag ($semver)
             VERSION:     $versionFile
 
-          Before releasing, set VERSION, DevBox.Host.csproj <Version>, and CHANGELOG ## [$semver], then commit and tag again.
+          Before releasing, set VERSION, DevEnv.csproj <Version>, and CHANGELOG ## [$semver], then commit and tag again.
           "@
           }
 
-          $csproj = Get-Content DevBox.Host/DevBox.Host.csproj -Raw
+          $csproj = Get-Content DevEnv/DevEnv.csproj -Raw
           if ($csproj -notmatch '<Version>\s*([^\s<]+)\s*</Version>') {
-            Fail 'Could not parse <Version> from DevBox.Host.csproj'
+            Fail 'Could not parse <Version> from DevEnv.csproj'
           }
           $csprojVersion = $Matches[1]
           if ($csprojVersion -ne $semver) {
             Fail @"
           Version mismatch:
             Git tag:           $semver
-            DevBox.Host.csproj: $csprojVersion
+            DevEnv.csproj: $csprojVersion
 
-          Update <Version> in DevBox.Host.csproj to match the tag.
+          Update <Version> in DevEnv.csproj to match the tag.
           "@
           }
 

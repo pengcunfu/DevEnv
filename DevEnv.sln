@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.00000.00
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBox.Core", "DevBox.Core\DevBox.Core.csproj", "{B8C9D0E1-F2A3-4567-1234-6789ABCDEF01}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevEnv.Core", "DevEnv.Core\DevEnv.Core.csproj", "{B8C9D0E1-F2A3-4567-1234-6789ABCDEF01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBox.Host", "DevBox.Host\DevBox.Host.csproj", "{C9D0E1F2-A3B4-5678-2345-789ABCDEF012}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevEnv", "DevEnv\DevEnv.csproj", "{C9D0E1F2-A3B4-5678-2345-789ABCDEF012}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

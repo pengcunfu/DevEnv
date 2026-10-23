@@ -37,7 +37,7 @@ make run CONFIG=Debug
 等价的手动流程：
 
 ```bash
-dotnet publish DevBox.Host/DevBox.Host.csproj ^
+dotnet publish DevEnv/DevEnv.csproj ^
   -c Release ^
   -r win-x64 ^
   --self-contained false ^
@@ -57,7 +57,7 @@ dotnet tool install -g vpk --version 1.2.0
 vpk pack -u DevEnv -v 1.2.0 -r win-x64 ^
   -p ./publish/win-x64 -o ./publish/velopack ^
   -e DevEnv.exe --packTitle DevEnv --packAuthors FNSoftware ^
-  -i DevBox.Host/Resources/icon.ico --framework net10-x64-desktop
+  -i DevEnv/Resources/icon.ico --framework net10-x64-desktop
 ```
 
 本地全流程联调更新时，可将 `DEVBOX_UPDATE_FEED` 环境变量指向本地目录或 HTTP 地址，替代 GitHub Releases 作为更新源。
@@ -67,7 +67,7 @@ vpk pack -u DevEnv -v 1.2.0 -r win-x64 ^
 发布前请同步以下位置：
 
 1. 根目录 `VERSION`
-2. `DevBox.Host/DevBox.Host.csproj` 中的 `<Version>` 等属性
+2. `DevEnv/DevEnv.csproj` 中的 `<Version>` 等属性
 3. `CHANGELOG.md` 对应版本条目
 
 应用内版本从程序集信息读取。

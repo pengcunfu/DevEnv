@@ -18,7 +18,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$project = Join-Path $root 'DevBox.Host\DevBox.Host.csproj'
+$project = Join-Path $root 'DevEnv\DevEnv.csproj'
 $versionPath = Join-Path $root 'VERSION'
 
 if (-not (Test-Path $project)) {

@@ -18,9 +18,10 @@
 
 ### Changed
 
-- **目录结构整合**：`Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` / `MenuManager` 六个独立工程并入 `DevBox.Core` 与 `DevBox.Host`，解决方案只保留这两个工程；模块命名空间统一为 `DevBox.Core.<模块>.*`，配置与用户数据路径保持不变
+- **工程统一更名为 DevEnv**：`DevBox.Host/` → `DevEnv/`（工程 `DevEnv.csproj`）、`DevBox.Core/` → `DevEnv.Core/`；命名空间同步为 `DevEnv.Host.*` / `DevEnv.Core.*`。程序集名、进程名、Velopack `APP_ID` 与用户数据目录本就是 `DevEnv`，旧版 `文档\FNSoftware\DevBox` 的数据迁移逻辑不变
+- **目录结构整合**：`Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` / `MenuManager` 六个独立工程并入 `DevEnv.Core` 与 `DevEnv.Host`，解决方案只保留这两个工程；模块命名空间统一为 `DevEnv.Core.<模块>.*`，配置与用户数据路径保持不变
 - **技术栈切换为原生 WPF**：主界面、设置、系统工具、熔岩、网络 / 进程监控、剪贴板全部改为 WPF 原生界面（CommunityToolkit.Mvvm + 两套主题，浅色 / 深色）
-- `DevBox.Api` 重命名为 `DevBox.Core`，从「本机 Minimal API `:35174`」改为**进程内直调的应用服务层**（26 个 `*Endpoints` → 12 个服务类 + 强类型模型）；不再起 HTTP 服务、不再有会话 token 与 `wwwroot`
+- `DevBox.Api` 重命名为 `DevEnv.Core`，从「本机 Minimal API `:35174`」改为**进程内直调的应用服务层**（26 个 `*Endpoints` → 12 个服务类 + 强类型模型）；不再起 HTTP 服务、不再有会话 token 与 `wwwroot`
 - **删除 `ui/`（React + Vite）**：`make ui` 目标、`publish.ps1` 的 npm/wwwroot 步骤、CI 的 Node 阶段全部移除；构建与运行不再需要 Node.js
 - 熔岩剪贴板独立窗改为纯 WPF（此前是加载 React 页面的 WebView2 窗），Ctrl+Space 唤起不变
 - 设置页「深色模式」现在真正生效（此前只是配置项，界面不跟随）
@@ -32,7 +33,7 @@
 - 用户数据目录改为 `文档\FNSoftware\DevEnv\`（与熔岩模块共用根目录）；首次启动会从旧版 `文档\FNSoftware\DevBox\` 迁入 `data.json` 与 `icons`
 - **注意**：Velopack 包 ID 从 `DevBox` 改为 `DevEnv` 后，旧版安装器无法走增量自更新，需重新安装 `DevEnv-win-Setup.exe`
 - JSON 格式化器、Hosts 文件编辑器、图像格式转换器、文件哈希计算器从「熔岩环境 → 工具」移至「系统工具 → 实用工具」
-- 默认入口改为 `make run`（Host）；版本号与发布脚本指向 `DevBox.Host/DevBox.Host.csproj`
+- 默认入口改为 `make run`（Host）；版本号与发布脚本指向 `DevEnv/DevEnv.csproj`
 - 文档站 CI / `make docs` 改指文档站目录
 - 逻辑库统一迁至 `libs/`（`Clipboard` / `DevEnv` / `NetworkWatch` / `ProcessWatch` / `Translator`）
 
@@ -44,10 +45,10 @@
 
 - 移除本机 HTTP API：`:35174` 端口、会话 token 鉴权、`wwwroot` 静态资源托管（图片不再经 HTTP，直接绑本地文件）
 - 移除主壳 WebView2：界面不再嵌入 Chromium，只有熔岩翻译窗保留 WebView2（DOM 填充需要真实浏览器）
-- 移除 Avalonia 主程序 `DevBox/` 与共享控件库 `Lava.UI/`
+- 移除 Avalonia 主程序 `DevEnv/` 与共享控件库 `Lava.UI/`
 - 内嵌模块迁至 `libs/`，并删除 Views / UI / `*.axaml` 等停用界面源文件；只保留供服务层 / Host 使用的 Services / Models
-- 删除未引用的独立项目 `WinBootSelfStarting/`（启动项已由 `DevBox.Core` 承接）与对应过时文档
-- 删除独立工程 `Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` 与独立应用 `MenuManager`（含其独立 sln、About 对话框）；功能已并入 `DevBox.Core` 与 `DevBox.Host`，右键菜单配置路径仍为 `文档\FNSoftware\MenuManager\menu_configs.json`
+- 删除未引用的独立项目 `WinBootSelfStarting/`（启动项已由 `DevEnv.Core` 承接）与对应过时文档
+- 删除独立工程 `Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` 与独立应用 `MenuManager`（含其独立 sln、About 对话框）；功能已并入 `DevEnv.Core` 与 `DevEnv.Host`，右键菜单配置路径仍为 `文档\FNSoftware\MenuManager\menu_configs.json`
 
 ## [1.2.0] - 2026-10-15
 

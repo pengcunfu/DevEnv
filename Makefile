@@ -37,8 +37,8 @@ endif
 # ============================================================
 APP_ID      := DevEnv
 COMPANY     := FNSoftware
-CSPROJ      := DevBox.Host/DevBox.Host.csproj
-ICON        := DevBox.Host/Resources/icon.ico
+CSPROJ      := DevEnv/DevEnv.csproj
+ICON        := DevEnv/Resources/icon.ico
 RUNTIME     := win-x64
 FRAMEWORK   := net10-x64-desktop
 VPK_VER     := 1.2.0
@@ -70,7 +70,7 @@ help:
 	@echo "  make run          Run the WPF host from source ($(CONFIG))"
 	@echo "  make publish      Single-file publish -> $(PUBLISH_DIR)/"
 	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
-	@echo "  make verify       Check VERSION / DevBox.Host.csproj / CHANGELOG agree"
+	@echo "  make verify       Check VERSION / DevEnv.csproj / CHANGELOG agree"
 	@echo "  make release      verify, then tag v<VER> and push (starts the CI release)"
 	@echo "  make docs         VitePress dev server for website/ (npm install on first run)"
 	@echo "  make clean        Remove root bin/ obj/ publish output/ RELEASE_NOTES.md DevEnv-*.zip"

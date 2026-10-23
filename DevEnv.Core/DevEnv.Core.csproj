@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DevEnv.Core</RootNamespace>
+    <AssemblyName>DevEnv.Core</AssemblyName>
+    <Description>应用服务层：数据持久化、熔岩/网络/进程/剪贴板/翻译等业务编排，供 WPF 宿主进程内直调。</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ImageSharp 4.x 需商业许可；改用 Apache-2.0 的 Magick.NET -->
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.17.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.24" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.10" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 熔岩内置资源随 Core 复制到宿主输出目录（ResourcePaths 按 BaseDirectory/Resources 读取）。
+         7zr.exe 故意入库：缺了它，全新克隆构建出的安装包无法解压 7z / tar.gz。 -->
+    <Content Include="LavaEnv\Resources\**\*" Exclude="LavaEnv\Resources\icon.ico;LavaEnv\Resources\icon.png">
+      <Link>Resources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <!-- 必须留在 exe 旁边：ResourcePaths 按 BaseDirectory/Resources 读取；
+           否则单文件打包会把 7zr.exe 等 PE 资源收进 bundle。 -->
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
+</Project>
