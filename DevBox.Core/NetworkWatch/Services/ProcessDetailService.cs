@@ -2,9 +2,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Management;
 using System.Runtime.InteropServices;
-using NetworkWatch.Models;
+using DevBox.Core.NetworkWatch.Models;
 
-namespace NetworkWatch.Services;
+namespace DevBox.Core.NetworkWatch.Services;
 
 /// <summary>
 /// 采集单个进程的详细信息（CPU、内存、线程、句柄、命令行等），对应端口管理器的进程详情对话框。

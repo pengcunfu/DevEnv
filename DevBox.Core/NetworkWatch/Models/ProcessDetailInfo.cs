@@ -1,4 +1,4 @@
-namespace NetworkWatch.Models;
+namespace DevBox.Core.NetworkWatch.Models;
 
 /// <summary>
 /// 进程详情（对应 PortManager 进程详情对话框的五组信息）。

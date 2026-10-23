@@ -1,7 +1,7 @@
 using System.Net;
 using System.Runtime.InteropServices;
 
-namespace NetworkWatch.Native;
+namespace DevBox.Core.NetworkWatch.Native;
 
 internal static class IpHelperNative
 {

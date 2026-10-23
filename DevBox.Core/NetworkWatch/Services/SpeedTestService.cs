@@ -2,9 +2,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using NetworkWatch.Models;
+using DevBox.Core.NetworkWatch.Models;
 
-namespace NetworkWatch.Services;
+namespace DevBox.Core.NetworkWatch.Services;
 
 /// <summary>
 /// 基于公共测速节点的 HTTP 下载/上传测速服务。

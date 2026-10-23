@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using DevBox.Core.Models;
 using DevEnv.Services;
-using NetworkWatch.Models;
-using NetworkWatch.Services;
+using DevBox.Core.NetworkWatch.Models;
+using DevBox.Core.NetworkWatch.Services;
 
 namespace DevBox.Core.Services;
 

@@ -1,4 +1,4 @@
-namespace NetworkWatch.Models;
+namespace DevBox.Core.NetworkWatch.Models;
 
 /// <summary>
 /// 扁平连接记录，用于端口管理视图（每行一条连接，含归属 PID）。

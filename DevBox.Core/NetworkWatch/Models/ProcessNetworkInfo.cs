@@ -1,4 +1,4 @@
-namespace NetworkWatch.Models;
+namespace DevBox.Core.NetworkWatch.Models;
 
 public sealed class ProcessNetworkInfo
 {

@@ -1,6 +1,6 @@
 using System.Security.Principal;
 
-namespace NetworkWatch.Helpers;
+namespace DevBox.Core.NetworkWatch.Helpers;
 
 internal static class AdminHelper
 {

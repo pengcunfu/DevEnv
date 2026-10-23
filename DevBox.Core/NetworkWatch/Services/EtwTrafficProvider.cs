@@ -2,9 +2,9 @@ using System.Diagnostics;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Session;
-using NetworkWatch.Helpers;
+using DevBox.Core.NetworkWatch.Helpers;
 
-namespace NetworkWatch.Services;
+namespace DevBox.Core.NetworkWatch.Services;
 
 /// <summary>
 /// Per-process TCP traffic via kernel ETW (requires administrator on most Windows builds).

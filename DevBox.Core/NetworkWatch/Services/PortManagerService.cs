@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using NetworkWatch.Models;
-using NetworkWatch.Native;
+using DevBox.Core.NetworkWatch.Models;
+using DevBox.Core.NetworkWatch.Native;
 
-namespace NetworkWatch.Services;
+namespace DevBox.Core.NetworkWatch.Services;
 
 /// <summary>
 /// 枚举本机所有 TCP/UDP 连接（含归属 PID），用于端口管理视图。

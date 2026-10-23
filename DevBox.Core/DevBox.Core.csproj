@@ -10,13 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.24" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.10" />
     <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetworkWatch\NetworkWatch.csproj" />
     <ProjectReference Include="..\LavaEnv\LavaEnv.csproj" />
     <ProjectReference Include="..\Clipboard\Clipboard.csproj" />
     <ProjectReference Include="..\Translator\LavaTranslator.csproj" />

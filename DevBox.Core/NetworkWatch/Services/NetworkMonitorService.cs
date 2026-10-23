@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using NetworkWatch.Helpers;
-using NetworkWatch.Models;
-using NetworkWatch.Native;
-using static NetworkWatch.Native.IpHelperNative;
+using DevBox.Core.NetworkWatch.Helpers;
+using DevBox.Core.NetworkWatch.Models;
+using DevBox.Core.NetworkWatch.Native;
+using static DevBox.Core.NetworkWatch.Native.IpHelperNative;
 
-namespace NetworkWatch.Services;
+namespace DevBox.Core.NetworkWatch.Services;
 
 public sealed class NetworkMonitorService : IDisposable
 {
