@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 namespace DevBox.Core.Models;
 
 /// <summary>
-/// 右键菜单项配置（对应 MenuManager 的 menu_configs.json 里的条目）。
+/// 右键菜单项配置（对应 menu_configs.json 里的条目）。
 /// 字段与 JSON 一一对应，两个程序共用同一份配置文件。
 /// </summary>
 public sealed class ContextMenuEntry

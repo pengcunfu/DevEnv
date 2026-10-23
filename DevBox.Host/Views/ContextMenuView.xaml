@@ -13,6 +13,7 @@
     <DockPanel Margin="14">
         <TextBlock DockPanel.Dock="Top"
                    Margin="0,0,0,10"
+                   TextWrapping="Wrap"
                    Text="{Binding Message}"
                    Style="{DynamicResource PageHintStyle}" />
 
@@ -45,6 +46,7 @@
             <TextBlock Text="「用 XXX 打开」右键菜单项" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="新增" Margin="0,0,8,0" Command="{Binding NewEntryCommand}" />
+                <Button Content="环境检查" Margin="0,0,8,0" Command="{Binding CheckEnvironmentCommand}" />
                 <Button Content="刷新" Command="{Binding ReloadCommand}" />
             </StackPanel>
         </Grid>
@@ -90,7 +92,9 @@
                 </Grid>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                    <Button Content="测试路径" Margin="0,0,8,0" Command="{Binding TestPathCommand}" />
                     <Button Content="取消" Margin="0,0,8,0" Command="{Binding CancelEditCommand}" />
+                    <Button Content="仅保存" Margin="0,0,8,0" Command="{Binding SaveOnlyCommand}" />
                     <Button Content="保存并写入注册表" Style="{StaticResource AccentButtonStyle}"
                             Command="{Binding SaveCommand}" />
                 </StackPanel>

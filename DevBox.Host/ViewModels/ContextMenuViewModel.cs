@@ -112,11 +112,17 @@ public sealed partial class ContextMenuViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(Editing.Entry.Name))
             Editing.Entry.Name = System.IO.Path.GetFileNameWithoutExtension(path);
         if (string.IsNullOrWhiteSpace(Editing.Entry.Root))
-            Editing.Entry.Root = BuildRootKey(Editing.Entry.Name);
+            Editing.Entry.Root = CoreServices.ContextMenu.GenerateUniqueRoot(Editing.Entry.Name);
     }
 
     [RelayCommand]
-    private void Save()
+    private void Save() => SaveCore(applyToSystem: true);
+
+    /// <summary>只保存配置，不写入注册表。</summary>
+    [RelayCommand]
+    private void SaveOnly() => SaveCore(applyToSystem: false);
+
+    private void SaveCore(bool applyToSystem)
     {
         if (Editing is null)
             return;
@@ -124,6 +130,10 @@ public sealed partial class ContextMenuViewModel : ObservableObject
         var service = CoreServices.ContextMenu;
         var index = Editing.Index;
         var entry = Editing.Entry;
+
+        // 新增时键名留空：按显示名称自动生成一个不冲突的
+        if (string.IsNullOrWhiteSpace(entry.Root))
+            entry.Root = service.GenerateUniqueRoot(entry.Name);
 
         var previous = index >= 0 ? service.GetEntries().ElementAtOrDefault(index) : null;
 
@@ -141,8 +151,15 @@ public sealed partial class ContextMenuViewModel : ObservableObject
             return;
         }
 
-        var applied = service.ApplyEntry(entry);
-        Message = applied.Ok ? $"{entry.Name}：{applied.DisplayMessage}" : applied.DisplayMessage;
+        if (applyToSystem)
+        {
+            var applied = service.ApplyEntry(entry);
+            Message = applied.Ok ? $"{entry.Name}：{applied.DisplayMessage}" : applied.DisplayMessage;
+        }
+        else
+        {
+            Message = $"{entry.Name}：配置已保存（未写入注册表）";
+        }
 
         Editing = null;
         OnPropertyChanged(nameof(IsEditing));
@@ -179,15 +196,26 @@ public sealed partial class ContextMenuViewModel : ObservableObject
         Reload();
     }
 
+    /// <summary>校验当前填写的程序路径。</summary>
+    [RelayCommand]
+    private void TestPath()
+    {
+        if (Editing is null)
+            return;
+
+        var path = Editing.Entry.Path;
+        Message = string.IsNullOrWhiteSpace(path)
+            ? "请先填写程序路径"
+            : System.IO.File.Exists(path) ? $"路径有效：{path}" : $"路径不存在：{path}";
+    }
+
+    /// <summary>检查 Win11 / 权限 / 注册表环境。</summary>
+    [RelayCommand]
+    private void CheckEnvironment() => Message = CoreServices.ContextMenu.GetStatusSummary();
+
     /// <summary>打开配置文件所在目录。</summary>
     [RelayCommand]
     private void OpenConfigFolder() => HostServices.OpenFolder(ContextMenuService.ConfigFilePath);
-
-    private static string BuildRootKey(string name)
-    {
-        var cleaned = new string(name.Where(char.IsLetterOrDigit).ToArray());
-        return string.IsNullOrEmpty(cleaned) ? "DevEnvMenu" : cleaned;
-    }
 
     #endregion
 }

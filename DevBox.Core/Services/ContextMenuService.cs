@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Security.Principal;
+using System.Text;
 using DevBox.Core.Models;
 using Microsoft.Win32;
 using Newtonsoft.Json;
@@ -13,11 +14,39 @@ namespace DevBox.Core.Services;
 /// 2) 「用 XXX 打开」右键菜单项的增删（写 HKEY_CLASSES_ROOT，需要管理员，
 ///    非管理员时以 --context-menu-apply 参数提权重启当前程序执行）
 ///
-/// 功能来自独立的 MenuManager 工具；配置文件沿用同一路径
-/// （文档\FNSoftware\MenuManager\menu_configs.json），两边配置互通。
+/// 配置路径沿用旧版独立的 MenuManager 工具
+/// （文档\FNSoftware\MenuManager\menu_configs.json），老用户配置和旧版安装目录下的
+/// menu_configs.json 会自动迁移。
 /// </summary>
 public sealed class ContextMenuService
 {
+    public ContextMenuService()
+    {
+        MigrateLegacyConfigIfNeeded();
+    }
+
+    /// <summary>旧版把 menu_configs.json 放在程序目录；首次运行时并入用户数据目录。</summary>
+    private static void MigrateLegacyConfigIfNeeded()
+    {
+        try
+        {
+            if (File.Exists(ConfigFilePath))
+                return;
+
+            var installDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            var legacyPath = Path.Combine(installDir, ConfigFileName);
+            if (!File.Exists(legacyPath))
+                return;
+
+            Directory.CreateDirectory(UserDataDirectory);
+            File.Copy(legacyPath, ConfigFilePath);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"迁移右键菜单配置失败：{ex.Message}");
+        }
+    }
+
     /// <summary>提权子进程的命令行参数。</summary>
     public const string ElevatedArgument = "--context-menu-apply";
 
@@ -64,17 +93,19 @@ public sealed class ContextMenuService
         lock (Gate)
         {
             var entries = GetEntries().ToList();
-            if (index is { } i && i >= 0 && i < entries.Count)
-            {
-                // 改了 root 就得先删旧键，这里只更新配置，注册表由调用方处理
-                entries[i] = entry;
-            }
+            var updating = index is { } i && i >= 0 && i < entries.Count;
+
+            // 新增或改名时都不能与其它条目的键名重复
+            var conflict = entries
+                .Where((_, i) => !updating || i != index)
+                .Any(e => string.Equals(e.Root, entry.Root, StringComparison.OrdinalIgnoreCase));
+            if (conflict)
+                return OperationResult.Fail($"注册表键名「{entry.Root}」已存在");
+
+            if (updating)
+                entries[index!.Value] = entry;
             else
-            {
-                if (entries.Any(e => string.Equals(e.Root, entry.Root, StringComparison.OrdinalIgnoreCase)))
-                    return OperationResult.Fail($"注册表键名「{entry.Root}」已存在");
                 entries.Add(entry);
-            }
 
             return WriteAll(entries);
         }
@@ -105,6 +136,24 @@ public sealed class ContextMenuService
         {
             return OperationResult.Fail($"保存配置失败：{ex.Message}");
         }
+    }
+
+    /// <summary>按显示名称生成不冲突的注册表键名（新增配置时留空自动使用）。</summary>
+    public string GenerateUniqueRoot(string name)
+    {
+        var baseRoot = new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        if (string.IsNullOrEmpty(baseRoot))
+            baseRoot = "devenvmenu";
+
+        var used = GetEntries()
+            .Select(e => e.Root)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var root = baseRoot;
+        var counter = 1;
+        while (used.Contains(root))
+            root = $"{baseRoot}{counter++}";
+        return root;
     }
 
     private static OperationResult Validate(ContextMenuEntry entry)
@@ -296,6 +345,27 @@ public sealed class ContextMenuService
             return IsWin11MenuDisabled
                 ? "当前：完整二级菜单（Win10 风格）"
                 : "当前：Win11 默认一级菜单";
+        }
+    }
+
+    /// <summary>环境检查摘要：系统版本 / 权限 / 当前形态 / 注册表可达性。</summary>
+    public string GetStatusSummary() =>
+        $"Win11：{(IsWindows11 ? "是" : "否")} ｜ 管理员：{(IsAdmin() ? "是" : "否")} ｜ " +
+        $"{Win11StatusText} ｜ 注册表访问：{(CanAccessRegistry() ? "正常" : "受限")}";
+
+    private static bool CanAccessRegistry()
+    {
+        const string testKeyPath = @"Software\Classes\CLSID\__test_devenv_access__";
+        try
+        {
+            using (var key = Registry.CurrentUser.CreateSubKey(testKeyPath))
+                key.SetValue("test", "test");
+            Registry.CurrentUser.DeleteSubKeyTree(testKeyPath, false);
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 
