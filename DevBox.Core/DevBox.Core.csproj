@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LavaEnv\LavaEnv.csproj" />
-    <ProjectReference Include="..\Translator\LavaTranslator.csproj" />
   </ItemGroup>
 
 </Project>

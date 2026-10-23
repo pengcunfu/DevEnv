@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace LavaTranslator.Services;
+namespace DevBox.Core.Translator.Services;
 
 /// <summary>
 /// 为内嵌网页翻译站生成“自动填充原文输入框”的 JavaScript。

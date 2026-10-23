@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using LavaTranslator.Models;
+using DevBox.Core.Translator.Models;
 
-namespace LavaTranslator.Services;
+namespace DevBox.Core.Translator.Services;
 
 public sealed class ConfigService
 {

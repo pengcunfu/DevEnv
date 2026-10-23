@@ -1,6 +1,6 @@
 using DevBox.Core.Models;
-using LavaTranslator.Models;
-using LavaTranslator.Services;
+using DevBox.Core.Translator.Models;
+using DevBox.Core.Translator.Services;
 
 namespace DevBox.Core.Services;
 

@@ -1,4 +1,4 @@
-namespace LavaTranslator.Models;
+namespace DevBox.Core.Translator.Models;
 
 public sealed class WebTranslateSite
 {
