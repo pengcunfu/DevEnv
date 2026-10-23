@@ -5,6 +5,8 @@ VisualStudioVersion = 18.0.00000.00
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevEnv.Core", "DevEnv.Core\DevEnv.Core.csproj", "{B8C9D0E1-F2A3-4567-1234-6789ABCDEF01}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevEnv.Tests", "DevEnv.Tests\DevEnv.Tests.csproj", "{93D3E860-0AFE-455F-A7D9-818E12F85988}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevEnv", "DevEnv\DevEnv.csproj", "{C9D0E1F2-A3B4-5678-2345-789ABCDEF012}"
 EndProject
 Global
@@ -21,6 +23,10 @@ Global
 		{C9D0E1F2-A3B4-5678-2345-789ABCDEF012}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9D0E1F2-A3B4-5678-2345-789ABCDEF012}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C9D0E1F2-A3B4-5678-2345-789ABCDEF012}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93D3E860-0AFE-455F-A7D9-818E12F85988}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93D3E860-0AFE-455F-A7D9-818E12F85988}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93D3E860-0AFE-455F-A7D9-818E12F85988}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93D3E860-0AFE-455F-A7D9-818E12F85988}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,6 +11,7 @@
 |------|------|
 | `DevEnv/` | 主程序（`WinExe`，WPF）：全部界面、托盘、全局热键、剪贴板轮询、Velopack 安装与自更新；**程序集名 / 进程名为 `DevEnv`**（产出 `DevEnv.exe`） |
 | `DevEnv.Core/` | 应用服务层（普通类库）：数据持久化，以及熔岩 / 网络 / 进程 / 剪贴板 / 翻译 / 右键菜单 / 更新等业务编排，按功能分 `LavaEnv/`、`NetworkWatch/`、`ProcessWatch/`、`Clipboard/`、`Translator/` 子目录；界面**进程内直调**，没有 HTTP |
+| `DevEnv.Tests/` | 单元测试工程（xunit 2.9 + Microsoft.NET.Test.Sdk）：只引用 `DevEnv.Core`，覆盖纯逻辑、序列化与文件/路径处理；`make test` 执行，CI 发版前也会跑一遍 |
 | `website/` | VitePress 在线文档站 → Cloudflare Pages，项目名 `devbox-docs`，站点 https://docs.devenv.cn/ |
 | `docs/` | 子项目说明文档（纯 Markdown，**不是**文档站，别往里放构建配置） |
 | `scripts/` | 发布与版本校验的 PowerShell 脚本 |
@@ -22,6 +23,7 @@
 ```bash
 dotnet build DevEnv.sln -c Debug # 构建全部；产物在仓库根 bin/<项目名>/...
 make run                          # 从源码跑主程序（Release，WPF 宿主）
+make test                         # 跑单元测试（DevEnv.Tests，xunit）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
 make publish                      # 单文件发布到 publish/win-x64/
 make installer                    # publish + vpk pack，产出 Velopack Setup.exe
@@ -47,3 +49,4 @@ cd website && npm run deploy      # 文档站构建并部署
 12. **页面级 XAML 异常是静默的**。视图加载失败不会弹窗，只会整页不显示；排查先看 `%LOCALAPPDATA%\DevEnv\crash.log`。
 13. **工具一律开独立非模态窗口**。`工具` 菜单下的各项走 `Infrastructure/ToolWindowHost`，不嵌入主窗内容区；新增工具时在 `ToolWindowHost.Tools` 注册即可，每工具只保留一个窗口实例。
 14. **样式不能跨兄弟类型 `BasedOn`**。WPF 只允许 `BasedOn` 自己或自己的基类；`CheckBox` 与 `RadioButton` 互不为基类，公共部分必须抽到 `ToggleButton` 基样式上。
+15. **服务层逻辑改动要配测试**。`DevEnv.Tests` 只引用 `DevEnv.Core`，测纯函数、序列化与文件/路径处理；测不了的东西（注册表、提权、进程、界面）不要硬写，要测就把逻辑抽成可注入的纯函数。涉及格式化的断言必须锁 `InvariantCulture`（见 `InvariantCultureScope`），否则换个语言环境就红。测试文件放在 `DevEnv.Tests/` 根目录，一个被测类型一个文件。

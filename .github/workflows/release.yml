@@ -122,6 +122,11 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # Service-layer unit tests gate the release: a failing suite must never
+      # produce an installer. Only the test project runs, never the WPF host.
+      - name: Run tests
+        run: dotnet test DevEnv.Tests/DevEnv.Tests.csproj -c Release --nologo
+
       # Framework-dependent single-file (Setup.exe installs missing Desktop Runtime via --framework)
       - name: Publish Windows x64
         shell: pwsh

@@ -61,13 +61,14 @@ ARGS   ?=
 # ============================================================
 .DEFAULT_GOAL := help
 
-.PHONY: help run publish installer verify release docs clean
+.PHONY: help run test publish installer verify release docs clean
 
 help:
 	@echo "DevEnv - available commands"
 	@echo "$(if $(VER),  current version: $(VER),[warn] VERSION file missing)"
 	@echo ""
 	@echo "  make run          Run the WPF host from source ($(CONFIG))"
+	@echo "  make test         Run the xunit suite (DevEnv.Tests)"
 	@echo "  make publish      Single-file publish -> $(PUBLISH_DIR)/"
 	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
 	@echo "  make verify       Check VERSION / DevEnv.csproj / CHANGELOG agree"
@@ -89,6 +90,12 @@ help:
 # WPF host (the UI is native now; only the translator window embeds WebView2)
 run:
 	@dotnet run --project $(CSPROJ) -c $(CONFIG)
+
+# Unit tests for the service layer. Kept as its own project (not a `dotnet test`
+# over the whole solution) so the WPF host never has to be launched for a
+# service-layer change.
+test:
+	@dotnet test DevEnv.Tests/DevEnv.Tests.csproj -c $(CONFIG) --nologo
 
 # scripts/publish.ps1 already does clean + publish + strip pdb + size report.
 # This target exists to make it callable from bash/cmd as well as PowerShell,

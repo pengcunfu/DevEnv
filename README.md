@@ -39,6 +39,7 @@ cd DevBox.Net
 
 dotnet restore
 make run CONFIG=Debug
+make test          # 服务层单元测试（DevEnv.Tests）
 ```
 
 界面是原生 WPF，构建与运行都不需要 Node.js。
