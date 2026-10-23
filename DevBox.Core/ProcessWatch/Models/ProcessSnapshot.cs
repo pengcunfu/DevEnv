@@ -1,4 +1,4 @@
-namespace ProcessWatch.Models;
+namespace DevBox.Core.ProcessWatch.Models;
 
 /// <summary>一次全量进程采样。</summary>
 public sealed class ProcessSnapshot

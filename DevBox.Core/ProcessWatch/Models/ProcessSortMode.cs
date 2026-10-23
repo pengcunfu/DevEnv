@@ -1,4 +1,4 @@
-namespace ProcessWatch.Models;
+namespace DevBox.Core.ProcessWatch.Models;
 
 public enum ProcessSortMode
 {

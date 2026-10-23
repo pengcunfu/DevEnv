@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ProcessWatch\ProcessWatch.csproj" />
     <ProjectReference Include="..\NetworkWatch\NetworkWatch.csproj" />
     <ProjectReference Include="..\LavaEnv\LavaEnv.csproj" />
     <ProjectReference Include="..\Clipboard\Clipboard.csproj" />

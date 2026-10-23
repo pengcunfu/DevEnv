@@ -1,4 +1,4 @@
-namespace ProcessWatch.Models;
+namespace DevBox.Core.ProcessWatch.Models;
 
 /// <summary>单条进程快照，供列表与详情绑定。</summary>
 public sealed class ProcessInfo

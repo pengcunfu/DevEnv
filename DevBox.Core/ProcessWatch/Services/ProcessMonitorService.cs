@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using ProcessWatch.Models;
+using DevBox.Core.ProcessWatch.Models;
 
-namespace ProcessWatch.Services;
+namespace DevBox.Core.ProcessWatch.Services;
 
 /// <summary>
 /// 后台定时采集进程列表；用跨采样的 TotalProcessorTime 差值估算 CPU%。

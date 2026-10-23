@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using DevBox.Core.Models;
-using ProcessWatch.Models;
-using ProcessWatch.Services;
+using DevBox.Core.ProcessWatch.Models;
+using DevBox.Core.ProcessWatch.Services;
 
 namespace DevBox.Core.Services;
 

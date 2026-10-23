@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace ProcessWatch.Services;
+namespace DevBox.Core.ProcessWatch.Services;
 
 /// <summary>结束进程、打开目录等用户操作。</summary>
 public static class ProcessActions
