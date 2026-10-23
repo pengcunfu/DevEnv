@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
-using ClipboardApp.Models;
+using DevBox.Core.Clipboard.Models;
 
-namespace ClipboardApp.Services;
+namespace DevBox.Core.Clipboard.Services;
 
 /// <summary>
 /// Owns the in-memory <see cref="Entries"/> list that the UI binds to, and

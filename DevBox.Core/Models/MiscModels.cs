@@ -99,7 +99,7 @@ public sealed class HostsFileView
     public bool CanWrite { get; init; }
 }
 
-/// <summary>剪贴板历史一条（包装 ClipboardApp 模型并补上图片绝对路径）。</summary>
+/// <summary>剪贴板历史一条（包装 DevBox.Core.Clipboard 模型并补上图片绝对路径）。</summary>
 public sealed class ClipboardEntryView
 {
     public required long Id { get; init; }

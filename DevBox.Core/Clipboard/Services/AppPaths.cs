@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace ClipboardApp.Services;
+namespace DevBox.Core.Clipboard.Services;
 
 public static class AppPaths
 {

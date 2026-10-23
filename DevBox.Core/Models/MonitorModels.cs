@@ -1,6 +1,6 @@
 namespace DevBox.Core.Models;
 
-/// <summary>进程监控快照（ProcessWatch 原始模型的视图投影）。</summary>
+/// <summary>进程监控快照（DevBox.Core.ProcessWatch 原始模型的视图投影）。</summary>
 public sealed class ProcessSnapshotView
 {
     public int ProcessCount { get; init; }

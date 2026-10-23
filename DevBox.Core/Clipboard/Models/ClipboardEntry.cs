@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text.Json.Serialization;
 
-namespace ClipboardApp.Models;
+namespace DevBox.Core.Clipboard.Models;
 
 public sealed class ClipboardEntry
 {

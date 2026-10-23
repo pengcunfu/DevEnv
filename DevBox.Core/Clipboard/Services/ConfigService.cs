@@ -1,8 +1,8 @@
 using System.IO;
 using System.Text.Json;
-using ClipboardApp.Models;
+using DevBox.Core.Clipboard.Models;
 
-namespace ClipboardApp.Services;
+namespace DevBox.Core.Clipboard.Services;
 
 public sealed class ConfigService
 {

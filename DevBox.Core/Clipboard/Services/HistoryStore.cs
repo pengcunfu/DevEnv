@@ -1,9 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
-using ClipboardApp.Models;
+using DevBox.Core.Clipboard.Models;
 using Microsoft.Data.Sqlite;
 
-namespace ClipboardApp.Services;
+namespace DevBox.Core.Clipboard.Services;
 
 /// <summary>
 /// Filter parameters for <see cref="HistoryStore.Query"/>.

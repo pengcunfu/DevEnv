@@ -1,6 +1,6 @@
 using System.IO;
-using ClipboardApp.Models;
-using ClipboardApp.Services;
+using DevBox.Core.Clipboard.Models;
+using DevBox.Core.Clipboard.Services;
 using DevBox.Core.Models;
 
 namespace DevBox.Core.Services;
@@ -14,7 +14,7 @@ public sealed class ClipboardService
 {
     public ClipboardService()
     {
-        ClipboardApp.Services.AppPaths.MigrateLegacyData();
+        DevBox.Core.Clipboard.Services.AppPaths.MigrateLegacyData();
     }
 
     /// <summary>底层历史服务：剪贴板轮询捕获到新内容时直接写入。</summary>
@@ -104,7 +104,7 @@ public sealed class ClipboardService
     {
         try
         {
-            var dir = ClipboardApp.Services.AppPaths.ImagesDir;
+            var dir = DevBox.Core.Clipboard.Services.AppPaths.ImagesDir;
             Directory.CreateDirectory(dir);
             var fileName = $"{DateTime.Now:yyyyMMdd_HHmmss_fff}.png";
             File.WriteAllBytes(Path.Combine(dir, fileName), pngBytes);
@@ -137,7 +137,7 @@ public sealed class ClipboardService
             return null;
         if (File.Exists(imagePath))
             return Path.GetFullPath(imagePath);
-        var combined = Path.Combine(ClipboardApp.Services.AppPaths.ImagesDir, imagePath);
+        var combined = Path.Combine(DevBox.Core.Clipboard.Services.AppPaths.ImagesDir, imagePath);
         return File.Exists(combined) ? combined : null;
     }
 
