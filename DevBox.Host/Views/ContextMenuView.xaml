@@ -1,0 +1,136 @@
+<UserControl x:Class="DevBox.Host.Views.ContextMenuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DevBox.Host.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:ContextMenuViewModel}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:ContextMenuViewModel />
+    </UserControl.DataContext>
+
+    <DockPanel Margin="14">
+        <TextBlock DockPanel.Dock="Top"
+                   Margin="0,0,0,10"
+                   Text="{Binding Message}"
+                   Style="{DynamicResource PageHintStyle}" />
+
+        <!-- Win11 右键菜单形态 -->
+        <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Windows 11 右键菜单" FontWeight="SemiBold" FontSize="14" />
+                        <TextBlock Text="{Binding Win11Status}" Style="{DynamicResource PageHintStyle}" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="切换为完整二级菜单"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource AccentButtonStyle}"
+                                IsEnabled="{Binding IsWindows11}"
+                                Command="{Binding UseClassicMenuCommand}" />
+                        <Button Content="恢复默认一级菜单"
+                                IsEnabled="{Binding IsWindows11}"
+                                Command="{Binding UseDefaultMenuCommand}" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="切换后会自动重启资源管理器使设置生效。"
+                           Style="{DynamicResource MutedTextStyle}" Margin="0,6,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- 工具条 -->
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+            <TextBlock Text="「用 XXX 打开」右键菜单项" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="新增" Margin="0,0,8,0" Command="{Binding NewEntryCommand}" />
+                <Button Content="刷新" Command="{Binding ReloadCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 编辑区 -->
+        <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12"
+                Visibility="{Binding IsEditing, Converter={StaticResource TrueToVisibility}}">
+            <StackPanel>
+                <TextBlock Text="新增 / 编辑菜单项" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="显示名称" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="6,0"
+                             Text="{Binding Editing.Entry.Name, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="注册表键名" VerticalAlignment="Center" Margin="0,6,0,0" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="6,6"
+                             Text="{Binding Editing.Entry.Root, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="程序路径" VerticalAlignment="Center" Margin="0,6,0,0" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Margin="6,6"
+                             Text="{Binding Editing.Entry.Path, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Row="2" Grid.Column="2" Content="浏览…" Margin="0,6,0,0"
+                            Command="{Binding BrowseProgramCommand}" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="作用域" VerticalAlignment="Center" Margin="0,8,0,0" />
+                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="6,8,0,0">
+                        <CheckBox Content="文件" Margin="0,0,14,0" IsChecked="{Binding Editing.Entry.ForFiles}" />
+                        <CheckBox Content="文件夹" Margin="0,0,14,0" IsChecked="{Binding Editing.Entry.ForDirectories}" />
+                        <CheckBox Content="桌面" IsChecked="{Binding Editing.Entry.ForDesktop}" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                    <Button Content="取消" Margin="0,0,8,0" Command="{Binding CancelEditCommand}" />
+                    <Button Content="保存并写入注册表" Style="{StaticResource AccentButtonStyle}"
+                            Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <DataGrid ItemsSource="{Binding Entries}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="2*" />
+                <DataGridTextColumn Header="键名" Binding="{Binding Root}" Width="*" />
+                <DataGridTextColumn Header="作用域" Binding="{Binding ScopeText}" Width="*" />
+                <DataGridTextColumn Header="程序" Binding="{Binding Path}" Width="2*" />
+                <DataGridTextColumn Header="状态" Binding="{Binding StateText}" Width="110" />
+                <DataGridTemplateColumn Header="操作" Width="170">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="编辑" Margin="0,0,6,0" Padding="8,2"
+                                        Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="同步" Margin="0,0,6,0" Padding="8,2"
+                                        Command="{Binding DataContext.SyncCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="删除" Padding="8,2"
+                                        Foreground="{DynamicResource DangerBrush}"
+                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+            <TextBlock Text="写入注册表需要管理员权限，未提权时会弹出 UAC。"
+                       Style="{DynamicResource MutedTextStyle}" VerticalAlignment="Center" />
+            <Button Content="打开配置目录" Margin="12,0,0,0" Padding="10,3"
+                    HorizontalAlignment="Left"
+                    Command="{Binding OpenConfigFolderCommand}" />
+        </StackPanel>
+    </DockPanel>
+</UserControl>

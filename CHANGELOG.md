@@ -8,22 +8,40 @@
 
 ### Added
 
-- 「进程监控」Tab：实时查看本机进程 CPU / 内存占用，支持搜索、按 CPU / 内存 / 名称排序、暂停刷新，以及结束进程、结束进程树、在资源管理器中定位
-- 主壳切换为 `DevBox.Host`（WinForms + WebView2）+ `DevBox.Api`（本机 HTTP :35174）+ `ui/`（React + Vite；开发 HMR :35173，发版构建进 `wwwroot`）
-- 翻译 / 剪贴板改为独立 WebView2 窗口；系统菜单位于页面内；熔岩环境下载分「进行中 / 历史」Tab
+- 集成 MenuManager 功能：新增「右键菜单管理」工具，可切换 Win11 右键菜单形态（一级 / 完整二级），并管理「用 XXX 打开」右键菜单项；与 MenuManager 共用 `文档\FNSoftware\MenuManager\menu_configs.json`，配置互通
+- 「工具」菜单下的 JSON 格式化器 / Hosts 编辑器 / 图像转换器 / 哈希计算器 / 启动项管理 / 右键菜单管理改为**独立非模态窗口**，同一工具只保留一个窗口实例
+- 深色主题：浅 / 深两套调色板 + 运行时切换，控件样式只写一份（颜色走 `DynamicResource`）
+- 全局未处理异常落盘 `%LOCALAPPDATA%\DevEnv\crash.log`（桌面程序崩了用户看不到控制台）
+- `DEVENV_START_PAGE` 环境变量：调试时直接启动到指定页
+- 「进程监控」页：实时查看本机进程 CPU / 内存占用，支持搜索、按 CPU / 内存 / 名称排序、暂停刷新，以及结束进程、结束进程树、在资源管理器中定位
+- 翻译 / 剪贴板改为独立窗口（翻译窗用 WebView2，剪贴板窗为纯 WPF）；系统菜单位于窗口菜单栏；熔岩环境下载分「活动 / 历史」页签
 
 ### Changed
 
+- **技术栈切换为原生 WPF**：主界面、设置、系统工具、熔岩、网络 / 进程监控、剪贴板全部改为 WPF 原生界面（CommunityToolkit.Mvvm + 两套主题，浅色 / 深色）
+- `DevBox.Api` 重命名为 `DevBox.Core`，从「本机 Minimal API `:35174`」改为**进程内直调的应用服务层**（26 个 `*Endpoints` → 12 个服务类 + 强类型模型）；不再起 HTTP 服务、不再有会话 token 与 `wwwroot`
+- **删除 `ui/`（React + Vite）**：`make ui` 目标、`publish.ps1` 的 npm/wwwroot 步骤、CI 的 Node 阶段全部移除；构建与运行不再需要 Node.js
+- 熔岩剪贴板独立窗改为纯 WPF（此前是加载 React 页面的 WebView2 窗），Ctrl+Space 唤起不变
+- 设置页「深色模式」现在真正生效（此前只是配置项，界面不跟随）
+- 菜单栏重做：顶栏项紧凑（原被误加的 `MinWidth=160` 撑开）、子菜单向右级联、带箭头/分隔线/悬停高亮
+- 图标路径兼容历史数据：`data.json` 里指向迁移前旧目录的 `IconPath` 自动回退到当前图标目录
+- 文档站目录 `devenv-docs/` 更名为 `website/`，`docs.yml` 与「编辑此页」链接同步
+- 程序英文名 / 进程名 / 程序集名 / Velopack 包 ID 统一为 `DevEnv`（产出 `DevEnv.exe`、`DevEnv-win-Setup.exe`）；界面显示名仍为「程序盒子」
+- 熔岩逻辑库程序集改为 `LavaEnv.dll`，避免与主程序 `DevEnv` 程序集名冲突
+- 用户数据目录改为 `文档\FNSoftware\DevEnv\`（与熔岩模块共用根目录）；首次启动会从旧版 `文档\FNSoftware\DevBox\` 迁入 `data.json` 与 `icons`
+- **注意**：Velopack 包 ID 从 `DevBox` 改为 `DevEnv` 后，旧版安装器无法走增量自更新，需重新安装 `DevEnv-win-Setup.exe`
 - JSON 格式化器、Hosts 文件编辑器、图像格式转换器、文件哈希计算器从「熔岩环境 → 工具」移至「系统工具 → 实用工具」
 - 默认入口改为 `make run`（Host）；版本号与发布脚本指向 `DevBox.Host/DevBox.Host.csproj`
-- 文档站 CI / `make docs` 改指 `devenv-docs/`
+- 文档站 CI / `make docs` 改指文档站目录
 - 逻辑库统一迁至 `libs/`（`Clipboard` / `DevEnv` / `NetworkWatch` / `ProcessWatch` / `Translator`）
 
 ### Removed
 
+- 移除本机 HTTP API：`:35174` 端口、会话 token 鉴权、`wwwroot` 静态资源托管（图片不再经 HTTP，直接绑本地文件）
+- 移除主壳 WebView2：界面不再嵌入 Chromium，只有熔岩翻译窗保留 WebView2（DOM 填充需要真实浏览器）
 - 移除 Avalonia 主程序 `DevBox/` 与共享控件库 `Lava.UI/`
-- 内嵌模块迁至 `libs/`，并删除 Views / UI / `*.axaml` 等停用界面源文件；只保留供 API / Host 使用的 Services / Models
-- 删除未引用的独立项目 `WinBootSelfStarting/`（启动项已由 `DevBox.Api` 承接）与对应过时文档
+- 内嵌模块迁至 `libs/`，并删除 Views / UI / `*.axaml` 等停用界面源文件；只保留供服务层 / Host 使用的 Services / Models
+- 删除未引用的独立项目 `WinBootSelfStarting/`（启动项已由 `DevBox.Core` 承接）与对应过时文档
 
 ## [1.2.0] - 2026-10-15
 

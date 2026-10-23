@@ -1,6 +1,6 @@
 # 熔岩剪贴板
 
-剪贴板历史模块，以 **Library** 形式被 `DevBox.Api` / `DevBox.Host` 引用。独立窗口由 Host 托管 WebView2；默认 `Ctrl+Space` 唤起。
+剪贴板历史模块，以 **Library** 形式被 `DevBox.Core` / `DevBox.Host` 引用。独立窗口是纯 WPF（不再需要 WebView2）；默认 `Ctrl+Space` 唤起。
 
 ## 源码位置
 
@@ -12,6 +12,6 @@ libs/Clipboard/
 
 ## 数据目录
 
-用户数据在 `文档\FNSoftware\DevBox\`（与主程序共用产品数据根；模块内路径见 `ClipboardApp.Services.AppPaths`）。
+用户数据在 `文档\FNSoftware\DevEnv\`（与主程序共用产品数据根；模块内路径见 `ClipboardApp.Services.AppPaths`）。
 
 用户使用说明见在线文档：[熔岩剪贴板](https://docs.devenv.cn/guide/clipboard/getting-started)。

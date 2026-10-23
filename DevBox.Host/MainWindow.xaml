@@ -1,0 +1,84 @@
+<Window x:Class="DevBox.Host.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:DevBox.Host.ViewModels"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="程序盒子"
+        Width="1100"
+        Height="700"
+        MinWidth="900"
+        MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+
+    <DockPanel>
+        <!-- 顶部菜单 -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_文件(F)">
+                <MenuItem Header="退出(_X)" Command="{Binding ExitAppCommand}" />
+            </MenuItem>
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_工具(T)">
+                <MenuItem Header="JSON 格式化器" Command="{Binding OpenToolCommand}" CommandParameter="json" />
+                <MenuItem Header="Hosts 文件编辑器" Command="{Binding OpenToolCommand}" CommandParameter="hosts" />
+                <MenuItem Header="图像格式转换器" Command="{Binding OpenToolCommand}" CommandParameter="image" />
+                <MenuItem Header="文件哈希计算器" Command="{Binding OpenToolCommand}" CommandParameter="hash" />
+                <Separator />
+                <MenuItem Header="启动项管理" Command="{Binding OpenToolCommand}" CommandParameter="startup" />
+                <MenuItem Header="右键菜单管理" Command="{Binding OpenToolCommand}" CommandParameter="context-menu" />
+                </MenuItem>
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩翻译(_L)" Command="{Binding ShowTranslatorCommand}" />
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩剪贴板(_C)" Command="{Binding ShowClipboardCommand}" />
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)" Command="{Binding NavigateToCommand}" CommandParameter="settings" />
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_帮助(H)">
+                <MenuItem Header="官方文档(_D)" Command="{Binding OpenDocsCommand}" />
+                <MenuItem Header="关于程序盒子(_A)..." Command="{Binding AboutCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- 底部状态栏 -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="12,4">
+            <Grid>
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding VersionText}"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="164" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="0,0,1,0">
+                <ListBox ItemsSource="{Binding NavItems}"
+                         SelectedItem="{Binding CurrentNav, Mode=TwoWay}"
+                         Padding="8"
+                         Margin="0,8" />
+            </Border>
+
+            <ContentControl Grid.Column="1" Content="{Binding CurrentView}" />
+        </Grid>
+    </DockPanel>
+</Window>

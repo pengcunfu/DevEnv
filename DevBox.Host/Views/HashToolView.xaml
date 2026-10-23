@@ -1,0 +1,59 @@
+<UserControl x:Class="DevBox.Host.Views.HashToolView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DevBox.Host.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:HashToolViewModel}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:HashToolViewModel />
+    </UserControl.DataContext>
+
+    <DockPanel Margin="14">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <TextBlock Text="文件哈希计算器" Style="{DynamicResource PageTitleStyle}" />
+            <TextBlock Text="计算文件或文本的 MD5 / SHA 哈希" Style="{DynamicResource PageHintStyle}" />
+        </StackPanel>
+
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <RadioButton Content="文件" Margin="0,0,12,0" GroupName="Mode" IsChecked="{Binding IsFileMode, Mode=TwoWay}" />
+            <RadioButton Content="文本" GroupName="Mode" IsChecked="{Binding IsFileMode, Mode=TwoWay, Converter={StaticResource InverseBool}}" />
+            <ComboBox Width="120" Margin="0,0,8,0" ItemsSource="{Binding Algorithms}" SelectedItem="{Binding Algorithm}" />
+            <Button Content="计算" Style="{StaticResource AccentButtonStyle}" Command="{Binding CalculateCommand}" />
+        </WrapPanel>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0"
+                        Orientation="Horizontal"
+                        Margin="0,0,0,10"
+                        Visibility="{Binding IsFileMode, Converter={StaticResource TrueToVisibility}}">
+                <TextBox Width="420" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                         Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Content="浏览…" Command="{Binding PickFileCommand}" />
+            </StackPanel>
+
+            <TextBox Grid.Row="0"
+                     Visibility="{Binding IsFileMode, Converter={StaticResource FalseToVisibility}}"
+                     Height="120"
+                     AcceptsReturn="True"
+                     VerticalScrollBarVisibility="Auto"
+                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,10" />
+
+            <Border Grid.Row="1"
+                    Style="{StaticResource CardStyle}"
+                    Visibility="{Binding Result, Converter={StaticResource NonEmptyString}}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Message}" Style="{DynamicResource MutedTextStyle}" Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding Result}" Style="{DynamicResource MonoTextStyle}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

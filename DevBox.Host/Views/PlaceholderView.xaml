@@ -1,0 +1,18 @@
+<UserControl x:Class="DevBox.Host.Views.PlaceholderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420">
+            <TextBlock x:Name="TitleText"
+                       Style="{DynamicResource PageTitleStyle}"
+                       HorizontalAlignment="Center" />
+            <TextBlock x:Name="HintText"
+                       Margin="0,8,0,0"
+                       Style="{DynamicResource PageHintStyle}"
+                       TextAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</UserControl>

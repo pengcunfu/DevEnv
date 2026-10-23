@@ -14,10 +14,9 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
-  NODE_VERSION: '20'
   CSPROJ: DevBox.Host/DevBox.Host.csproj
-  APP_ID: DevBox
-  PRODUCT_NAME: DevBox
+  APP_ID: DevEnv
+  PRODUCT_NAME: DevEnv
   COMPANY_NAME: FNSoftware
   FRAMEWORK: net10-x64-desktop
   RUNTIME: win-x64
@@ -123,19 +122,6 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ui/package-lock.json
-
-      - name: Build React UI
-        working-directory: ui
-        run: |
-          npm ci
-          npm run build
-
       # Framework-dependent single-file (Setup.exe installs missing Desktop Runtime via --framework)
       - name: Publish Windows x64
         shell: pwsh
@@ -155,10 +141,6 @@ jobs:
             -o ./artifacts/publish `
             --nologo
           if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
-          Copy-Item -Path ui/dist -Destination artifacts/publish/wwwroot -Recurse
-          if (-not (Test-Path artifacts/publish/wwwroot/index.html)) {
-            throw "wwwroot/index.html missing after UI copy"
-          }
 
       - name: Cleanup and verify built executable
         shell: pwsh
@@ -167,9 +149,9 @@ jobs:
             Remove-Item -Force
 
           $expected = '${{ steps.version.outputs.semver }}'
-          $exe = Join-Path $PWD 'artifacts/publish/DevBox.exe'
+          $exe = Join-Path $PWD 'artifacts/publish/DevEnv.exe'
           if (-not (Test-Path $exe)) {
-            Write-Error "DevBox.exe not found at $exe"
+            Write-Error "DevEnv.exe not found at $exe"
             exit 1
           }
           $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
@@ -178,7 +160,7 @@ jobs:
             Write-Error "Built exe ProductVersion is '$product', expected '$expected'"
             exit 1
           }
-          Write-Host "✓ DevBox.exe ProductVersion: $product"
+          Write-Host "✓ DevEnv.exe ProductVersion: $product"
           $mb = [math]::Round(((Get-ChildItem artifacts/publish -Recurse -File | Measure-Object Length -Sum).Sum)/1MB,2)
           Write-Host "publish 目录大小: $mb MB"
 

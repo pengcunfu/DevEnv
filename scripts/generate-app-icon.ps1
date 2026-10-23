@@ -5,8 +5,8 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$resDir = Join-Path $root 'DevBox\Resources'
-$docsLogo = Join-Path $root 'docs\public\logo.svg'
+$resDir = Join-Path $root 'DevBox.Host\Resources'
+$docsLogo = Join-Path $root 'website\public\logo.svg'
 New-Item -ItemType Directory -Force -Path $resDir | Out-Null
 
 $bg = [System.Drawing.Color]::FromArgb(255, 11, 18, 32)

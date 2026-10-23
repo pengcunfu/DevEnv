@@ -1,0 +1,180 @@
+# 右键菜单管理工具
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://www.microsoft.com/windows)
+
+这是一个功能强大的Windows右键菜单管理工具，使用C# WPF开发，支持自定义右键菜单项和Win11菜单样式切换。
+
+## 下载
+
+前往 [Releases](https://github.com/pengcunfu/MenuManager/releases/latest) 页面下载最新版本：
+
+- **独立版本（推荐）**: 无需安装 .NET，开箱即用
+- **依赖版本**: 需要安装 [.NET 10.0 运行时](https://dotnet.microsoft.com/download/dotnet/10.0)
+
+## 功能特点
+
+- **现代化用户界面**：使用WPF开发，界面美观且用户友好
+- **按需提权**：普通权限即可启动，仅在修改注册表时临时请求管理员权限
+- **配置管理**：支持添加、删除、修改右键菜单配置
+- **实时状态检测**：自动检测菜单项的启用状态
+- **路径验证**：验证程序路径的有效性
+- **支持文件和目录**：可以为文件或目录分别配置右键菜单
+- **Win11菜单切换**：支持在Win11一级菜单和完整二级菜单之间切换
+
+## 技术架构
+
+### 项目结构
+```
+MenuManager/
+├── Models/
+│   └── MenuConfig.cs              # 数据模型
+├── Services/
+│   ├── ConfigManager.cs           # 配置管理服务
+│   ├── RegistryManager.cs         # 注册表操作服务
+│   └── Win11ContextMenuManager.cs # Win11右键菜单管理服务
+├── MainWindow.xaml                # 主窗口UI
+├── MainWindow.xaml.cs             # 主窗口逻辑
+├── App.xaml                       # 应用程序定义
+├── App.xaml.cs                    # 应用程序启动逻辑
+├── app.manifest                   # UAC权限配置
+├── menu_configs.json              # 默认配置文件
+└── README.md                      # 说明文档
+```
+
+### 核心组件
+
+1. **MenuConfig** - 配置数据模型
+   - 实现`INotifyPropertyChanged`支持数据绑定
+   - 包含名称、注册表键、程序路径等属性
+
+2. **ConfigManager** - 配置管理服务
+   - 负责配置文件的读取、保存和验证
+   - 支持异步操作
+   - 提供默认配置生成
+
+3. **RegistryManager** - 注册表操作服务
+   - 处理Windows注册表的读写操作
+   - 管理员权限检查和提升
+   - 菜单项的添加、删除和状态检测
+
+4. **Win11ContextMenuManager** - Win11右键菜单管理服务
+   - 检测Windows 11系统版本
+   - 切换Win11一级菜单和完整二级菜单
+   - 自动重启资源管理器应用更改
+   - 系统兼容性验证
+
+5. **MainWindow** - 主用户界面
+   - 现代化的WPF界面设计
+   - 响应式布局支持
+   - 完整的用户交互逻辑
+
+## 从Go版本的迁移内容
+
+### 功能对等性
+- 管理员权限检查和UAC提升
+- 配置文件管理（JSON格式）
+- 注册表操作（添加/删除右键菜单）
+- 实时状态检测和刷新
+- 路径验证和文件浏览
+- 错误处理和用户提示
+
+### 新增功能
+- Win11右键菜单样式切换
+- 系统版本自动检测
+- 资源管理器自动重启
+- 注册表访问权限测试
+
+### 界面改进
+- 从Go的Fyne GUI迁移到C# WPF
+- 更现代化的界面设计和用户体验
+- 更好的响应式布局和样式支持
+- 改进的数据绑定和状态管理
+
+### 技术改进
+- 异步操作支持，提高界面响应性
+- 更好的异常处理和错误提示
+- 标准的Windows应用程序架构
+- 更容易的打包和部署
+
+## 使用方法
+
+1. **运行程序**
+   - 程序会自动请求管理员权限（修改注册表所必需）
+   - 如果没有管理员权限，会提示重新启动
+
+2. **管理配置**
+   - 在左侧列表中选择预设配置或添加新配置
+   - 在右侧编辑区域修改配置参数
+   - 支持的参数：
+     - 显示名称：右键菜单中显示的文本
+     - 注册表键名：在注册表中使用的唯一标识符
+     - 程序路径：点击菜单项后要运行的程序
+     - 应用范围：选择是应用于文件还是目录
+
+3. **启用/禁用菜单**
+   - 勾选"启用右键菜单"复选框来添加菜单
+   - 取消勾选来删除菜单
+   - 点击"应用更改"保存配置
+
+4. **Win11菜单切换**（仅限Windows 11系统）
+   - 在"Win11菜单设置"区域可以切换右键菜单样式
+   - **一级菜单**：Win11默认的简化菜单，需要点击"显示更多选项"才能看到完整菜单
+   - **完整二级菜单**：类似Win10的完整菜单，直接显示所有选项
+   - 切换后会自动重启资源管理器以应用更改
+
+## 预设配置
+
+程序内置了多种常用编辑器和IDE的右键菜单配置：
+
+- VSCode
+- PyCharm
+- IntelliJ IDEA
+- PhpStorm
+- GoLand
+- Cursor
+- Trae
+- Notepad++
+- Sublime Text
+- 记事本
+
+## 编译和部署
+
+### 要求
+- .NET 10.0 或更高版本
+- Windows 7 或更高版本
+- Visual Studio 2022 或 .NET CLI
+
+### 编译
+```bash
+dotnet build --configuration Release
+```
+
+### 发布
+```bash
+dotnet publish --configuration Release --self-contained true --runtime win-x64
+```
+
+## 注意事项
+
+- **用户数据**：配置保存在文档目录下的 `FNSoftware\MenuManager\menu_configs.json`
+- **管理员权限**：本程序需要管理员权限才能正常工作
+- **注册表风险**：修改注册表有一定风险，请谨慎操作
+- **路径验证**：如果程序路径不存在，可能会导致右键菜单无法正常工作
+- **备份建议**：在进行大量修改前，建议备份注册表
+- **Win11菜单切换**：切换Win11菜单样式会重启资源管理器，请保存未保存的工作
+- **系统兼容性**：Win11菜单切换功能仅支持Windows 11（版本22000及以上）
+
+## 许可证
+
+本项目采用 [Apache License 2.0](LICENSE) 开源许可证。
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 联系方式
+
+- 项目地址：https://github.com/pengcunfu/MenuManager
+- 问题反馈：https://github.com/pengcunfu/MenuManager/issues

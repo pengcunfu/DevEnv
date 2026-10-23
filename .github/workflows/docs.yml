@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'devenv-docs/**'
+      - 'website/**'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: devenv-docs
+        working-directory: website
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: devenv-docs/package-lock.json
+          cache-dependency-path: website/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -40,5 +40,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: devenv-docs
+          workingDirectory: website
           command: pages deploy dist --project-name=devbox-docs --branch=main

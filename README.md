@@ -1,4 +1,4 @@
-# DevBox
+# DevEnv
 
 [![Release](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/release/pengcunfu/DevBox.Net?label=release)](https://github.com/pengcunfu/DevBox.Net/releases/latest)
@@ -11,7 +11,7 @@ Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿
 
 ## 下载与更新
 
-从 [Releases](https://github.com/pengcunfu/DevBox.Net/releases/latest) 下载 `DevBox-win-Setup.exe` 安装包并安装（若缺少 .NET 10 Desktop Runtime，安装器会自动安装）。安装后可在设置页「检查更新」自动升级，无需手动下载覆盖。
+从 [Releases](https://github.com/pengcunfu/DevBox.Net/releases/latest) 下载 `DevEnv-win-Setup.exe` 安装包并安装（若缺少 .NET 10 Desktop Runtime，安装器会自动安装）。安装后可在设置页「检查更新」自动升级，无需手动下载覆盖。
 
 ## 文档
 
@@ -20,7 +20,7 @@ Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿
 本地预览 / 部署文档：
 
 ```bash
-cd devenv-docs
+cd website
 npm install
 npm run dev       # 本地预览
 npm run deploy    # 构建并部署到 Cloudflare Pages（首次会浏览器登录）
@@ -28,7 +28,7 @@ npm run deploy    # 构建并部署到 Cloudflare Pages（首次会浏览器登�
 
 ## 技术栈
 
-- .NET 10 · WinForms + WebView2 宿主 · React（Vite）
+- .NET 10 · WPF 界面（仅熔岩翻译窗内嵌 WebView2）
 - Windows 10+（x64）
 
 ## 从源码运行
@@ -37,14 +37,11 @@ npm run deploy    # 构建并部署到 Cloudflare Pages（首次会浏览器登�
 git clone https://github.com/pengcunfu/DevBox.Net.git
 cd DevBox.Net
 
-# 终端 1：宿主 + 本机 API (:35174)
+dotnet restore
 make run CONFIG=Debug
-
-# 终端 2：React HMR (:35173)
-make ui
 ```
 
-发布版会把 `ui/` 构建进 `wwwroot`，无需单独跑 Vite。
+界面是原生 WPF，构建与运行都不需要 Node.js。
 
 ## 发版（维护者）
 

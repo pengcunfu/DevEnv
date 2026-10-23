@@ -1,5 +1,5 @@
 # ============================================================
-#  DevBox - build / release entry point
+#  DevEnv - build / release entry point
 #  Run `make` (or `make help`) for the target list.
 #
 #  KEEP THIS FILE PURE ASCII. GNU Make on Windows transcodes
@@ -35,7 +35,7 @@ endif
 # ============================================================
 #  CONFIG - keep in sync with .github/workflows/release.yml
 # ============================================================
-APP_ID      := DevBox
+APP_ID      := DevEnv
 COMPANY     := FNSoftware
 CSPROJ      := DevBox.Host/DevBox.Host.csproj
 ICON        := DevBox.Host/Resources/icon.ico
@@ -61,22 +61,21 @@ ARGS   ?=
 # ============================================================
 .DEFAULT_GOAL := help
 
-.PHONY: help run ui publish installer verify release docs clean
+.PHONY: help run publish installer verify release docs clean
 
 help:
-	@echo "DevBox - available commands"
+	@echo "DevEnv - available commands"
 	@echo "$(if $(VER),  current version: $(VER),[warn] VERSION file missing)"
 	@echo ""
-	@echo "  make run          Run WinForms+WebView2 host (API :35174, $(CONFIG))"
-	@echo "  make ui           Run React Vite HMR UI (:35173)"
-	@echo "  make publish      Build ui/wwwroot + single-file publish -> $(PUBLISH_DIR)/"
+	@echo "  make run          Run the WPF host from source ($(CONFIG))"
+	@echo "  make publish      Single-file publish -> $(PUBLISH_DIR)/"
 	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
 	@echo "  make verify       Check VERSION / DevBox.Host.csproj / CHANGELOG agree"
 	@echo "  make release      verify, then tag v<VER> and push (starts the CI release)"
-	@echo "  make docs         VitePress dev server for devenv-docs/ (npm install on first run)"
-	@echo "  make clean        Remove root bin/ obj/ publish output/ RELEASE_NOTES.md DevBox-*.zip"
+	@echo "  make docs         VitePress dev server for website/ (npm install on first run)"
+	@echo "  make clean        Remove root bin/ obj/ publish output/ RELEASE_NOTES.md DevEnv-*.zip"
 	@echo ""
-	@echo "  make publish ARGS=-Zip    also emit DevBox-<ver>-$(RUNTIME).zip"
+	@echo "  make publish ARGS=-Zip    also emit DevEnv-<ver>-$(RUNTIME).zip"
 	@echo "  make run CONFIG=Debug     run a Debug build"
 
 # ------------------------------------------------------------
@@ -87,14 +86,9 @@ help:
 #  keystrokes while adding a layer that goes stale. Type those directly.
 # ------------------------------------------------------------
 
-# WinForms + WebView2 host + local API on 127.0.0.1:35174
+# WPF host (the UI is native now; only the translator window embeds WebView2)
 run:
 	@dotnet run --project $(CSPROJ) -c $(CONFIG)
-
-# React UI with Vite HMR on 127.0.0.1:35173 (proxy /api -> 35174)
-ui:
-	@[ -d ui/node_modules ] || { echo "ui deps missing - running npm install (first run only)"; cd ui && npm install; }
-	@cd ui && npm run dev
 
 # scripts/publish.ps1 already does clean + publish + strip pdb + size report.
 # This target exists to make it callable from bash/cmd as well as PowerShell,
@@ -148,16 +142,16 @@ release: verify
 
 # Two steps: first-run dependency install, then the dev server.
 # No URL is echoed on purpose - the dev port shifts when 5173 is taken and the
-# site base is /DevBox.Net/ (docs/.vitepress/config), so vitepress's own banner
+# site base is /DevBox.Net/ (website/.vitepress/config), so vitepress's own banner
 # is the only reliable place to read it from.
 docs:
-	@[ -d devenv-docs/node_modules ] || { echo "docs deps missing - running npm install (first run only)"; cd devenv-docs && npm install; }
+	@[ -d website/node_modules ] || { echo "docs deps missing - running npm install (first run only)"; cd website && npm install; }
 	@echo "[ok] starting vitepress dev"
-	@cd devenv-docs && npm run dev
+	@cd website && npm run dev
 
 # Only removes what this makefile produces, and only gitignored paths.
 # publish/ is left alone apart from the two generated subdirs: the icon
 # scripts write publish/_icon_check, which is not ours to delete.
 clean:
-	@rm -rf bin obj "$(PUBLISH_DIR)" "$(VPACK_DIR)" artifacts RELEASE_NOTES.md DevBox-*.zip
+	@rm -rf bin obj "$(PUBLISH_DIR)" "$(VPACK_DIR)" artifacts RELEASE_NOTES.md DevEnv-*.zip
 	@echo "[ok] cleaned build output"

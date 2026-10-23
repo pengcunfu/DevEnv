@@ -13,16 +13,13 @@ param(
 
     [switch]$Zip,
 
-    [switch]$NoSingleFile,
-
-    [switch]$SkipUi
+    [switch]$NoSingleFile
 )
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $project = Join-Path $root 'DevBox.Host\DevBox.Host.csproj'
 $versionPath = Join-Path $root 'VERSION'
-$uiDir = Join-Path $root 'ui'
 
 if (-not (Test-Path $project)) {
     Write-Error "Project not found: $project"
@@ -45,35 +42,13 @@ if (Test-Path $OutputDir) {
     catch {
         Write-Error @"
 Unable to clean output directory (files may be in use): $OutputDir
-Close any running DevBox.exe, then retry.
+Close any running DevEnv.exe, then retry.
 $($_.Exception.Message)
 "@
         exit 1
     }
 }
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-
-# Build React UI into wwwroot next to the published exe (API serves static files from there).
-if (-not $SkipUi) {
-    if (-not (Test-Path (Join-Path $uiDir 'package.json'))) {
-        Write-Error "UI project not found: $uiDir"
-        exit 1
-    }
-    Push-Location $uiDir
-    try {
-        if (-not (Test-Path 'node_modules')) {
-            Write-Host 'ui deps missing - running npm install'
-            npm install
-            if ($LASTEXITCODE -ne 0) { throw "npm install failed with exit code $LASTEXITCODE" }
-        }
-        Write-Host 'Building UI (npm run build)...'
-        npm run build
-        if ($LASTEXITCODE -ne 0) { throw "npm run build failed with exit code $LASTEXITCODE" }
-    }
-    finally {
-        Pop-Location
-    }
-}
 
 $publishArgs = @(
     'publish', $project,
@@ -92,7 +67,7 @@ if (-not $NoSingleFile) {
     )
 }
 
-Write-Host "Publishing DevBox $semver ($Configuration, $Runtime, framework-dependent)..."
+Write-Host "Publishing DevEnv $semver ($Configuration, $Runtime, framework-dependent)..."
 Write-Host "dotnet $($publishArgs -join ' ')"
 & dotnet @publishArgs
 if ($LASTEXITCODE -ne 0) {
@@ -100,23 +75,10 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$exe = Join-Path $OutputDir 'DevBox.exe'
+$exe = Join-Path $OutputDir 'DevEnv.exe'
 if (-not (Test-Path $exe)) {
-    Write-Error "DevBox.exe not found at $exe"
+    Write-Error "DevEnv.exe not found at $exe"
     exit 1
-}
-
-# Copy Vite dist -> wwwroot beside the exe (single-file publish keeps loose content next to exe).
-if (-not $SkipUi) {
-    $dist = Join-Path $uiDir 'dist'
-    $wwwroot = Join-Path $OutputDir 'wwwroot'
-    if (-not (Test-Path (Join-Path $dist 'index.html'))) {
-        Write-Error "UI build missing index.html at $dist"
-        exit 1
-    }
-    if (Test-Path $wwwroot) { Remove-Item $wwwroot -Recurse -Force }
-    Copy-Item -Path $dist -Destination $wwwroot -Recurse
-    Write-Host "OK: wwwroot copied from ui/dist"
 }
 
 # Strip PDBs to shrink the distribution package
@@ -128,7 +90,7 @@ Write-Host "OK: $exe ($sizeMb MB)"
 Write-Host 'Note: target machine must have the matching .NET Desktop Runtime installed.'
 
 if ($Zip) {
-    $zipName = "DevBox-$semver-$Runtime.zip"
+    $zipName = "DevEnv-$semver-$Runtime.zip"
     $zipPath = Join-Path $root $zipName
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
     Compress-Archive -Path (Join-Path $OutputDir '*') -DestinationPath $zipPath
