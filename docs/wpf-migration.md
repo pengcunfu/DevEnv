@@ -139,7 +139,7 @@
 
 **踩到的两个坑（已修）**
 
-1. **`Directory.Build.props` 会污染 WPF 的临时标记编译项目**。WPF 标记编译会生成一个 `<项目名>_<随机>_wpftmp` 临时工程，MSBuild 把主工程的 `BaseIntermediateOutputPath` / `MSBuildProjectExtensionsPath` 显式传给它，用来定位复制过去的 `nuget.g.props`。而根 props 位于 `Microsoft.Common.props` 早期导入，会按 `$(MSBuildProjectName)` 再重定向一次，临时工程因此去找一个从没被写入的 obj 目录 → `NETSDK1004 找不到 project.assets.json`。修法：props 的重定向加条件 `!$(MSBuildProjectName).EndsWith('_wpftmp')`。**这条对以后新增 WPF 项目同样成立**，不是一次性绕过。
+1. **`Directory.Build.props` 会污染 WPF 的临时标记编译项目**。WPF 标记编译会生成一个 `<项目名>_<随机>_wpftmp` 临时工程，MSBuild 把主工程的 `BaseIntermediateOutputPath` / `MSBuildProjectExtensionsPath` 显式传给它，用来定位复制过去的 `nuget.g.props`。而根 props 位于 `Microsoft.Common.props` 早期导入，会按 `$(MSBuildProjectName)` 再重定向一次，临时工程因此去找一个从没被写入的 obj 目录 → `NETSDK1004 找不到 project.assets.json`。修法：props 的重定向加条件 `!$(MSBuildProjectName).EndsWith('_wpftmp')`。**这条对以后新增 WPF 项目同样成立**，不是一次性绕过。（后续已移除根 `Directory.Build.props`，产物改回各项目的 `bin/`、`obj/`，不再需要这条条件。）
 2. **`UseWindowsForms=true` 会带来隐式 using**，让 `UserControl` / `Application` / `Clipboard` / `MessageBox` 与 WPF 同名类型冲突。修法：csproj 里 `<Using Remove="System.Windows.Forms" />` + `<Using Remove="System.Drawing" />`，需要时只写别名 `using Forms = System.Windows.Forms;`——与计划里「禁止裸 using」的原则一致。
 
 **验证**

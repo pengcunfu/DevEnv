@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <meta name="theme-color" content="#0b1220" />
+    <meta
+      name="description"
+      content="程序盒子（DevEnv）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控与剪贴板历史。基于 .NET 10 + WPF，MIT 开源。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DevEnv · 程序盒子" />
+    <meta property="og:title" content="DevEnv · 程序盒子 — Windows 开发环境管理工具" />
+    <meta
+      property="og:description"
+      content="把开发环境收进一个盒子：熔岩环境、熔岩翻译、网络监控、进程监控、剪贴板历史与系统工具。"
+    />
+    <meta property="og:url" content="https://docs.devenv.cn/" />
+    <meta property="og:image" content="https://docs.devenv.cn/logo.svg" />
+    <title>DevEnv · 程序盒子 — Windows 开发环境管理工具</title>
+    <script>
+      // 在首屏绘制前确定主题，避免深色模式闪白。
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('devenv-theme')
+          var theme =
+            stored ||
+            (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light')
+          document.documentElement.dataset.theme = theme
+        } catch (error) {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

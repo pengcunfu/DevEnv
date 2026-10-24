@@ -1,5 +1,5 @@
 # ============================================================
-# Cloudflare Pages deploy (DevEnv docs)
+# Cloudflare Pages deploy (DevEnv site)
 #
 # Usage:
 #   .\deploy.ps1

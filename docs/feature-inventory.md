@@ -21,7 +21,7 @@
 | 6 | **文件哈希计算器页面加载即抛异常**：`<Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type CheckBox}}"/>` 非法——WPF 只允许 BasedOn 自己或**自己的基类**，CheckBox 与 RadioButton 互不为基类（都派生自 ToggleButton），样式 Seal 时抛 `InvalidOperationException` | 从「工具」菜单进哈希页**整页加载失败、点了没反应** | 公共部分抽到 `ToggleButton` 基样式，两个控件各自模板 |
 | 7 | **三页卡片图标不显示**：data.json 里的 `IconPath` 存的是目录迁移**之前**的旧路径（旧目录已搬空），同名文件其实就在当前图标目录里 | 本地应用 / 文件夹 / 网站 共 10 条图标全部失效 | 新增 `IconHelper.ResolveIconPath()`：旧路径不存在时按文件名回退到当前图标目录 |
 
-另外补记一条此前发现的隐患：`Directory.Build.props` 的 obj 重定向会污染 WPF 的 `_wpftmp` 临时工程（报 `NETSDK1004`），已加条件跳过。
+另外补记一条此前发现的隐患：`Directory.Build.props` 的 obj 重定向会污染 WPF 的 `_wpftmp` 临时工程（报 `NETSDK1004`），当时已加条件跳过；该根级重定向现已整体移除，构建产物回到各项目自己的 `bin/`、`obj/`，这条隐患随之消失。
 
 ### 审计手段（可复跑）
 

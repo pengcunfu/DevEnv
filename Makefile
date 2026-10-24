@@ -73,8 +73,8 @@ help:
 	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
 	@echo "  make verify       Check VERSION / DevEnv.csproj / CHANGELOG agree"
 	@echo "  make release      verify, then tag v<VER> and push (starts the CI release)"
-	@echo "  make docs         VitePress dev server for website/ (npm install on first run)"
-	@echo "  make clean        Remove root bin/ obj/ publish output/ RELEASE_NOTES.md DevEnv-*.zip"
+	@echo "  make docs         Vite dev server for website/ (npm install on first run)"
+	@echo "  make clean        Remove project bin/ obj/, legacy root output and publish artifacts"
 	@echo ""
 	@echo "  make publish ARGS=-Zip    also emit DevEnv-<ver>-$(RUNTIME).zip"
 	@echo "  make run CONFIG=Debug     run a Debug build"
@@ -148,17 +148,17 @@ release: verify
 	@echo "[ok] pushed v$(VER) - GitHub Actions is now building the release"
 
 # Two steps: first-run dependency install, then the dev server.
-# No URL is echoed on purpose - the dev port shifts when 5173 is taken and the
-# site base is /DevBox.Net/ (website/.vitepress/config), so vitepress's own banner
-# is the only reliable place to read it from.
+# No URL is echoed on purpose - the port shifts when 5173 is taken, so Vite's
+# own banner is the only reliable place to read it from.
 docs:
 	@[ -d website/node_modules ] || { echo "docs deps missing - running npm install (first run only)"; cd website && npm install; }
-	@echo "[ok] starting vitepress dev"
+	@echo "[ok] starting vite dev server"
 	@cd website && npm run dev
 
 # Only removes what this makefile produces, and only gitignored paths.
 # publish/ is left alone apart from the two generated subdirs: the icon
 # scripts write publish/_icon_check, which is not ours to delete.
 clean:
-	@rm -rf bin obj "$(PUBLISH_DIR)" "$(VPACK_DIR)" artifacts RELEASE_NOTES.md DevEnv-*.zip
+	@rm -rf DevEnv/bin DevEnv/obj DevEnv.Core/bin DevEnv.Core/obj DevEnv.Tests/bin DevEnv.Tests/obj \
+		bin obj "$(PUBLISH_DIR)" "$(VPACK_DIR)" artifacts RELEASE_NOTES.md DevEnv-*.zip
 	@echo "[ok] cleaned build output"

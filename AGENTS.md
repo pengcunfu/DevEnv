@@ -12,7 +12,7 @@
 | `DevEnv/` | 主程序（`WinExe`，WPF）：全部界面、托盘、全局热键、剪贴板轮询、Velopack 安装与自更新；**程序集名 / 进程名为 `DevEnv`**（产出 `DevEnv.exe`） |
 | `DevEnv.Core/` | 应用服务层（普通类库）：数据持久化，以及熔岩 / 网络 / 进程 / 剪贴板 / 翻译 / 右键菜单 / 更新等业务编排，按功能分 `LavaEnv/`、`NetworkWatch/`、`ProcessWatch/`、`Clipboard/`、`Translator/` 子目录；界面**进程内直调**，没有 HTTP |
 | `DevEnv.Tests/` | 单元测试工程（xunit 2.9 + Microsoft.NET.Test.Sdk）：只引用 `DevEnv.Core`，覆盖纯逻辑、序列化与文件/路径处理；`make test` 执行，CI 发版前也会跑一遍 |
-| `website/` | VitePress 在线文档站 → Cloudflare Pages，项目名 `devbox-docs`，站点 https://docs.devenv.cn/ |
+| `website/` | Vue 3 + Vite 官网与文档站（首页 + `guide/**/*.md` 文档 + `/downloads` 软件下载站，正文由 markdown-it 渲染；下载站数据在 `src/data/software.json`）→ Cloudflare Pages，项目名 `devbox-docs`，站点 https://docs.devenv.cn/ |
 | `docs/` | 子项目说明文档（纯 Markdown，**不是**文档站，别往里放构建配置） |
 | `scripts/` | 发布与版本校验的 PowerShell 脚本 |
 
@@ -21,7 +21,7 @@
 ## 常用命令
 
 ```bash
-dotnet build DevEnv.sln -c Debug # 构建全部；产物在仓库根 bin/<项目名>/...
+dotnet build DevEnv.sln -c Debug # 构建全部；产物在各项目的 bin/、obj/ 下
 make run                          # 从源码跑主程序（Release，WPF 宿主）
 make test                         # 跑单元测试（DevEnv.Tests，xunit）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
@@ -39,7 +39,7 @@ cd website && npm run deploy      # 文档站构建并部署
 2. **提交信息里绝不能出现 AI 署名或生成标记**——`Co-Authored-By:`、`Generated with ...`、`Signed-off-by:` 一律不加，无论用哪个工具执行。工具默认会加，必须手动去掉。
 3. **`Makefile` 必须保持纯 ASCII**。GNU Make 在 Windows 上会转码 makefile 里的非 ASCII 文本，UTF-8 注释和字符串在 `make help` 里会变成乱码。自检：`LC_ALL=C grep -c '[^ -~\t]' Makefile` 结果必须是 `0`。中文说明写到脚本或文档里，不要写进 Makefile。
 4. **版本号有三处单一事实来源，必须同改**：`VERSION`、`DevEnv/DevEnv.csproj`（`Version` / `AssemblyVersion` / `FileVersion` / `InformationalVersion`，后两者形如 `X.Y.Z.0`）、`CHANGELOG.md` 里的 `## [x.y.z] - 日期`。改完跑 `make verify`；CI 会重复校验同一件事，不一致就构建失败。
-5. **不要改回子项目的 `bin`/`obj`**。根 `Directory.Build.props` 已把两者统一到 `bin/<项目名>/`、`obj/<项目名>/`，别在任何 csproj 里再覆盖 `BaseOutputPath` / `BaseIntermediateOutputPath`。该文件对 `*_wpftmp` 工程（WPF 标记编译的临时工程）必须跳过重定向，否则会报 `NETSDK1004` 找不到 `project.assets.json`。
+5. **构建产物保留在各项目目录**。使用 .NET SDK 默认的 `<项目目录>/bin/`、`<项目目录>/obj/`，不要通过 `Directory.Build.props` 或 csproj 重定向到仓库根目录；仓库不保留 `global.json`，使用本机安装且支持 .NET 10 的 SDK。
 6. **产品显示名与程序标识不是一回事**：界面文案 / `Product` / 托盘用「程序盒子」；程序集名、进程名、Velopack `APP_ID`、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录为 `DevEnv` / `DevEnv.Core`，命名空间为 `DevEnv.Host` / `DevEnv.Core`。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
 7. **构建产物不入库**。`website/` 的 `.gitignore` 已忽略 `node_modules`、`dist` 等；`DevEnv.Core/LavaEnv/Resources/tools/7zr.exe` 是**故意入库**的例外（缺了它，CI 全新克隆构建出的安装包无法解压 7z / tar.gz）。
 8. **全局热键跟随宿主生命周期**：主窗句柄就绪后注册，窗口关闭时释放；句柄重建时需 `Rebind` 补注册。
@@ -50,3 +50,4 @@ cd website && npm run deploy      # 文档站构建并部署
 13. **工具一律开独立非模态窗口**。`工具` 菜单下的各项走 `Infrastructure/ToolWindowHost`，不嵌入主窗内容区；新增工具时在 `ToolWindowHost.Tools` 注册即可，每工具只保留一个窗口实例。
 14. **样式不能跨兄弟类型 `BasedOn`**。WPF 只允许 `BasedOn` 自己或自己的基类；`CheckBox` 与 `RadioButton` 互不为基类，公共部分必须抽到 `ToggleButton` 基样式上。
 15. **服务层逻辑改动要配测试**。`DevEnv.Tests` 只引用 `DevEnv.Core`，测纯函数、序列化与文件/路径处理；测不了的东西（注册表、提权、进程、界面）不要硬写，要测就把逻辑抽成可注入的纯函数。涉及格式化的断言必须锁 `InvariantCulture`（见 `InvariantCultureScope`），否则换个语言环境就红。测试文件放在 `DevEnv.Tests/` 根目录，一个被测类型一个文件。
+16. **文档站不用 VitePress**。`website/` 是 Vue 3 + Vite 官网：首页为 Vue 组件，指南正文继续维护在 `website/guide/**/*.md`，由 `src/docs/markdown.ts` 渲染。不要为了加文档重新引入 VitePress 或把正文改成 Vue 组件。

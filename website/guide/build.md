@@ -3,7 +3,7 @@
 ## 环境要求
 
 - Windows 10+
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)（与仓库 `global.json` 一致）
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)（使用本机安装的 SDK，不通过 `global.json` 固定版本）
 - Git
 
 界面是原生 WPF，构建与运行不需要 Node.js。只有克隆文档站并本地预览时才需要 Node.js 20+。
@@ -21,7 +21,7 @@ dotnet build DevEnv.sln -c Debug
 make run CONFIG=Debug
 ```
 
-编译产物位于仓库根目录 `bin/<项目名>/`、`obj/<项目名>/`（见根 `Directory.Build.props`）。
+编译产物位于各项目自己的 `bin/`、`obj/` 目录，例如 `DevEnv/bin/Debug/net10.0-windows/DevEnv.exe`、`DevEnv.Core/bin/Debug/net10.0-windows/`。`make clean` 会清理各项目产物，并兼容清理旧的仓库根目录 `bin/`、`obj/` 残留。
 
 设置 `DarkMode` 为 true（或在「设置」页勾选深色模式）即可切换深色主题。调试时可用环境变量直接启动到指定页：`DEVENV_START_PAGE=lava make run`。
 
@@ -72,15 +72,18 @@ vpk pack -u DevEnv -v 1.2.0 -r win-x64 ^
 
 应用内版本从程序集信息读取。
 
-## 文档站点（VitePress → Cloudflare Pages）
+## 文档站点（Vue + Vite → Cloudflare Pages）
 
 项目名：`devbox-docs` · 线上地址：**https://docs.devenv.cn/**（备用 `https://devbox-docs.pages.dev/`）
+
+站点首页是 Vue 组件，指南正文仍以 Markdown 维护在 `website/guide/`，由 `markdown-it` 渲染，不再使用 VitePress。
 
 ```bash
 cd website
 npm install
-npm run dev       # 本地预览
-npm run build     # 输出到 website/dist
+npm run dev       # 本地预览（Vite 开发服务器）
+npm run build     # 预渲染静态页面到 website/dist
+npm run preview   # 本地预览构建产物
 npm run deploy    # 构建并部署（等价于 .\deploy.ps1）
 ```
 

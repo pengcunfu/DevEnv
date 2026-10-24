@@ -19,6 +19,8 @@
 
 ### Changed
 
+- 构建产物恢复到各项目自己的 `bin/`、`obj/` 目录，移除根目录的路径重定向配置 `Directory.Build.props`；`make clean` 同步清理各项目产物与旧根目录残留
+- 移除根目录 `global.json`，不再固定 .NET SDK 版本，使用本机安装的 SDK（构建仍需支持 .NET 10）
 - **工程统一更名为 DevEnv**：`DevBox.Host/` → `DevEnv/`（工程 `DevEnv.csproj`）、`DevBox.Core/` → `DevEnv.Core/`；命名空间同步为 `DevEnv.Host.*` / `DevEnv.Core.*`。程序集名、进程名、Velopack `APP_ID` 与用户数据目录本就是 `DevEnv`，旧版 `文档\FNSoftware\DevBox` 的数据迁移逻辑不变
 - **目录结构整合**：`Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` / `MenuManager` 六个独立工程并入 `DevEnv.Core` 与 `DevEnv.Host`，解决方案只保留这两个工程；模块命名空间统一为 `DevEnv.Core.<模块>.*`，配置与用户数据路径保持不变
 - **技术栈切换为原生 WPF**：主界面、设置、系统工具、熔岩、网络 / 进程监控、剪贴板全部改为 WPF 原生界面（CommunityToolkit.Mvvm + 两套主题，浅色 / 深色）

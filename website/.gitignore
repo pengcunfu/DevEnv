@@ -5,8 +5,11 @@
 # 依赖与构建产物
 node_modules/
 dist/
-.vitepress/dist/
-.vitepress/cache/
+.vite/
+
+# Python 脚本缓存（scripts/check_links.py 等）
+__pycache__/
+*.py[cod]
 
 # Cloudflare Pages / Wrangler
 .wrangler/
