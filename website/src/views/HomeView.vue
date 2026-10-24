@@ -2,7 +2,6 @@
 import { RouterLink } from 'vue-router'
 import AppPreview from '@/components/AppPreview.vue'
 import FeatureIcon from '@/components/FeatureIcon.vue'
-import { docs } from '@/docs/registry'
 import { repoUrl, releasesUrl } from '@/docs/nav'
 import { softwareSchema, sourceCodeSchema, websiteSchema } from '@/seo/schema'
 import { useSeo } from '@/seo/useSeo'
@@ -150,15 +149,6 @@ const steps = [
         <div class="hero-visual">
           <AppPreview />
         </div>
-      </div>
-    </section>
-
-    <section class="stats">
-      <div class="container stats-grid">
-        <div><strong>8</strong><span>功能模块</span></div>
-        <div><strong>1</strong><span>统一入口</span></div>
-        <div><strong>{{ docs.length }}</strong><span>篇使用文档</span></div>
-        <div><strong>Apache 2.0</strong><span>开源协议</span></div>
       </div>
     </section>
 
@@ -430,37 +420,6 @@ const steps = [
 
 .hero-visual {
   position: relative;
-}
-
-/* Stats */
-.stats {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 26px 24px;
-}
-
-.stats-grid div {
-  text-align: center;
-}
-
-.stats-grid strong {
-  display: block;
-  color: var(--text);
-  font-size: 26px;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-}
-
-.stats-grid span {
-  color: var(--muted);
-  font-size: 12px;
 }
 
 /* Sections */
@@ -759,11 +718,6 @@ const steps = [
 
   .section {
     padding: 62px 0;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 22px;
   }
 
   .step-grid {
