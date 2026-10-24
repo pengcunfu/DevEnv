@@ -1,4 +1,6 @@
-# DevEnv
+# 燧岚开发盒子 · DevEnv
+
+FireNeb 出品的 Windows 开发环境管理工具，中文名「燧岚开发盒子」，英文名保持 **DevEnv**，官网/文档域名 **devenv.cn**。
 
 [![Release](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/release/pengcunfu/DevEnv?label=release)](https://github.com/pengcunfu/DevEnv/releases/latest)
@@ -7,7 +9,7 @@
 
 Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿色版环境、熔岩网页翻译、网络监控、进程监控、熔岩剪贴板、系统工具快捷入口。
 
-**当前版本：1.2.0** · 开源协议：[Apache License 2.0](LICENSE)
+**当前版本：1.2.0** · 品牌：[FireNeb](https://fireneb.com) · 开源协议：[Apache License 2.0](LICENSE)
 
 ## 下载与更新
 
@@ -15,7 +17,7 @@ Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿
 
 ## 文档
 
-完整使用与发版说明见在线文档：**https://docs.devenv.cn/**
+完整使用与发版说明见在线文档：**https://docs.devenv.cn/**（站点域名 [devenv.cn](https://devenv.cn)）
 
 本地预览 / 部署文档：
 

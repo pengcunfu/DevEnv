@@ -10,10 +10,10 @@ import { useSeo } from '@/seo/useSeo'
 const version = __APP_VERSION__
 
 const description =
-  '程序盒子（DevEnv）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控与剪贴板历史。基于 .NET 10 + WPF，Apache 2.0 开源。'
+  '燧岚开发盒子（DevEnv，FireNeb）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控与剪贴板历史。基于 .NET 10 + WPF，Apache 2.0 开源。'
 
 useSeo({
-  title: 'DevEnv · 程序盒子 — Windows 开发环境管理工具',
+  title: 'DevEnv · 燧岚开发盒子 — Windows 开发环境管理工具',
   description,
   path: '/',
   jsonLd: [
@@ -117,10 +117,10 @@ const steps = [
         <div class="hero-copy">
           <p class="eyebrow">
             <span class="pulse"></span>
-            v{{ version }} · Apache 2.0 开源 · Windows 10+
+            FireNeb · v{{ version }} · Apache 2.0 开源 · Windows 10+
           </p>
           <h1>
-            <span class="hero-name">程序盒子</span>
+            <span class="hero-name">燧岚开发盒子</span>
             <span class="hero-en">DevEnv</span>
           </h1>
           <p class="hero-tagline">
@@ -216,7 +216,7 @@ const steps = [
       <div class="container download-panel">
         <div class="download-copy">
           <p class="eyebrow">下载</p>
-          <h2>下载程序盒子 v{{ version }}</h2>
+          <h2>下载燧岚开发盒子 v{{ version }}</h2>
           <p>
             提供 Windows x64 安装包与便携版。安装器为框架依赖发布，缺少 .NET 10 Desktop Runtime
             时会自动安装。

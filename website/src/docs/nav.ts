@@ -17,6 +17,12 @@ export const issuesUrl = `${repoUrl}/issues`
 export const siteUrl = 'https://docs.devenv.cn'
 export const editBase = `${repoUrl}/edit/master/website/`
 
+/** 友链：品牌站与作者站点。 */
+export const friendLinks = [
+  { text: 'FireNeb', url: 'https://fireneb.com' },
+  { text: 'Sigxor', url: 'https://sigxor.cn' },
+]
+
 export const primaryNav = [
   { text: '功能', path: '/guide/features' },
   { text: '文档', path: '/guide/getting-started' },
@@ -34,13 +40,13 @@ export const sidebarGroups: SidebarGroup[] = [
         text: '快速开始',
         path: '/guide/getting-started',
         description:
-          '从 GitHub Releases 下载 DevEnv（程序盒子）Windows 安装包，完成首次启动与数据目录初始化，并了解应用内自动更新。',
+          '从 GitHub Releases 下载燧岚开发盒子（DevEnv）Windows 安装包，完成首次启动与数据目录初始化，并了解应用内自动更新。',
       },
       {
         text: '开源协议',
         path: '/guide/license',
         description:
-          'DevEnv（程序盒子）采用 Apache License 2.0 开源，可自由使用、修改与分发；了解版权与归属声明、修改标注、专利授权与免责声明。',
+          '燧岚开发盒子（DevEnv，FireNeb）采用 Apache License 2.0 开源，可自由使用、修改与分发；了解版权与归属声明、修改标注、专利授权与免责声明。',
       },
     ],
   },

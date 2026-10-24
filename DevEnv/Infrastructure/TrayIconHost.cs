@@ -46,7 +46,7 @@ internal sealed class TrayIconHost : IDisposable
             return;
         try
         {
-            _notifyIcon.ShowBalloonTip(2000, "程序盒子", message, icon);
+            _notifyIcon.ShowBalloonTip(2000, "燧岚开发盒子", message, icon);
         }
         catch
         {

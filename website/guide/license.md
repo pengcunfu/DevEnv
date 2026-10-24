@@ -1,6 +1,6 @@
 # 开源协议
 
-本项目以 **Apache License 2.0** 开源，版权归 [pengcunfu](https://github.com/pengcunfu) 所有，归属声明见 [NOTICE](https://github.com/pengcunfu/DevEnv/blob/master/NOTICE)。
+燧岚开发盒子（DevEnv，品牌 [FireNeb](https://fireneb.com)）以 **Apache License 2.0** 开源，版权归 [pengcunfu](https://github.com/pengcunfu) 所有，归属声明见 [NOTICE](https://github.com/pengcunfu/DevEnv/blob/master/NOTICE)。
 
 ## 你可以
 

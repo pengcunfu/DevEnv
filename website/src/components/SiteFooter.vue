@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { issuesUrl, repoUrl, releasesUrl } from '@/docs/nav'
+import { friendLinks, issuesUrl, repoUrl, releasesUrl } from '@/docs/nav'
 
 const version = __APP_VERSION__
 </script>
@@ -11,14 +11,14 @@ const version = __APP_VERSION__
         <div class="footer-logo">
           <img src="/logo.svg" alt="" width="34" height="34" />
           <div>
-            <strong>程序盒子</strong>
-            <span>DevEnv v{{ version }}</span>
+            <strong>燧岚开发盒子</strong>
+            <span>FireNeb · DevEnv v{{ version }}</span>
           </div>
         </div>
         <p>
           Windows 桌面开发环境管理工具。把熔岩环境、网页翻译、网络与进程监控、剪贴板历史收进同一个盒子。
         </p>
-        <p class="footer-license">Apache License 2.0 · 永久免费</p>
+        <p class="footer-license">Apache License 2.0 · FireNeb</p>
       </div>
 
       <div class="footer-col">
@@ -47,10 +47,23 @@ const version = __APP_VERSION__
         </a>
         <a href="https://docs.devenv.cn/" target="_blank" rel="noopener noreferrer">在线文档</a>
       </div>
+
+      <div class="footer-col">
+        <p class="footer-col-title">友链</p>
+        <a
+          v-for="link in friendLinks"
+          :key="link.url"
+          :href="link.url"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ link.text }}
+        </a>
+      </div>
     </div>
 
     <div class="site-footer-bottom">
-      <span>© 2025–2026 pengcunfu · 程序盒子 DevEnv</span>
+      <span>© 2025–2026 FireNeb · 燧岚开发盒子 DevEnv · devenv.cn</span>
       <span>基于 Vue 3 + Vite 构建 · 文档以 Markdown 编写</span>
     </div>
   </footer>
@@ -64,8 +77,8 @@ const version = __APP_VERSION__
 
 .site-footer-inner {
   display: grid;
-  grid-template-columns: 1.8fr repeat(3, 1fr);
-  gap: 48px;
+  grid-template-columns: 1.8fr repeat(4, 1fr);
+  gap: 40px;
   max-width: 1200px;
   margin: 0 auto;
   padding: 56px 24px 40px;
@@ -146,6 +159,10 @@ const version = __APP_VERSION__
   .site-footer-inner {
     grid-template-columns: 1fr 1fr;
     gap: 36px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
   }
 }
 

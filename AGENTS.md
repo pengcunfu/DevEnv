@@ -5,7 +5,7 @@
 
 ## 项目是什么
 
-**DevEnv**（产品显示名「程序盒子」）是 Windows 桌面工具：.NET 10 + 原生 WPF 界面，把开发环境管理和几个自研小工具收进同一个壳。只有熔岩翻译窗内嵌 WebView2（DOM 填充需要真实浏览器）。解决方案文件是 `DevEnv.sln`。
+**DevEnv**（产品显示名「燧岚开发盒子」，品牌 FireNeb）是 Windows 桌面工具：.NET 10 + 原生 WPF 界面，把开发环境管理和几个自研小工具收进同一个壳。只有熔岩翻译窗内嵌 WebView2（DOM 填充需要真实浏览器）。解决方案文件是 `DevEnv.sln`。
 
 | 路径 | 角色 |
 |------|------|
@@ -40,7 +40,7 @@ cd website && npm run deploy      # 文档站构建并部署
 3. **`Makefile` 必须保持纯 ASCII**。GNU Make 在 Windows 上会转码 makefile 里的非 ASCII 文本，UTF-8 注释和字符串在 `make help` 里会变成乱码。自检：`LC_ALL=C grep -c '[^ -~\t]' Makefile` 结果必须是 `0`。中文说明写到脚本或文档里，不要写进 Makefile。
 4. **版本号有三处单一事实来源，必须同改**：`VERSION`、`DevEnv/DevEnv.csproj`（`Version` / `AssemblyVersion` / `FileVersion` / `InformationalVersion`，后两者形如 `X.Y.Z.0`）、`CHANGELOG.md` 里的 `## [x.y.z] - 日期`。改完跑 `make verify`；CI 会重复校验同一件事，不一致就构建失败。
 5. **构建产物保留在各项目目录**。使用 .NET SDK 默认的 `<项目目录>/bin/`、`<项目目录>/obj/`，不要通过 `Directory.Build.props` 或 csproj 重定向到仓库根目录；仓库不保留 `global.json`，使用本机安装且支持 .NET 10 的 SDK。
-6. **产品显示名与程序标识不是一回事**：界面文案 / `Product` / 托盘用「程序盒子」；程序集名、进程名、Velopack `APP_ID`、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录为 `DevEnv` / `DevEnv.Core`，命名空间为 `DevEnv.Host` / `DevEnv.Core`。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
+6. **品牌、显示名与程序标识不是一回事**：品牌名为 **FireNeb**；界面文案 / `Product` / 托盘用「燧岚开发盒子」；英文名、程序集名、进程名、Velopack `APP_ID`、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录为 `DevEnv` / `DevEnv.Core`，命名空间为 `DevEnv.Host` / `DevEnv.Core`。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
 7. **构建产物不入库**。`website/` 的 `.gitignore` 已忽略 `node_modules`、`dist` 等；`DevEnv.Core/LavaEnv/Resources/tools/7zr.exe` 是**故意入库**的例外（缺了它，CI 全新克隆构建出的安装包无法解压 7z / tar.gz）。
 8. **全局热键跟随宿主生命周期**：主窗句柄就绪后注册，窗口关闭时释放；句柄重建时需 `Rebind` 补注册。
 9. **改功能就同步文档**：模块级改动更新 `website/guide/` 下对应指南与 `CHANGELOG.md`；发版流程见 `website/guide/releases.md`。

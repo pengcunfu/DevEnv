@@ -6,7 +6,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="程序盒子"
+        Title="燧岚开发盒子"
         Width="1100"
         Height="700"
         MinWidth="900"
@@ -39,7 +39,7 @@
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)" Command="{Binding NavigateToCommand}" CommandParameter="settings" />
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_帮助(H)">
                 <MenuItem Header="官方文档(_D)" Command="{Binding OpenDocsCommand}" />
-                <MenuItem Header="关于程序盒子(_A)..." Command="{Binding AboutCommand}" />
+                <MenuItem Header="关于燧岚开发盒子(_A)..." Command="{Binding AboutCommand}" />
             </MenuItem>
         </Menu>
 

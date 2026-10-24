@@ -45,7 +45,7 @@ public static class HostServices
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"无法打开目录：{ex.Message}", "程序盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"无法打开目录：{ex.Message}", "燧岚开发盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -57,7 +57,7 @@ public static class HostServices
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"无法打开链接：{ex.Message}", "程序盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Windows.MessageBox.Show($"无法打开链接：{ex.Message}", "燧岚开发盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

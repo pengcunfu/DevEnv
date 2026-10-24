@@ -56,7 +56,7 @@ dotnet publish DevEnv/DevEnv.csproj ^
 dotnet tool install -g vpk --version 1.2.0
 vpk pack -u DevEnv -v 1.2.0 -r win-x64 ^
   -p ./publish/win-x64 -o ./publish/velopack ^
-  -e DevEnv.exe --packTitle DevEnv --packAuthors FNSoftware ^
+  -e DevEnv.exe --packTitle DevEnv --packAuthors FireNeb ^
   -i DevEnv/Resources/icon.ico --framework net10-x64-desktop
 ```
 

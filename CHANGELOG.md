@@ -19,6 +19,7 @@
 
 ### Changed
 
+- 产品中文显示名由「程序盒子」更名为「燧岚开发盒子」，品牌名 **FireNeb**；英文名、`DevEnv.exe`、Velopack `APP_ID` 与用户数据目录保持不变。官网与文档站同步更新品牌、域名与友链（FireNeb / Sigxor），开机自启注册表项在下次切换时自动清理旧名称
 - 开源协议由 MIT 变更为 **Apache License 2.0**：根目录 `LICENSE` 换为 Apache 2.0 全文，新增 `NOTICE` 承载版权与归属声明；NuGet `PackageLicenseExpression`、README 与官网相关文案同步更新。此前已发布的版本仍按当时的 MIT 协议授权
 - 仓库地址由 `github.com/pengcunfu/DevBox.Net` 更名为 `github.com/pengcunfu/DevEnv`：README、官网文档、`RepositoryUrl` 与自更新源（`UpdateService` / `AppInfo`）同步更新
 - 构建产物恢复到各项目自己的 `bin/`、`obj/` 目录，移除根目录的路径重定向配置 `Directory.Build.props`；`make clean` 同步清理各项目产物与旧根目录残留

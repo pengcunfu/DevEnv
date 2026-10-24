@@ -3,10 +3,11 @@ import { absoluteUrl, siteName } from './useSeo'
 
 const publisher = {
   '@type': 'Organization',
-  name: '程序盒子',
+  name: 'FireNeb',
+  alternateName: '燧岚开发盒子',
   url: `${siteUrl}/`,
   logo: `${siteUrl}/logo.svg`,
-  sameAs: [repoUrl],
+  sameAs: [repoUrl, 'https://fireneb.com'],
 }
 
 export function websiteSchema(): Record<string, unknown> {
@@ -25,7 +26,7 @@ export function softwareSchema(version: string, description: string): Record<str
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: '程序盒子（DevEnv）',
+    name: '燧岚开发盒子（DevEnv）',
     alternateName: 'DevEnv',
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Windows 10, Windows 11',
@@ -34,6 +35,10 @@ export function softwareSchema(version: string, description: string): Record<str
     url: `${siteUrl}/`,
     downloadUrl: releasesUrl,
     license: 'https://www.apache.org/licenses/LICENSE-2.0',
+    brand: {
+      '@type': 'Brand',
+      name: 'FireNeb',
+    },
     inLanguage: 'zh-CN',
     offers: {
       '@type': 'Offer',
@@ -49,7 +54,7 @@ export function sourceCodeSchema(version: string, description: string): Record<s
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareSourceCode',
-    name: '程序盒子（DevEnv）',
+    name: '燧岚开发盒子（DevEnv）',
     description,
     codeRepository: repoUrl,
     programmingLanguage: 'C#',

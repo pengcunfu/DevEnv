@@ -36,7 +36,7 @@ endif
 #  CONFIG - keep in sync with .github/workflows/release.yml
 # ============================================================
 APP_ID      := DevEnv
-COMPANY     := FNSoftware
+COMPANY     := FireNeb
 CSPROJ      := DevEnv/DevEnv.csproj
 ICON        := DevEnv/Resources/icon.ico
 RUNTIME     := win-x64

@@ -76,7 +76,7 @@ public partial class App : System.Windows.Application
 
         SingleInstance.StartActivateListener(Dispatcher, ShowMainWindow);
 
-        _tray = new TrayIconHost("程序盒子", LoadAppIcon());
+        _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
         _tray.ShowWindowRequested += ShowMainWindow;
         _tray.TranslatorRequested += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest { Visible = true }));
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
@@ -431,7 +431,7 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"无法重启: {ex.Message}", "程序盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Windows.MessageBox.Show($"无法重启: {ex.Message}", "燧岚开发盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

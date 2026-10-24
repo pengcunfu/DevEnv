@@ -2,7 +2,7 @@ import { useHead } from '@unhead/vue'
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { siteUrl } from '@/docs/nav'
 
-export const siteName = 'DevEnv · 程序盒子'
+export const siteName = 'DevEnv · 燧岚开发盒子'
 
 /**
  * 社交平台大多不识别 SVG，条件允许时把这里换成 1200×630 的 PNG（放到 public/ 下）。

@@ -25,7 +25,7 @@ function closeMobile(): void {
     <div class="site-header-inner">
       <RouterLink to="/" class="brand" @click="closeMobile">
         <img src="/logo.svg" alt="" width="30" height="30" />
-        <span class="brand-name">程序盒子</span>
+        <span class="brand-name">燧岚开发盒子</span>
         <span class="brand-sub">DevEnv</span>
       </RouterLink>
 
