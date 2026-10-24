@@ -14,8 +14,8 @@ public static class AppInfo
     /// <summary>产品定位一句话描述。</summary>
     public const string ProductTagline = "开源智能开发环境管理工具，为多语言与全栈开发者提供一键下载、配置与管理";
 
-    /// <summary>GitHub 仓库地址（已并入 DevBox.Net）。</summary>
-    public const string RepositoryUrl = "https://github.com/pengcunfu/DevBox.Net";
+    /// <summary>GitHub 仓库地址（DevEnv）。</summary>
+    public const string RepositoryUrl = "https://github.com/pengcunfu/DevEnv";
 
     /// <summary>GitHub Pages 帮助文档（熔岩环境章节）。</summary>
     public const string DocsUrl = "https://docs.devenv.cn/guide/lava/getting-started";

@@ -1,9 +1,9 @@
 # DevEnv
 
-[![Release](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml)
-[![Version](https://img.shields.io/github/v/release/pengcunfu/DevBox.Net?label=release)](https://github.com/pengcunfu/DevBox.Net/releases/latest)
+[![Release](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml)
+[![Version](https://img.shields.io/github/v/release/pengcunfu/DevEnv?label=release)](https://github.com/pengcunfu/DevEnv/releases/latest)
 [![Docs](https://img.shields.io/badge/docs-docs.devenv.cn-blue)](https://docs.devenv.cn/)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/pengcunfu/DevBox.Net/blob/master/LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/pengcunfu/DevEnv/blob/master/LICENSE)
 
 Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿色版环境、熔岩网页翻译、网络监控、进程监控、熔岩剪贴板、系统工具快捷入口。
 
@@ -11,7 +11,7 @@ Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿
 
 ## 下载与更新
 
-从 [Releases](https://github.com/pengcunfu/DevBox.Net/releases/latest) 下载 `DevEnv-win-Setup.exe` 安装包并安装（若缺少 .NET 10 Desktop Runtime，安装器会自动安装）。安装后可在设置页「检查更新」自动升级，无需手动下载覆盖。
+从 [Releases](https://github.com/pengcunfu/DevEnv/releases/latest) 下载 `DevEnv-win-Setup.exe` 安装包并安装（若缺少 .NET 10 Desktop Runtime，安装器会自动安装）。安装后可在设置页「检查更新」自动升级，无需手动下载覆盖。
 
 ## 文档
 
@@ -34,8 +34,8 @@ npm run deploy    # 构建并部署到 Cloudflare Pages（首次会浏览器登�
 ## 从源码运行
 
 ```bash
-git clone https://github.com/pengcunfu/DevBox.Net.git
-cd DevBox.Net
+git clone https://github.com/pengcunfu/DevEnv.git
+cd DevEnv
 
 dotnet restore
 make run CONFIG=Debug
@@ -54,7 +54,7 @@ make test          # 服务层单元测试（DevEnv.Tests）
 
 ## 参与贡献
 
-欢迎提交 Issue 与 Pull Request。仓库地址：[pengcunfu/DevBox.Net](https://github.com/pengcunfu/DevBox.Net)
+欢迎提交 Issue 与 Pull Request。仓库地址：[pengcunfu/DevEnv](https://github.com/pengcunfu/DevEnv)
 
 ## 许可证
 

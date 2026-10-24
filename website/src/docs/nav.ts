@@ -10,7 +10,7 @@ export interface SidebarGroup {
   items: SidebarItem[]
 }
 
-export const repo = 'pengcunfu/DevBox.Net'
+export const repo = 'pengcunfu/DevEnv'
 export const repoUrl = `https://github.com/${repo}`
 export const releasesUrl = `${repoUrl}/releases/latest`
 export const issuesUrl = `${repoUrl}/issues`

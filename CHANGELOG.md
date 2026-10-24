@@ -20,7 +20,7 @@
 ### Changed
 
 - 开源协议由 MIT 变更为 **Apache License 2.0**：根目录 `LICENSE` 换为 Apache 2.0 全文，新增 `NOTICE` 承载版权与归属声明；NuGet `PackageLicenseExpression`、README 与官网相关文案同步更新。此前已发布的版本仍按当时的 MIT 协议授权
-
+- 仓库地址由 `github.com/pengcunfu/DevBox.Net` 更名为 `github.com/pengcunfu/DevEnv`：README、官网文档、`RepositoryUrl` 与自更新源（`UpdateService` / `AppInfo`）同步更新
 - 构建产物恢复到各项目自己的 `bin/`、`obj/` 目录，移除根目录的路径重定向配置 `Directory.Build.props`；`make clean` 同步清理各项目产物与旧根目录残留
 - 移除根目录 `global.json`，不再固定 .NET SDK 版本，使用本机安装的 SDK（构建仍需支持 .NET 10）
 - **工程统一更名为 DevEnv**：`DevBox.Host/` → `DevEnv/`（工程 `DevEnv.csproj`）、`DevBox.Core/` → `DevEnv.Core/`；命名空间同步为 `DevEnv.Host.*` / `DevEnv.Core.*`。程序集名、进程名、Velopack `APP_ID` 与用户数据目录本就是 `DevEnv`，旧版 `文档\FNSoftware\DevBox` 的数据迁移逻辑不变
@@ -110,7 +110,7 @@
 - VitePress 在线文档与 GitHub Pages 部署
 - MIT 开源协议
 
-[Unreleased]: https://github.com/pengcunfu/DevBox.Net/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/pengcunfu/DevBox.Net/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/pengcunfu/DevBox.Net/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/pengcunfu/DevBox.Net/releases/tag/v1.0.0
+[Unreleased]: https://github.com/pengcunfu/DevEnv/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/pengcunfu/DevEnv/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/pengcunfu/DevEnv/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/pengcunfu/DevEnv/releases/tag/v1.0.0

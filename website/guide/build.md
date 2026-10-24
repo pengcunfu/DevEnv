@@ -11,8 +11,8 @@
 ## 克隆与运行（开发）
 
 ```bash
-git clone https://github.com/pengcunfu/DevBox.Net.git
-cd DevBox.Net
+git clone https://github.com/pengcunfu/DevEnv.git
+cd DevEnv
 
 dotnet restore
 dotnet build DevEnv.sln -c Debug

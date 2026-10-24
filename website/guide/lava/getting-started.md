@@ -17,7 +17,7 @@
 
 ## 打开方式
 
-1. 安装并启动 [DevEnv](https://github.com/pengcunfu/DevBox.Net/releases/latest)。
+1. 安装并启动 [DevEnv](https://github.com/pengcunfu/DevEnv/releases/latest)。
 2. 在左侧导航选择 **熔岩环境**。
 3. 顶栏提供软件下载、下载管理、环境扫描、镜像配置，以及「工具」下拉（环境变量 / 应用目录 / 数据目录）。
 

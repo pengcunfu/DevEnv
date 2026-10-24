@@ -2,7 +2,7 @@
 
 ## 找不到「熔岩环境」？
 
-请确认使用的是已嵌入熔岩模块的 DevEnv 版本。左侧导航应包含 **熔岩环境** Tab；若没有，请升级到最新 [Release](https://github.com/pengcunfu/DevBox.Net/releases/latest)。
+请确认使用的是已嵌入熔岩模块的 DevEnv 版本。左侧导航应包含 **熔岩环境** Tab；若没有，请升级到最新 [Release](https://github.com/pengcunfu/DevEnv/releases/latest)。
 
 ## 无法编辑 Hosts 文件
 
@@ -37,4 +37,4 @@ ipconfig /flushdns
 ## 文档与反馈
 
 - 帮助文档：<https://docs.devenv.cn/guide/lava/getting-started>
-- 问题反馈：<https://github.com/pengcunfu/DevBox.Net/issues>
+- 问题反馈：<https://github.com/pengcunfu/DevEnv/issues>

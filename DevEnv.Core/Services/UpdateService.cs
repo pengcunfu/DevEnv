@@ -10,7 +10,7 @@ namespace DevEnv.Core.Services;
 /// </summary>
 public sealed class UpdateService
 {
-    private const string GithubRepo = "https://github.com/pengcunfu/DevBox.Net";
+    private const string GithubRepo = "https://github.com/pengcunfu/DevEnv";
     private const string FeedEnvVar = "DEVBOX_UPDATE_FEED";
 
     private UpdateInfo? _pending;
