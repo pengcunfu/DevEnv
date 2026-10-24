@@ -1,34 +1,106 @@
 <script setup lang="ts">
-import { useHead } from '@unhead/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import CategorySection from '@/components/downloads/CategorySection.vue'
 import {
   categoryAnchor,
+  categoryPagePath,
   downloadCategories,
   downloadData,
   downloadStats,
   type DownloadCategory,
 } from '@/downloads/software'
 import { editBase, issuesUrl, repoUrl } from '@/docs/nav'
+import { breadcrumbSchema, collectionSchema } from '@/seo/schema'
+import { absoluteUrl, useSeo } from '@/seo/useSeo'
 
+const route = useRoute()
 const query = ref('')
-const view = ref('all')
 const contentRef = ref<HTMLElement>()
+
+/** 分类独立页（/downloads/java）对应的分类；/downloads 本身为空。 */
+const routeCategory = computed<DownloadCategory | undefined>(() => {
+  const anchor = route.meta.category
+  if (typeof anchor !== 'string') return undefined
+  return downloadCategories.find((category) => categoryAnchor(category) === anchor)
+})
+
+const view = ref(routeCategory.value ? categoryAnchor(routeCategory.value) : 'all')
 
 const keyword = computed(() => query.value.trim().toLowerCase())
 
 const dataEditUrl = `${editBase}src/data/software.json`
 const dataFormatUrl = `${repoUrl}/blob/master/website/docs/DATA_FORMAT.md`
 
-useHead({
-  title: '开发环境下载站 · DevEnv',
-  meta: [
-    {
-      name: 'description',
-      content:
-        '常用开发环境与工具安装包下载导航（国内镜像加速）：Java、Python、PHP、Node.js、Web 服务器、数据库、缓存、编辑器、AI 与 API 工具等。',
-    },
-  ],
+const downloadDescription =
+  'Windows 常用开发环境与工具安装包下载导航（国内镜像加速）：Java、Python、PHP、Node.js、Web 服务器、数据库、缓存、编辑器、AI 与 API 工具，附官网与 GitHub 来源。'
+
+function categoryDescription(category: DownloadCategory): string {
+  const names = category.softwares
+    .slice(0, 6)
+    .map((software) => software.name)
+    .join('、')
+  const more = category.softwares.length > 6 ? ' 等' : ''
+  return `${category.name} 开发工具下载：${names}${more}，共 ${category.softwares.length} 个软件，提供国内镜像、官网与 GitHub 地址，适用于 Windows 开发环境。`
+}
+
+const pagePath = computed(() =>
+  routeCategory.value ? categoryPagePath(routeCategory.value) : '/downloads',
+)
+
+const pageTitle = computed(() =>
+  routeCategory.value
+    ? `${routeCategory.value.name} 下载 · 镜像、官网与 GitHub 地址 · DevEnv`
+    : '开发环境下载站 · Java、Python、Node.js 镜像加速 · DevEnv',
+)
+
+const pageDescription = computed(() =>
+  routeCategory.value ? categoryDescription(routeCategory.value) : downloadDescription,
+)
+
+const seoJsonLd = computed(() => {
+  const category = routeCategory.value
+  if (!category) {
+    return [
+      collectionSchema({
+        name: '开发环境下载站',
+        description: downloadDescription,
+        path: '/downloads',
+        items: downloadCategories.map((item) => ({
+          name: item.name,
+          url: absoluteUrl(categoryPagePath(item)),
+        })),
+      }),
+      breadcrumbSchema([{ name: '首页', path: '/' }, { name: '开发环境下载站' }]),
+    ]
+  }
+
+  return [
+    collectionSchema({
+      name: `${category.name} 下载`,
+      description: categoryDescription(category),
+      path: pagePath.value,
+      items: category.softwares.map((software) => ({
+        name: software.name,
+        url:
+          software.official_site ||
+          software.versions[0]?.url ||
+          absoluteUrl(pagePath.value),
+      })),
+    }),
+    breadcrumbSchema([
+      { name: '首页', path: '/' },
+      { name: '开发环境下载站', path: '/downloads' },
+      { name: category.name },
+    ]),
+  ]
+})
+
+useSeo({
+  title: pageTitle,
+  description: pageDescription,
+  path: pagePath,
+  jsonLd: seoJsonLd,
 })
 
 function viewFromHash(hash: string): string {
@@ -38,7 +110,9 @@ function viewFromHash(hash: string): string {
   return 'all'
 }
 
+// 旧的 /downloads#cat-xxx 深链仍然可用；分类独立页以路由为准。
 function syncFromHash(): void {
+  if (routeCategory.value) return
   view.value = viewFromHash(window.location.hash)
 }
 
@@ -48,6 +122,18 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => window.removeEventListener('hashchange', syncFromHash))
+
+watch(
+  () => route.meta.category,
+  () => {
+    if (routeCategory.value) {
+      view.value = categoryAnchor(routeCategory.value)
+      query.value = ''
+      return
+    }
+    syncFromHash()
+  },
+)
 
 // 分类视图切换后内容高度会变化；等 DOM 更新完再回到列表顶部，
 // 避免锚点跳转后因旧滚动位置落到页面底部。
@@ -60,9 +146,12 @@ watch(view, async () => {
 // 无搜索词时按当前视图（全部分类或单个分类）展示。
 const categories = computed<DownloadCategory[]>(() => {
   const q = keyword.value
+  // 分类独立页只在当前分类内搜索，避免页面内容与标题 / canonical 不一致。
+  const pool = routeCategory.value ? [routeCategory.value] : downloadCategories
+
   if (q) {
     const matched: DownloadCategory[] = []
-    for (const category of downloadCategories) {
+    for (const category of pool) {
       const softwares = category.softwares.filter(
         (software) =>
           software.name.toLowerCase().includes(q) ||
@@ -74,8 +163,8 @@ const categories = computed<DownloadCategory[]>(() => {
     return matched
   }
 
-  if (view.value === 'all') return downloadCategories
-  return downloadCategories.filter((category) => categoryAnchor(category) === view.value)
+  if (view.value === 'all') return pool
+  return pool.filter((category) => categoryAnchor(category) === view.value)
 })
 
 const totalMatched = computed(() =>
@@ -92,9 +181,16 @@ function isActive(category: DownloadCategory | null): boolean {
   <div class="downloads-page">
     <section class="downloads-hero">
       <div class="downloads-container">
+        <nav v-if="routeCategory" class="downloads-breadcrumb" aria-label="面包屑">
+          <RouterLink to="/">首页</RouterLink>
+          <span aria-hidden="true">/</span>
+          <RouterLink to="/downloads">开发环境下载站</RouterLink>
+          <span aria-hidden="true">/</span>
+          <span class="current">{{ routeCategory.name }}</span>
+        </nav>
         <p class="eyebrow"><span class="pulse"></span> Downloads</p>
-        <h1>{{ downloadData.sitename }}</h1>
-        <p class="lead">{{ downloadData.description }}</p>
+        <h1>{{ routeCategory ? routeCategory.name + ' 下载' : downloadData.sitename }}</h1>
+        <p class="lead">{{ routeCategory ? pageDescription : downloadData.description }}</p>
 
         <div class="downloads-stats">
           <span><strong>{{ downloadStats.categories }}</strong> 个分类</span>
@@ -132,15 +228,15 @@ function isActive(category: DownloadCategory | null): boolean {
 
     <nav class="downloads-nav" aria-label="软件分类导航">
       <div class="downloads-container downloads-nav-inner">
-        <a :class="{ active: isActive(null) }" href="#all">全部</a>
-        <a
+        <RouterLink :class="{ active: isActive(null) }" to="/downloads">全部</RouterLink>
+        <RouterLink
           v-for="category in downloadCategories"
           :key="category.name"
           :class="{ active: isActive(category) }"
-          :href="'#' + categoryAnchor(category)"
+          :to="categoryPagePath(category)"
         >
           {{ category.name }}
-        </a>
+        </RouterLink>
       </div>
     </nav>
 
@@ -214,6 +310,29 @@ function isActive(category: DownloadCategory | null): boolean {
 .downloads-hero > .downloads-container {
   position: relative;
   z-index: 1;
+}
+
+.downloads-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.downloads-breadcrumb a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.downloads-breadcrumb a:hover {
+  color: var(--brand);
+}
+
+.downloads-breadcrumb .current {
+  color: var(--text-soft);
 }
 
 .eyebrow {

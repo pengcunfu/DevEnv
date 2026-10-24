@@ -18,7 +18,7 @@ const version = __APP_VERSION__
         <p>
           Windows 桌面开发环境管理工具。把熔岩环境、网页翻译、网络与进程监控、剪贴板历史收进同一个盒子。
         </p>
-        <p class="footer-license">MIT License · 永久免费</p>
+        <p class="footer-license">Apache License 2.0 · 永久免费</p>
       </div>
 
       <div class="footer-col">

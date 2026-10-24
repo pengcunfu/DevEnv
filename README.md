@@ -3,11 +3,11 @@
 [![Release](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevBox.Net/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/release/pengcunfu/DevBox.Net?label=release)](https://github.com/pengcunfu/DevBox.Net/releases/latest)
 [![Docs](https://img.shields.io/badge/docs-docs.devenv.cn-blue)](https://docs.devenv.cn/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pengcunfu/DevBox.Net/blob/master/LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/pengcunfu/DevBox.Net/blob/master/LICENSE)
 
 Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿色版环境、熔岩网页翻译、网络监控、进程监控、熔岩剪贴板、系统工具快捷入口。
 
-**当前版本：1.2.0** · 开源协议：[MIT](LICENSE)
+**当前版本：1.2.0** · 开源协议：[Apache License 2.0](LICENSE)
 
 ## 下载与更新
 
@@ -58,4 +58,4 @@ make test          # 服务层单元测试（DevEnv.Tests）
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE) 开源。
+本项目采用 [Apache License 2.0](LICENSE) 开源，版权与归属声明见 [NOTICE](NOTICE)。

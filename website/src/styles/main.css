@@ -327,6 +327,10 @@ html[data-theme='dark'] .icon-moon {
   transition: opacity 0.15s ease, color 0.15s ease;
 }
 
+.markdown-body .header-anchor::before {
+  content: '#';
+}
+
 .markdown-body h1:hover .header-anchor,
 .markdown-body h2:hover .header-anchor,
 .markdown-body h3:hover .header-anchor,

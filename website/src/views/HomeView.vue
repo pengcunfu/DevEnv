@@ -1,21 +1,25 @@
 <script setup lang="ts">
-import { useHead } from '@unhead/vue'
 import { RouterLink } from 'vue-router'
 import AppPreview from '@/components/AppPreview.vue'
 import FeatureIcon from '@/components/FeatureIcon.vue'
 import { docs } from '@/docs/registry'
 import { repoUrl, releasesUrl } from '@/docs/nav'
+import { softwareSchema, sourceCodeSchema, websiteSchema } from '@/seo/schema'
+import { useSeo } from '@/seo/useSeo'
 
 const version = __APP_VERSION__
 
-useHead({
+const description =
+  '程序盒子（DevEnv）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控与剪贴板历史。基于 .NET 10 + WPF，Apache 2.0 开源。'
+
+useSeo({
   title: 'DevEnv · 程序盒子 — Windows 开发环境管理工具',
-  meta: [
-    {
-      name: 'description',
-      content:
-        '程序盒子（DevEnv）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控与剪贴板历史。基于 .NET 10 + WPF，MIT 开源。',
-    },
+  description,
+  path: '/',
+  jsonLd: [
+    websiteSchema(),
+    softwareSchema(version, description),
+    sourceCodeSchema(version, description),
   ],
 })
 
@@ -72,7 +76,7 @@ const features = [
   {
     icon: 'code',
     title: '开源免费',
-    description: '基于 .NET 10 + WPF，MIT 协议，源码完全公开，本地数据归你所有。',
+    description: '基于 .NET 10 + WPF，Apache 2.0 协议，源码完全公开，本地数据归你所有。',
     link: repoUrl,
     external: true,
   },
@@ -113,7 +117,7 @@ const steps = [
         <div class="hero-copy">
           <p class="eyebrow">
             <span class="pulse"></span>
-            v{{ version }} · MIT 开源 · Windows 10+
+            v{{ version }} · Apache 2.0 开源 · Windows 10+
           </p>
           <h1>
             <span class="hero-name">程序盒子</span>
@@ -154,7 +158,7 @@ const steps = [
         <div><strong>8</strong><span>功能模块</span></div>
         <div><strong>1</strong><span>统一入口</span></div>
         <div><strong>{{ docs.length }}</strong><span>篇使用文档</span></div>
-        <div><strong>MIT</strong><span>开源协议</span></div>
+        <div><strong>Apache 2.0</strong><span>开源协议</span></div>
       </div>
     </section>
 
@@ -241,7 +245,7 @@ const steps = [
           </div>
           <div class="download-card-rows">
             <div><span>运行时</span><strong>.NET 10 Desktop Runtime</strong></div>
-            <div><span>许可</span><strong>MIT License</strong></div>
+            <div><span>许可</span><strong>Apache License 2.0</strong></div>
             <div><span>数据目录</span><strong>文档\FNSoftware\DevEnv</strong></div>
           </div>
           <p class="download-note">安装包未签名，SmartScreen 提示时选择「仍要运行」即可。</p>

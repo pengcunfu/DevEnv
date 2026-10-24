@@ -30,8 +30,12 @@ const rawDocs = import.meta.glob('../../guide/**/*.md', {
 }) as Record<string, string>
 
 const groupByPath = new Map<string, string>()
+const descriptionByPath = new Map<string, string>()
 for (const group of sidebarGroups) {
-  for (const item of group.items) groupByPath.set(item.path, group.text)
+  for (const item of group.items) {
+    groupByPath.set(item.path, group.text)
+    if (item.description) descriptionByPath.set(item.path, item.description)
+  }
 }
 
 const orderByPath = new Map<string, number>()
@@ -129,7 +133,7 @@ const entries: DocEntry[] = Object.entries(rawDocs).map(([key, raw]) => {
     file,
     dir,
     title: extractTitle(raw),
-    description: extractDescription(raw),
+    description: descriptionByPath.get(path) || extractDescription(raw),
     group: groupByPath.get(path) || '文档',
     raw,
   }
@@ -149,6 +153,11 @@ export const searchSections: SearchSection[] = entries.flatMap(buildSections)
 
 export function getDoc(path: string): DocEntry | undefined {
   return docsByPath.get(path)
+}
+
+/** 侧边栏分组下的第一篇文档，用作该分组的落地页（面包屑结构化数据）。 */
+export function getGroupEntryPath(group: string): string | undefined {
+  return sidebarGroups.find((item) => item.text === group)?.items[0]?.path
 }
 
 export function getPrevNext(path: string): { prev?: DocEntry; next?: DocEntry } {

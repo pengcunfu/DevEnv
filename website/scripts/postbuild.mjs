@@ -1,4 +1,5 @@
-// 构建后处理：生成 sitemap.xml 与 Cloudflare Pages 使用的 404.html。
+// 构建后处理：生成 sitemap.xml、Cloudflare Pages 使用的 404.html 与跳转规则。
+import { execFileSync } from 'node:child_process'
 import { readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,15 +22,49 @@ const pages = walk(dist)
   .map((path) => (path === '' ? '/' : path))
 
 const urls = [...new Set(['/', ...pages])].sort()
-const lastmod = new Date().toISOString().slice(0, 10)
+const buildDate = new Date().toISOString().slice(0, 10)
+
+/** 页面 URL 对应的源文件（用于取 git 最后提交日期）。 */
+function sourceFileFor(url) {
+  if (url === '/') return 'src/views/HomeView.vue'
+  if (url === '/downloads' || url.startsWith('/downloads/')) return 'src/data/software.json'
+  return `${url.slice(1)}.md`
+}
+
+/**
+ * 用 git 最后提交日期作为 lastmod；取不到时回退到构建日期。
+ * 统一用构建日期会让所有 URL 的 lastmod 相同，搜索引擎会忽略这个信号。
+ */
+function lastmodFor(url) {
+  try {
+    const date = execFileSync('git', ['log', '-1', '--format=%cs', '--', sourceFileFor(url)], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim()
+    return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : buildDate
+  } catch {
+    return buildDate
+  }
+}
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((url) => `  <url><loc>${siteUrl}${url}</loc><lastmod>${lastmod}</lastmod></url>`).join('\n')}
+${urls.map((url) => `  <url><loc>${siteUrl}${url}</loc><lastmod>${lastmodFor(url)}</lastmod></url>`).join('\n')}
 </urlset>
 `
 
 writeFileSync(join(dist, 'sitemap.xml'), sitemap, 'utf8')
+
+// Cloudflare Pages 会同时响应 /guide/foo、/guide/foo.html 与 /guide/foo/，
+// 后两者统一 301 到规范地址，避免重复内容分散权重。
+const cleanPages = pages.filter((path) => path !== '/' && !path.endsWith('/'))
+const redirects = [
+  '/index.html / 301',
+  ...cleanPages.map((path) => `${path}.html ${path} 301`),
+  ...cleanPages.map((path) => `${path}/ ${path} 301`),
+]
+writeFileSync(join(dist, '_redirects'), `${redirects.join('\n')}\n`, 'utf8')
 
 const notFound = `<!doctype html>
 <html lang="zh-CN">
@@ -77,4 +112,6 @@ const notFound = `<!doctype html>
 
 writeFileSync(join(dist, '404.html'), notFound, 'utf8')
 
-console.log(`[postbuild] sitemap.xml: ${urls.length} urls, 404.html written`)
+console.log(
+  `[postbuild] sitemap.xml: ${urls.length} urls, _redirects: ${redirects.length} rules, 404.html written`,
+)

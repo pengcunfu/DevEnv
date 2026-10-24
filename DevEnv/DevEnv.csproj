@@ -21,7 +21,7 @@
     <Copyright>© 2026 FNSoftware. All rights reserved.</Copyright>
     <Authors>FNSoftware</Authors>
     <Description>Windows 上的开发环境管理工具：多语言运行时切换、系统工具快捷入口、本地/Web 应用与服务集中管理。</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/pengcunfu/DevBox.Net</RepositoryUrl>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -53,6 +53,9 @@
     <Content Include="Resources\icon.ico" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <Content Include="Resources\icon.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <Content Include="Resources\icons\win\*.png" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <!-- Apache-2.0 §4(a)(d)：安装包内必须随附许可证与归属声明 -->
+    <Content Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <Content Include="..\NOTICE" Link="NOTICE" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 
 </Project>

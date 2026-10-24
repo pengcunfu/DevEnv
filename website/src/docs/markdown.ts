@@ -79,8 +79,9 @@ const md = new MarkdownIt({
 md.use(anchor, {
   slugify,
   level: [1, 2, 3, 4],
+  // 用 CSS 伪元素显示 #，避免标题正文里混入锚点字符（利于标题文本提取）。
   permalink: anchor.permalink.linkInsideHeader({
-    symbol: '#',
+    symbol: '',
     placement: 'before',
     class: 'header-anchor',
     ariaHidden: true,

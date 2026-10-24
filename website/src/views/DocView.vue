@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useHead } from '@unhead/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DocToc from '@/components/DocToc.vue'
@@ -7,7 +6,9 @@ import DocsSidebar from '@/components/DocsSidebar.vue'
 import { sidebarOpen } from '@/composables/useUi'
 import { renderDoc } from '@/docs/markdown'
 import { editBase } from '@/docs/nav'
-import { getDoc, getPrevNext } from '@/docs/registry'
+import { getDoc, getGroupEntryPath, getPrevNext } from '@/docs/registry'
+import { articleSchema, breadcrumbSchema, faqSchema } from '@/seo/schema'
+import { useSeo } from '@/seo/useSeo'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,18 +23,46 @@ const rendered = computed(() => {
 })
 const neighbors = computed(() => getPrevNext(route.path))
 const editUrl = computed(() => (doc.value ? `${editBase}${doc.value.file}` : ''))
+const groupPath = computed(() => (doc.value ? getGroupEntryPath(doc.value.group) : undefined))
 
-useHead(
-  computed(() => ({
-    title: doc.value ? `${doc.value.title} · DevEnv 文档` : '文档 · DevEnv',
-    meta: [
-      {
-        name: 'description',
-        content: doc.value?.description || '程序盒子（DevEnv）使用文档。',
-      },
-    ],
-  })),
-)
+const seoDescription = computed(() => doc.value?.description || '程序盒子（DevEnv）使用文档。')
+
+const jsonLd = computed(() => {
+  const entry = doc.value
+  if (!entry) return undefined
+
+  const breadcrumb: { name: string; path?: string }[] = [{ name: '首页', path: '/' }]
+  if (groupPath.value && groupPath.value !== entry.path) {
+    breadcrumb.push({ name: entry.group, path: groupPath.value })
+  }
+  breadcrumb.push({ name: entry.title })
+
+  const nodes: Record<string, unknown>[] = [
+    articleSchema({
+      title: entry.title,
+      description: entry.description,
+      path: entry.path,
+      group: entry.group,
+    }),
+    breadcrumbSchema(breadcrumb),
+  ]
+
+  if (entry.path === '/guide/lava/faq') {
+    const faq = faqSchema(entry.raw, entry.path)
+    if (faq) nodes.push(faq)
+  }
+
+  return nodes
+})
+
+useSeo({
+  title: computed(() => (doc.value ? `${doc.value.title} · DevEnv 文档` : '文档 · DevEnv')),
+  description: seoDescription,
+  path: computed(() => route.path),
+  type: 'article',
+  section: computed(() => doc.value?.group),
+  jsonLd,
+})
 
 function setupObserver(): void {
   observer?.disconnect()
@@ -122,7 +151,10 @@ async function onArticleClick(event: MouseEvent): Promise<void> {
       <nav class="breadcrumb" aria-label="面包屑">
         <RouterLink to="/">首页</RouterLink>
         <span aria-hidden="true">/</span>
-        <span>{{ doc?.group }}</span>
+        <RouterLink v-if="groupPath && groupPath !== doc?.path" :to="groupPath">
+          {{ doc?.group }}
+        </RouterLink>
+        <span v-else>{{ doc?.group }}</span>
         <span aria-hidden="true">/</span>
         <span class="current">{{ doc?.title }}</span>
       </nav>
