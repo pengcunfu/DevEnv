@@ -36,5 +36,5 @@ ipconfig /flushdns
 
 ## 文档与反馈
 
-- 帮助文档：<https://docs.devenv.cn/guide/lava/getting-started>
+- 帮助文档：<https://devenv.cn/guide/lava/getting-started>
 - 问题反馈：<https://github.com/pengcunfu/DevEnv/issues>

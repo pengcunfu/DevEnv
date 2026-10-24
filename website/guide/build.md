@@ -74,7 +74,7 @@ vpk pack -u DevEnv -v 1.2.0 -r win-x64 ^
 
 ## 文档站点（Vue + Vite → Cloudflare Pages）
 
-项目名：`devbox-docs` · 线上地址：**https://docs.devenv.cn/**（备用 `https://devbox-docs.pages.dev/`）
+项目名：`devbox-docs` · 线上地址：**https://devenv.cn/**（备用 `https://devbox-docs.pages.dev/`）
 
 站点首页是 Vue 组件，指南正文仍以 Markdown 维护在 `website/guide/`，由 `markdown-it` 渲染，不再使用 VitePress。
 

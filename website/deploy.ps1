@@ -12,7 +12,7 @@
 [CmdletBinding()]
 param(
     [switch]$SkipBuild,
-    [string]$ProjectName = "devbox-docs",
+    [string]$ProjectName = "devenv-docs",
     [string]$Branch = "main"
 )
 
@@ -111,6 +111,6 @@ Invoke-Checked "pages deploy (branch: $Branch)" {
 
 Write-Host ""
 Write-Host "Done!" -ForegroundColor Green
-Write-Host "URL: https://docs.devenv.cn"
+Write-Host "URL: https://devenv.cn"
 Write-Host "Fallback: https://$ProjectName.pages.dev"
 Write-Host "Custom domain: Cloudflare Dashboard -> Workers & Pages -> $ProjectName -> Custom domains" -ForegroundColor DarkGray

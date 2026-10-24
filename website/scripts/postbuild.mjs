@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const dist = join(root, 'dist')
-const siteUrl = 'https://docs.devenv.cn'
+const siteUrl = 'https://devenv.cn'
 
 function walk(directory) {
   return readdirSync(directory).flatMap((name) => {

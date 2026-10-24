@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://docs.devenv.cn/schema/software.schema.json",
+  "$id": "https://devenv.cn/schema/software.schema.json",
   "title": "开发环境下载站数据",
   "description": "站点数据源 website/src/data/software.json 的格式定义。在 VS Code 中打开该 JSON 时会自动校验并给出中文提示。",
   "type": "object",

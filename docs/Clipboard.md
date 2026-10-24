@@ -14,4 +14,4 @@ DevEnv.Core/Clipboard/
 
 用户数据在 `文档\FNSoftware\DevEnv\`（与主程序共用产品数据根；模块内路径见 `DevEnv.Core.Clipboard.Services.AppPaths`）。
 
-用户使用说明见在线文档：[熔岩剪贴板](https://docs.devenv.cn/guide/clipboard/getting-started)。
+用户使用说明见在线文档：[熔岩剪贴板](https://devenv.cn/guide/clipboard/getting-started)。

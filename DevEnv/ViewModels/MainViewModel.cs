@@ -109,7 +109,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void About() => HostServices.ShowAbout();
 
     [RelayCommand]
-    private void OpenDocs() => HostServices.OpenUrl("https://docs.devenv.cn/");
+    private void OpenDocs() => HostServices.OpenUrl("https://devenv.cn/");
 
     /// <summary>工具菜单项：启动对应 Windows 工具或跳到内置工具页。</summary>
     [RelayCommand]

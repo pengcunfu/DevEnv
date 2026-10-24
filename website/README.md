@@ -1,6 +1,6 @@
 # DevEnv 官网与文档站
 
-燧岚开发盒子（DevEnv，FireNeb）的官网、使用文档与开发环境下载站。Vue 3 + Vite 构建，静态部署到 Cloudflare Pages，线上地址 [docs.devenv.cn](https://docs.devenv.cn/)。
+燧岚开发盒子（DevEnv，FireNeb）的官网、使用文档与开发环境下载站。Vue 3 + Vite 构建，静态部署到 Cloudflare Pages，线上地址 [devenv.cn](https://devenv.cn/)。
 
 ## 站点构成
 
@@ -62,6 +62,6 @@ website/
 npm run deploy
 ```
 
-需要已登录 wrangler（未登录会自动打开浏览器），或设置 `CLOUDFLARE_API_TOKEN`（建议同时设置 `CLOUDFLARE_ACCOUNT_ID`）。Cloudflare Pages 项目名为 `devbox-docs`，自定义域为 `docs.devenv.cn`。
+需要已登录 wrangler（未登录会自动打开浏览器），或设置 `CLOUDFLARE_API_TOKEN`（建议同时设置 `CLOUDFLARE_ACCOUNT_ID`）。Cloudflare Pages 项目名为 `devbox-docs`，自定义域为 `devenv.cn`。
 
 CI 在推送 `master` / `main` 且改动 `website/**` 时自动构建并部署，见 `.github/workflows/docs.yml`。

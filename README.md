@@ -4,7 +4,7 @@ FireNeb 出品的 Windows 开发环境管理工具，中文名「燧岚开发盒
 
 [![Release](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/release/pengcunfu/DevEnv?label=release)](https://github.com/pengcunfu/DevEnv/releases/latest)
-[![Docs](https://img.shields.io/badge/docs-docs.devenv.cn-blue)](https://docs.devenv.cn/)
+[![Docs](https://img.shields.io/badge/docs-devenv.cn-blue)](https://devenv.cn/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/pengcunfu/DevEnv/blob/master/LICENSE)
 
 Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿色版环境、熔岩网页翻译、网络监控、进程监控、熔岩剪贴板、系统工具快捷入口。
@@ -17,7 +17,7 @@ Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿
 
 ## 文档
 
-完整使用与发版说明见在线文档：**https://docs.devenv.cn/**（站点域名 [devenv.cn](https://devenv.cn)）
+完整使用与发版说明见在线文档：**https://devenv.cn/**
 
 本地预览 / 部署文档：
 
@@ -52,7 +52,7 @@ make test          # 服务层单元测试（DevEnv.Tests）
 2. `git tag v1.2.0 && git push origin v1.2.0`
 3. GitHub Actions 自动构建安装包 / 更新包 / 便携包并创建 Release
 
-详见 [版本发布](https://docs.devenv.cn/guide/releases)。
+详见 [版本发布](https://devenv.cn/guide/releases)。
 
 ## 参与贡献
 

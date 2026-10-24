@@ -12,4 +12,4 @@ DevBox.Core/NetworkWatch/
 └── Helpers/
 ```
 
-用户使用说明见在线文档：[网络监控](https://docs.devenv.cn/guide/networkwatch/getting-started)。
+用户使用说明见在线文档：[网络监控](https://devenv.cn/guide/networkwatch/getting-started)。

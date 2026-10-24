@@ -14,7 +14,7 @@ export const repo = 'pengcunfu/DevEnv'
 export const repoUrl = `https://github.com/${repo}`
 export const releasesUrl = `${repoUrl}/releases/latest`
 export const issuesUrl = `${repoUrl}/issues`
-export const siteUrl = 'https://docs.devenv.cn'
+export const siteUrl = 'https://devenv.cn'
 export const editBase = `${repoUrl}/edit/master/website/`
 
 /** 友链：品牌站与作者站点。 */

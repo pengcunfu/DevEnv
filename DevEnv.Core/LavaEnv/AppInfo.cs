@@ -18,7 +18,7 @@ public static class AppInfo
     public const string RepositoryUrl = "https://github.com/pengcunfu/DevEnv";
 
     /// <summary>GitHub Pages 帮助文档（熔岩环境章节）。</summary>
-    public const string DocsUrl = "https://docs.devenv.cn/guide/lava/getting-started";
+    public const string DocsUrl = "https://devenv.cn/guide/lava/getting-started";
 
     /// <summary>发布包文件名前缀（ASCII，避免路径编码问题）。</summary>
     public const string ReleaseArtifactPrefix = "LavaEnv";

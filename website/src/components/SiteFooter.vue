@@ -35,7 +35,7 @@ const version = __APP_VERSION__
         <RouterLink to="/downloads">软件下载站</RouterLink>
         <a :href="issuesUrl" target="_blank" rel="noopener noreferrer">问题反馈</a>
         <RouterLink to="/guide/build">从源码构建</RouterLink>
-        <a href="https://docs.devenv.cn/" target="_blank" rel="noopener noreferrer">在线文档</a>
+        <a href="https://devenv.cn/" target="_blank" rel="noopener noreferrer">在线文档</a>
       </div>
 
       <div class="footer-col">
