@@ -23,7 +23,7 @@ make run CONFIG=Debug
 
 编译产物位于各项目自己的 `bin/`、`obj/` 目录，例如 `DevEnv/bin/Debug/net10.0-windows/DevEnv.exe`、`DevEnv.Core/bin/Debug/net10.0-windows/`。`make clean` 会清理各项目产物，并兼容清理旧的仓库根目录 `bin/`、`obj/` 残留。
 
-设置 `DarkMode` 为 true（或在「设置」页勾选深色模式）即可切换深色主题。调试时可用环境变量直接启动到指定页：`DEVENV_START_PAGE=lava make run`。
+设置 `DarkMode` 为 true（或在「设置」对话框中勾选深色模式）即可切换深色主题。调试时可用环境变量直接启动到指定页：`DEVENV_START_PAGE=lava make run`。
 
 ## 本地发布（单文件）
 

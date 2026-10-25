@@ -30,7 +30,6 @@ public static class ViewFactory
         "tools" => new ToolsView(),
         "translator" => new TranslatorEntryView(),
         "clipboard" => new ClipboardEntryView(),
-        "settings" => new SettingsView(),
         _ => new PlaceholderView("未知页面", id),
     };
 }

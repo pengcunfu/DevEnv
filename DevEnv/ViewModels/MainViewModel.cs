@@ -8,6 +8,7 @@ using DevEnv.Core.Models;
 using DevEnv.Core.Services;
 using DevEnv.Host.Infrastructure;
 using DevEnv.Host.Views;
+using DevEnv.Host.Windows;
 
 namespace DevEnv.Host.ViewModels;
 
@@ -69,6 +70,13 @@ public sealed partial class MainViewModel : ObservableObject
             return;
 
         var normalized = id.TrimStart('/');
+        // 「设置」不再是内容页，任何入口都统一弹设置对话框。
+        if (normalized.Equals("settings", StringComparison.OrdinalIgnoreCase))
+        {
+            OpenSettings();
+            return;
+        }
+
         // 从左侧导航进入时同步高亮；工具子页不属于导航项，保持现状即可
         var nav = NavItems.FirstOrDefault(n => n.Id == normalized);
         if (nav is not null && !ReferenceEquals(nav, CurrentNav))
@@ -76,6 +84,23 @@ public sealed partial class MainViewModel : ObservableObject
 
         CurrentPageId = normalized;
         CurrentView = ViewFactory.Create(normalized);
+    }
+
+    /// <summary>设置以模态对话框打开；已打开时仅激活，避免重复弹窗。</summary>
+    [RelayCommand]
+    private void OpenSettings()
+    {
+        var windows = System.Windows.Application.Current?.Windows;
+        if (windows?.OfType<SettingsWindow>().FirstOrDefault(w => w.IsVisible) is { } existing)
+        {
+            existing.Activate();
+            return;
+        }
+
+        var window = new SettingsWindow();
+        if (System.Windows.Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, window))
+            window.Owner = owner;
+        window.ShowDialog();
     }
 
     /// <summary>工具一律开独立非模态窗口，不再嵌入主窗内容区。</summary>
