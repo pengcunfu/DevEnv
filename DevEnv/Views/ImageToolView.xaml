@@ -18,10 +18,13 @@
 
         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
             <Button Content="选择图片…" Margin="0,0,8,0" Command="{Binding PickFilesCommand}" />
-            <ComboBox Width="100" Margin="0,0,8,0" ItemsSource="{Binding Formats}" SelectedItem="{Binding Format}" />
-            <TextBox Width="60" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+            <ComboBox Width="100" Margin="0,0,8,0" Tag="目标格式"
+                      ItemsSource="{Binding Formats}" SelectedItem="{Binding Format}" />
+            <TextBox Width="80" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                     Tag="质量 1-100"
                      Text="{Binding Quality, UpdateSourceTrigger=PropertyChanged}" ToolTip="质量 1-100" />
-            <TextBox Width="240" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+            <TextBox Width="220" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                     Tag="输出目录（可留空）"
                      Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
                      ToolTip="输出目录（留空 = 与源文件同目录）" />
             <Button Content="目录…" Margin="0,0,8,0" Command="{Binding PickOutputDirectoryCommand}" />

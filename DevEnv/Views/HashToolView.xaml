@@ -19,7 +19,8 @@
         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
             <RadioButton Content="文件" Margin="0,0,12,0" GroupName="Mode" IsChecked="{Binding IsFileMode, Mode=TwoWay}" />
             <RadioButton Content="文本" GroupName="Mode" IsChecked="{Binding IsFileMode, Mode=TwoWay, Converter={StaticResource InverseBool}}" />
-            <ComboBox Width="120" Margin="0,0,8,0" ItemsSource="{Binding Algorithms}" SelectedItem="{Binding Algorithm}" />
+            <ComboBox Width="120" Margin="0,0,8,0" Tag="哈希算法"
+                      ItemsSource="{Binding Algorithms}" SelectedItem="{Binding Algorithm}" />
             <Button Content="计算" Style="{StaticResource AccentButtonStyle}" Command="{Binding CalculateCommand}" />
         </WrapPanel>
 
@@ -33,13 +34,15 @@
                         Orientation="Horizontal"
                         Margin="0,0,0,10"
                         Visibility="{Binding IsFileMode, Converter={StaticResource TrueToVisibility}}">
-                <TextBox Width="420" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                <TextBox Width="380" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                         Tag="选择或输入文件路径"
                          Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" />
                 <Button Content="浏览…" Command="{Binding PickFileCommand}" />
             </StackPanel>
 
             <TextBox Grid.Row="0"
                      Visibility="{Binding IsFileMode, Converter={StaticResource FalseToVisibility}}"
+                     Tag="在此粘贴要计算哈希的文本…"
                      Height="120"
                      AcceptsReturn="True"
                      VerticalScrollBarVisibility="Auto"

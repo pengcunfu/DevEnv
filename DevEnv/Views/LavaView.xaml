@@ -102,11 +102,13 @@
             <TabItem Header="软件下载">
                 <DockPanel Margin="0,8,0,0">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-                        <TextBox Width="200" Margin="0,0,8,0"
+                        <TextBox Width="180" Margin="0,0,8,0"
                                  Style="{StaticResource SearchBoxStyle}"
                                  Text="{Binding CatalogQuery, UpdateSourceTrigger=PropertyChanged}"
+                                 Tag="搜索软件名称"
                                  ToolTip="搜索软件" />
-                        <ComboBox Width="150" Margin="0,0,8,0"
+                        <ComboBox Width="140" Margin="0,0,8,0"
+                                  Tag="全部分类"
                                   ItemsSource="{Binding CatalogCategories}"
                                   SelectedItem="{Binding CatalogCategory}" />
                         <Button Content="重置" Margin="0,0,8,0" Command="{Binding ResetCatalogFilterCommand}" />
@@ -137,6 +139,7 @@
                                                             </StackPanel>
                                                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                                                 <ComboBox Width="120" Margin="0,0,8,0"
+                                                                          Tag="选择版本"
                                                                           ItemsSource="{Binding Versions}"
                                                                           SelectedValuePath="Version"
                                                                           DisplayMemberPath="Version"
@@ -270,6 +273,7 @@
                 <DockPanel Margin="0,8,0,0">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
                         <ComboBox Width="200" Margin="0,0,8,0"
+                                  Tag="选择镜像工具"
                                   ItemsSource="{Binding MirrorTools}"
                                   SelectedValuePath="Key"
                                   DisplayMemberPath="Label"

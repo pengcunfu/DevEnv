@@ -19,10 +19,10 @@
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         Margin="10,8">
-                <Button Content="保存" Width="88" Height="28" Margin="0,0,8,0"
+                <Button Content="保存" Width="88" Height="32" Margin="0,0,8,0"
                         IsDefault="True"
                         Click="OnSaveClick" />
-                <Button Content="关闭" Width="88" Height="28"
+                <Button Content="关闭" Width="88" Height="32"
                         IsCancel="True"
                         Click="OnCloseClick" />
             </StackPanel>

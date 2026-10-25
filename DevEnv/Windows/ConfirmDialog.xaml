@@ -11,8 +11,8 @@
     <StackPanel Margin="18">
         <TextBlock x:Name="MessageText" TextWrapping="Wrap" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-            <Button x:Name="CancelButton" Content="取消" Width="84" Height="28" IsCancel="True" Click="OnCancelClick" Margin="0,0,8,0" />
-            <Button x:Name="OkButton" Content="确定" Width="84" Height="28" IsDefault="True" Click="OnOkClick" />
+            <Button x:Name="CancelButton" Content="取消" Width="84" Height="32" IsCancel="True" Click="OnCancelClick" Margin="0,0,8,0" />
+            <Button x:Name="OkButton" Content="确定" Width="84" Height="32" IsDefault="True" Click="OnOkClick" />
         </StackPanel>
     </StackPanel>
 </Window>

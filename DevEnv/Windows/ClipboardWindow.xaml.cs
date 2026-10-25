@@ -14,7 +14,6 @@ public partial class ClipboardWindow : Window
     public ClipboardWindow()
     {
         InitializeComponent();
-        ClearModeCombo.Items.Add("清空…");
         foreach (var (_, label) in ((ViewModels.ClipboardViewModel)DataContext).ClearModes)
             ClearModeCombo.Items.Add(label);
     }
@@ -42,13 +41,14 @@ public partial class ClipboardWindow : Window
     private void OnClearModeChanged(object sender, SelectionChangedEventArgs e)
     {
         var combo = ClearModeCombo;
-        if (combo.SelectedIndex <= 0)
+        if (combo.SelectedIndex < 0)
             return;
 
         var label = combo.SelectedItem as string ?? string.Empty;
         var mode = ((ViewModels.ClipboardViewModel)DataContext).ClearModes
             .FirstOrDefault(m => m.Label == label).Mode ?? "all";
-        combo.SelectedIndex = 0;
+        // 取消选中，回到「清空记录…」占位提示，方便重复操作。
+        combo.SelectedIndex = -1;
         ((ViewModels.ClipboardViewModel)DataContext).Clear(mode);
     }
 

@@ -18,9 +18,9 @@
 
         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
             <TextBox Width="160" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
-                     ToolTip="名称" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBox Width="320" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
-                     ToolTip="命令 / 路径" Text="{Binding Command, UpdateSourceTrigger=PropertyChanged}" />
+                     Tag="启动项名称" ToolTip="名称" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Width="300" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                     Tag="命令 / 文件路径" ToolTip="命令 / 路径" Text="{Binding Command, UpdateSourceTrigger=PropertyChanged}" />
             <Button Content="添加注册表项" Margin="0,0,8,0" Style="{StaticResource AccentButtonStyle}"
                     Command="{Binding AddCommand}" />
             <Button Content="刷新" Command="{Binding ReloadCommand}" />

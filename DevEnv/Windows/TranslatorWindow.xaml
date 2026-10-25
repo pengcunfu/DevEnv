@@ -21,6 +21,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <ComboBox x:Name="SiteCombo" Grid.Column="0" Width="150" Margin="0,0,8,0"
+                          Tag="选择翻译站点"
                           DisplayMemberPath="Name" SelectionChanged="OnSiteChanged" />
                 <Button x:Name="FillButton" Grid.Column="1" Content="填充剪贴板"
                         Click="OnFillClick" Padding="14,5" />

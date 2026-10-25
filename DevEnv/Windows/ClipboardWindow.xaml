@@ -24,14 +24,21 @@
         </Grid>
 
         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-            <TextBox Width="200" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+            <TextBox Width="180" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                     Tag="搜索剪贴板内容"
                      ToolTip="搜索" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" />
-            <ComboBox Width="100" Margin="0,0,8,0" SelectedItem="{Binding TypeFilter}" ToolTip="类型">
-                <ComboBoxItem Content="" />
-                <ComboBoxItem Content="text" />
-                <ComboBoxItem Content="image" />
+            <ComboBox Width="100" Margin="0,0,8,0"
+                      Tag="全部类型"
+                      SelectedValuePath="Tag"
+                      SelectedValue="{Binding TypeFilter, Mode=TwoWay}"
+                      ToolTip="类型">
+                <ComboBoxItem Content="全部" Tag="" />
+                <ComboBoxItem Content="文本" Tag="text" />
+                <ComboBoxItem Content="图片" Tag="image" />
             </ComboBox>
-            <ComboBox x:Name="ClearModeCombo" Width="110" Margin="0,0,8,0" SelectionChanged="OnClearModeChanged" />
+            <ComboBox x:Name="ClearModeCombo" Width="110" Margin="0,0,8,0"
+                      Tag="清空记录…"
+                      SelectionChanged="OnClearModeChanged" />
             <Button Content="导出" Margin="0,0,8,0" Command="{Binding ExportCommand}" />
             <Button Content="刷新" Command="{Binding ReloadCommand}" />
         </WrapPanel>

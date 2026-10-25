@@ -17,11 +17,13 @@
         </StackPanel>
 
         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-            <TextBox Width="260" Margin="0,0,8,0"
+            <TextBox Width="220" Margin="0,0,8,0"
                      Style="{StaticResource SearchBoxStyle}"
+                     Tag="搜索进程名 / PID / 路径"
                      ToolTip="搜索进程名 / PID / 路径"
                      Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
             <ComboBox Width="120" Margin="0,0,8,0"
+                      Tag="排序方式"
                       ItemsSource="{Binding SortModes}"
                       SelectedItem="{Binding Sort}" />
             <Button Content="暂停" Margin="0,0,8,0" Command="{Binding TogglePauseCommand}" />

@@ -71,14 +71,17 @@
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="显示名称" VerticalAlignment="Center" />
                     <TextBox Grid.Row="0" Grid.Column="1" Margin="6,0"
+                             Tag="显示名称"
                              Text="{Binding Editing.Entry.Name, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="注册表键名" VerticalAlignment="Center" Margin="0,6,0,0" />
                     <TextBox Grid.Row="1" Grid.Column="1" Margin="6,6"
+                             Tag="例如 Directory\Background"
                              Text="{Binding Editing.Entry.Root, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="程序路径" VerticalAlignment="Center" Margin="0,6,0,0" />
                     <TextBox Grid.Row="2" Grid.Column="1" Margin="6,6"
+                             Tag="可执行文件路径"
                              Text="{Binding Editing.Entry.Path, UpdateSourceTrigger=PropertyChanged}" />
                     <Button Grid.Row="2" Grid.Column="2" Content="浏览…" Margin="0,6,0,0"
                             Command="{Binding BrowseProgramCommand}" />

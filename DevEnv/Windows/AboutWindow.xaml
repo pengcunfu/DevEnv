@@ -9,7 +9,7 @@
         Background="{DynamicResource ChromeBrush}">
     <DockPanel Margin="18">
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="确定" Width="84" Height="28" IsDefault="True" IsCancel="True" Click="OnCloseClick" />
+            <Button Content="确定" Width="84" Height="32" IsDefault="True" IsCancel="True" Click="OnCloseClick" />
         </StackPanel>
         <StackPanel>
             <TextBlock Text="燧岚开发盒子" FontSize="17" FontWeight="SemiBold"

@@ -23,16 +23,19 @@
                     <CheckBox Content="双击启动快捷方式" Margin="0,8,0,0" IsChecked="{Binding Config.DoubleClickToLaunch}" />
 
                     <TextBlock Text="环境根目录" Style="{DynamicResource MutedTextStyle}" Margin="0,14,0,0" />
-                    <TextBox Text="{Binding Config.BaseEnvPath, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Tag="环境根目录路径"
+                             Text="{Binding Config.BaseEnvPath, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock Text="显示窗口快捷键" Style="{DynamicResource MutedTextStyle}" Margin="0,10,0,0" />
-                    <TextBox Text="{Binding Config.ShowWindowHotkey, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Tag="例如 Ctrl+Alt+D"
+                             Text="{Binding Config.ShowWindowHotkey, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBlock Text="全局热键：显示窗口（上）· 翻译 Alt+Space · 剪贴板 Ctrl+Space"
                                Style="{DynamicResource MutedTextStyle}" Margin="0,4,0,0" />
 
                     <TextBlock Text="默认翻译引擎" Style="{DynamicResource MutedTextStyle}" Margin="0,14,0,0" />
                     <StackPanel Orientation="Horizontal">
                         <ComboBox Width="200" Margin="0,0,8,0"
+                                  Tag="默认翻译引擎"
                                   ItemsSource="{Binding Sites}"
                                   DisplayMemberPath="Name"
                                   SelectedValuePath="Id"

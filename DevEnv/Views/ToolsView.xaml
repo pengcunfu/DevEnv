@@ -16,9 +16,10 @@
                 <TextBlock Text="系统工具" Style="{DynamicResource PageTitleStyle}" />
                 <TextBlock Text="快速访问 Windows 系统管理工具" Style="{DynamicResource PageHintStyle}" />
             </StackPanel>
-            <TextBox Width="220" HorizontalAlignment="Right"
+            <TextBox Width="200" HorizontalAlignment="Right"
                      VerticalAlignment="Top"
                      Style="{StaticResource SearchBoxStyle}"
+                     Tag="搜索工具"
                      ToolTip="搜索工具"
                      Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
