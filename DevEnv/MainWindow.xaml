@@ -30,6 +30,7 @@
                 <MenuItem Header="Hosts 文件编辑器" Command="{Binding OpenToolCommand}" CommandParameter="hosts" />
                 <MenuItem Header="图像格式转换器" Command="{Binding OpenToolCommand}" CommandParameter="image" />
                 <MenuItem Header="文件哈希计算器" Command="{Binding OpenToolCommand}" CommandParameter="hash" />
+                <MenuItem Header="文件解锁与粉碎" Command="{Binding OpenToolCommand}" CommandParameter="file-tools" />
                 <Separator />
                 <MenuItem Header="启动项管理" Command="{Binding OpenToolCommand}" CommandParameter="startup" />
                 <MenuItem Header="右键菜单管理" Command="{Binding OpenToolCommand}" CommandParameter="context-menu" />

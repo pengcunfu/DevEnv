@@ -8,6 +8,10 @@
 
 ### Added
 
+- 新增「文件解锁与粉碎」工具（`工具` 菜单 → 独立窗口）：
+  - **解除占用**：通过 Windows Restart Manager 检测占用文件 / 文件夹的进程，支持结束所选或全部可结束进程；关键系统进程与 DevEnv 自身受保护，普通权限下可一键请求管理员重启
+  - **文件粉碎**：用随机数据覆盖文件 1 / 3 / 7 遍后截断、随机改名并删除，支持拖入文件与整个文件夹、逐文件进度与取消；单个文件失败不影响整批任务
+  - 粉碎前做路径安全校验：拒绝磁盘根目录、Windows / Program Files / ProgramData / 用户主目录等系统目录、包含当前程序的目录，以及符号链接 / 目录联接
 - 新增 `DevEnv.Tests` 单元测试工程（xunit 2.9 + Microsoft.NET.Test.Sdk）：只引用 `DevEnv.Core`，覆盖流量 / 字节格式化、文件与文本哈希、JSON 兼容字符串转换、Hosts 解析、网址规范化、剪贴板条目与时间戳、翻译站点目录、镜像源、熔岩默认设置，并校验随程序发布的 `processes_config.json` / `software_config.json` 本身可解析；`make test` 一键执行，Release 工作流在打包前先跑测试，测试不过不出安装包
 - 集成 MenuManager 功能：新增「右键菜单管理」工具，可切换 Win11 右键菜单形态（一级 / 完整二级），并管理「用 XXX 打开」右键菜单项；与 MenuManager 共用 `文档\FNSoftware\MenuManager\menu_configs.json`，配置互通
 - 「工具」菜单下的 JSON 格式化器 / Hosts 编辑器 / 图像转换器 / 哈希计算器 / 启动项管理 / 右键菜单管理改为**独立非模态窗口**，同一工具只保留一个窗口实例

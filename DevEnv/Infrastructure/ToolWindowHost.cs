@@ -22,6 +22,7 @@ public static class ToolWindowHost
         ["json"] = ("JSON 格式化器", () => new JsonToolView()),
         ["hosts"] = ("Hosts 文件编辑器", () => new HostsToolView()),
         ["hash"] = ("文件哈希计算器", () => new HashToolView()),
+        ["file-tools"] = ("文件解锁与粉碎", () => new FileToolView()),
         ["image"] = ("图像格式转换器", () => new ImageToolView()),
         ["startup"] = ("启动项管理", () => new StartupToolView()),
         ["context-menu"] = ("右键菜单管理", () => new ContextMenuView()),

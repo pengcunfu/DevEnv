@@ -7,7 +7,7 @@ FireNeb 出品的 Windows 开发环境管理工具，中文名「燧岚开发盒
 [![Docs](https://img.shields.io/badge/docs-devenv.cn-blue)](https://devenv.cn/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/pengcunfu/DevEnv/blob/master/LICENSE)
 
-Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿色版环境、熔岩网页翻译、网络监控、进程监控、熔岩剪贴板、系统工具快捷入口。
+Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿色版环境、熔岩网页翻译、网络监控、进程监控、熔岩剪贴板、文件解锁与粉碎、系统工具快捷入口。
 
 **当前版本：1.2.0** · 品牌：[FireNeb](https://fireneb.com) · 开源协议：[Apache License 2.0](LICENSE)
 

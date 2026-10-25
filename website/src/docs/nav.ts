@@ -65,6 +65,12 @@ export const sidebarGroups: SidebarGroup[] = [
         description:
           'DevEnv 配置说明：认识文档目录下的 data.json、图标与熔岩配置文件，了解偏好设置、备份迁移与手动修改注意事项。',
       },
+      {
+        text: '文件解锁与粉碎',
+        path: '/guide/filetools/getting-started',
+        description:
+          '使用 DevEnv 的文件解锁与粉碎工具：通过 Restart Manager 定位占用文件的进程，并用随机数据多遍覆盖后删除文件或文件夹。',
+      },
     ],
   },
   {
