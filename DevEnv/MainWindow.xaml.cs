@@ -40,7 +40,17 @@ public partial class MainWindow : Window
             var path = Path.Combine(AppContext.BaseDirectory, "Resources", "icon.ico");
             if (!File.Exists(path))
                 return;
-            Icon = new BitmapImage(new Uri(path));
+
+            var decoder = new IconBitmapDecoder(
+                new Uri(path),
+                BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
+
+            // ICO 第一帧是 16px，BitmapImage 默认只取第一帧，任务栏会按 16px 绘制，
+            // 看起来比其他图标小一圈。这里取最大帧，由系统按 DPI 缩小。
+            Icon = decoder.Frames
+                .OrderByDescending(frame => frame.PixelWidth)
+                .FirstOrDefault() ?? Icon;
         }
         catch
         {

@@ -50,9 +50,24 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // 管理员编辑 Hosts：绕过单实例，独立小窗
+        // 管理员编辑 Hosts：绕过单实例，独立小窗。
+        // 直接以普通权限运行 --edit-hosts 时先自我提权，保证编辑器启动即具备写权限。
         if (e.Args.Any(a => string.Equals(a, ElevationHelper.EditHostsArgument, StringComparison.OrdinalIgnoreCase)))
         {
+            if (!ElevationHelper.IsAdministrator())
+            {
+                if (!ElevationHelper.TryRunElevated(ElevationHelper.EditHostsArgument))
+                {
+                    System.Windows.MessageBox.Show(
+                        "Hosts 文件编辑器需要管理员权限，已取消提权，编辑器不会打开。",
+                        "需要管理员权限",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+                Shutdown();
+                return;
+            }
+
             var hostsWindow = new HostsEditWindow();
             hostsWindow.Closed += (_, _) => Shutdown();
             hostsWindow.Show();

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>燧岚开发盒子 · 平面 Logo</title>
+<style>
+  :root {
+    --ink: #0b1220;
+    --mint: #2dd4bf;
+    --deep: #0f766e;
+    --amber: #fbbf24;
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --border: #e3e8ef;
+    --text: #0f172a;
+    --text-soft: #334155;
+    --muted: #667085;
+    --font: 'Segoe UI Variable Text', 'Segoe UI', 'Microsoft YaHei UI', 'Microsoft YaHei', system-ui, sans-serif;
+    --mono: 'Cascadia Code', 'Cascadia Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 48px 24px 72px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: -0.01em; }
+  .lead { margin: 0; color: var(--muted); font-size: 14px; }
+  .badge-note {
+    display: inline-block; margin-top: 14px; padding: 3px 9px;
+    border: 1px solid var(--border); border-radius: 999px;
+    color: var(--muted); font-size: 12px;
+  }
+  .grid { display: grid; gap: 16px; }
+  .hero { grid-template-columns: 300px 1fr; margin-bottom: 16px; }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .card h2 {
+    margin: 0 0 18px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .showcase { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  .showcase img { width: 256px; height: 256px; display: block; }
+  .showcase .caption { color: var(--muted); font-size: 12px; }
+  .variants { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 0; }
+  @media (max-width: 560px) { .variants { grid-template-columns: 1fr; } }
+  .variant {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 168px; border-radius: 12px; border: 1px solid var(--border);
+  }
+  .variant.light { background: #ffffff; }
+  .variant.dark { background: var(--ink); border-color: var(--ink); }
+  .variant img { width: 112px; height: 112px; display: block; }
+  .label {
+    display: block; margin-top: 10px; color: var(--muted);
+    font-size: 12px; text-align: center;
+  }
+  .sizes { display: flex; align-items: flex-end; gap: 32px; flex-wrap: wrap; }
+  .size { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .size img { display: block; image-rendering: auto; }
+  .size span { color: var(--muted); font-size: 12px; font-family: var(--mono); }
+  .swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+  .swatch { width: 116px; }
+  .swatch i { display: block; height: 56px; border-radius: 10px; border: 1px solid rgba(15, 23, 42, 0.08); }
+  .swatch b { display: block; margin-top: 8px; font-size: 12px; }
+  .swatch code { color: var(--muted); font-size: 11px; font-family: var(--mono); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  td code { font-family: var(--mono); font-size: 12px; }
+  .cmd {
+    margin: 16px 0 0; padding: 12px 14px;
+    background: var(--ink); color: #e6edf7;
+    border-radius: 10px; font-family: var(--mono); font-size: 12px;
+    overflow-x: auto;
+  }
+  footer { margin-top: 20px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>燧岚开发盒子 · 平面 Logo</h1>
+    <p class="lead">“方形色块 + 终端提示符 &gt;_”的纯平面造型，透明底、无底板、无描边。</p>
+    <span class="badge-note">由 scripts/generate-logo.ps1 生成</span>
+  </header>
+
+  <section class="grid hero">
+    <div class="card showcase">
+      <img src="logo-flat-512.png" alt="平面 Logo" />
+      <span class="caption">主 Logo（透明底、圆角方形）</span>
+    </div>
+
+    <div class="card">
+      <h2>背景适配</h2>
+      <div class="variants">
+        <div>
+          <div class="variant light"><img src="logo-flat-512.png" alt="浅色背景上的 Logo" /></div>
+          <span class="label">浅色背景</span>
+        </div>
+        <div>
+          <div class="variant dark"><img src="logo-flat-512.png" alt="深色背景上的 Logo" /></div>
+          <span class="label">深色背景</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom: 16px;">
+    <h2>尺寸适配</h2>
+    <div class="sizes">
+      <div class="size"><img src="logo-flat-64.png" width="64" height="64" alt="64px" /><span>64px</span></div>
+      <div class="size"><img src="logo-flat-32.png" width="32" height="32" alt="32px" /><span>32px</span></div>
+      <div class="size"><img src="logo-flat-16.png" width="16" height="16" alt="16px" /><span>16px（简化几何）</span></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom: 16px;">
+    <h2>调色板</h2>
+    <div class="swatches">
+      <div class="swatch"><i style="background:#0f766e"></i><b>深青</b><code>#0F766E</code></div>
+      <div class="swatch"><i style="background:#fbbf24"></i><b>琥珀</b><code>#FBBF24</code></div>
+      <div class="swatch"><i style="background:#f0fdfa"></i><b>纸白</b><code>#F0FDFA</code></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>文件</h2>
+    <table>
+      <tr><th>文件</th><th>用途</th></tr>
+      <tr><td><code>logo-flat.svg</code></td><td>矢量主 Logo，网站、文档、印刷</td></tr>
+      <tr><td><code>logo-flat-16…512.png</code></td><td>各尺寸位图，16px 为简化几何</td></tr>
+      <tr><td><code>logo-flat.ico</code></td><td>Windows 多尺寸图标（16–256）</td></tr>
+    </table>
+    <p class="cmd">powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\generate-logo.ps1</p>
+  </section>
+
+  <footer>
+    已应用到 <code>website/public/logo.svg</code>（站点图标 / 页头）与
+    <code>DevEnv/Resources/icon.ico</code>、<code>icon.png</code>（程序图标）。<br />
+    修改造型后运行 <code>scripts\generate-app-icon.ps1</code> 重新生成并应用。
+  </footer>
+</div>
+</body>
+</html>

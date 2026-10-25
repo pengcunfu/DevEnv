@@ -1,5 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
+using DevEnv.Core.LavaEnv.Services;
+using DevEnv.Core.Models;
+using DevEnv.Core.Services;
 using DevEnv.Host.Views;
 using DevEnv.Host.Windows;
 
@@ -30,10 +33,18 @@ public static class ToolWindowHost
     public static IReadOnlyList<string> ToolIds => Tools.Keys.ToList();
 
     /// <summary>打开（或前置）指定工具窗口。</summary>
-    public static void Open(string id)
+    public static OperationResult Open(string id)
     {
         if (!Tools.TryGetValue(id, out var tool))
-            return;
+            return OperationResult.Fail($"未知工具：{id}");
+
+        // Hosts 编辑器需要写系统目录：普通权限下直接请求管理员权限并拉起
+        // 独立编辑窗口，不再展示只读窗口，避免编辑完才发现无法保存。
+        if (string.Equals(id, "hosts", StringComparison.OrdinalIgnoreCase)
+            && !ElevationHelper.IsAdministrator())
+        {
+            return CoreServices.Utility.ElevateHosts();
+        }
 
         var window = Windows.GetValueOrDefault(id);
         if (window is null)
@@ -50,11 +61,12 @@ public static class ToolWindowHost
             if (window.WindowState == WindowState.Minimized)
                 window.WindowState = WindowState.Normal;
             window.Activate();
-            return;
+            return OperationResult.Success();
         }
 
         window.Show();
         window.Activate();
+        return OperationResult.Success();
     }
 
     /// <summary>主窗恢复显示时，把已打开的工具窗一起带出来。</summary>

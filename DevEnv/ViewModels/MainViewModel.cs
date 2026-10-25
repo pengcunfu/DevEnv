@@ -111,7 +111,9 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         var window = System.Windows.Application.Current?.MainWindow as MainWindow;
         window?.Show();
-        ToolWindowHost.Open(id);
+        var result = ToolWindowHost.Open(id);
+        if (!result.Ok)
+            StatusText = result.DisplayMessage;
     }
 
     [RelayCommand]

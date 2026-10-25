@@ -4,7 +4,7 @@ using DevEnv.Core.Services;
 
 namespace DevEnv.Host.ViewModels;
 
-/// <summary>Hosts 文件编辑器：非管理员只读，可拉起管理员窗口另存。</summary>
+/// <summary>Hosts 文件编辑器：打开入口已确保管理员权限，这里负责读写与状态提示。</summary>
 public sealed partial class HostsToolViewModel : ObservableObject
 {
     public HostsToolViewModel() => Load();
@@ -44,12 +44,5 @@ public sealed partial class HostsToolViewModel : ObservableObject
         {
             Message = result.DisplayMessage;
         }
-    }
-
-    [RelayCommand]
-    private void Elevate()
-    {
-        var result = CoreServices.Utility.ElevateHosts();
-        Message = result.Ok ? "已请求管理员权限打开 Hosts 编辑" : result.DisplayMessage;
     }
 }
