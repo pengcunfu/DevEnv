@@ -22,7 +22,7 @@
             <StackPanel>
                 <Grid>
                     <StackPanel>
-                        <TextBlock Text="Windows 11 右键菜单" FontWeight="SemiBold" FontSize="14" />
+                        <TextBlock Text="Windows 11 右键菜单" FontSize="14" />
                         <TextBlock Text="{Binding Win11Status}" Style="{DynamicResource PageHintStyle}" Margin="0,4,0,0" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -43,7 +43,7 @@
 
         <!-- 工具条 -->
         <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
-            <TextBlock Text="「用 XXX 打开」右键菜单项" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+            <TextBlock Text="「用 XXX 打开」右键菜单项" FontSize="14" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="新增" Margin="0,0,8,0" Command="{Binding NewEntryCommand}" />
                 <Button Content="环境检查" Margin="0,0,8,0" Command="{Binding CheckEnvironmentCommand}" />
@@ -55,7 +55,7 @@
         <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12"
                 Visibility="{Binding IsEditing, Converter={StaticResource TrueToVisibility}}">
             <StackPanel>
-                <TextBlock Text="新增 / 编辑菜单项" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <TextBlock Text="新增 / 编辑菜单项" Margin="0,0,0,8" />
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="90" />

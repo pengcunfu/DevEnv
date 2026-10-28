@@ -18,7 +18,7 @@
                             Click="OnToggleIssuesClick"
                             Content="查看问题" />
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock x:Name="StatusText" FontSize="12" FontWeight="SemiBold" />
+                        <TextBlock x:Name="StatusText" FontSize="12" />
                         <TextBlock x:Name="CountText" Margin="8,0,0,0"
                                    VerticalAlignment="Center"
                                    Style="{DynamicResource MutedTextStyle}" />

@@ -59,7 +59,6 @@
                                                Margin="8,0,6,0"
                                                VerticalAlignment="Center"
                                                FontSize="12"
-                                               FontWeight="SemiBold"
                                                Text="{Binding Name}"
                                                TextWrapping="Wrap"
                                                TextTrimming="CharacterEllipsis"
@@ -80,7 +79,7 @@
                 ContextMenu="{StaticResource EmptyMenu}"
                 Visibility="{Binding Items.Count, Converter={StaticResource NoItems}}">
             <StackPanel>
-                <TextBlock Text="暂无本地应用程序" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Text="暂无本地应用程序" HorizontalAlignment="Center" />
                 <TextBlock Margin="0,6,0,0"
                            Text="{Binding EmptyHint}"
                            Style="{DynamicResource PageHintStyle}"

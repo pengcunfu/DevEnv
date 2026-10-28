@@ -62,7 +62,7 @@
                     <Run Text="  |  " /><Run Text="{Binding StatusHint, Mode=OneWay}" />
                 </TextBlock>
                 <TextBlock Margin="24,0,0,0">
-                    <Run Text="工作集合计: " /><Run Text="{Binding TotalMemoryText, Mode=OneWay}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" />
+                    <Run Text="工作集合计: " /><Run Text="{Binding TotalMemoryText, Mode=OneWay}" Foreground="{DynamicResource TextPrimaryBrush}" />
                 </TextBlock>
                 <TextBlock Margin="24,0,0,0">
                     <Run Text="更新于 " /><Run Text="{Binding Timestamp, Mode=OneWay}" />

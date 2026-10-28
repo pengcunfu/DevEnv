@@ -98,8 +98,8 @@
                         <Grid Margin="0,12,0,0"
                               Visibility="{Binding SpeedResult, Converter={StaticResource TrueToVisibility}}">
                             <StackPanel>
-                                <TextBlock><Run Text="下载 " /><Run Text="{Binding SpeedResult.DownloadText, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" /></TextBlock>
-                                <TextBlock><Run Text="上传 " /><Run Text="{Binding SpeedResult.UploadText, Mode=OneWay}" Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" /></TextBlock>
+                                <TextBlock><Run Text="下载 " /><Run Text="{Binding SpeedResult.DownloadText, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" /></TextBlock>
+                                <TextBlock><Run Text="上传 " /><Run Text="{Binding SpeedResult.UploadText, Mode=OneWay}" Foreground="{DynamicResource WarningBrush}" /></TextBlock>
                                 <TextBlock><Run Text="延迟 " /><Run Text="{Binding SpeedResult.PingText, Mode=OneWay}" /></TextBlock>
                                 <TextBlock><Run Text="抖动 " /><Run Text="{Binding SpeedResult.JitterText, Mode=OneWay}" /></TextBlock>
                                 <TextBlock Style="{DynamicResource MutedTextStyle}" Margin="0,6,0,0">

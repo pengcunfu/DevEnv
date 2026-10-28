@@ -12,7 +12,7 @@
             <Button Content="确定" Width="84" Height="32" IsDefault="True" IsCancel="True" Click="OnCloseClick" />
         </StackPanel>
         <StackPanel>
-            <TextBlock Text="燧岚开发盒子" FontSize="17" FontWeight="SemiBold"
+            <TextBlock Text="燧岚开发盒子" FontSize="17"
                        Foreground="{DynamicResource TextPrimaryBrush}" />
             <TextBlock x:Name="VersionText" Margin="0,4,0,0" Style="{DynamicResource PageHintStyle}" />
             <TextBlock Margin="0,12,0,0"

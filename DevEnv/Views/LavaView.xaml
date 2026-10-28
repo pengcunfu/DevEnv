@@ -139,7 +139,7 @@
                                                                 <ColumnDefinition Width="Auto" />
                                                             </Grid.ColumnDefinitions>
                                                             <StackPanel>
-                                                                <TextBlock Text="{Binding Item.Name}" FontWeight="SemiBold" />
+                                                                <TextBlock Text="{Binding Item.Name}" />
                                                                 <TextBlock Text="{Binding Item.Description}" Style="{DynamicResource PageHintStyle}" />
                                                             </StackPanel>
                                                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -300,7 +300,7 @@
                                 <Border Style="{StaticResource CardStyle}" Width="420" Margin="0,0,10,10">
                                     <StackPanel>
                                         <Grid>
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Name}" />
                                             <TextBlock HorizontalAlignment="Right" Style="{DynamicResource PageHintStyle}">
                                                 <Run Text="{Binding ResponseTimeMs, StringFormat={}{0:0} ms}" />
                                             </TextBlock>
@@ -379,7 +379,7 @@
                         </Border>
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="{Binding DataInfo.About.ProductName}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding DataInfo.About.ProductName}" />
                                 <TextBlock Text="{Binding DataInfo.About.Tagline}" Style="{DynamicResource PageHintStyle}" />
                                 <TextBlock><Run Text="版本: " /><Run Text="{Binding DataInfo.About.Version, Mode=OneWay}" /></TextBlock>
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">

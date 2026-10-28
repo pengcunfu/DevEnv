@@ -25,7 +25,6 @@
 
     <Style TargetType="TextBlock" x:Key="PageTitleStyle" BasedOn="{StaticResource BaseTextStyle}">
         <Setter Property="FontSize" Value="20" />
-        <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
     <Style TargetType="TextBlock" x:Key="PageHintStyle" BasedOn="{StaticResource BaseTextStyle}">
@@ -36,7 +35,6 @@
 
     <Style TargetType="TextBlock" x:Key="SectionTitleStyle" BasedOn="{StaticResource BaseTextStyle}">
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Margin" Value="0,0,0,6" />
     </Style>
 
@@ -495,7 +493,6 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource SelectedTextBrush}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -533,7 +530,6 @@
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource SelectedTextBrush}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -707,7 +703,6 @@
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource SelectedTextBrush}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45" />

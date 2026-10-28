@@ -9,7 +9,7 @@
         ShowInTaskbar="False"
         Background="{DynamicResource ChromeBrush}">
     <StackPanel Margin="18">
-        <TextBlock Text="{Binding DisplayName}" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding DisplayName}" FontSize="16" />
         <TextBlock Style="{DynamicResource MutedTextStyle}" Margin="0,2,0,0">
             <Run Text="PID " /><Run Text="{Binding ProcessId, Mode=OneWay}" />
             <Run Text=" · 启动于 " /><Run Text="{Binding StartTimeText, Mode=OneWay}" />
