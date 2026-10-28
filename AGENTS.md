@@ -22,7 +22,7 @@
 
 ```bash
 make build                        # 构建全部（Release，= dotnet build DevEnv.sln -c Release）；产物在各项目的 bin/、obj/ 下
-make run                          # 从源码跑主程序（Release，WPF 宿主）
+make run                          # 运行 make build 产出的主程序（Release，不重复编译）
 make test                         # 跑单元测试（DevEnv.Tests，xunit）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
 make publish                      # 单文件发布到 publish/win-x64/

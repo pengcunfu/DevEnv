@@ -71,7 +71,7 @@ help:
 	@echo "$(if $(VER),  current version: $(VER),[warn] VERSION file missing)"
 	@echo ""
 	@echo "  make build        Build DevEnv.sln ($(CONFIG))"
-	@echo "  make run          Run the WPF host from source ($(CONFIG))"
+	@echo "  make run          Run the built WPF host ($(CONFIG), needs 'make build')"
 	@echo "  make test         Run the xunit suite (DevEnv.Tests)"
 	@echo "  make publish      Single-file publish -> $(PUBLISH_DIR)/"
 	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
@@ -94,9 +94,15 @@ help:
 build:
 	@dotnet build DevEnv.sln -c $(CONFIG) --nologo
 
-# WPF host (the UI is native now; only the translator window embeds WebView2)
+# WPF host (the UI is native now; only the translator window embeds WebView2).
+# Runs the binary `make build` already produced: no compile, no restore. The
+# existence check happens in the recipe (not at parse time) so `make build run`
+# works too; a missing build fails with the fix instead of an MSBuild error.
+# The TFM is globbed so retargeting the host does not silently break run.
 run:
-	@dotnet run --project $(CSPROJ) -c $(CONFIG)
+	@exe=$$(ls DevEnv/bin/$(CONFIG)/*/DevEnv.exe 2>/dev/null | head -n 1); \
+	[ -n "$$exe" ] || { echo "[error] no $(CONFIG) build found - run 'make build' first"; exit 1; }; \
+	dotnet run --project $(CSPROJ) -c $(CONFIG) --no-build
 
 # Unit tests for the service layer. Kept as its own project (not a `dotnet test`
 # over the whole solution) so the WPF host never has to be launched for a
