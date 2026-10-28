@@ -9,6 +9,8 @@ public static class AppPaths
 
     public static string UserDataDirectory { get; } = ResolveUserDataDirectory();
     public static string DataJsonPath => Path.Combine(UserDataDirectory, "data.json");
+    /// <summary>开发环境服务等后台进程的输出日志目录。</summary>
+    public static string LogsDirectory => Path.Combine(UserDataDirectory, "logs");
 
     private static string ResolveUserDataDirectory()
     {

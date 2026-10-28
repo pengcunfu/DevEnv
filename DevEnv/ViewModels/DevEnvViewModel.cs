@@ -125,6 +125,23 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
             Message = result.DisplayMessage;
     }
 
+    [RelayCommand]
+    private void OpenLog(DevServiceItem? item)
+    {
+        if (item is null)
+            return;
+
+        DevServiceLogWindow.Show(HostServices.DialogOwner, CoreServices.DevEnvServices, item.Id, item.Name);
+    }
+
+    [RelayCommand]
+    private void OpenLogsDirectory()
+    {
+        var result = CoreServices.DevEnvServices.OpenLogsDirectory();
+        if (!result.Ok)
+            Message = result.DisplayMessage;
+    }
+
     private void Save(DevServiceConfig config)
     {
         Message = CoreServices.DevEnvServices.Save(config).DisplayMessage;

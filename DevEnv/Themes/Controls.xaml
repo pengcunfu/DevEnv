@@ -88,9 +88,10 @@
                                        TextTrimming="CharacterEllipsis"
                                        IsHitTestVisible="False"
                                        Visibility="Collapsed" />
+                            <!-- 对齐方式跟随控件属性：多行日志需要顶对齐，单行输入默认居中 -->
                             <ScrollViewer x:Name="PART_ContentHost"
                                           Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                           Focusable="False"
                                           HorizontalScrollBarVisibility="Hidden"
                                           VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />

@@ -6,12 +6,16 @@ namespace DevEnv.Core.Services;
 
 /// <summary>
 /// 开发环境服务：用户自定义后台进程的配置与启停。
-/// 启动命令交给 <c>cmd /c</c> 执行，因此 npm / 批处理 / 带参数的 exe 都能直接用。
+/// 启动命令交给 <c>cmd /c</c> 执行，因此 npm / 批处理 / 带参数的 exe 都能直接用；
+/// 标准输出与错误输出实时写入日志，内存与磁盘各留一份。
 /// </summary>
 public sealed class DevEnvService
 {
     /// <summary>本程序拉起的进程（按配置 Id 索引），用于停止时结束整棵进程树。</summary>
     private readonly ConcurrentDictionary<string, Process> _started = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>各服务的运行日志（按配置 Id 索引），停止后仍保留供查看。</summary>
+    private readonly ConcurrentDictionary<string, DevServiceLog> _logs = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly DevServiceStore _store;
 
@@ -48,13 +52,18 @@ public sealed class DevEnvService
 
     public OperationResult Remove(string id)
     {
-        var list = _store.GetAll().ToList();
-        var removed = list.RemoveAll(c => SameId(c.Id, id));
-        if (removed == 0)
+        var config = Find(id);
+        if (config is null)
             return OperationResult.Fail("配置不存在");
 
+        var list = _store.GetAll().ToList();
+        list.RemoveAll(c => SameId(c.Id, id));
         _store.SaveAll(list);
+
         RemoveTracked(id);
+        if (_logs.TryRemove(id, out var log))
+            log.Dispose();
+        DevServiceLog.Delete(GetLogPath(config));
         return OperationResult.Success("已移除");
     }
 
@@ -76,24 +85,46 @@ public sealed class DevEnvService
 
         try
         {
+            var log = BeginLog(config);
+            log.AppendSystem($"启动：{config.StartCommand}");
+            log.AppendSystem($"工作目录：{workingDirectory}");
+
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "cmd.exe",
-                Arguments = "/c " + config.StartCommand,
+                // chcp 65001 让 cmd 与多数开发工具按 UTF-8 输出，中文日志才不会乱码。
+                Arguments = "/c chcp 65001>nul & " + config.StartCommand,
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
             });
             if (process is null)
+            {
+                log.AppendSystem("启动失败：无法创建进程");
                 return OperationResult.Fail("启动失败：无法创建进程");
+            }
+
+            var pumps = AttachLog(process, log);
 
             // 命令秒退且非 0 多半是路径或参数写错，直接反馈退出码。
             if (process.WaitForExit(800))
             {
+                // 等管道读空，日志里才能看到具体报错原因。
+                try
+                {
+                    Task.WaitAll([pumps.Stdout, pumps.Stderr], 2000);
+                }
+                catch
+                {
+                    // ignore
+                }
+
                 var exitCode = process.ExitCode;
                 process.Dispose();
                 return exitCode != 0
-                    ? OperationResult.Fail($"{name} 启动失败（退出代码 {exitCode}）")
+                    ? OperationResult.Fail($"{name} 启动失败（退出代码 {exitCode}），详情见日志")
                     : OperationResult.Success($"{name} 的启动命令已执行并退出，未保持后台运行");
             }
 
@@ -114,15 +145,18 @@ public sealed class DevEnvService
             return OperationResult.Fail("配置不存在");
 
         var name = DisplayName(config);
+        var log = _logs.TryGetValue(id, out var existingLog) ? existingLog : null;
         if (!IsRunning(config))
         {
             RemoveTracked(id);
+            log?.AppendSystem($"{name} 当前未运行");
             return OperationResult.Success($"{name} 当前未运行");
         }
 
         // 1. 优先走配置的停止命令，让数据库之类能优雅退出。
         if (config.StopCommand.Length > 0)
         {
+            log?.AppendSystem($"执行停止命令：{config.StopCommand}");
             try
             {
                 RunAndWait(config.StopCommand, ResolveWorkingDirectory(config), 20000);
@@ -144,9 +178,56 @@ public sealed class DevEnvService
             KillProcessesByName(NormalizeProcessName(config.ProcessName));
 
         WaitUntilStopped(config, 5000);
-        return IsRunning(config)
-            ? OperationResult.Fail($"无法停止 {name}，请手动结束进程")
-            : OperationResult.Success($"{name} 已停止");
+        if (IsRunning(config))
+        {
+            log?.AppendSystem($"无法停止 {name}，请手动结束进程");
+            return OperationResult.Fail($"无法停止 {name}，请手动结束进程");
+        }
+
+        log?.AppendSystem($"{name} 已停止");
+        return OperationResult.Success($"{name} 已停止");
+    }
+
+    /// <summary>读取服务日志：优先内存（本次运行），否则回读磁盘上的上一次运行记录。</summary>
+    public string GetLogText(string id)
+    {
+        if (_logs.TryGetValue(id, out var log))
+            return log.GetText();
+
+        var config = Find(id);
+        return config is null ? string.Empty : DevServiceLog.ReadTail(GetLogPath(config));
+    }
+
+    public void ClearLog(string id)
+    {
+        if (_logs.TryGetValue(id, out var log))
+        {
+            log.Clear();
+            return;
+        }
+
+        var config = Find(id);
+        if (config is not null)
+            DevServiceLog.Delete(GetLogPath(config));
+    }
+
+    public OperationResult OpenLogsDirectory()
+    {
+        try
+        {
+            Directory.CreateDirectory(AppPaths.LogsDirectory);
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"\"{AppPaths.LogsDirectory}\"",
+                UseShellExecute = true,
+            });
+            return OperationResult.Success(AppPaths.LogsDirectory);
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail(ex.Message);
+        }
     }
 
     public OperationResult OpenWorkingDirectory(string id)
@@ -270,6 +351,80 @@ public sealed class DevEnvService
             Thread.Sleep(200);
         }
     }
+
+    /// <summary>把标准输出 / 错误输出接进日志，并在进程结束时补一条退出记录。</summary>
+    private static (Task Stdout, Task Stderr) AttachLog(Process process, DevServiceLog log)
+    {
+        // 自己读原始字节再按行猜编码：PostgreSQL 等原生程序输出 GBK，npm / node 输出 UTF-8，
+        // 固定用某一种编码必然有一边乱码，BeginOutputReadLine 又只能按固定编码解码。
+        var stdout = Task.Run(() => PumpOutput(process.StandardOutput.BaseStream, log, isError: false));
+        var stderr = Task.Run(() => PumpOutput(process.StandardError.BaseStream, log, isError: true));
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                process.WaitForExit();
+                Task.WaitAll(stdout, stderr);
+                log.AppendSystem($"进程已退出（退出代码 {process.ExitCode}）");
+            }
+            catch
+            {
+                // 进程对象可能已被释放，忽略。
+            }
+        });
+
+        return (stdout, stderr);
+    }
+
+    /// <summary>按行读取管道原始字节，交给 <see cref="DevServiceLog.DecodeLine"/> 解码。</summary>
+    private static void PumpOutput(Stream stream, DevServiceLog log, bool isError)
+    {
+        var buffer = new byte[4096];
+        var line = new List<byte>(256);
+        try
+        {
+            int read;
+            while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                for (var i = 0; i < read; i++)
+                {
+                    var value = buffer[i];
+                    if (value == (byte)'\n')
+                    {
+                        log.Append(DevServiceLog.DecodeLine(line.ToArray()), isError);
+                        line.Clear();
+                    }
+                    else if (value != (byte)'\r')
+                    {
+                        line.Add(value);
+                    }
+                }
+            }
+
+            // 最后一行可能没有换行符。
+            if (line.Count > 0)
+                log.Append(DevServiceLog.DecodeLine(line.ToArray()), isError);
+        }
+        catch
+        {
+            // 进程退出时管道关闭，忽略。
+        }
+    }
+
+    /// <summary>每次启动都新开一份日志（同名文件会被截断），旧的内存缓冲先释放。</summary>
+    private DevServiceLog BeginLog(DevServiceConfig config)
+    {
+        if (_logs.TryRemove(config.Id, out var previous))
+            previous.Dispose();
+
+        var log = new DevServiceLog(GetLogPath(config));
+        _logs[config.Id] = log;
+        return log;
+    }
+
+    private static string GetLogPath(DevServiceConfig config) =>
+        DevServiceLog.GetLogPath(DisplayName(config), config.Id);
 
     private void ReplaceTracked(string id, Process process)
     {

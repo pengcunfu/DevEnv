@@ -17,6 +17,8 @@
                         Command="{Binding AddServiceCommand}" />
                 <Button Content="刷新" Style="{StaticResource ToolbarButtonStyle}"
                         Command="{Binding ReloadCommand}" />
+                <Button Content="日志目录" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding OpenLogsDirectoryCommand}" />
             </StackPanel>
         </Border>
 
@@ -56,7 +58,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="100" />
-                    <DataGridTemplateColumn Header="操作" Width="300">
+                    <DataGridTemplateColumn Header="操作" Width="340">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -67,6 +69,9 @@
                                     <Button Content="停止" Margin="0,0,6,0" Padding="9,3"
                                             IsEnabled="{Binding CanStop}"
                                             Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="日志" Margin="0,0,6,0" Padding="9,3"
+                                            Command="{Binding DataContext.OpenLogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}" />
                                     <Button Content="编辑" Margin="0,0,6,0" Padding="9,3"
                                             Command="{Binding DataContext.EditServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
