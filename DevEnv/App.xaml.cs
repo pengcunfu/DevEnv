@@ -36,6 +36,14 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
 
         DispatcherUnhandledException += OnUnhandledException;
+        // 后台线程异常不走 Dispatcher，之前会静默结束进程，这里也落盘一份。
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            WriteCrashLog(args.ExceptionObject as Exception, "AppDomain");
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            WriteCrashLog(args.Exception, "Task");
+            args.SetObserved();
+        };
 
         // Velopack 必须最先处理：安装 / 卸载 / 更新重启都在参数里
         VelopackApp.Build().SetArgs(e.Args).Run();
@@ -106,6 +114,12 @@ public partial class App : System.Windows.Application
     /// <summary>未处理异常落盘到 %LOCALAPPDATA%\DevEnv\crash.log：桌面程序崩了用户看不到控制台。</summary>
     private void OnUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
+        WriteCrashLog(e.Exception, "Dispatcher");
+        e.Handled = true;
+    }
+
+    private static void WriteCrashLog(Exception? exception, string source)
+    {
         try
         {
             var dir = Path.Combine(
@@ -113,14 +127,12 @@ public partial class App : System.Windows.Application
             Directory.CreateDirectory(dir);
             File.AppendAllText(
                 Path.Combine(dir, "crash.log"),
-                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}{Environment.NewLine}{e.Exception}{Environment.NewLine}{Environment.NewLine}");
+                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{source}]{Environment.NewLine}{exception}{Environment.NewLine}{Environment.NewLine}");
         }
         catch
         {
             // 记录失败就算了
         }
-
-        e.Handled = true;
     }
 
     #endregion

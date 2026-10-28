@@ -15,6 +15,9 @@ namespace DevEnv.Host.ViewModels;
 /// <summary>主窗口视图模型：左侧导航 + 当前页面 + 状态栏 + 顶部菜单命令。</summary>
 public sealed partial class MainViewModel : ObservableObject
 {
+    /// <summary>程序化同步导航高亮时置位，避免 OnCurrentNavChanged 再导航一次、把同一页面创建两份。</summary>
+    private bool _syncingNav;
+
     public MainViewModel()
     {
         NavItems = new ObservableCollection<NavItem>(ViewFactory.NavItems);
@@ -43,11 +46,18 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _statusText = string.Empty;
 
+    /// <summary>页面自己的摘要（例如网络监控的连接数 / 速率），显示在状态栏左半部分。</summary>
+    [ObservableProperty]
+    private string _pageStatusText = string.Empty;
+
     [ObservableProperty]
     private string _versionText = string.Empty;
 
     /// <summary>给状态栏写一句话（拖放添加、工具启动结果等）。</summary>
     public void SetStatus(string message) => StatusText = message;
+
+    /// <summary>页面级摘要，切页时由页面自行写入与清空。</summary>
+    public void SetPageStatus(string message) => PageStatusText = message;
 
     public string PageTitle => CurrentPageId switch
     {
@@ -59,7 +69,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnCurrentNavChanged(NavItem? value)
     {
-        if (value is not null)
+        if (!_syncingNav && value is not null)
             Navigate(value.Id);
     }
 
@@ -80,9 +90,14 @@ public sealed partial class MainViewModel : ObservableObject
         // 从左侧导航进入时同步高亮；工具子页不属于导航项，保持现状即可
         var nav = NavItems.FirstOrDefault(n => n.Id == normalized);
         if (nav is not null && !ReferenceEquals(nav, CurrentNav))
+        {
+            _syncingNav = true;
             CurrentNav = nav;
+            _syncingNav = false;
+        }
 
         CurrentPageId = normalized;
+        PageStatusText = string.Empty;
         CurrentView = ViewFactory.Create(normalized);
     }
 

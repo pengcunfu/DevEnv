@@ -17,44 +17,17 @@ public sealed class NetworkMonitorService : IDisposable
     private readonly Dictionary<int, (string Name, string? Path)> _processCache = new();
     private readonly EtwTrafficProvider _etw = new();
     private DateTime _lastSample = DateTime.UtcNow;
-    private bool _disposed;
-
-    public event Action<MonitorSnapshot>? SnapshotUpdated;
-
-    public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(1);
 
     public bool SortByTraffic { get; set; }
 
+    /// <summary>
+    /// 启动 ETW 采集。快照本身由界面定时器驱动：这里不再另起后台轮询，
+    /// 否则两条线程同时改采样字典，容易抢出异常。
+    /// </summary>
     public void Start()
     {
         _lastSample = DateTime.UtcNow;
         _etw.Start();
-        _ = RunLoopAsync();
-    }
-
-    private async Task RunLoopAsync()
-    {
-        while (!_disposed)
-        {
-            try
-            {
-                var snapshot = CollectSnapshot();
-                SnapshotUpdated?.Invoke(snapshot);
-            }
-            catch
-            {
-                // Keep polling even if a single sample fails.
-            }
-
-            try
-            {
-                await Task.Delay(PollInterval, CancellationToken.None);
-            }
-            catch
-            {
-                break;
-            }
-        }
     }
 
     public MonitorSnapshot CollectSnapshot()
@@ -534,11 +507,7 @@ public sealed class NetworkMonitorService : IDisposable
         return result;
     }
 
-    public void Dispose()
-    {
-        _disposed = true;
-        _etw.Dispose();
-    }
+    public void Dispose() => _etw.Dispose();
 
     private sealed class RawConnection
     {

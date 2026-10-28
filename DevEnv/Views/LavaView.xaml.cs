@@ -9,11 +9,18 @@ public partial class LavaView : UserControl
     public LavaView()
     {
         InitializeComponent();
-        Tabs.SelectionChanged += (_, _) => OnTabChanged(Tabs.SelectedIndex);
+        Tabs.SelectionChanged += OnTabsSelectionChanged;
         Unloaded += (_, _) => (DataContext as System.IDisposable)?.Dispose();
     }
 
     private LavaViewModel ViewModel => (LavaViewModel)DataContext;
 
-    private void OnTabChanged(int index) => ViewModel.OnTabChanged(index);
+    /// <summary>只响应 TabControl 自己的选择变化，忽略内部 DataGrid 冒泡上来的事件。</summary>
+    private void OnTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, Tabs))
+            return;
+
+        ViewModel.OnTabChanged(Tabs.SelectedIndex);
+    }
 }

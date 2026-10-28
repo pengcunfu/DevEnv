@@ -1,0 +1,42 @@
+<Window x:Class="DevEnv.Host.Windows.NetworkConnectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="连接详情"
+        Width="780"
+        Height="500"
+        MinWidth="520"
+        MinHeight="320"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource AppBackgroundBrush}">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Style="{StaticResource ToolbarStyle}" Margin="12,12,12,0">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="刷新" Style="{StaticResource ToolbarButtonStyle}" Click="OnRefreshClick" />
+                <TextBlock x:Name="SummaryText"
+                           VerticalAlignment="Center"
+                           Margin="8,0,0,0"
+                           Style="{DynamicResource MutedTextStyle}" />
+            </StackPanel>
+        </Border>
+
+        <TextBlock x:Name="StatusText"
+                   DockPanel.Dock="Top"
+                   Margin="12,6,12,0"
+                   Foreground="{DynamicResource WarningBrush}"
+                   Visibility="Collapsed" />
+
+        <DataGrid Margin="12"
+                  ItemsSource="{Binding Connections}"
+                  IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="协议" Binding="{Binding Protocol}" Width="70" />
+                <DataGridTextColumn Header="本地" Binding="{Binding LocalEndpoint}" Width="*" />
+                <DataGridTextColumn Header="远程" Binding="{Binding RemoteEndpoint}" Width="*" />
+                <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="100" />
+                <DataGridTextColumn Header="下载" Binding="{Binding DownloadRateText}" Width="90" />
+                <DataGridTextColumn Header="上传" Binding="{Binding UploadRateText}" Width="90" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>

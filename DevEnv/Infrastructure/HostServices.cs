@@ -26,6 +26,13 @@ public static class HostServices
             window.ViewModel.SetStatus(message);
     }
 
+    /// <summary>写页面级摘要（如网络监控的连接数与速率），页面切换时由页面清空。</summary>
+    public static void SetPageStatus(string message)
+    {
+        if (Application.Current?.MainWindow is MainWindow window)
+            window.ViewModel.SetPageStatus(message);
+    }
+
     public static void ShowAbout()
     {
         var window = new AboutWindow

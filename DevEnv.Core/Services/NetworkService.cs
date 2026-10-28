@@ -12,6 +12,7 @@ namespace DevEnv.Core.Services;
 /// </summary>
 public sealed class NetworkService
 {
+    private readonly object _gate = new();
     private readonly NetworkMonitorService _monitor = new() { SortByTraffic = true };
     private readonly PortManagerService _ports = new();
 
@@ -24,11 +25,18 @@ public sealed class NetworkService
 
     public NetworkService() => _monitor.Start();
 
+    /// <summary>采集网络快照。调用方在后台线程执行，加锁保证采样字典只被一条线程访问。</summary>
     public NetworkSnapshotView GetSnapshot(bool sortByTraffic = true)
     {
-        _monitor.SortByTraffic = sortByTraffic;
-        var snapshot = _monitor.CollectSnapshot();
-        return new NetworkSnapshotView
+        lock (_gate)
+        {
+            _monitor.SortByTraffic = sortByTraffic;
+            return ToView(_monitor.CollectSnapshot());
+        }
+    }
+
+    private static NetworkSnapshotView ToView(MonitorSnapshot snapshot) =>
+        new()
         {
             Timestamp = snapshot.Timestamp,
             TotalConnections = snapshot.TotalConnections,
@@ -56,9 +64,14 @@ public sealed class NetworkService
                 }).ToList(),
             }).ToList(),
         };
+
+    public IReadOnlyList<PortRowView> GetPorts()
+    {
+        lock (_gate)
+            return GetPortsCore();
     }
 
-    public IReadOnlyList<PortRowView> GetPorts() =>
+    private IReadOnlyList<PortRowView> GetPortsCore() =>
         _ports.GetConnections().Select(c => new PortRowView
         {
             Protocol = c.Protocol,

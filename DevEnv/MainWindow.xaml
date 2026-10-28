@@ -51,10 +51,16 @@
                 BorderThickness="0,1,0,0"
                 Padding="12,4">
             <Grid>
-                <TextBlock Text="{Binding StatusText}"
-                           FontSize="11"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusText}"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding PageStatusText}"
+                               FontSize="11"
+                               Margin="24,0,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               Visibility="{Binding PageStatusText, Converter={StaticResource NonEmptyString}}" />
+                </StackPanel>
                 <TextBlock Text="{Binding VersionText}"
                            FontSize="11"
                            Foreground="{DynamicResource TextSecondaryBrush}"

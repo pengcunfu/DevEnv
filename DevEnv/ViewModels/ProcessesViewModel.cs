@@ -13,14 +13,16 @@ namespace DevEnv.Host.ViewModels;
 public sealed partial class ProcessesViewModel : ObservableObject, IDisposable
 {
     private readonly DispatcherTimer _timer;
+    private int _refreshing;
+    private bool _disposed;
 
     public ProcessesViewModel()
     {
         Rows = [];
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _timer.Tick += (_, _) => { if (!Paused) Refresh(); };
+        _timer.Tick += (_, _) => { if (!Paused) _ = Refresh(); };
         _timer.Start();
-        Refresh();
+        _ = Refresh();
     }
 
     public ObservableCollection<ProcessRowView> Rows { get; }
@@ -57,22 +59,37 @@ public sealed partial class ProcessesViewModel : ObservableObject, IDisposable
 
     partial void OnQueryChanged(string value) => ApplyFilter();
 
-    partial void OnSortChanged(string value) => Refresh();
+    partial void OnSortChanged(string value) => _ = Refresh();
 
     public IEnumerable<string> SortModes { get; } = ["cpu", "memory", "name"];
 
     private IEnumerable<ProcessRowView> _all = [];
 
+    /// <summary>采样放到线程池，避免每秒一次的进程枚举阻塞界面与导航切换。</summary>
     [RelayCommand]
-    public void Refresh()
+    public async Task Refresh()
     {
-        var snapshot = CoreServices.Processes.GetSnapshot(Sort);
-        _all = snapshot.Processes;
-        ProcessCount = snapshot.ProcessCount;
-        TotalMemoryText = snapshot.TotalMemoryText;
-        Timestamp = snapshot.Timestamp.ToString("HH:mm:ss");
-        StatusHint = snapshot.StatusHint ?? string.Empty;
-        ApplyFilter();
+        if (Interlocked.Exchange(ref _refreshing, 1) == 1)
+            return;
+
+        try
+        {
+            var sort = Sort;
+            var snapshot = await Task.Run(() => CoreServices.Processes.GetSnapshot(sort));
+            if (_disposed)
+                return;
+
+            _all = snapshot.Processes;
+            ProcessCount = snapshot.ProcessCount;
+            TotalMemoryText = snapshot.TotalMemoryText;
+            Timestamp = snapshot.Timestamp.ToString("HH:mm:ss");
+            StatusHint = snapshot.StatusHint ?? string.Empty;
+            ApplyFilter();
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _refreshing, 0);
+        }
     }
 
     private void ApplyFilter()
@@ -108,7 +125,7 @@ public sealed partial class ProcessesViewModel : ObservableObject, IDisposable
         if (!result.Ok)
             Message = result.DisplayMessage;
         Selected = null;
-        Refresh();
+        _ = Refresh();
     }
 
     [RelayCommand]
@@ -124,7 +141,7 @@ public sealed partial class ProcessesViewModel : ObservableObject, IDisposable
         if (!result.Ok)
             Message = result.DisplayMessage;
         Selected = null;
-        Refresh();
+        _ = Refresh();
     }
 
     [RelayCommand]
@@ -137,5 +154,9 @@ public sealed partial class ProcessesViewModel : ObservableObject, IDisposable
             Message = result.DisplayMessage;
     }
 
-    public void Dispose() => _timer.Stop();
+    public void Dispose()
+    {
+        _disposed = true;
+        _timer.Stop();
+    }
 }

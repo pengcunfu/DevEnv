@@ -26,6 +26,11 @@
 ### Changed
 
 - 「开发环境」页去掉标题、说明与环境根目录展示，顶部操作区改为紧凑工具条；`BaseEnvPath` 仍可在设置中修改。添加、编辑、启停与移除等操作结果统一显示在主窗底部状态栏，不再占用页面空间
+- 「网络监控」「进程监控」「系统工具」三页同样去掉页面标题与说明，内容整体上移；网络监控的「管理员重启」并入流量页工具条，系统工具的搜索框移到页面顶部
+- 「进程监控」的进程详情移入独立非模态窗口：双击列表行打开，窗口复用并支持手动刷新，页面列表恢复整行宽度
+- 「网络监控」的连接详情同样移入独立非模态窗口：双击流量页进程行打开，窗口复用并支持手动刷新；流量列表恢复整行宽度并补上可执行路径列
+- 「网络监控」「进程监控」的快照采集改到线程池执行，界面只做数据绑定：进程枚举、连接枚举与 TCP 统计不再阻塞 UI 线程，两个页面的导航切换明显跟手；端口页签与详情窗口的手动刷新一并异步化
+- 网络监控底部的状态卡并入主窗状态栏，显示连接数、上下行速率与提示，离开页面时自动清空
 - 产品中文显示名由「程序盒子」更名为「燧岚开发盒子」，品牌名 **FireNeb**；英文名、`DevEnv.exe`、Velopack `APP_ID` 与用户数据目录保持不变。官网与文档站同步更新品牌、域名与友链（FireNeb / Sigxor），开机自启注册表项在下次切换时自动清理旧名称
 - 开源协议由 MIT 变更为 **Apache License 2.0**：根目录 `LICENSE` 换为 Apache 2.0 全文，新增 `NOTICE` 承载版权与归属声明；NuGet `PackageLicenseExpression`、README 与官网相关文案同步更新。此前已发布的版本仍按当时的 MIT 协议授权
 - 仓库地址由 `github.com/pengcunfu/DevBox.Net` 更名为 `github.com/pengcunfu/DevEnv`：README、官网文档、`RepositoryUrl` 与自更新源（`UpdateService` / `AppInfo`）同步更新
@@ -52,6 +57,11 @@
 
 ### Fixed
 
+- 修复程序化导航重复创建页面：`Navigate` 同步左侧导航高亮时触发了 `OnCurrentNavChanged` 再次导航，`DEVENV_START_PAGE`、托盘唤回等入口会创建两份同一页面。旧实例没有进入可视树，`Unloaded` 不触发，其定时器会一直在后台采样；现在用 `_syncingNav` 守卫，含网络监控、进程监控在内的页面切换只创建一份视图
+- 修复网络监控里选中进程或双击查看详情时程序直接退出：`TabControl` 的 `SelectionChanged` 会被内部 `DataGrid` 的选中事件冒泡触发，切页签逻辑重刷列表又反过来改选中项，形成无限递归并栈溢出；栈溢出无法被托管异常处理器捕获，所以 `crash.log` 与事件日志里都没有记录。现在只处理 `OriginalSource` 为 `TabControl` 自身的事件，熔岩环境页的同类写法一并加上护栏
+- 双击详情改用 `PreviewMouseLeftButtonDown` 判断 `ClickCount`：`DataGridCell` 会先把普通双击事件处理掉，挂在 `MouseDoubleClick` 上不会触发
+- 网络监控不再在 `NetworkService` 构造时另起一条后台快照轮询，改为只由页面定时器采集，避免两条线程同时读写采样字典
+- 未处理异常日志补齐后台线程来源：`AppDomain.UnhandledException` 与 `TaskScheduler.UnobservedTaskException` 也会写入 `%LOCALAPPDATA%\DevEnv\crash.log`，排查静默退出时不再只有 UI 线程记录
 - 添加网站时粘贴 `ftp://` / `file://` 等非 http(s) 地址不再被拼成 `https://ftp//…` 这类假地址，改为直接判定为无效网址
 - 单文件发布时 `Resources/tools/7zr.exe` 与 `icon.ico` 会被打进 exe bundle，导致安装包内解压 7z / tar.gz 失败；这些资源现标记为排除单文件打包，稳定输出到 `Resources/`
 

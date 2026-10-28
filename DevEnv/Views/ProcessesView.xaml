@@ -10,13 +10,8 @@
         <vm:ProcessesViewModel />
     </UserControl.DataContext>
 
-    <DockPanel Margin="14">
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-            <TextBlock Text="进程监控" Style="{DynamicResource PageTitleStyle}" />
-            <TextBlock Text="实时查看本机进程的 CPU、内存占用" Style="{DynamicResource PageHintStyle}" />
-        </StackPanel>
-
-        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+    <DockPanel Margin="12">
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
             <TextBox Width="220" Margin="0,0,8,0"
                      Style="{StaticResource SearchBoxStyle}"
                      Tag="搜索进程名 / PID / 路径"
@@ -40,58 +35,27 @@
         </WrapPanel>
 
         <TextBlock DockPanel.Dock="Top"
-                   Margin="0,0,0,8"
+                   Margin="0,0,0,6"
                    Text="{Binding Message}"
                    Foreground="{DynamicResource DangerBrush}"
                    Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" />
-                <ColumnDefinition Width="2*" />
-            </Grid.ColumnDefinitions>
+        <DataGrid x:Name="ProcessGrid"
+                  ItemsSource="{Binding Rows}"
+                  SelectedItem="{Binding Selected, Mode=TwoWay}"
+                  ToolTip="双击行查看进程详情"
+                  PreviewMouseLeftButtonDown="OnGridPreviewMouseDown">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="进程" Binding="{Binding DisplayName}" Width="2*" />
+                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70" />
+                <DataGridTextColumn Header="CPU" Binding="{Binding CpuText}" Width="80" />
+                <DataGridTextColumn Header="内存" Binding="{Binding MemoryText}" Width="90" />
+                <DataGridTextColumn Header="线程" Binding="{Binding ThreadCount}" Width="60" />
+                <DataGridTextColumn Header="路径" Binding="{Binding PathText}" Width="3*" />
+            </DataGrid.Columns>
+        </DataGrid>
 
-            <DataGrid Grid.Column="0"
-                      Margin="0,0,10,0"
-                      ItemsSource="{Binding Rows}"
-                      SelectedItem="{Binding Selected, Mode=TwoWay}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="进程" Binding="{Binding DisplayName}" Width="2*" />
-                    <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70" />
-                    <DataGridTextColumn Header="CPU" Binding="{Binding CpuText}" Width="80" />
-                    <DataGridTextColumn Header="内存" Binding="{Binding MemoryText}" Width="90" />
-                    <DataGridTextColumn Header="线程" Binding="{Binding ThreadCount}" Width="60" />
-                    <DataGridTextColumn Header="路径" Binding="{Binding PathText}" Width="2*" />
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="12">
-                <StackPanel>
-                    <TextBlock Text="进程详情" Style="{DynamicResource SectionTitleStyle}" />
-                    <TextBlock Text="未选择进程" Style="{DynamicResource PageHintStyle}"
-                               Visibility="{Binding Selected, Converter={StaticResource FalseToVisibility}}" />
-                    <StackPanel Visibility="{Binding Selected, Converter={StaticResource TrueToVisibility}}"
-                                DataContext="{Binding Selected}">
-                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="14" />
-                        <TextBlock Style="{DynamicResource MutedTextStyle}">
-                            <Run Text="PID " /><Run Text="{Binding ProcessId, Mode=OneWay}" />
-                        </TextBlock>
-                        <TextBlock Text="{Binding PathText}" Style="{DynamicResource MonoTextStyle}" Margin="0,4,0,8" />
-                        <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Margin="0,0,0,8" />
-                        <TextBlock><Run Text="CPU: " /><Run Text="{Binding CpuText, Mode=OneWay}" /></TextBlock>
-                        <TextBlock><Run Text="工作集: " /><Run Text="{Binding MemoryText, Mode=OneWay}" /></TextBlock>
-                        <TextBlock><Run Text="专用内存: " /><Run Text="{Binding PrivateMemoryText, Mode=OneWay}" /></TextBlock>
-                        <TextBlock><Run Text="虚拟内存: " /><Run Text="{Binding VirtualMemoryText, Mode=OneWay}" /></TextBlock>
-                        <TextBlock><Run Text="线程: " /><Run Text="{Binding ThreadCount, Mode=OneWay}" /></TextBlock>
-                        <TextBlock><Run Text="句柄: " /><Run Text="{Binding HandleCount, Mode=OneWay}" /></TextBlock>
-                        <TextBlock><Run Text="启动时间: " /><Run Text="{Binding StartTimeText, Mode=OneWay}" /></TextBlock>
-                        <TextBlock><Run Text="状态: " /><Run Text="{Binding RespondingText, Mode=OneWay}" /></TextBlock>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </Grid>
-
-        <Border DockPanel.Dock="Bottom" Style="{StaticResource CardStyle}" Padding="10,6" Margin="0,10,0,0">
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource CardStyle}" Padding="10,6" Margin="0,8,0,0">
             <StackPanel Orientation="Horizontal">
                 <TextBlock>
                     <Run Text="进程数: " /><Run Text="{Binding ProcessCount, Mode=OneWay}" />

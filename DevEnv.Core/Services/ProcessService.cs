@@ -8,6 +8,7 @@ namespace DevEnv.Core.Services;
 /// <summary>进程监控：快照、结束进程、定位目录。逻辑来自 <c>ProcessEndpoints</c>。</summary>
 public sealed class ProcessService
 {
+    private readonly object _gate = new();
     private readonly ProcessMonitorService _monitor = new() { SortMode = ProcessSortMode.Cpu };
 
     public ProcessService()
@@ -16,18 +17,24 @@ public sealed class ProcessService
         _monitor.CollectSnapshot();
     }
 
+    /// <summary>采集全量进程快照。会在后台线程调用，用锁串行化避免采样状态互相踩踏。</summary>
     public ProcessSnapshotView GetSnapshot(string? sort = null)
     {
-        _monitor.SortMode = sort?.ToLowerInvariant() switch
+        lock (_gate)
         {
-            "memory" => ProcessSortMode.Memory,
-            "name" => ProcessSortMode.Name,
-            _ => ProcessSortMode.Cpu,
-        };
+            _monitor.SortMode = sort?.ToLowerInvariant() switch
+            {
+                "memory" => ProcessSortMode.Memory,
+                "name" => ProcessSortMode.Name,
+                _ => ProcessSortMode.Cpu,
+            };
 
-        var snapshot = _monitor.CollectSnapshot();
-        return new ProcessSnapshotView
-        {
+            return ToView(_monitor.CollectSnapshot());
+        }
+    }
+
+    private static ProcessSnapshotView ToView(ProcessSnapshot snapshot) => new()
+    {
             ProcessCount = snapshot.ProcessCount,
             TotalMemoryText = snapshot.TotalMemoryText,
             Timestamp = snapshot.Timestamp,
@@ -50,8 +57,7 @@ public sealed class ProcessService
                 StartTimeText = p.StartTimeText,
                 RespondingText = p.RespondingText,
             }).ToList(),
-        };
-    }
+    };
 
     public OperationResult Kill(int pid, bool entireProcessTree) =>
         ProcessActions.TryKill(pid, entireProcessTree, out var error)

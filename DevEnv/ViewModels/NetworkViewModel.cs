@@ -15,16 +15,20 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _portTimer;
     private readonly DispatcherTimer _speedTimer;
 
+    private int _snapshotRefreshing;
+    private int _portsRefreshing;
+    private bool _disposed;
+
     public NetworkViewModel()
     {
         Processes = [];
         Ports = [];
 
         _monitorTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _monitorTimer.Tick += (_, _) => { if (!Paused && SelectedTab == "monitor") RefreshSnapshot(); };
+        _monitorTimer.Tick += (_, _) => { if (!Paused && SelectedTab == "monitor") _ = RefreshSnapshot(); };
 
         _portTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _portTimer.Tick += (_, _) => { if (SelectedTab == "ports") RefreshPorts(); };
+        _portTimer.Tick += (_, _) => { if (SelectedTab == "ports") _ = RefreshPorts(); };
 
         _speedTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _speedTimer.Tick += (_, _) => { if (SelectedTab == "speed") RefreshSpeed(); };
@@ -32,7 +36,7 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
         _monitorTimer.Start();
         _portTimer.Start();
         _speedTimer.Start();
-        RefreshSnapshot();
+        _ = RefreshSnapshot();
     }
 
     #region 公共
@@ -45,7 +49,6 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
     ];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedConnections))]
     private string _selectedTab = "monitor";
 
     [ObservableProperty]
@@ -60,9 +63,9 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
         SelectedTab = index >= 0 && index < Tabs.Count ? Tabs[index].Id : "monitor";
         switch (SelectedTab)
         {
-            case "ports": RefreshPorts(); break;
+            case "ports": _ = RefreshPorts(); break;
             case "speed": RefreshSpeed(); break;
-            default: RefreshSnapshot(); break;
+            default: _ = RefreshSnapshot(); break;
         }
     }
 
@@ -93,26 +96,45 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _statusHint = string.Empty;
 
-    public IEnumerable<NetworkConnectionView> SelectedConnections =>
-        SelectedProcess?.Connections ?? [];
-
     partial void OnQueryChanged(string value) => ApplyFilter();
-
-    partial void OnSelectedProcessChanged(NetworkProcessView? value) => OnPropertyChanged(nameof(SelectedConnections));
 
     private IEnumerable<NetworkProcessView> _all = [];
 
+    /// <summary>采样放到线程池，避免每秒一次的连接枚举阻塞界面与导航切换。</summary>
     [RelayCommand]
-    public void RefreshSnapshot()
+    public async Task RefreshSnapshot()
     {
-        var snapshot = CoreServices.Network.GetSnapshot();
-        _all = snapshot.Processes;
-        TotalConnections = snapshot.TotalConnections;
-        TotalDownload = snapshot.TotalDownloadText;
-        TotalUpload = snapshot.TotalUploadText;
-        IsElevated = snapshot.IsElevated;
-        StatusHint = snapshot.StatusHint ?? string.Empty;
-        ApplyFilter();
+        if (Interlocked.Exchange(ref _snapshotRefreshing, 1) == 1)
+            return;
+
+        try
+        {
+            var snapshot = await Task.Run(() => CoreServices.Network.GetSnapshot());
+            if (_disposed)
+                return;
+
+            _all = snapshot.Processes;
+            TotalConnections = snapshot.TotalConnections;
+            TotalDownload = snapshot.TotalDownloadText;
+            TotalUpload = snapshot.TotalUploadText;
+            IsElevated = snapshot.IsElevated;
+            StatusHint = snapshot.StatusHint ?? string.Empty;
+            ApplyFilter();
+            PublishStatus();
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _snapshotRefreshing, 0);
+        }
+    }
+
+    /// <summary>底部状态条已并到主窗状态栏，这里按当前快照刷新那行摘要。</summary>
+    private void PublishStatus()
+    {
+        var summary = $"连接 {TotalConnections} · 下载 {TotalDownload} · 上传 {TotalUpload}";
+        if (!string.IsNullOrWhiteSpace(StatusHint))
+            summary += $" · {StatusHint}";
+        HostServices.SetPageStatus(summary);
     }
 
     private void ApplyFilter()
@@ -174,12 +196,26 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
     partial void OnPortQueryChanged(string value) => OnPropertyChanged(nameof(FilteredPorts));
 
     [RelayCommand]
-    public void RefreshPorts()
+    public async Task RefreshPorts()
     {
-        Ports.Clear();
-        foreach (var port in CoreServices.Network.GetPorts())
-            Ports.Add(port);
-        OnPropertyChanged(nameof(FilteredPorts));
+        if (Interlocked.Exchange(ref _portsRefreshing, 1) == 1)
+            return;
+
+        try
+        {
+            var ports = await Task.Run(() => CoreServices.Network.GetPorts());
+            if (_disposed)
+                return;
+
+            Ports.Clear();
+            foreach (var port in ports)
+                Ports.Add(port);
+            OnPropertyChanged(nameof(FilteredPorts));
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _portsRefreshing, 0);
+        }
     }
 
     [RelayCommand]
@@ -194,7 +230,7 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
         var result = CoreServices.Network.KillPortProcess(row.ProcessId);
         if (!result.Ok)
             Message = result.DisplayMessage;
-        RefreshPorts();
+        _ = RefreshPorts();
     }
 
     #endregion
@@ -242,8 +278,11 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         _monitorTimer.Stop();
         _portTimer.Stop();
         _speedTimer.Stop();
+        // 离开网络监控页时清掉状态栏摘要，别把旧数据带到其他页面。
+        HostServices.SetPageStatus(string.Empty);
     }
 }
