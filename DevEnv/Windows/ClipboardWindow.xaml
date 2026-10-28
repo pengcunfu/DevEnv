@@ -137,24 +137,26 @@
               </Grid>
             </Border>
 
-            <Border Grid.Column="1" Style="{StaticResource CardStyle}"
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="0"
                     ContextMenu="{StaticResource EntryContextMenu}">
-                <StackPanel Visibility="{Binding Selected, Converter={StaticResource TrueToVisibility}}"
-                            DataContext="{Binding Selected}">
+                <Grid DataContext="{Binding Selected}">
                     <Image Source="{Binding ImageFullPath, Converter={StaticResource PathToImage}}"
-                           MaxHeight="320" Margin="0,0,0,8"
+                           Margin="8"
                            Stretch="Uniform"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
                            Visibility="{Binding IsImage, Converter={StaticResource TrueToVisibility}}" />
                     <TextBox Text="{Binding Text, Mode=OneWay}"
                              IsReadOnly="True"
                              AcceptsReturn="True"
                              FontFamily="Consolas"
                              FontSize="12"
-                             MaxHeight="320"
+                             Padding="10,8"
+                             VerticalContentAlignment="Top"
                              VerticalScrollBarVisibility="Auto"
                              HorizontalScrollBarVisibility="Auto"
                              Visibility="{Binding IsImage, Converter={StaticResource FalseToVisibility}}" />
-                </StackPanel>
+                </Grid>
             </Border>
         </Grid>
         </DockPanel>
