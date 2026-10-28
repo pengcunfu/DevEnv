@@ -8,6 +8,7 @@
 
 ### Added
 
+- 「开发环境」页改为**自定义后台服务**：服务列表由用户维护，支持添加 / 编辑 / 移除，每条可配置名称、工作目录、启动命令、停止命令与进程名；命令通过 `cmd /c` 执行，`npm run dev`、批处理与带参数的 exe 都能直接填，停止时优先执行停止命令、失败再结束进程树。配置存于 `data.json` 的 `DevServiceList`，取代原先写死的 MySQL / Redis / PostgreSQL 三项与本机绝对路径
 - 新增「文件解锁与粉碎」工具（`工具` 菜单 → 独立窗口）：
   - **解除占用**：通过 Windows Restart Manager 检测占用文件 / 文件夹的进程，支持结束所选或全部可结束进程；关键系统进程与 DevEnv 自身受保护，普通权限下可一键请求管理员重启
   - **文件粉碎**：用随机数据覆盖文件 1 / 3 / 7 遍后截断、随机改名并删除，支持拖入文件与整个文件夹、逐文件进度与取消；单个文件失败不影响整批任务
@@ -23,6 +24,7 @@
 
 ### Changed
 
+- 「开发环境」页去掉标题、说明与环境根目录展示，顶部操作区改为紧凑工具条；`BaseEnvPath` 仍可在设置中修改
 - 产品中文显示名由「程序盒子」更名为「燧岚开发盒子」，品牌名 **FireNeb**；英文名、`DevEnv.exe`、Velopack `APP_ID` 与用户数据目录保持不变。官网与文档站同步更新品牌、域名与友链（FireNeb / Sigxor），开机自启注册表项在下次切换时自动清理旧名称
 - 开源协议由 MIT 变更为 **Apache License 2.0**：根目录 `LICENSE` 换为 Apache 2.0 全文，新增 `NOTICE` 承载版权与归属声明；NuGet `PackageLicenseExpression`、README 与官网相关文案同步更新。此前已发布的版本仍按当时的 MIT 协议授权
 - 仓库地址由 `github.com/pengcunfu/DevBox.Net` 更名为 `github.com/pengcunfu/DevEnv`：README、官网文档、`RepositoryUrl` 与自更新源（`UpdateService` / `AppInfo`）同步更新

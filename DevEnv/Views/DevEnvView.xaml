@@ -10,59 +10,86 @@
         <vm:DevEnvViewModel />
     </UserControl.DataContext>
 
-    <DockPanel Margin="14">
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-            <TextBlock Text="开发环境" Style="{DynamicResource PageTitleStyle}" />
-            <TextBlock Text="本机 MySQL / Redis / PostgreSQL 进程启停。绿色版请用「熔岩环境」。"
-                       Style="{DynamicResource PageHintStyle}" />
-        </StackPanel>
-
-        <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,10">
-            <StackPanel>
-                <TextBlock Text="环境根目录 (BaseEnvPath)" Style="{DynamicResource MutedTextStyle}" />
-                <TextBlock Text="{Binding Config.BaseEnvPath}" Style="{DynamicResource MonoTextStyle}" />
+    <DockPanel Margin="12">
+        <Border DockPanel.Dock="Top" Style="{StaticResource ToolbarStyle}" Margin="0,0,0,6">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="添加服务" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding AddServiceCommand}" />
+                <Button Content="刷新" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding ReloadCommand}" />
             </StackPanel>
         </Border>
 
+        <!-- 无消息时不占位，避免顶部多出一条空隙 -->
         <TextBlock DockPanel.Dock="Top"
-                   Margin="0,0,0,8"
+                   Margin="0,0,0,6"
                    Text="{Binding Message}"
+                   Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}"
                    Style="{DynamicResource PageHintStyle}" />
 
-        <DataGrid ItemsSource="{Binding Services}">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Header="服务" Width="3*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding Description}" Style="{DynamicResource MutedTextStyle}" />
-                                <TextBlock Text="{Binding InstallPath}" Style="{DynamicResource MonoTextStyle}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="100" />
-                <DataGridTemplateColumn Header="操作" Width="240">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="启动" Margin="0,0,6,0" Padding="10,3"
-                                        IsEnabled="{Binding CanStart}"
-                                        Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
-                                <Button Content="停止" Margin="0,0,6,0" Padding="10,3"
-                                        IsEnabled="{Binding CanStop}"
-                                        Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
-                                <Button Content="数据目录" Padding="10,3"
-                                        Command="{Binding DataContext.OpenDataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+        <Grid>
+            <DataGrid ItemsSource="{Binding Services}">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="服务" Width="3*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding StartCommand}"
+                                               FontFamily="Consolas" FontSize="11"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding StartCommand}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="工作目录" Width="2*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding WorkingDirectory}"
+                                           FontFamily="Consolas" FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding WorkingDirectory}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="100" />
+                    <DataGridTemplateColumn Header="操作" Width="300">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="启动" Margin="0,0,6,0" Padding="9,3"
+                                            IsEnabled="{Binding CanStart}"
+                                            Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="停止" Margin="0,0,6,0" Padding="9,3"
+                                            IsEnabled="{Binding CanStop}"
+                                            Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="编辑" Margin="0,0,6,0" Padding="9,3"
+                                            Command="{Binding DataContext.EditServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="目录" Margin="0,0,6,0" Padding="9,3"
+                                            Command="{Binding DataContext.OpenDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="移除" Padding="9,3"
+                                            Foreground="{DynamicResource DangerBrush}"
+                                            Command="{Binding DataContext.RemoveServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Text="还没有服务，点「添加服务」配一个要常驻的后台进程。"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       IsHitTestVisible="False"
+                       Style="{DynamicResource PageHintStyle}"
+                       Visibility="{Binding Services.Count, Converter={StaticResource NoItems}}" />
+        </Grid>
     </DockPanel>
 </UserControl>

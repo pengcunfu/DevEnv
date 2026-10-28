@@ -1,0 +1,49 @@
+<Window x:Class="DevEnv.Host.Windows.DevServiceEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="服务配置"
+        Width="560"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource ChromeBrush}">
+    <StackPanel Margin="18">
+        <TextBlock Text="名称" Style="{DynamicResource MutedTextStyle}" />
+        <TextBox x:Name="NameBox" Margin="0,4,0,0" Tag="例如 Redis 或 前端开发服务器" />
+
+        <TextBlock Text="工作目录" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,0" />
+        <Grid Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="WorkDirBox" Tag="留空则使用用户数据目录" />
+            <Button Grid.Column="1" Content="浏览" Margin="8,0,0,0" Padding="14,0" Click="OnBrowseClick" />
+        </Grid>
+
+        <TextBlock Text="启动命令" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,0" />
+        <TextBox x:Name="StartCommandBox" Margin="0,4,0,0"
+                 Tag="例如 npm run dev 或 redis-server.exe redis.conf" />
+
+        <TextBlock Text="停止命令（可选）" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,0" />
+        <TextBox x:Name="StopCommandBox" Margin="0,4,0,0"
+                 Tag="例如 redis-cli shutdown；留空则直接结束进程" />
+
+        <TextBlock Text="进程名（可选）" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,0" />
+        <TextBox x:Name="ProcessNameBox" Margin="0,4,0,0"
+                 Tag="例如 node；用于重启本程序后仍能识别状态并结束进程" />
+
+        <TextBlock Text="命令通过 cmd 执行，支持 npm、批处理与带参数的 exe；工作目录留空时使用用户数据目录。进程名请填该服务独有的名称，否则可能误判运行状态。"
+                   Style="{DynamicResource PageHintStyle}" Margin="0,12,0,0" />
+
+        <TextBlock x:Name="ErrorText" Style="{DynamicResource ErrorTextStyle}"
+                   Visibility="Collapsed" Margin="0,10,0,0" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="取消" Width="84" Height="32" IsCancel="True" Margin="0,0,8,0" />
+            <Button Content="保存" Width="84" Height="32" Style="{StaticResource AccentButtonStyle}"
+                    IsDefault="True" Click="OnSaveClick" />
+        </StackPanel>
+    </StackPanel>
+</Window>

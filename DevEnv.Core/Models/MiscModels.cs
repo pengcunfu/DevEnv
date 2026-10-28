@@ -12,16 +12,32 @@ public sealed class AppConfig
     public string ShowWindowHotkey { get; set; } = "Ctrl+Alt+D";
 }
 
-/// <summary>开发环境服务（MySQL / Redis / PostgreSQL）一行。</summary>
+/// <summary>
+/// 开发环境服务配置（data.json 的 DevServiceList 一项）：
+/// 用户自己填写的后台进程，启动命令走 <c>cmd /c</c> 执行。
+/// </summary>
+public sealed class DevServiceConfig
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string WorkingDirectory { get; set; } = string.Empty;
+    public string StartCommand { get; set; } = string.Empty;
+    /// <summary>可选：优雅停止命令，如 <c>redis-cli shutdown</c>；留空则直接结束进程。</summary>
+    public string StopCommand { get; set; } = string.Empty;
+    /// <summary>可选：进程名（不含 .exe），用于识别运行状态，并在重启本程序后仍能停止它。</summary>
+    public string ProcessName { get; set; } = string.Empty;
+}
+
+/// <summary>开发环境服务列表中的一行（配置 + 实时状态）。</summary>
 public sealed class DevServiceItem
 {
-    public required string Key { get; init; }
+    public required string Id { get; init; }
     public required string Name { get; init; }
-    public required string Description { get; init; }
-    public required string InstallPath { get; init; }
-    public required string DataPath { get; init; }
+    public string WorkingDirectory { get; init; } = string.Empty;
+    public string StartCommand { get; init; } = string.Empty;
+    public string StopCommand { get; init; } = string.Empty;
+    public string ProcessName { get; init; } = string.Empty;
     public bool Running { get; init; }
-    public bool Installed { get; init; }
     public string StatusText { get; init; } = string.Empty;
     public bool CanStart { get; init; }
     public bool CanStop { get; init; }

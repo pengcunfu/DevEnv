@@ -10,39 +10,44 @@
         <vm:LavaViewModel />
     </UserControl.DataContext>
 
-    <DockPanel Margin="14">
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-            <TextBlock Text="熔岩" Style="{DynamicResource PageTitleStyle}" />
-            <TextBlock Style="{DynamicResource PageHintStyle}">
-                <TextBlock.Text>
-                    <Binding Path="DataInfo.About.Tagline" FallbackValue="开源智能开发环境管理工具" />
-                </TextBlock.Text>
-            </TextBlock>
-        </StackPanel>
+    <UserControl.Resources>
+        <!-- 本页选项卡按工具条排布，比全局样式更紧凑 -->
+        <Style TargetType="TabItem" BasedOn="{StaticResource PageTabItemStyle}">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </UserControl.Resources>
 
-        <Border DockPanel.Dock="Top"
-                Style="{StaticResource CardStyle}"
-                Padding="8"
-                Margin="0,0,0,8">
+    <DockPanel Margin="12">
+        <Border DockPanel.Dock="Top" Style="{StaticResource ToolbarStyle}" Margin="0,0,0,6">
             <StackPanel Orientation="Horizontal">
-                <Button Content="应用目录" Margin="0,0,6,0" Command="{Binding OpenAppsDirectoryCommand}" />
-                <Button Content="下载缓存" Margin="0,0,6,0" Command="{Binding OpenCacheDirectoryCommand}" />
-                <Button Content="数据目录" Margin="0,0,6,0" Command="{Binding OpenDataRootCommand}" />
-                <Button Content="环境变量" Margin="0,0,6,0" Command="{Binding OpenEnvironmentVariablesCommand}" />
-                <Button Content="官方文档" Command="{Binding OpenDocsCommand}" />
+                <Button Content="应用目录" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding OpenAppsDirectoryCommand}" />
+                <Button Content="下载缓存" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding OpenCacheDirectoryCommand}" />
+                <Button Content="数据目录" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding OpenDataRootCommand}" />
+                <Border Width="1" Margin="5,3" Background="{DynamicResource CardBorderBrush}" />
+                <Button Content="环境变量" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding OpenEnvironmentVariablesCommand}" />
+                <Button Content="官方文档" Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding OpenDocsCommand}" />
             </StackPanel>
         </Border>
 
+        <!-- 无消息时不占位，避免顶部多出一条空隙 -->
         <TextBlock DockPanel.Dock="Top"
-                   Margin="0,0,0,8"
+                   Margin="0,0,0,6"
                    Text="{Binding Message}"
+                   Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}"
                    Style="{DynamicResource PageHintStyle}" />
 
         <TabControl x:Name="Tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
 
             <!-- ============ 服务 ============ -->
             <TabItem Header="服务">
-                <DataGrid ItemsSource="{Binding Services}" Margin="0,8,0,0">
+                <DataGrid ItemsSource="{Binding Services}" Margin="0,4,0,0">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="服务" Binding="{Binding DisplayName}" Width="2*" />
                         <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="2*" />
@@ -100,7 +105,7 @@
 
             <!-- ============ 软件下载 ============ -->
             <TabItem Header="软件下载">
-                <DockPanel Margin="0,8,0,0">
+                <DockPanel Margin="0,6,0,0">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
                         <TextBox Width="180" Margin="0,0,8,0"
                                  Style="{StaticResource SearchBoxStyle}"
@@ -163,7 +168,7 @@
 
             <!-- ============ 活动下载 ============ -->
             <TabItem Header="活动下载">
-                <DockPanel Margin="0,8,0,0">
+                <DockPanel Margin="0,6,0,0">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
                         <Button Content="刷新" Margin="0,0,6,0" Command="{Binding RefreshDownloadsCommand}" />
                         <Button Content="打开缓存" Margin="0,0,6,0" Command="{Binding OpenCacheDirectoryCommand}" />
@@ -214,7 +219,7 @@
 
             <!-- ============ 下载历史 ============ -->
             <TabItem Header="下载历史">
-                <DockPanel Margin="0,8,0,0">
+                <DockPanel Margin="0,6,0,0">
                     <StackPanel DockPanel.Dock="Top">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="刷新" Margin="0,0,6,0" Command="{Binding RefreshDownloadsCommand}" />
@@ -270,7 +275,7 @@
 
             <!-- ============ 镜像 ============ -->
             <TabItem Header="镜像">
-                <DockPanel Margin="0,8,0,0">
+                <DockPanel Margin="0,6,0,0">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
                         <ComboBox Width="200" Margin="0,0,8,0"
                                   Tag="选择镜像工具"
@@ -315,7 +320,7 @@
 
             <!-- ============ 扫描 ============ -->
             <TabItem Header="扫描">
-                <DockPanel Margin="0,8,0,0">
+                <DockPanel Margin="0,6,0,0">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
                         <Button Content="开始扫描" Command="{Binding ScanCommand}" />
                         <ItemsControl Margin="12,0,0,0" ItemsSource="{Binding ScanSummary}" VerticalAlignment="Center">

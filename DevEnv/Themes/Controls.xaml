@@ -436,6 +436,15 @@
         </Setter>
     </Style>
 
+    <!-- 工具条按钮：透明底、小内边距，用在页面顶部的紧凑操作条上 -->
+    <Style TargetType="Button" x:Key="ToolbarButtonStyle" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="9,4" />
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
     <Style TargetType="Button" x:Key="LinkButtonStyle">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -665,8 +674,9 @@
         </Setter>
     </Style>
 
-    <!-- 横向选项卡：扁平样式，选中态用底部强调色下划线 -->
-    <Style TargetType="TabItem">
+    <!-- 横向选项卡：扁平样式，选中态用底部强调色下划线。
+         带 Key 的这份供页面按需 BasedOn 后做紧凑覆盖，隐式样式只是它的默认实例。 -->
+    <Style TargetType="TabItem" x:Key="PageTabItemStyle">
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Padding" Value="12,6" />
@@ -707,6 +717,8 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style TargetType="TabItem" BasedOn="{StaticResource PageTabItemStyle}" />
 
     <!-- ============ 菜单 ============
 
@@ -969,6 +981,15 @@
     </Style>
 
     <!-- ============ 页面容器 ============ -->
+
+    <!-- 页面顶部操作条：紧凑的横向工具条外壳，配合 ToolbarButtonStyle 使用 -->
+    <Style TargetType="Border" x:Key="ToolbarStyle">
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="4,3" />
+    </Style>
 
     <Style TargetType="Border" x:Key="CardStyle">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />

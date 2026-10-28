@@ -30,6 +30,34 @@
 
 修改后重启应用生效。`SelfStarting` 开启/关闭会同步系统启动项。
 
+### DevServiceList
+
+「开发环境」页的服务列表，由界面添加 / 编辑 / 移除，也可在 data.json 中手工迁移。示例：
+
+```json
+{
+  "DevServiceList": [
+    {
+      "Id": "5f0c1c2a8b3d4e5f",
+      "Name": "前端开发服务器",
+      "WorkingDirectory": "D:\\work\\web",
+      "StartCommand": "npm run dev",
+      "StopCommand": "",
+      "ProcessName": "node"
+    }
+  ]
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `Id` | string | 条目唯一标识；留空时会自动生成 |
+| `Name` | string | 显示名称 |
+| `WorkingDirectory` | string | 工作目录；留空时使用用户数据目录 |
+| `StartCommand` | string | 启动命令，通过 `cmd /c` 执行 |
+| `StopCommand` | string | 可选，停止命令；留空时直接结束进程树 |
+| `ProcessName` | string | 可选，进程名（不含 `.exe`）；用于识别状态，并能在重启程序后停止它 |
+
 同目录下的 `config.json` 属于熔岩环境模块（下载路径、镜像等），与主程序 `data.json` 分开。
 
 迁移到新机器时：
