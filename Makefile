@@ -55,18 +55,22 @@ VER := $(strip $(file <VERSION))
 PS ?= $(if $(wildcard C:/Program$(sp)Files/PowerShell/7/pwsh.exe),pwsh,powershell)
 
 # Overridable knobs (never set as environment variables by these recipes).
+# Release is the default for build, run, test and publish - what ships is what
+# you run. Debug is opt-in only via an explicit `CONFIG=Debug` on the command
+# line; never document or default to it.
 CONFIG ?= Release
 ARGS   ?=
 
 # ============================================================
 .DEFAULT_GOAL := help
 
-.PHONY: help run test publish installer verify release docs clean
+.PHONY: help build run test publish installer verify release docs clean
 
 help:
 	@echo "DevEnv - available commands"
 	@echo "$(if $(VER),  current version: $(VER),[warn] VERSION file missing)"
 	@echo ""
+	@echo "  make build        Build DevEnv.sln ($(CONFIG))"
 	@echo "  make run          Run the WPF host from source ($(CONFIG))"
 	@echo "  make test         Run the xunit suite (DevEnv.Tests)"
 	@echo "  make publish      Single-file publish -> $(PUBLISH_DIR)/"
@@ -77,15 +81,18 @@ help:
 	@echo "  make clean        Remove project bin/ obj/, legacy root output and publish artifacts"
 	@echo ""
 	@echo "  make publish ARGS=-Zip    also emit DevEnv-<ver>-$(RUNTIME).zip"
-	@echo "  make run CONFIG=Debug     run a Debug build"
+	@echo "  CONFIG overrides the build configuration (default: Release)"
 
 # ------------------------------------------------------------
 #  Targets that earn their keep: multi-step pipelines, long flag sets, fixed
-#  artifact paths, a fixed project path. Deliberately absent are the
-#  single-command wrappers - `build: dotnet build -c Release`,
-#  `restore: dotnet restore`, `tidy: dotnet format` - they save zero
-#  keystrokes while adding a layer that goes stale. Type those directly.
+#  artifact paths, a fixed project path. `build` is here because the solution
+#  path plus the config knob are the one command everyone types; `restore`
+#  and `format` stay out - they save zero keystrokes.
 # ------------------------------------------------------------
+
+# Whole solution: host + core + tests. Same entry point CI uses before packing.
+build:
+	@dotnet build DevEnv.sln -c $(CONFIG) --nologo
 
 # WPF host (the UI is native now; only the translator window embeds WebView2)
 run:

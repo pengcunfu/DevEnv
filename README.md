@@ -39,9 +39,9 @@ npm run deploy    # 构建并部署到 Cloudflare Pages（首次会浏览器登�
 git clone https://github.com/pengcunfu/DevEnv.git
 cd DevEnv
 
-dotnet restore
-make run CONFIG=Debug
-make test          # 服务层单元测试（DevEnv.Tests）
+make build                # 构建整个解决方案（DevEnv.sln，Release）
+make run                  # 从源码运行主程序（Release）
+make test                 # 服务层单元测试（DevEnv.Tests，Release）
 ```
 
 界面是原生 WPF，构建与运行都不需要 Node.js。

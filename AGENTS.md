@@ -21,7 +21,7 @@
 ## 常用命令
 
 ```bash
-dotnet build DevEnv.sln -c Debug # 构建全部；产物在各项目的 bin/、obj/ 下
+make build                        # 构建全部（Release，= dotnet build DevEnv.sln -c Release）；产物在各项目的 bin/、obj/ 下
 make run                          # 从源码跑主程序（Release，WPF 宿主）
 make test                         # 跑单元测试（DevEnv.Tests，xunit）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
