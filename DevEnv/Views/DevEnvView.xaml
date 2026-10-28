@@ -22,13 +22,6 @@
             </StackPanel>
         </Border>
 
-        <!-- 无消息时不占位，避免顶部多出一条空隙 -->
-        <TextBlock DockPanel.Dock="Top"
-                   Margin="0,0,0,6"
-                   Text="{Binding Message}"
-                   Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}"
-                   Style="{DynamicResource PageHintStyle}" />
-
         <Grid>
             <DataGrid ItemsSource="{Binding Services}">
                 <DataGrid.Columns>

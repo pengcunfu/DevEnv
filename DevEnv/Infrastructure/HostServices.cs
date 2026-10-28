@@ -19,6 +19,13 @@ public static class HostServices
         }
     }
 
+    /// <summary>把一句话写到主窗底部的状态栏。</summary>
+    public static void SetStatus(string message)
+    {
+        if (Application.Current?.MainWindow is MainWindow window)
+            window.ViewModel.SetStatus(message);
+    }
+
     public static void ShowAbout()
     {
         var window = new AboutWindow
