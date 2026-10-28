@@ -82,7 +82,23 @@
                 <ListBox ItemsSource="{Binding NavItems}"
                          SelectedItem="{Binding CurrentNav, Mode=TwoWay}"
                          Padding="8"
-                         Margin="0,8" />
+                         Margin="0,8">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Glyph}"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           Width="20"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Center" />
+                                <TextBlock Text="{Binding Title}"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </Border>
 
             <ContentControl Grid.Column="1" Content="{Binding CurrentView}" />

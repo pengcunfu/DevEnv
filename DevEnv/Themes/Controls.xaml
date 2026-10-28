@@ -275,11 +275,16 @@
                                    TextTrimming="CharacterEllipsis"
                                    IsHitTestVisible="False"
                                    Visibility="Collapsed" />
+                        <!-- 必须带上 ContentTemplateSelector / ContentStringFormat：
+                             DisplayMemberPath 在 WPF 里是通过 ItemTemplateSelector 生效的，
+                             SelectionBoxItemTemplate 此时为 null，漏掉它就只显示对象类型名。 -->
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           VerticalAlignment="Center"
                                           HorizontalAlignment="Left"
                                           Content="{TemplateBinding SelectionBoxItem}"
                                           ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                          ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
                                           IsHitTestVisible="False" />
                         <Popup x:Name="PART_Popup"
                                AllowsTransparency="True"

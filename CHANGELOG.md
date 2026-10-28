@@ -32,6 +32,7 @@
 - 「网络监控」「进程监控」的快照采集改到线程池执行，界面只做数据绑定：进程枚举、连接枚举与 TCP 统计不再阻塞 UI 线程，两个页面的导航切换明显跟手；端口页签与详情窗口的手动刷新一并异步化
 - 网络监控底部的状态卡并入主窗状态栏，显示连接数、上下行速率与提示，离开页面时自动清空
 - 全应用取消加粗文字：移除主题里的半粗字重（页面标题、小节标题、选中的页签与列表项）以及各视图里显式写的 `FontWeight`。此前选中页签会把半粗字重传给整块内容，网络监控、熔岩环境的表格文字因此看起来发粗
+- 左侧导航增加图标：本地应用、文件夹、网站、开发环境、熔岩环境、网络监控、进程监控、系统工具各配一个 Segoe MDL2 Assets 字形，通过 `NavItem.Glyph` 与 `ListBox.ItemTemplate` 渲染
 - 产品中文显示名由「程序盒子」更名为「燧岚开发盒子」，品牌名 **FireNeb**；英文名、`DevEnv.exe`、Velopack `APP_ID` 与用户数据目录保持不变。官网与文档站同步更新品牌、域名与友链（FireNeb / Sigxor），开机自启注册表项在下次切换时自动清理旧名称
 - 开源协议由 MIT 变更为 **Apache License 2.0**：根目录 `LICENSE` 换为 Apache 2.0 全文，新增 `NOTICE` 承载版权与归属声明；NuGet `PackageLicenseExpression`、README 与官网相关文案同步更新。此前已发布的版本仍按当时的 MIT 协议授权
 - 仓库地址由 `github.com/pengcunfu/DevBox.Net` 更名为 `github.com/pengcunfu/DevEnv`：README、官网文档、`RepositoryUrl` 与自更新源（`UpdateService` / `AppInfo`）同步更新
@@ -58,6 +59,7 @@
 
 ### Fixed
 
+- 修复下拉框选中项显示成对象类型名（如 `DevEnv.Core.Translator.Models.TranslateSiteInfo`）：自定义 `ComboBox` 模板的选中项 `ContentPresenter` 漏了 `ContentTemplateSelector`，而 `DisplayMemberPath` 在 WPF 里是通过 `ItemTemplateSelector` 生效的，`SelectionBoxItemTemplate` 此时为 `null`。补上该绑定后，默认翻译引擎、软件版本、镜像工具等下拉框恢复显示正常名称
 - 修复程序化导航重复创建页面：`Navigate` 同步左侧导航高亮时触发了 `OnCurrentNavChanged` 再次导航，`DEVENV_START_PAGE`、托盘唤回等入口会创建两份同一页面。旧实例没有进入可视树，`Unloaded` 不触发，其定时器会一直在后台采样；现在用 `_syncingNav` 守卫，含网络监控、进程监控在内的页面切换只创建一份视图
 - 修复网络监控里选中进程或双击查看详情时程序直接退出：`TabControl` 的 `SelectionChanged` 会被内部 `DataGrid` 的选中事件冒泡触发，切页签逻辑重刷列表又反过来改选中项，形成无限递归并栈溢出；栈溢出无法被托管异常处理器捕获，所以 `crash.log` 与事件日志里都没有记录。现在只处理 `OriginalSource` 为 `TabControl` 自身的事件，熔岩环境页的同类写法一并加上护栏
 - 双击详情改用 `PreviewMouseLeftButtonDown` 判断 `ClickCount`：`DataGridCell` 会先把普通双击事件处理掉，挂在 `MouseDoubleClick` 上不会触发
