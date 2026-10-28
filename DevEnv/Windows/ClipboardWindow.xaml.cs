@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using DevEnv.Core.Services;
+using DevEnv.Host.Infrastructure;
+using DevEnv.Host.ViewModels;
 
 namespace DevEnv.Host.Windows;
 
@@ -14,9 +16,9 @@ public partial class ClipboardWindow : Window
     public ClipboardWindow()
     {
         InitializeComponent();
-        foreach (var (_, label) in ((ViewModels.ClipboardViewModel)DataContext).ClearModes)
-            ClearModeCombo.Items.Add(label);
     }
+
+    private ClipboardViewModel ViewModel => (ClipboardViewModel)DataContext;
 
     protected override void OnClosing(CancelEventArgs e)
     {
@@ -35,26 +37,64 @@ public partial class ClipboardWindow : Window
         if (WindowState == WindowState.Minimized)
             WindowState = WindowState.Normal;
         Activate();
-        ((ViewModels.ClipboardViewModel)DataContext).Reload();
+        ViewModel.Reload();
     }
 
-    private void OnClearModeChanged(object sender, SelectionChangedEventArgs e)
+    /// <summary>左列表右键时先选中指针下的条目，再弹菜单。</summary>
+    private void OnEntryListRightButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var combo = ClearModeCombo;
-        if (combo.SelectedIndex < 0)
-            return;
-
-        var label = combo.SelectedItem as string ?? string.Empty;
-        var mode = ((ViewModels.ClipboardViewModel)DataContext).ClearModes
-            .FirstOrDefault(m => m.Label == label).Mode ?? "all";
-        // 取消选中，回到「清空记录…」占位提示，方便重复操作。
-        combo.SelectedIndex = -1;
-        ((ViewModels.ClipboardViewModel)DataContext).Clear(mode);
+        if (VisualTreeSearch.FindAncestor<ListBoxItem>(e.OriginalSource as DependencyObject) is { } item)
+            item.IsSelected = true;
     }
 
     private void OnEntryDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is ListBox { SelectedItem: not null })
-            ((ViewModels.ClipboardViewModel)DataContext).Paste(null);
+            ViewModel.Paste(null);
+    }
+
+    /// <summary>没有选中记录时，右键菜单里的操作置灰。</summary>
+    private void OnEntryMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is not ContextMenu menu)
+            return;
+
+        var enabled = ViewModel.Selected is not null;
+        foreach (var item in menu.Items.OfType<MenuItem>())
+            item.IsEnabled = enabled;
+    }
+
+    private void OnEntryCopyClick(object sender, RoutedEventArgs e) => ViewModel.Paste(null);
+
+    private void OnEntryDeleteClick(object sender, RoutedEventArgs e) =>
+        ViewModel.DeleteCommand.Execute(ViewModel.Selected);
+
+    private void OnClearButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { ContextMenu: { } menu } button)
+            return;
+
+        menu.PlacementTarget = button;
+        menu.Placement = PlacementMode.Bottom;
+        menu.IsOpen = true;
+    }
+
+    /// <summary>菜单项 Tag 形如 "text|today"、"image|all"，第一段是类型，第二段是时间范围。</summary>
+    private void OnClearRangeClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { Tag: string tag })
+            return;
+
+        var parts = tag.Split('|');
+        if (parts.Length != 2)
+            return;
+
+        var type = parts[0] switch
+        {
+            "text" => "text",
+            "image" => "image",
+            _ => null,
+        };
+        ViewModel.Clear(parts[1], type);
     }
 }

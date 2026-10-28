@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
 using DevEnv.Core.Clipboard.Models;
+using DevEnv.Core.Models;
 
 namespace DevEnv.Core.Clipboard.Services;
 
@@ -13,12 +14,18 @@ namespace DevEnv.Core.Clipboard.Services;
 /// </summary>
 public sealed class HistoryService
 {
+    /// <summary>历史记录只保留最近三天，避免长期复制导致数据库与图片无限增长。</summary>
+    public const int RetentionDays = 3;
+
+    private static readonly TimeSpan PurgeInterval = TimeSpan.FromHours(1);
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
     private readonly HistoryStore _store;
+    private DateTime _lastPurge = DateTime.MinValue;
 
     public ObservableCollection<ClipboardEntry> Entries { get; } = [];
 
@@ -27,6 +34,15 @@ public sealed class HistoryService
         _store = new HistoryStore(AppPaths.HistoryDb);
         _store.Open();
         MigrateLegacyJson();
+
+        try
+        {
+            PurgeExpired();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"清理过期剪贴板记录失败: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -34,6 +50,9 @@ public sealed class HistoryService
     /// </summary>
     public void ReloadView(HistoryQuery query)
     {
+        // 打开/刷新列表时顺带清理过期记录，避免暂停监听后旧数据长期滞留。
+        PurgeIfDue();
+
         var fresh = _store.Query(query);
         Entries.Clear();
         foreach (var e in fresh)
@@ -46,7 +65,44 @@ public sealed class HistoryService
     /// that ended up in the database (with its <see cref="ClipboardEntry.Id"/>
     /// populated). The caller is responsible for refreshing the visible window.
     /// </summary>
-    public ClipboardEntry Insert(ClipboardEntry entry) => _store.Insert(entry);
+    public ClipboardEntry Insert(ClipboardEntry entry)
+    {
+        var saved = _store.Insert(entry);
+        PurgeIfDue();
+        return saved;
+    }
+
+    /// <summary>
+    /// 删除三天前的记录，并删掉这些记录对应的图片文件。返回删除的行数。
+    /// </summary>
+    public int PurgeExpired()
+    {
+        _lastPurge = DateTime.UtcNow;
+        var cutoff = RetentionCutoff();
+
+        // 先按时间窗取出旧图片条目，数据库行删除前把文件清掉。
+        var oldImages = _store.Query(new HistoryQuery(UntilTimestamp: cutoff, Type: "image", Limit: 0));
+        foreach (var image in oldImages)
+            DeleteEntryFiles(image);
+
+        return _store.DeleteBefore(cutoff);
+    }
+
+    private void PurgeIfDue()
+    {
+        if (DateTime.UtcNow - _lastPurge < PurgeInterval)
+            return;
+
+        try
+        {
+            PurgeExpired();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"清理过期剪贴板记录失败: {ex.Message}");
+            _lastPurge = DateTime.UtcNow;
+        }
+    }
 
     /// <summary>
     /// Delete a single entry by reference. Also removes its image file (if any).
@@ -61,30 +117,29 @@ public sealed class HistoryService
     }
 
     /// <summary>
-    /// Remove entries in the time window expressed by <paramref name="mode"/>:
-    /// "today" (from 00:00 today), "week" (last 7 days), "month" (last 30 days),
-    /// or "all". Returns the number of database rows removed.
+    /// Remove entries for the day expressed by <paramref name="mode"/>:
+    /// "today" / "yesterday" / "daybefore"（前天）, or "all"。
+    /// 因为历史只保留三天，按天清理即可覆盖全部数据。返回删除的行数。
     /// </summary>
-    public int ClearByRange(string mode)
+    public int ClearByRange(string mode, string? type = null)
     {
-        string? since = mode switch
+        var (since, until) = ResolveRange(mode);
+
+        // 只有清空全部或图片时才需要删图片文件；清空文本时不动磁盘。
+        if (type != "text")
         {
-            "today" => TodayStartTimestamp(),
-            "week"  => DaysAgoTimestamp(7),
-            "month" => DaysAgoTimestamp(30),
-            "all"   => null,
-            _ => null,
-        };
+            var images = _store.Query(new HistoryQuery(
+                SinceTimestamp: since,
+                UntilTimestamp: until,
+                Type: "image",
+                Limit: 0));
+            foreach (var img in images)
+                DeleteEntryFiles(img);
+        }
 
-        // Collect image files to delete BEFORE wiping rows.
-        var imagesQuery = new HistoryQuery(SinceTimestamp: since, Type: "image");
-        var images = _store.Query(imagesQuery);
-        foreach (var img in images)
-            DeleteEntryFiles(img);
-
-        int removed = since is null
-            ? _store.DeleteAll()
-            : _store.DeleteSince(since);
+        var removed = since is null || until is null
+            ? _store.DeleteAll(type)
+            : _store.DeleteRange(since, until, type);
 
         if (removed > 0)
         {
@@ -92,6 +147,23 @@ public sealed class HistoryService
             ReloadView(GetCurrentQuery());
         }
         return removed;
+    }
+
+    /// <summary>把清空模式换算成 [since, until) 时间窗；"all" 返回两个 null。</summary>
+    private static (string? Since, string? Until) ResolveRange(string mode)
+    {
+        var day = mode switch
+        {
+            "today" => DateTime.Today,
+            "yesterday" => DateTime.Today.AddDays(-1),
+            "daybefore" => DateTime.Today.AddDays(-2),
+            _ => (DateTime?)null,
+        };
+
+        return day is null
+            ? (null, null)
+            : (day.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+               day.Value.AddDays(1).ToString("yyyy-MM-dd HH:mm:ss"));
     }
 
     /// <summary>
@@ -113,17 +185,13 @@ public sealed class HistoryService
     /// database so the confirmation message is accurate even when the user is looking
     /// at a narrow date range.
     /// </summary>
-    public long CountByRange(string mode)
+    public long CountByRange(string mode, string? type = null)
     {
-        var since = mode switch
-        {
-            "today" => TodayStartTimestamp(),
-            "week"  => DaysAgoTimestamp(7),
-            "month" => DaysAgoTimestamp(30),
-            "all"   => null,
-            _ => null,
-        };
-        return _store.Count(new HistoryQuery(SinceTimestamp: since));
+        var (since, until) = ResolveRange(mode);
+        return _store.Count(new HistoryQuery(
+            SinceTimestamp: since,
+            UntilTimestamp: until,
+            Type: type));
     }
 
     public static void DeleteEntryFiles(ClipboardEntry entry)
@@ -182,8 +250,24 @@ public sealed class HistoryService
     /// itself remember the filter, so this is a thin wrapper for callers
     /// (e.g. after a destructive operation) to use a default.
     /// </summary>
-    public HistoryQuery GetCurrentQuery() => new(Last3DaysCutoff());
+    public HistoryQuery GetCurrentQuery() => new(RetentionCutoff());
 
-    private static string Last3DaysCutoff()
-        => DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd HH:mm:ss");
+    /// <summary>保留窗口内的条数统计（总 / 文本 / 图片）。</summary>
+    public ClipboardStatsView GetStats()
+    {
+        var counts = _store.CountByType(RetentionCutoff());
+        var text = counts.GetValueOrDefault("text");
+        var image = counts.GetValueOrDefault("image");
+        return new ClipboardStatsView
+        {
+            Text = text,
+            Image = image,
+            Total = counts.Values.Sum(),
+            RetentionDays = RetentionDays,
+        };
+    }
+
+    /// <summary>三天前的时间戳，作为保留窗口的下界。</summary>
+    public static string RetentionCutoff()
+        => DateTime.Now.AddDays(-RetentionDays).ToString("yyyy-MM-dd HH:mm:ss");
 }

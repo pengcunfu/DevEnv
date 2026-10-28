@@ -9,10 +9,11 @@ namespace DevEnv.Core.Clipboard.Services;
 /// Filter parameters for <see cref="HistoryStore.Query"/>.
 /// </summary>
 public sealed record HistoryQuery(
-    string? SinceTimestamp = null,   // exclusive lower bound (yyyy-MM-dd HH:mm:ss), null = no lower bound
+    string? SinceTimestamp = null,   // lower bound, inclusive (yyyy-MM-dd HH:mm:ss), null = no lower bound
     string? Type = null,             // "text" or "image" (null = both)
     string? Search = null,           // LIKE pattern, applied to text and image filename
-    int Limit = 5000
+    int Limit = 5000,
+    string? UntilTimestamp = null    // upper bound, exclusive; used when清理过期记录
 );
 
 /// <summary>
@@ -166,24 +167,77 @@ public sealed class HistoryStore : IDisposable
 
     /// <summary>
     /// Delete every entry whose timestamp is at or newer than <paramref name="sinceTimestamp"/>.
+    /// <paramref name="type"/> restricts the deletion to "text" or "image" (null = both).
     /// Used by "clear today / last week / last month".
     /// </summary>
-    public int DeleteSince(string sinceTimestamp)
+    public int DeleteSince(string sinceTimestamp, string? type = null)
     {
         using var cmd = Conn.CreateCommand();
-        cmd.CommandText = "DELETE FROM entries WHERE timestamp >= $since";
+        cmd.CommandText = "DELETE FROM entries WHERE timestamp >= $since"
+            + (type is null ? string.Empty : " AND type = $type");
         cmd.Parameters.AddWithValue("$since", sinceTimestamp);
+        if (type is not null)
+            cmd.Parameters.AddWithValue("$type", type);
         return cmd.ExecuteNonQuery();
     }
 
     /// <summary>
-    /// Delete every entry. Returns the number of rows removed.
+    /// Delete entries whose timestamp is in [since, until). Optionally limited to one type.
     /// </summary>
-    public int DeleteAll()
+    public int DeleteRange(string sinceTimestamp, string untilTimestamp, string? type = null)
     {
         using var cmd = Conn.CreateCommand();
-        cmd.CommandText = "DELETE FROM entries";
+        cmd.CommandText = "DELETE FROM entries WHERE timestamp >= $since AND timestamp < $until"
+            + (type is null ? string.Empty : " AND type = $type");
+        cmd.Parameters.AddWithValue("$since", sinceTimestamp);
+        cmd.Parameters.AddWithValue("$until", untilTimestamp);
+        if (type is not null)
+            cmd.Parameters.AddWithValue("$type", type);
         return cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Delete every entry older than <paramref name="untilTimestamp"/>.
+    /// </summary>
+    public int DeleteBefore(string untilTimestamp)
+    {
+        using var cmd = Conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM entries WHERE timestamp < $until";
+        cmd.Parameters.AddWithValue("$until", untilTimestamp);
+        return cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Delete every entry, optionally limited to one type. Returns the number of rows removed.
+    /// </summary>
+    public int DeleteAll(string? type = null)
+    {
+        using var cmd = Conn.CreateCommand();
+        cmd.CommandText = type is null
+            ? "DELETE FROM entries"
+            : "DELETE FROM entries WHERE type = $type";
+        if (type is not null)
+            cmd.Parameters.AddWithValue("$type", type);
+        return cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// 按类型统计行数（可选时间下界），用于状态栏展示。
+    /// </summary>
+    public Dictionary<string, int> CountByType(string? sinceTimestamp = null)
+    {
+        var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        using var cmd = Conn.CreateCommand();
+        cmd.CommandText = sinceTimestamp is null
+            ? "SELECT type, COUNT(*) FROM entries GROUP BY type"
+            : "SELECT type, COUNT(*) FROM entries WHERE timestamp >= $since GROUP BY type";
+        if (sinceTimestamp is not null)
+            cmd.Parameters.AddWithValue("$since", sinceTimestamp);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result[reader.GetString(0)] = reader.GetInt32(1);
+        return result;
     }
 
     /// <summary>
@@ -208,6 +262,11 @@ public sealed class HistoryStore : IDisposable
         {
             sql.Append(" AND timestamp >= $since");
             cmd.Parameters.AddWithValue("$since", query.SinceTimestamp);
+        }
+        if (!string.IsNullOrEmpty(query.UntilTimestamp))
+        {
+            sql.Append(" AND timestamp < $until");
+            cmd.Parameters.AddWithValue("$until", query.UntilTimestamp);
         }
         if (!string.IsNullOrEmpty(query.Type))
         {
@@ -238,6 +297,12 @@ public sealed class HistoryStore : IDisposable
         {
             sql.Append(" AND timestamp >= $since");
             cmd.Parameters.AddWithValue("$since", query.SinceTimestamp);
+        }
+
+        if (!string.IsNullOrEmpty(query.UntilTimestamp))
+        {
+            sql.Append(" AND timestamp < $until");
+            cmd.Parameters.AddWithValue("$until", query.UntilTimestamp);
         }
 
         if (!string.IsNullOrEmpty(query.Type))

@@ -115,6 +115,15 @@ public sealed class HostsFileView
     public bool CanWrite { get; init; }
 }
 
+/// <summary>剪贴板保留窗口内的统计（总条数 / 文本 / 图片）。</summary>
+public sealed class ClipboardStatsView
+{
+    public int Total { get; init; }
+    public int Text { get; init; }
+    public int Image { get; init; }
+    public int RetentionDays { get; init; }
+}
+
 /// <summary>剪贴板历史一条（包装 DevEnv.Core.Clipboard 模型并补上图片绝对路径）。</summary>
 public sealed class ClipboardEntryView
 {

@@ -22,9 +22,15 @@ public sealed class ClipboardService
 
     public IReadOnlyList<ClipboardEntryView> GetEntries(string? search = null, string? type = null)
     {
-        History.ReloadView(new HistoryQuery(Search: search, Type: type));
+        History.ReloadView(new HistoryQuery(
+            SinceTimestamp: HistoryService.RetentionCutoff(),
+            Search: search,
+            Type: type));
         return History.Entries.Select(MapEntry).ToList();
     }
+
+    /// <summary>保留窗口内的统计，供状态栏展示。</summary>
+    public ClipboardStatsView GetStats() => History.GetStats();
 
     public OperationResult Delete(long id)
     {
@@ -35,7 +41,7 @@ public sealed class ClipboardService
         return OperationResult.Success();
     }
 
-    public int Clear(string mode = "all") => History.ClearByRange(mode);
+    public int Clear(string mode = "all", string? type = null) => History.ClearByRange(mode, type);
 
     public OperationResult Paste(long id)
     {
@@ -62,7 +68,7 @@ public sealed class ClipboardService
 
     public OperationResult Export()
     {
-        History.ReloadView(new HistoryQuery());
+        History.ReloadView(History.GetCurrentQuery());
         var suggested = $"clipboard_history_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
         var path = HostCallbacks.SaveFile?.Invoke(suggested, "文本文件|*.txt|所有文件|*.*");
         if (string.IsNullOrWhiteSpace(path))

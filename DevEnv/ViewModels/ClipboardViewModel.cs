@@ -12,6 +12,7 @@ namespace DevEnv.Host.ViewModels;
 public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
 {
     private readonly DispatcherTimer _timer;
+    private readonly DispatcherTimer _messageTimer;
 
     public ClipboardViewModel()
     {
@@ -19,6 +20,15 @@ public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
         _timer.Tick += (_, _) => Reload();
         _timer.Start();
+
+        // 状态栏的操作反馈显示几秒后自动消失，统计信息常驻。
+        _messageTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+        _messageTimer.Tick += (_, _) =>
+        {
+            _messageTimer.Stop();
+            Message = string.Empty;
+        };
+
         Reload();
     }
 
@@ -28,8 +38,8 @@ public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
     [
         ("all", "全部"),
         ("today", "今天"),
-        ("week", "本周"),
-        ("month", "本月"),
+        ("yesterday", "昨天"),
+        ("daybefore", "前天"),
     ];
 
     [ObservableProperty]
@@ -39,10 +49,25 @@ public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
     private string _typeFilter = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelection))]
     private ClipboardEntryView? _selected;
+
+    /// <summary>右键菜单中的复制 / 删除是否可用。</summary>
+    public bool HasSelection => Selected is not null;
 
     [ObservableProperty]
     private string _message = string.Empty;
+
+    /// <summary>底部状态栏常驻的统计信息。</summary>
+    [ObservableProperty]
+    private string _statsText = string.Empty;
+
+    partial void OnMessageChanged(string value)
+    {
+        _messageTimer.Stop();
+        if (!string.IsNullOrEmpty(value))
+            _messageTimer.Start();
+    }
 
     partial void OnSearchChanged(string value) => Reload();
 
@@ -56,6 +81,13 @@ public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
         foreach (var entry in CoreServices.Clipboard.GetEntries(Search, TypeFilter))
             Entries.Add(entry);
         Selected = selectedId is null ? null : Entries.FirstOrDefault(e => e.Id == selectedId);
+        RefreshStats();
+    }
+
+    private void RefreshStats()
+    {
+        var stats = CoreServices.Clipboard.GetStats();
+        StatsText = $"共 {stats.Total} 条 · 文本 {stats.Text} · 图片 {stats.Image} · 仅保留最近 {stats.RetentionDays} 天";
     }
 
     [RelayCommand]
@@ -65,7 +97,7 @@ public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
         if (target is null)
             return;
         var result = CoreServices.Clipboard.Paste(target.Id);
-        Message = result.Ok ? "已写入系统剪贴板" : result.DisplayMessage;
+        Message = result.Ok ? "已复制到系统剪贴板" : result.DisplayMessage;
     }
 
     [RelayCommand]
@@ -76,21 +108,26 @@ public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
             return;
 
         var result = CoreServices.Clipboard.Delete(target.Id);
-        if (!result.Ok)
-            Message = result.DisplayMessage;
+        Message = result.Ok ? "已删除 1 条" : result.DisplayMessage;
         Selected = null;
         Reload();
     }
 
-    [RelayCommand]
-    public void Clear(string mode)
+    /// <summary>按时间范围清空指定类型的历史。type 为 "text" / "image"，null 表示全部。</summary>
+    public void Clear(string mode, string? type)
     {
         var label = ClearModes.FirstOrDefault(m => m.Mode == mode).Label ?? mode;
-        if (!Windows.ConfirmDialog.Show(HostServices.DialogOwner, $"清空「{label}」历史？", "清空"))
+        var typeLabel = type switch
+        {
+            "text" => "文本",
+            "image" => "图片",
+            _ => "全部",
+        };
+        if (!Windows.ConfirmDialog.Show(HostServices.DialogOwner, $"清空「{label}」的{typeLabel}记录？", "清空"))
             return;
 
-        var removed = CoreServices.Clipboard.Clear(mode);
-        Message = $"已删除 {removed} 条";
+        var removed = CoreServices.Clipboard.Clear(mode, type);
+        Message = removed > 0 ? $"已删除 {removed} 条" : "没有符合条件的记录";
         Selected = null;
         Reload();
     }
@@ -99,8 +136,12 @@ public sealed partial class ClipboardViewModel : ObservableObject, IDisposable
     private void Export()
     {
         var result = CoreServices.Clipboard.Export();
-        Message = result.Ok ? result.DisplayMessage : result.DisplayMessage;
+        Message = result.DisplayMessage;
     }
 
-    public void Dispose() => _timer.Stop();
+    public void Dispose()
+    {
+        _timer.Stop();
+        _messageTimer.Stop();
+    }
 }
