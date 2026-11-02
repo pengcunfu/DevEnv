@@ -70,6 +70,17 @@ public sealed class LavaService
         return StartProcess(DevEnv.Core.LavaEnv.Models.LavaPaths.ConfigFile);
     }
 
+    /// <summary>打开外部镜像清单；服务构造时已确保模板复制到用户数据目录。</summary>
+    public OperationResult OpenMirrorsConfigFile()
+    {
+        DevEnv.Core.LavaEnv.Models.LavaPaths.EnsureDirectories();
+        _ = LavaAppServices.MirrorConfig.LoadCatalog();
+        var path = DevEnv.Core.LavaEnv.Models.LavaPaths.MirrorsConfigFile;
+        if (!File.Exists(path))
+            return OperationResult.Fail("镜像配置文件不存在");
+        return StartProcess(path);
+    }
+
     public OperationResult OpenCacheDirectory()
     {
         var dir = LavaAppServices.Config.Load().CacheDir;
@@ -286,6 +297,7 @@ public sealed class LavaService
         {
             Root = DevEnv.Core.LavaEnv.Models.LavaPaths.Root,
             ConfigFile = DevEnv.Core.LavaEnv.Models.LavaPaths.ConfigFile,
+            MirrorsConfigFile = DevEnv.Core.LavaEnv.Models.LavaPaths.MirrorsConfigFile,
             CacheDir = string.IsNullOrWhiteSpace(settings.CacheDir) ? DevEnv.Core.LavaEnv.Models.LavaPaths.CacheDir : settings.CacheDir,
             AppsDir = string.IsNullOrWhiteSpace(settings.AppsDir) ? DevEnv.Core.LavaEnv.Models.LavaPaths.AppsDir : settings.AppsDir,
             HistoryFile = DevEnv.Core.LavaEnv.Models.LavaPaths.DownloadHistoryFile,

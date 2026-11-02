@@ -60,11 +60,11 @@
 
 服务的标准输出与错误输出会实时写入 `文档\FNSoftware\DevEnv\logs\`，文件名形如 `<服务名>-<Id>.log`，每次启动重新写入；页面上的「日志」按钮是查看同一份内容的实时窗口。
 
-同目录下的 `config.json` 属于熔岩环境模块（下载路径、镜像等），与主程序 `data.json` 分开。
+同目录下的 `config.json` 属于熔岩环境模块（下载路径等），与主程序 `data.json` 分开。熔岩的镜像清单另存为同目录的 `mirrors_config.json`，可直接编辑，详见 [下载与环境](./lava/download.md#自定义镜像清单)。
 
 迁移到新机器时：
 
-1. 复制 `文档\FNSoftware\DevEnv\` 下的 `data.json`、`config.json` 以及 `icons`（及熔岩的 `apps` / `cache` 如需保留）
+1. 复制 `文档\FNSoftware\DevEnv\` 下的 `data.json`、`config.json`、`mirrors_config.json` 以及 `icons`（及熔岩的 `apps` / `cache` 如需保留）
 2. 根据新机器路径调整 `BaseEnvPath` 与各条目的可执行文件路径
 
 ## 备份建议

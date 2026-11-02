@@ -21,6 +21,8 @@ namespace DevEnv.Core.LavaEnv.Models
         AppFolderName);
 
     public static string ConfigFile => Path.Combine(Root, "config.json");
+    /// <summary>可外部编辑的镜像源清单；不存在时从内置模板复制。</summary>
+    public static string MirrorsConfigFile => Path.Combine(Root, "mirrors_config.json");
     public static string DownloadHistoryFile => Path.Combine(Root, "download_history.json");
     public static string ProcessesStateFile => Path.Combine(Root, "processes_state.json");
     public static string CacheDir => Path.Combine(Root, "cache");

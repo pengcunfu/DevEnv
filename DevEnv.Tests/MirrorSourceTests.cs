@@ -32,6 +32,14 @@ public sealed class MirrorSourceTests
     }
 
     [Fact]
+    public void IsOfficial_RecognizesFlagOrOfficialKey()
+    {
+        Assert.True(new MirrorSource { Key = "official" }.IsOfficial);
+        Assert.True(new MirrorSource { Key = "custom", Official = true }.IsOfficial);
+        Assert.False(new MirrorSource { Key = "tsinghua" }.IsOfficial);
+    }
+
+    [Fact]
     public void DisplayName_WithLatency_AppendsMilliseconds()
     {
         using var _ = new InvariantCultureScope();

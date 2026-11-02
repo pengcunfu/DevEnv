@@ -136,6 +136,9 @@ public sealed partial class LavaViewModel : ObservableObject, IDisposable
     private void OpenConfigFile() => Report(CoreServices.Lava.OpenConfigFile());
 
     [RelayCommand]
+    private void OpenMirrorsConfig() => Report(CoreServices.Lava.OpenMirrorsConfigFile());
+
+    [RelayCommand]
     private void OpenCacheDirectory() => Report(CoreServices.Lava.OpenCacheDirectory());
 
     [RelayCommand]

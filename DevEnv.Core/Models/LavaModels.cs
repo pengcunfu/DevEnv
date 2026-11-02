@@ -40,6 +40,7 @@ public sealed class LavaDataInfo
 {
     public string Root { get; init; } = string.Empty;
     public string ConfigFile { get; init; } = string.Empty;
+    public string MirrorsConfigFile { get; init; } = string.Empty;
     public string CacheDir { get; init; } = string.Empty;
     public string AppsDir { get; init; } = string.Empty;
     public string HistoryFile { get; init; } = string.Empty;

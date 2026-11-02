@@ -1,0 +1,233 @@
+{
+  "pip": [
+    {
+      "key": "tsinghua",
+      "name": "清华大学",
+      "url": "https://pypi.tuna.tsinghua.edu.cn/simple",
+      "trusted_host": "pypi.tuna.tsinghua.edu.cn"
+    },
+    {
+      "key": "aliyun",
+      "name": "阿里云",
+      "url": "https://mirrors.aliyun.com/pypi/simple/",
+      "trusted_host": "mirrors.aliyun.com"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云",
+      "url": "https://mirrors.cloud.tencent.com/pypi/simple",
+      "trusted_host": "mirrors.cloud.tencent.com"
+    },
+    {
+      "key": "huawei",
+      "name": "华为云",
+      "url": "https://repo.huaweicloud.com/repository/pypi/simple",
+      "trusted_host": "repo.huaweicloud.com"
+    },
+    {
+      "key": "ustc",
+      "name": "中国科学技术大学",
+      "url": "https://pypi.mirrors.ustc.edu.cn/simple/",
+      "trusted_host": "pypi.mirrors.ustc.edu.cn"
+    },
+    {
+      "key": "nju",
+      "name": "南京大学",
+      "url": "https://mirror.nju.edu.cn/pypi/web/simple",
+      "trusted_host": "mirror.nju.edu.cn"
+    },
+    {
+      "key": "official",
+      "name": "官方源",
+      "url": "https://pypi.org/simple",
+      "official": true
+    }
+  ],
+  "npm": [
+    {
+      "key": "npmmirror",
+      "name": "npmmirror (淘宝)",
+      "url": "https://registry.npmmirror.com/"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云",
+      "url": "https://mirrors.cloud.tencent.com/npm/"
+    },
+    {
+      "key": "huawei",
+      "name": "华为云",
+      "url": "https://repo.huaweicloud.com/repository/npm/"
+    },
+    {
+      "key": "ustc",
+      "name": "中国科学技术大学",
+      "url": "https://npmreg.proxy.ustclug.org/"
+    },
+    {
+      "key": "official",
+      "name": "官方源",
+      "url": "https://registry.npmjs.org/",
+      "official": true
+    }
+  ],
+  "pnpm": [
+    {
+      "key": "npmmirror",
+      "name": "npmmirror (淘宝)",
+      "url": "https://registry.npmmirror.com/"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云",
+      "url": "https://mirrors.cloud.tencent.com/npm/"
+    },
+    {
+      "key": "huawei",
+      "name": "华为云",
+      "url": "https://repo.huaweicloud.com/repository/npm/"
+    },
+    {
+      "key": "official",
+      "name": "官方源",
+      "url": "https://registry.npmjs.org/",
+      "official": true
+    }
+  ],
+  "yarn": [
+    {
+      "key": "npmmirror",
+      "name": "npmmirror (淘宝)",
+      "url": "https://registry.npmmirror.com/"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云",
+      "url": "https://mirrors.cloud.tencent.com/npm/"
+    },
+    {
+      "key": "official",
+      "name": "官方源",
+      "url": "https://registry.yarnpkg.com/",
+      "official": true
+    }
+  ],
+  "maven": [
+    {
+      "key": "aliyun",
+      "name": "阿里云公共仓库",
+      "url": "https://maven.aliyun.com/repository/public"
+    },
+    {
+      "key": "huawei",
+      "name": "华为云镜像",
+      "url": "https://repo.huaweicloud.com/repository/maven/"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云镜像",
+      "url": "https://mirrors.cloud.tencent.com/nexus/repository/maven-public/"
+    },
+    {
+      "key": "netease",
+      "name": "网易镜像",
+      "url": "https://mirrors.163.com/maven/repository/maven-public/"
+    },
+    {
+      "key": "official",
+      "name": "Maven 中央仓库",
+      "url": "https://repo1.maven.org/maven2/",
+      "official": true
+    }
+  ],
+  "go": [
+    {
+      "key": "goproxy_cn",
+      "name": "goproxy.cn",
+      "url": "https://goproxy.cn,direct",
+      "test_url": "https://goproxy.cn"
+    },
+    {
+      "key": "goproxy_io",
+      "name": "goproxy.io",
+      "url": "https://goproxy.io,direct",
+      "test_url": "https://goproxy.io"
+    },
+    {
+      "key": "aliyun",
+      "name": "阿里云",
+      "url": "https://mirrors.aliyun.com/goproxy/,direct",
+      "test_url": "https://mirrors.aliyun.com/goproxy/"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云",
+      "url": "https://mirrors.tencent.com/go/,direct",
+      "test_url": "https://mirrors.tencent.com/go/"
+    },
+    {
+      "key": "ustc",
+      "name": "中国科学技术大学",
+      "url": "https://goproxy.ustc.edu.cn,direct",
+      "test_url": "https://goproxy.ustc.edu.cn"
+    },
+    {
+      "key": "official",
+      "name": "官方源",
+      "url": "https://proxy.golang.org,direct",
+      "test_url": "https://proxy.golang.org",
+      "official": true
+    }
+  ],
+  "nuget": [
+    {
+      "key": "huawei",
+      "name": "华为云",
+      "url": "https://repo.huaweicloud.com/repository/nuget/v3/index.json"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云",
+      "url": "https://mirrors.cloud.tencent.com/nuget/v3/index.json"
+    },
+    {
+      "key": "official",
+      "name": "官方源",
+      "url": "https://api.nuget.org/v3/index.json",
+      "official": true
+    }
+  ],
+  "composer": [
+    {
+      "key": "aliyun",
+      "name": "阿里云",
+      "url": "https://mirrors.aliyun.com/composer/",
+      "test_url": "https://mirrors.aliyun.com/composer/packages.json"
+    },
+    {
+      "key": "tencent",
+      "name": "腾讯云",
+      "url": "https://mirrors.cloud.tencent.com/composer/",
+      "test_url": "https://mirrors.cloud.tencent.com/composer/packages.json"
+    },
+    {
+      "key": "huawei",
+      "name": "华为云",
+      "url": "https://repo.huaweicloud.com/repository/php/",
+      "test_url": "https://repo.huaweicloud.com/repository/php/packages.json"
+    },
+    {
+      "key": "sjtug",
+      "name": "上海交通大学",
+      "url": "https://mirrors.sjtug.sjtu.edu.cn/composer/",
+      "test_url": "https://mirrors.sjtug.sjtu.edu.cn/composer/packages.json"
+    },
+    {
+      "key": "official",
+      "name": "官方源",
+      "url": "https://repo.packagist.org/",
+      "test_url": "https://repo.packagist.org/packages.json",
+      "official": true
+    }
+  ]
+}

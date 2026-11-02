@@ -284,7 +284,9 @@
                                   DisplayMemberPath="Label"
                                   SelectedValue="{Binding SelectedMirrorTool}" />
                         <Button Content="刷新" Margin="0,0,6,0" Command="{Binding RefreshMirrorsCommand}" />
-                        <Button Content="测试速度" Command="{Binding TestMirrorsCommand}" />
+                        <Button Content="测试速度" Margin="0,0,6,0" Command="{Binding TestMirrorsCommand}" />
+                        <Button Content="编辑镜像清单" Command="{Binding OpenMirrorsConfigCommand}"
+                                ToolTip="编辑外部文件 mirrors_config.json，保存后点「刷新」生效" />
                         <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Style="{DynamicResource PageHintStyle}">
                             <Run Text="当前：" /><Run Text="{Binding CurrentMirror, Mode=OneWay}" />
                         </TextBlock>
@@ -362,6 +364,7 @@
                                 <TextBlock Text="路径" Style="{DynamicResource SectionTitleStyle}" />
                                 <TextBlock Style="{DynamicResource MonoTextStyle}"><Run Text="根目录: " /><Run Text="{Binding DataInfo.Root, Mode=OneWay}" /></TextBlock>
                                 <TextBlock Style="{DynamicResource MonoTextStyle}"><Run Text="运行时配置: " /><Run Text="{Binding DataInfo.ConfigFile, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Style="{DynamicResource MonoTextStyle}"><Run Text="镜像清单: " /><Run Text="{Binding DataInfo.MirrorsConfigFile, Mode=OneWay}" /></TextBlock>
                                 <TextBlock Style="{DynamicResource MonoTextStyle}"><Run Text="下载缓存: " /><Run Text="{Binding DataInfo.CacheDir, Mode=OneWay}" /></TextBlock>
                                 <TextBlock Style="{DynamicResource MonoTextStyle}"><Run Text="应用目录: " /><Run Text="{Binding DataInfo.AppsDir, Mode=OneWay}" /></TextBlock>
                                 <TextBlock Style="{DynamicResource MonoTextStyle}"><Run Text="下载历史: " /><Run Text="{Binding DataInfo.HistoryFile, Mode=OneWay}" /></TextBlock>

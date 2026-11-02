@@ -17,6 +17,9 @@ public sealed class BundledConfigTests
         ResourceLoader.LoadBundledJson<Dictionary<string, List<SoftwareCatalogItem>>>(ResourcePaths.SoftwareCatalogFile)
         ?? throw new InvalidOperationException("software_config.json 缺失或无法解析");
 
+    private static Dictionary<string, List<MirrorSource>> LoadMirrors() =>
+        MirrorCatalog.Parse(File.ReadAllText(ResourcePaths.GetBundledResourcePath(ResourcePaths.MirrorsConfigFile)));
+
     [Fact]
     public void LoadBundledJson_MissingFile_ReturnsDefault()
     {
@@ -96,9 +99,46 @@ public sealed class BundledConfigTests
     }
 
     [Fact]
+    public void MirrorsConfig_CoversEverySupportedTool()
+    {
+        var catalog = LoadMirrors();
+
+        foreach (var tool in Enum.GetValues<MirrorToolType>())
+        {
+            Assert.True(catalog.TryGetValue(tool.ToString(), out var mirrors) && mirrors.Count > 0,
+                $"mirrors_config.json 缺少 {tool} 的镜像列表");
+        }
+    }
+
+    [Fact]
+    public void MirrorsConfig_EveryEntryIsUsable()
+    {
+        foreach (var (tool, mirrors) in LoadMirrors())
+        {
+            var keys = mirrors.Select(m => m.Key).ToList();
+            Assert.Equal(keys.Count, keys.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+
+            Assert.Contains(mirrors, m => m.IsOfficial);
+            foreach (var mirror in mirrors)
+            {
+                Assert.False(string.IsNullOrWhiteSpace(mirror.Name), $"{tool}/{mirror.Key} 缺少 name");
+                Assert.StartsWith("https://", mirror.Url, StringComparison.OrdinalIgnoreCase);
+                Assert.True(Uri.TryCreate(mirror.SpeedTestUrl, UriKind.Absolute, out _),
+                    $"{tool}/{mirror.Key} 的测速地址不合法：{mirror.SpeedTestUrl}");
+            }
+        }
+    }
+
+    [Fact]
     public void ConfigFileNames_MatchWhatShipsInResources()
     {
-        foreach (var name in new[] { ResourcePaths.ProcessesConfigFile, ResourcePaths.SoftwareCatalogFile, ResourcePaths.DefaultConfigFile })
+        foreach (var name in new[]
+                 {
+                     ResourcePaths.ProcessesConfigFile,
+                     ResourcePaths.SoftwareCatalogFile,
+                     ResourcePaths.DefaultConfigFile,
+                     ResourcePaths.MirrorsConfigFile
+                 })
         {
             Assert.True(File.Exists(ResourcePaths.GetBundledResourcePath(name)), $"Resources/{name} 没有随程序发布");
         }
