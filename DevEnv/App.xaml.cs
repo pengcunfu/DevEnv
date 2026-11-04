@@ -7,7 +7,10 @@ using System.Windows.Media.Imaging;
 using DevEnv.Core;
 using DevEnv.Core.Services;
 using DevEnv.Core.LavaEnv.Services;
+using DevEnv.Host.SigXor;
 using DevEnv.Host.Infrastructure;
+using DevEnv.Host.SigXor;
+using DevEnv.Host.SigXor.Diagnostics;
 using DevEnv.Host.Themes;
 using DevEnv.Host.Windows;
 using Velopack;
@@ -29,6 +32,7 @@ public partial class App : System.Windows.Application
     private ClipboardWatcher? _clipboardWatcher;
     private TranslatorWindow? _translatorWindow;
     private ClipboardWindow? _clipboardWindow;
+    private SigXorHost? _sigXor;
     private bool _exiting;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -47,6 +51,46 @@ public partial class App : System.Windows.Application
 
         // Velopack 必须最先处理：安装 / 卸载 / 更新重启都在参数里
         VelopackApp.Build().SetArgs(e.Args).Run();
+
+        // SigXor 模块自检探针：独立进程跑完检查即退出，不进单例、不建窗口。
+        // 用法见 SigXorDiagnostics 的说明。
+        int checkIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, SigXorDiagnostics.Argument, StringComparison.OrdinalIgnoreCase));
+        if (checkIndex >= 0)
+        {
+            string report = checkIndex + 1 < e.Args.Length ? e.Args[checkIndex + 1] : "";
+            RunSigXorDiagnosticsAsync(report);
+            return;
+        }
+
+        int smokeIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, SigXorSmokeProbe.Argument, StringComparison.OrdinalIgnoreCase));
+        if (smokeIndex >= 0)
+        {
+            string report = smokeIndex + 1 < e.Args.Length ? e.Args[smokeIndex + 1] : "";
+            Shutdown(SigXorSmokeProbe.Run(
+                string.IsNullOrWhiteSpace(report) ? [] : [report]));
+            return;
+        }
+
+        int previewIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, SigXorPreviewProbe.Argument, StringComparison.OrdinalIgnoreCase));
+        if (previewIndex >= 0)
+        {
+            string report = previewIndex + 1 < e.Args.Length ? e.Args[previewIndex + 1] : "";
+            RunSigXorPreviewProbeAsync(report);
+            return;
+        }
+
+        int themeIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, SigXorThemeProbe.Argument, StringComparison.OrdinalIgnoreCase));
+        if (themeIndex >= 0)
+        {
+            string report = themeIndex + 1 < e.Args.Length ? e.Args[themeIndex + 1] : "";
+            Shutdown(SigXorThemeProbe.Run(
+                string.IsNullOrWhiteSpace(report) ? [] : [report]));
+            return;
+        }
 
         // 右键菜单管理提权子进程：执行完立即退出（绕过单实例）
         var applyIndex = Array.FindIndex(e.Args, a =>
@@ -82,8 +126,18 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        // 命令行里带文件路径：转给主实例弹预览（文件关联 / 右键「打开方式」都走这里）
+        var fileArgs = e.Args
+            .Where(a => !a.StartsWith("--", StringComparison.Ordinal))
+            .Where(a => !string.IsNullOrWhiteSpace(a))
+            .Where(File.Exists)
+            .ToArray();
+
         if (!SingleInstance.TryStartAsPrimary())
         {
+            // 二次启动：把文件路径转给主实例后退出
+            if (fileArgs.Length > 0)
+                SingleInstance.ForwardFilesToPrimary(fileArgs);
             Shutdown();
             return;
         }
@@ -98,6 +152,7 @@ public partial class App : System.Windows.Application
         _mainWindow.Show();
 
         SingleInstance.StartActivateListener(Dispatcher, ShowMainWindow);
+        SingleInstance.StartFileListener(Dispatcher, paths => _sigXor?.ShowPreviewForPaths(paths));
 
         _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
         _tray.ShowWindowRequested += ShowMainWindow;
@@ -105,11 +160,84 @@ public partial class App : System.Windows.Application
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
         _tray.ExitRequested += ExitApp;
 
+        // SigXor 模块：文件快速预览 / 语音输入 / 区域截图 OCR 取色 / 全局启动器
+        _sigXor = new SigXorHost(Dispatcher);
+        _sigXor.NotificationRequested += (title, message) =>
+            Dispatcher.BeginInvoke(new Action(() => _tray?.ShowBalloon(message, Forms.ToolTipIcon.Info)));
+        _sigXor.VoiceStatusChanged += status =>
+            Dispatcher.BeginInvoke(new Action(() => _tray?.SetVoiceServiceState(status.IsRunning)));
+        _sigXor.Initialize();
+
+        _tray.FilePreviewRequested += () => Dispatcher.InvokeAsync(() => ShowFilePreviewDialog());
+        _tray.ScreenshotRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StartCapture());
+        _tray.StartVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StartVoiceService());
+        _tray.StopVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StopVoiceService());
+        _tray.SigXorSettingsRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.OpenSettings());
+        _tray.SigXorLauncherRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowLauncher());
+        _tray.SigXorBrowserRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowBrowser());
+        _tray.SigXorAboutRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.OpenAbout());
+        _tray.SetVoiceServiceState(_sigXor.IsVoiceServiceRunning);
+
+        // 首次启动就带了文件路径：直接弹预览浮窗
+        if (fileArgs.Length > 0)
+        {
+            Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowPreviewForPaths(fileArgs)),
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+
         _clipboardWatcher = new ClipboardWatcher();
         _clipboardWatcher.Captured += OnClipboardCaptured;
     }
 
+    /// <summary>托盘「文件快速预览…」：选择文件后弹出预览浮窗。</summary>
+    private void ShowFilePreviewDialog()
+    {
+        var dlg = new Forms.OpenFileDialog
+        {
+            Title = "选择要预览的文件",
+            Multiselect = true,
+            CheckFileExists = true,
+        };
+        if (dlg.ShowDialog() != Forms.DialogResult.OK)
+            return;
+        _sigXor?.ShowPreviewForPaths(dlg.FileNames);
+    }
+
     #region 全局异常
+
+    /// <summary>SigXor 预览链路探针的异步执行入口：跑完写报告文件再退出进程。</summary>
+    private async void RunSigXorPreviewProbeAsync(string reportPath)
+    {
+        int exitCode = 1;
+        try
+        {
+            exitCode = await SigXorPreviewProbe.RunAsync(
+                string.IsNullOrWhiteSpace(reportPath) ? [] : [reportPath]);
+        }
+        catch (Exception ex)
+        {
+            try { File.WriteAllText(reportPath, $"FATAL {ex}"); } catch { }
+        }
+
+        Shutdown(exitCode);
+    }
+
+    /// <summary>SigXor 全量自检的异步执行入口：跑完写报告文件再退出进程。</summary>
+    private async void RunSigXorDiagnosticsAsync(string reportPath)
+    {
+        int exitCode = 1;
+        try
+        {
+            exitCode = await SigXorDiagnostics.RunAllAsync(
+                string.IsNullOrWhiteSpace(reportPath) ? [] : [reportPath]);
+        }
+        catch (Exception ex)
+        {
+            try { File.WriteAllText(reportPath, $"FATAL {ex}"); } catch { }
+        }
+
+        Shutdown(exitCode);
+    }
 
     /// <summary>未处理异常落盘到 %LOCALAPPDATA%\DevEnv\crash.log：桌面程序崩了用户看不到控制台。</summary>
     private void OnUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
@@ -192,6 +320,7 @@ public partial class App : System.Windows.Application
         _clipboardWindow?.PrepareForExit();
         try { _translatorWindow?.Close(); } catch { /* 已在退出路径 */ }
         try { _clipboardWindow?.Close(); } catch { /* 已在退出路径 */ }
+        try { _sigXor?.Dispose(); } catch { /* 已在退出路径 */ }
         try { _mainWindow?.Close(); } catch { /* 已在退出路径 */ }
         Shutdown();
     }
@@ -398,6 +527,15 @@ public partial class App : System.Windows.Application
         }));
         HostCallbacks.OnShowTranslator += request => Dispatcher.BeginInvoke(new Action(() => ShowTranslatorWindow(request)));
         HostCallbacks.OnShowClipboard += visible => Dispatcher.BeginInvoke(new Action(() => ShowClipboardWindow(visible)));
+
+        // SigXor 模块接线：核心层与工具目录通过 HostCallbacks 触发模块能力
+        HostCallbacks.OnOpenFilePreview += () => Dispatcher.BeginInvoke(new Action(ShowFilePreviewDialog));
+        HostCallbacks.OnOpenScreenshot += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.StartCapture()));
+        HostCallbacks.OnOpenSigXorSettings += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenSettings()));
+        HostCallbacks.OnOpenSigXorLauncher += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowLauncher()));
+        HostCallbacks.OnOpenSigXorBrowser += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowBrowser()));
+        HostCallbacks.OnOpenSigXorAbout += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenAbout()));
+        HostCallbacks.OnOpenSigXorUpdate += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenUpdateWindow()));
     }
 
     private static void RestartProcess(bool asAdmin)

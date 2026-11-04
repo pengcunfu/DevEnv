@@ -215,7 +215,7 @@ _pkginfo.txt
 data.json
 config.json
 # 父仓全局忽略了 config.json；放行 DevEnv 内置模板（其余仍由 DevEnv/.gitignore 管理）
-!DevEnv/Resources/config.json
+!DevEnv.Core/LavaEnv/Resources/config.json
 icons/
 icons/
 *.log

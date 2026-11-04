@@ -18,6 +18,38 @@
 
 **功能模块是 `DevEnv.Core` / `DevEnv` 工程内的子目录，不再有独立工程**。新功能按 `DevEnv.Core/<模块>/{Models,Services}` + `DevEnv/{Views,ViewModels,Windows}` 放置，命名空间与目录一致（`DevEnv.Core.<模块>.*` / `DevEnv.Host.*`）。不要恢复独立 `Program.cs`、独立 `sln` 或独立入口。
 
+### SigXor 模块（文件快速预览 / 语音输入 / 截图 OCR 取色）
+
+原 SigXor 独立应用已并入本仓库，代码保留原结构但**命名空间与目录已改写**：
+
+| 位置 | 内容 |
+|------|------|
+| `DevEnv.Core/SigXor/` | 纯逻辑：HexDocument、文件类型识别、编码检测、Office / RTF / ODF 解析、CSV 解析、Markdown 渲染、快捷键与屏幕几何。命名空间 `DevEnv.Core.SigXor.*` |
+| `DevEnv/SigXor/` | WPF 界面与系统能力：预览浮窗、语音输入、截图 / OCR / 取色、全局启动器、文件浏览器。命名空间 `DevEnv.Host.SigXor.*` |
+| `DevEnv/SigXor/SigXorHost.cs` | **模块装配入口**。原 SigXor 的 `App` 已改造为此类：不再继承 `Application`、不再自带托盘 / 单实例 / 独立入口（这些统一由 `DevEnv.Host.App` 提供），只保留模块自己的接线与生命周期 |
+| `DevEnv/SigXor/SigXorStyles.xaml` | 原 `App.xaml` 里的 `EngineToggle` 样式，已改为 `ResourceDictionary` 并入主 `App.xaml` |
+| `DevEnv.Tests/` 根目录 | SigXor 的 12 个测试文件（`namespace DevEnv.Tests.SigXor`），与 DevEnv 原有测试同工程 |
+
+约定：
+
+- **不要再引入第二套基础设施**。托盘、单实例、自启动、更新、异常日志一律用 DevEnv 现有的（`TrayIconHost`、`SingleInstance`、`AutostartHelper`、Velopack `UpdateService`）。SigXor 自带的 `TrayIconService` / `SingleInstanceService` / `Updater` / `App` / `Program` 是未接线的遗留代码，**已删除**，不要接回去。
+- 模块要暴露能力给宿主，走 `DevEnv.Core.HostCallbacks`（`OnOpenFilePreview` / `OnOpenScreenshot` / `OnOpenSigXorSettings` / `OnOpenSigXorLauncher` / `OnOpenSigXorBrowser` / `OnOpenSigXorAbout`），不要在 Core 里直接碰 UI。
+- SigXor 的数据目录仍是 `文档\FNSoftware\SigXor`（与 DevEnv 的 `文档\FNSoftware\DevEnv` 并存），旧版 SigXor 配置与模型在首次启动时自动迁移。
+- 全局键盘钩子：SigXor 用自己的 `GlobalHotkeyService`（`WH_KEYBOARD_LL`，处理空格 / Esc / 语音键 / 反引号），与 DevEnv 的 `RegisterHotKey` 体系**并存但不冲突**（前者管预览与语音，后者管显示窗口 / 翻译 / 剪贴板）。多个 SigXor 功能共用一个钩子时靠 `GlobalHotkeyRouter` 的**优先级**排序：截图 300 > 语音 200 > 预览 100。
+- **开机自启只有一个开关**：DevEnv 主界面「设置」里的 `SelfStarting`（data.json）是唯一事实来源，落盘到注册表 `HKCU\...\Run`。SigXor 设置窗里的同名勾选框读写的是同一项（`Services/AutoStartService.cs` 是适配层），不要让两边各写一套。
+- **自检探针**：SigXor 有 34 个 XAML（11 个窗口 + 15 个预览视图 + 7 个 WebView2 宿主），而 WPF 的 XAML 异常是静默的（AGENTS.md 第 12 条），靠肉眼点菜单不可靠。改动模块后跑：
+
+ ```bash
+ DevEnv\bin\Release\net10.0-windows\DevEnv.exe --sigxor-check %TEMP%\sigxor.txt
+ ```
+
+ 三组探针：窗口 / 视图能否加载、预览内容能否渲染、深浅主题切换是否生效。单个探针也有独立开关：`--sigxor-smoke` / `--sigxor-preview-smoke` / `--sigxor-theme-smoke`。
+- **预览内容类型共 13 种**（`ContentKind`）：Text / Code / Image / Svg / Archive / Csv / Font / Document / Markdown / WebPage / Audio / Video / Pdf / Binary。新增类型要同时改 `DevEnv.Core/SigXor/FileTypeDetector.cs` 与 `DevEnv/SigXor/ViewModels/PreviewViewModel.cs` 的分发，并补一条预览探针用例。
+- **webassets 是嵌入 exe 的资源**（`EmbeddedResource` + `LogicalName="webassets/..."`），运行时由 `DevEnv/SigXor/WebAssets.cs` 按内容指纹解压到 `%LOCALAPPDATA%\SigXor\WebAssets\{指纹}`。**不要**改成复制到输出目录——WebView2 的虚拟主机映射只接受真实目录。
+- **语法高亮是 VS Code Dark 配色**（`SyntaxHighlightingService`），固定深色方案不跟主题走，因此 `TextView` 的编辑器底色也必须恒为深色（见 `Views/TextView.xaml.cs`），否则浅色主题下看不清。其余界面颜色一律走 `DynamicResource`。
+- **截图 / 取色 / 选区 / 语音浮窗里的黑白配色是功能性颜色**，必须保持不透明与高对比，不随主题变化（`scripts/theme-sigxor-xaml.ps1` 已把它们列为例外）。
+- **合并脚本**：`scripts/merge-sigxor.ps1`（搬运）+ `scripts/rewrite-sigxor-namespace.ps1`（改写命名空间）+ `scripts/verify-sigxor-merge.ps1`（逐字校验）。合并 SigXor 新版本后跑一次 verify，确认「除预期的宿主适配外与源仓库逐字一致」。
+
 ## 常用命令
 
 ```bash

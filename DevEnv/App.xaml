@@ -9,6 +9,10 @@
                 <ResourceDictionary Source="Themes/Converters.xaml" />
                 <!-- 控件样式（浅深共用） -->
                 <ResourceDictionary Source="Themes/Controls.xaml" />
+                <!-- SigXor 模块样式（模型 / 视图切换按钮等）。
+                     必须排在调色板之前：ThemeManager.Apply 只替换最后一个字典位置，
+                     调色板必须留在末尾，否则深色主题切换会失效。 -->
+                <ResourceDictionary Source="SigXor/SigXorStyles.xaml" />
                 <!-- 调色板：ThemeManager 在 Light / Dark 之间整块替换 -->
                 <ResourceDictionary Source="Themes/Palette.Light.xaml" />
             </ResourceDictionary.MergedDictionaries>

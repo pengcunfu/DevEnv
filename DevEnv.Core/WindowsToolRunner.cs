@@ -31,6 +31,12 @@ public static class WindowsToolRunner
         ("event", "事件查看器", "性能与监控", "查看系统事件日志"),
         ("info", "系统信息", "性能与监控", "查看系统详细信息"),
         ("planned_task", "计划任务", "性能与监控", "管理系统定时任务"),
+        // SigXor 模块并入后新增的文件与截图类工具
+        ("file_preview", "文件快速预览", "文件与截图", "预览文档、图片、代码、压缩包等文件内容"),
+        ("sigxor_launcher", "全局启动器", "文件与截图", "快速启动应用、打开文件或执行命令"),
+        ("sigxor_browser", "文件浏览器", "文件与截图", "浏览目录并在内嵌面板中预览文件"),
+        ("screenshot", "区域截图", "文件与截图", "截取屏幕区域，可提取文字或取色"),
+        ("sigxor_settings", "语音与截屏设置", "文件与截图", "配置语音输入、OCR 模型与截图行为"),
     ];
 
     public static bool TryRun(string key, out string? error)
@@ -74,6 +80,22 @@ public static class WindowsToolRunner
                     break;
                 case "startup":
                     HostCallbacks.OnActivateTab?.Invoke("tools/startup");
+                    break;
+                // SigXor 模块：走 HostCallbacks 回到宿主，由宿主调模块能力
+                case "file_preview":
+                    HostCallbacks.OnOpenFilePreview?.Invoke();
+                    break;
+                case "sigxor_launcher":
+                    HostCallbacks.OnOpenSigXorLauncher?.Invoke();
+                    break;
+                case "sigxor_browser":
+                    HostCallbacks.OnOpenSigXorBrowser?.Invoke();
+                    break;
+                case "screenshot":
+                    HostCallbacks.OnOpenScreenshot?.Invoke();
+                    break;
+                case "sigxor_settings":
+                    HostCallbacks.OnOpenSigXorSettings?.Invoke();
                     break;
                 default:
                     error = $"未知工具: {key}";

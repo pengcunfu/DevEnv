@@ -1,0 +1,63 @@
+<Window x:Class="DevEnv.Host.SigXor.Toolkit.Capture.ScreenshotPreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="400" Height="300"
+        WindowStyle="None" Background="Black" Topmost="True"
+        ShowInTaskbar="False" ShowActivated="False"
+        ResizeMode="NoResize" WindowStartupLocation="Manual"
+        PreviewKeyDown="OnPreviewKeyDown">
+    <Grid>
+        <Image x:Name="PreviewImage" Stretch="Fill"/>
+        <Border x:Name="DragSurface" BorderBrush="#E033A6FF" BorderThickness="1"
+                Background="Transparent" Cursor="SizeAll" Focusable="True"
+                MouseLeftButtonDown="OnMouseLeftButtonDown"
+                MouseMove="OnMouseMove"
+                MouseLeftButtonUp="OnMouseLeftButtonUp"
+                MouseRightButtonDown="OnMouseRightButtonDown">
+            <!-- 取色放大镜：直接在截图预览图上取色，不隐藏预览 -->
+            <Canvas x:Name="PickOverlay" Visibility="Collapsed" IsHitTestVisible="False">
+                <Border x:Name="MagnifierCard" Width="184"
+                        Background="#F2141418" BorderBrush="#66FFFFFF" BorderThickness="1"
+                        CornerRadius="12" Padding="8">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="24" ShadowDepth="3" Opacity="0.4" Color="Black"/>
+                    </Border.Effect>
+                    <StackPanel Width="168">
+                        <Border Width="152" Height="152" Background="#0A0A0A"
+                                BorderBrush="#55FFFFFF" BorderThickness="1" CornerRadius="8"
+                                ClipToBounds="True" HorizontalAlignment="Center">
+                            <Grid>
+                                <Image x:Name="MagnifierImage" Stretch="Fill"/>
+                                <Canvas Width="152" Height="152" IsHitTestVisible="False">
+                                    <Line X1="76" Y1="0" X2="76" Y2="152" Stroke="#E0FFFFFF" StrokeThickness="1"/>
+                                    <Line X1="0" Y1="76" X2="152" Y2="76" Stroke="#E0FFFFFF" StrokeThickness="1"/>
+                                    <Rectangle Canvas.Left="69" Canvas.Top="69" Width="14" Height="14"
+                                               Stroke="#FFFFD166" StrokeThickness="1.5"/>
+                                </Canvas>
+                            </Grid>
+                        </Border>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Border x:Name="ColorSwatch" Width="28" Height="28" CornerRadius="7"
+                                    BorderBrush="#88FFFFFF" BorderThickness="1" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ColorValueText" Grid.Column="1" Text="#000000"
+                                       Foreground="White" FontSize="14" FontWeight="SemiBold"
+                                       FontFamily="Consolas" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="HintText" Grid.Column="1" Grid.Row="1"
+                                       Text="点击/C 复制 · Shift→RGB · Esc 退出"
+                                       Foreground="#99FFFFFF" FontSize="10.5" TextWrapping="Wrap"
+                                       Margin="0,2,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Canvas>
+        </Border>
+    </Grid>
+</Window>

@@ -18,6 +18,8 @@ public sealed class ShortcutService
     private static readonly HashSet<string> MenuOnlyKeys = new(StringComparer.OrdinalIgnoreCase)
     {
         "json_formatter", "hosts_editor", "image_converter", "hash_calculator", "startup",
+        // SigXor 模块的工具同样在顶部菜单里有入口，不在系统工具页重复列出
+        "file_preview", "sigxor_launcher", "sigxor_browser", "screenshot", "sigxor_settings",
     };
 
     private readonly DataStore _store;

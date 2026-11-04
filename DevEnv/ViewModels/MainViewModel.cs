@@ -153,6 +153,32 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenDocs() => HostServices.OpenUrl("https://devenv.cn/");
 
+    // SigXor 模块：文件快速预览 / 区域截图 / 语音与截屏 / 全局启动器 / 文件浏览器
+
+    /// <summary>SigXor 模块：文件快速预览（选择文件后弹预览浮窗）。</summary>
+    [RelayCommand]
+    private void OpenFilePreview() => HostCallbacks.OnOpenFilePreview?.Invoke();
+
+    /// <summary>SigXor 模块：区域截图 / OCR / 取色。</summary>
+    [RelayCommand]
+    private void OpenScreenshot() => HostCallbacks.OnOpenScreenshot?.Invoke();
+
+    /// <summary>SigXor 模块：语音与截屏设置。</summary>
+    [RelayCommand]
+    private void OpenSigXorSettings() => HostCallbacks.OnOpenSigXorSettings?.Invoke();
+
+    /// <summary>SigXor 模块：全局启动器（应用 / 文件 / 命令启动）。</summary>
+    [RelayCommand]
+    private void OpenSigXorLauncher() => HostCallbacks.OnOpenSigXorLauncher?.Invoke();
+
+    /// <summary>SigXor 模块：文件浏览器（目录导航 + 内嵌预览）。</summary>
+    [RelayCommand]
+    private void OpenSigXorBrowser() => HostCallbacks.OnOpenSigXorBrowser?.Invoke();
+
+    /// <summary>SigXor 模块：关于窗口。</summary>
+    [RelayCommand]
+    private void OpenSigXorAbout() => HostCallbacks.OnOpenSigXorAbout?.Invoke();
+
     /// <summary>工具菜单项：启动对应 Windows 工具或跳到内置工具页。</summary>
     [RelayCommand]
     private void RunSystemTool(string? key)

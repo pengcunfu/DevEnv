@@ -1,0 +1,46 @@
+<UserControl x:Class="DevEnv.Host.SigXor.Views.FontView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:DevEnv.Host.SigXor.Converters"
+             xmlns:vm="clr-namespace:DevEnv.Host.SigXor.ViewModels">
+    <UserControl.Resources>
+        <conv:NullToVisibilityConverter x:Key="NullToVis"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Text="{Binding Summary}" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBlock Text="{Binding VersionText}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,12"
+                       Visibility="{Binding VersionText, Converter={StaticResource NullToVis}}"/>
+
+            <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="12,8" Margin="0,0,0,16"
+                    Visibility="{Binding Error, Converter={StaticResource NullToVis}}">
+                <TextBlock Text="{Binding Error}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"/>
+            </Border>
+
+            <StackPanel Visibility="{Binding CanPreview, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="拉丁字母" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,6"/>
+                <TextBlock Text="{x:Static vm:FontContentViewModel.SampleLatin}"
+                           FontFamily="{Binding FontFamily}" FontSize="28"
+                           TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="36"/>
+
+                <TextBlock Text="中文样本" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,6"/>
+                <TextBlock Text="{x:Static vm:FontContentViewModel.SampleChinese}"
+                           FontFamily="{Binding FontFamily}" FontSize="28"
+                           TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="40"/>
+
+                <TextBlock Text="符号" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,6"/>
+                <TextBlock Text="{x:Static vm:FontContentViewModel.SampleSymbols}"
+                           FontFamily="{Binding FontFamily}" FontSize="24"
+                           TextWrapping="Wrap" Margin="0,0,0,20"/>
+
+                <TextBlock Text="字号阶梯" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,6"/>
+                <TextBlock Text="汉体 Aa 12" FontFamily="{Binding FontFamily}" FontSize="12" Margin="0,0,0,4"/>
+                <TextBlock Text="汉体 Aa 18" FontFamily="{Binding FontFamily}" FontSize="18" Margin="0,0,0,4"/>
+                <TextBlock Text="汉体 Aa 24" FontFamily="{Binding FontFamily}" FontSize="24" Margin="0,0,0,4"/>
+                <TextBlock Text="汉体 Aa 36" FontFamily="{Binding FontFamily}" FontSize="36" Margin="0,0,0,4"/>
+                <TextBlock Text="汉体 Aa 48" FontFamily="{Binding FontFamily}" FontSize="48"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

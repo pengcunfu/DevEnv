@@ -16,6 +16,23 @@ internal sealed class TrayIconHost : IDisposable
     public event Action? ClipboardRequested;
     public event Action? ExitRequested;
 
+    /// <summary>SigXor 模块：打开文件快速预览。</summary>
+    public event Action? FilePreviewRequested;
+    /// <summary>SigXor 模块：开始区域截图。</summary>
+    public event Action? ScreenshotRequested;
+    /// <summary>SigXor 模块：启动语音服务。</summary>
+    public event Action? StartVoiceRequested;
+    /// <summary>SigXor 模块：停止语音服务。</summary>
+    public event Action? StopVoiceRequested;
+    /// <summary>SigXor 模块：打开模块设置。</summary>
+    public event Action? SigXorSettingsRequested;
+    /// <summary>SigXor 模块：打开全局启动器。</summary>
+    public event Action? SigXorLauncherRequested;
+    /// <summary>SigXor 模块：打开文件浏览器窗口。</summary>
+    public event Action? SigXorBrowserRequested;
+    /// <summary>SigXor 模块：打开模块关于窗口。</summary>
+    public event Action? SigXorAboutRequested;
+
     public TrayIconHost(string text, System.Drawing.Icon? icon)
     {
         _notifyIcon = new Forms.NotifyIcon
@@ -29,9 +46,31 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add("熔岩翻译", null, (_, _) => Raise(TranslatorRequested));
         _menu.Items.Add("熔岩剪贴板", null, (_, _) => Raise(ClipboardRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
+        _menu.Items.Add("文件快速预览…", null, (_, _) => Raise(FilePreviewRequested));
+        _menu.Items.Add("全局启动器…", null, (_, _) => Raise(SigXorLauncherRequested));
+        _menu.Items.Add("文件浏览器…", null, (_, _) => Raise(SigXorBrowserRequested));
+        _menu.Items.Add("区域截图", null, (_, _) => Raise(ScreenshotRequested));
+        _menu.Items.Add("启动语音服务", null, (_, _) => Raise(StartVoiceRequested));
+        _menu.Items.Add("停止语音服务", null, (_, _) => Raise(StopVoiceRequested));
+        _menu.Items.Add("文件预览与语音设置…", null, (_, _) => Raise(SigXorSettingsRequested));
+        _menu.Items.Add("关于文件预览模块…", null, (_, _) => Raise(SigXorAboutRequested));
+        _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;
         _notifyIcon.DoubleClick += (_, _) => Raise(ShowWindowRequested);
+    }
+
+    /// <summary>语音服务运行时，把「启动语音服务」置灰，只留「停止」。</summary>
+    public void SetVoiceServiceState(bool running)
+    {
+        UpdateMenuItem("启动语音服务", !running);
+        UpdateMenuItem("停止语音服务", running);
+    }
+
+    private void UpdateMenuItem(string text, bool visible)
+    {
+        if (_menu.Items[text] is { } item)
+            item.Visible = visible;
     }
 
     public bool Visible

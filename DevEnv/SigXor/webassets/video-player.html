@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>视频预览</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: #111827; color: #f9fafb;
+  }
+  .stage {
+    height: 100%;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .viewport {
+    flex: 1; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #000;
+    position: relative;
+  }
+  video {
+    max-width: 100%; max-height: 100%;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #000;
+    outline: none;
+  }
+  .bar {
+    flex: 0 0 auto;
+    padding: 10px 16px 14px;
+    background: #1f2937;
+    border-top: 1px solid #374151;
+  }
+  .name {
+    font-size: 13px; font-weight: 600;
+    word-break: break-all;
+    margin-bottom: 2px;
+  }
+  .meta {
+    font-size: 11px; color: #9ca3af;
+    margin-bottom: 10px;
+  }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; border-radius: 3px;
+    background: #4b5563; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #60a5fa; border: none;
+  }
+  input[type="range"]:disabled::-webkit-slider-thumb { background: #6b7280; }
+  .times {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: #9ca3af;
+    font-variant-numeric: tabular-nums;
+    margin-top: 4px;
+  }
+  .controls {
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; margin-top: 12px;
+  }
+  button {
+    border: 1px solid #4b5563; background: #374151;
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 13px; color: #e5e7eb; cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: #4b5563; }
+  button:disabled { opacity: .5; cursor: default; }
+  button.play {
+    width: 44px; height: 44px; border-radius: 50%;
+    font-size: 16px; padding: 0;
+    background: #2563eb; border-color: #2563eb; color: #fff;
+  }
+  button.play:hover:not(:disabled) { background: #1d4ed8; }
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 12px; font-size: 12px; color: #9ca3af;
+  }
+  .row .grow { flex: 1; }
+  .row input[type="range"] { height: 4px; }
+  select {
+    border: 1px solid #4b5563; border-radius: 6px;
+    padding: 3px 6px; font-size: 12px; background: #374151; color: #e5e7eb;
+  }
+  .error {
+    display: none;
+    margin-top: 10px;
+    background: #7f1d1d; border: 1px solid #b91c1c;
+    color: #fecaca; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px;
+    text-align: center; white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="viewport">
+    <video id="v" preload="metadata" playsinline></video>
+  </div>
+  <div class="bar">
+    <div class="name" id="name"></div>
+    <div class="meta" id="meta">正在读取…</div>
+
+    <input type="range" id="seek" min="0" max="1000" value="0" step="1" disabled>
+    <div class="times"><span id="cur">0:00</span><span id="dur">--:--</span></div>
+
+    <div class="controls">
+      <button id="back" title="后退 5 秒">-5s</button>
+      <button id="play" class="play" title="播放 / 暂停">▶</button>
+      <button id="fwd" title="前进 5 秒">+5s</button>
+    </div>
+
+    <div class="row">
+      <span>音量</span>
+      <input type="range" id="vol" class="grow" min="0" max="100" value="100">
+      <select id="rate" title="倍速">
+        <option value="0.75">0.75x</option>
+        <option value="1" selected>1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+      </select>
+      <button id="loop" title="循环播放">循环: 关</button>
+    </div>
+
+    <div class="error" id="error"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var params = new URLSearchParams(location.search);
+  var video = document.getElementById("v");
+  var els = {
+    name: document.getElementById("name"),
+    meta: document.getElementById("meta"),
+    seek: document.getElementById("seek"),
+    cur: document.getElementById("cur"),
+    dur: document.getElementById("dur"),
+    play: document.getElementById("play"),
+    back: document.getElementById("back"),
+    fwd: document.getElementById("fwd"),
+    vol: document.getElementById("vol"),
+    rate: document.getElementById("rate"),
+    loop: document.getElementById("loop"),
+    error: document.getElementById("error"),
+  };
+
+  var fileName = params.get("name") || "视频文件";
+  var fileSize = params.get("size") || "";
+  els.name.textContent = fileName;
+
+  function reportError(message) {
+    try {
+      window.chrome.webview.postMessage({ type: "error", message: String(message) });
+    } catch (_) { }
+    els.error.style.display = "block";
+    els.error.textContent = message;
+    els.meta.textContent = fileSize ? "大小 " + fileSize : "";
+    els.play.disabled = true;
+    els.seek.disabled = true;
+  }
+
+  function fmt(t) {
+    if (!isFinite(t) || t < 0) return "--:--";
+    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  function updatePlayButton() {
+    els.play.textContent = video.paused ? "▶" : "❚❚";
+    els.play.title = video.paused ? "播放" : "暂停";
+  }
+
+  function updateMeta() {
+    var duration = video.duration;
+    var bits = [];
+    if (isFinite(duration)) bits.push("时长 " + fmt(duration));
+    if (fileSize) bits.push("大小 " + fileSize);
+    if (video.videoWidth > 0 && video.videoHeight > 0)
+      bits.push(video.videoWidth + "×" + video.videoHeight);
+    els.meta.textContent = bits.length ? bits.join(" · ") : (fileSize || "");
+  }
+
+  video.addEventListener("loadedmetadata", function () {
+    els.seek.disabled = false;
+    els.dur.textContent = fmt(video.duration);
+    updateMeta();
+  });
+
+  video.addEventListener("timeupdate", function () {
+    if (!seeking && isFinite(video.duration) && video.duration > 0)
+      els.seek.value = Math.round(video.currentTime / video.duration * 1000);
+    els.cur.textContent = fmt(video.currentTime);
+  });
+
+  video.addEventListener("play", updatePlayButton);
+  video.addEventListener("pause", updatePlayButton);
+  video.addEventListener("ended", function () { if (!video.loop) els.seek.value = 0; });
+
+  video.addEventListener("error", function () {
+    var code = video.error ? video.error.code : 0;
+    if (code === 2)
+      reportError("视频数据读取失败（网络/拦截错误）。");
+    else if (code === 3)
+      reportError("视频解码失败，文件可能已损坏。");
+    else if (code === 4)
+      reportError("无法播放此视频（编码不受支持）。WebView2/Chromium 通常支持 MP4(H.264+AAC)、WebM；MKV/AVI/WMV 可能无法播放。");
+    else
+      reportError("视频播放失败（错误码 " + code + "）。");
+  });
+
+  var seeking = false;
+  els.seek.addEventListener("input", function () { seeking = true; });
+  els.seek.addEventListener("change", function () {
+    if (isFinite(video.duration) && video.duration > 0)
+      video.currentTime = els.seek.value / 1000 * video.duration;
+    seeking = false;
+  });
+
+  els.play.addEventListener("click", function () {
+    if (video.paused) video.play(); else video.pause();
+  });
+  els.back.addEventListener("click", function () {
+    video.currentTime = Math.max(0, video.currentTime - 5);
+  });
+  els.fwd.addEventListener("click", function () {
+    if (isFinite(video.duration))
+      video.currentTime = Math.min(video.duration, video.currentTime + 5);
+  });
+  els.vol.addEventListener("input", function () { video.volume = els.vol.value / 100; });
+  els.rate.addEventListener("change", function () { video.playbackRate = parseFloat(els.rate.value); });
+  els.loop.addEventListener("click", function () {
+    video.loop = !video.loop;
+    els.loop.textContent = "循环: " + (video.loop ? "开" : "关");
+  });
+
+  video.addEventListener("click", function () {
+    if (video.paused) video.play(); else video.pause();
+  });
+
+  document.addEventListener("keydown", function (ev) {
+    if (ev.target.tagName === "INPUT" || ev.target.tagName === "SELECT") return;
+    if (ev.code === "Space") { ev.preventDefault(); els.play.click(); }
+  });
+
+  updatePlayButton();
+  video.src = "stream";
+})();
+</script>
+</body>
+</html>

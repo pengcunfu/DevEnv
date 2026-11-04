@@ -1,0 +1,65 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using DevEnv.Core.SigXor;
+using DevEnv.Host.SigXor.Services;
+
+namespace DevEnv.Host.SigXor.ViewModels;
+
+/// <summary>空格预览浮窗的视图模型（多选文件时支持 ↑/↓ 切换）。</summary>
+public sealed partial class ShellPreviewViewModel : ObservableObject
+{
+    private readonly PreviewViewModel _preview;
+    private readonly List<FileEntry> _files = [];
+    private int _index;
+
+    public ShellPreviewViewModel(SettingsService settings, BackupService backup)
+    {
+        _preview = new PreviewViewModel(settings, backup);
+    }
+
+    public PreviewViewModel Preview => _preview;
+
+    [ObservableProperty]
+    private string _positionText = "";
+
+    public void LoadFiles(IReadOnlyList<FileEntry> files)
+    {
+        _files.Clear();
+        _files.AddRange(files);
+        _index = 0;
+        PositionText = _files.Count <= 1 ? "" : $"1 / {_files.Count}";
+        if (_files.Count > 0)
+        {
+            _ = ShowCurrentAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void Previous()
+    {
+        if (_files.Count == 0) return;
+        _index = _index <= 0 ? _files.Count - 1 : _index - 1;
+        _ = ShowCurrentAsync();
+    }
+
+    [RelayCommand]
+    private void Next()
+    {
+        if (_files.Count == 0) return;
+        _index = (_index + 1) % _files.Count;
+        _ = ShowCurrentAsync();
+    }
+
+    private async Task ShowCurrentAsync()
+    {
+        if (_files.Count == 0) return;
+        PositionText = _files.Count <= 1 ? "" : $"{_index + 1} / {_files.Count}";
+        await _preview.LoadAsync(_files[_index]);
+    }
+
+    public void DisposeContent()
+    {
+        _preview.CloseDocument();
+        _preview.IsOpen = false;
+    }
+}

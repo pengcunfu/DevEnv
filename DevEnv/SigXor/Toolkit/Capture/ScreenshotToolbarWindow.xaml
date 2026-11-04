@@ -1,0 +1,113 @@
+<Window x:Class="DevEnv.Host.SigXor.Toolkit.Capture.ScreenshotToolbarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        SizeToContent="WidthAndHeight"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False"
+        ResizeMode="NoResize" WindowStartupLocation="Manual">
+    <Window.Resources>
+        <!-- 深色底上的常规按钮：透明底 + 圆角，悬停时叠一层半透明白 -->
+        <Style x:Key="ToolButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#F2FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="11,6"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}"
+                                CornerRadius="7" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <!-- 置灰按钮不参与悬停高亮，避免误以为可点 -->
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsMouseOver" Value="True"/>
+                        <Condition Property="IsEnabled" Value="True"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="#24FFFFFF"/>
+                </MultiTrigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#3AFFFFFF"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#80FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 次级功能（OCR）：深蓝底，保持白字可读 -->
+        <Style x:Key="AccentToolButton" TargetType="Button" BasedOn="{StaticResource ToolButton}">
+            <Setter Property="Background" Value="#1E3D6B"/>
+            <Setter Property="Foreground" Value="#D3E4FF"/>
+            <Style.Triggers>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsMouseOver" Value="True"/>
+                        <Condition Property="IsEnabled" Value="True"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="#2A5490"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </MultiTrigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#183557"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 主操作（完成）：实心蓝底 -->
+        <Style x:Key="PrimaryToolButton" TargetType="Button" BasedOn="{StaticResource ToolButton}">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Style.Triggers>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsMouseOver" Value="True"/>
+                        <Condition Property="IsEnabled" Value="True"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="#2B6EF0"/>
+                </MultiTrigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#1D4ED8"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Border x:Name="Surface" Background="#F216161B" BorderBrush="#3DFFFFFF" BorderThickness="1"
+            CornerRadius="12" Padding="4"
+            PreviewMouseLeftButtonDown="OnSurfaceMouseLeftButtonDown">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="OcrButton" Content="OCR 识别" Style="{StaticResource AccentToolButton}"
+                        Click="OnOcrClick" IsEnabled="False" ToolTip="OCR 将在后续批次接入"/>
+                <Button x:Name="ColorPickButton" Content="取色" Style="{StaticResource ToolButton}"
+                        Click="OnColorPickClick" IsEnabled="False" ToolTip="取色将在后续批次接入"/>
+                <Border Width="1" Height="14" Background="#33FFFFFF" Margin="5,0" VerticalAlignment="Center"/>
+                <Button x:Name="CopyButton" Content="复制图片" Style="{StaticResource ToolButton}" Click="OnCopyClick"/>
+                <Button x:Name="SaveButton" Content="保存" Style="{StaticResource ToolButton}" Click="OnSaveClick"/>
+                <Border Width="1" Height="14" Background="#33FFFFFF" Margin="5,0" VerticalAlignment="Center"/>
+                <Button x:Name="DoneButton" Content="完成" Style="{StaticResource PrimaryToolButton}" Click="OnDoneClick"/>
+            </StackPanel>
+            <TextBlock x:Name="StatusText" Visibility="Collapsed" MaxWidth="340"
+                       Margin="8,4,8,1" Foreground="#C7D2DF"
+                       FontSize="11" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+    </Border>
+</Window>

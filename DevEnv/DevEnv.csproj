@@ -34,6 +34,11 @@
     <!-- 仅熔岩翻译窗使用（DOM 填充需要真实浏览器），主界面已无 WebView2 -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3537.50" />
     <PackageReference Include="Velopack" Version="1.2.0" />
+    <!-- SigXor 模块（文件快速预览 / 语音输入 / 截图 OCR 取色） -->
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="NAudio" Version="2.3.0" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.2" />
+    <PackageReference Include="RapidOcrNet" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,6 +61,19 @@
     <!-- Apache-2.0 §4(a)(d)：安装包内必须随附许可证与归属声明 -->
     <Content Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <Content Include="..\NOTICE" Link="NOTICE" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
+  <!-- SigXor 模块资源 -->
+  <ItemGroup>
+    <!-- 语法高亮定义文件（AvalonEdit 的 .xshd），运行时从程序集资源读取 -->
+    <EmbeddedResource Include="SigXor\SyntaxHighlighting\*.xshd" />
+    <!-- Office 网页预览的离线渲染资产（HTML/JS/CSS 及第三方库）。
+         嵌入 exe（而非复制到输出目录），运行时由 WebAssets 解压到 LOCALAPPDATA，
+         因为 WebView2 的虚拟主机映射只接受真实目录。 -->
+    <EmbeddedResource Include="SigXor\webassets\**\*"
+                      LogicalName="webassets/%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- 关于窗口用的联系二维码 -->
+    <Resource Include="SigXor\Assets\feishu.png" Link="Assets\feishu.png" />
   </ItemGroup>
 
 </Project>

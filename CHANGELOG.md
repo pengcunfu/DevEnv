@@ -7,6 +7,16 @@
 ## [Unreleased]
 
 ### Added
+- 合并 SigXor 独立应用到本仓库，作为「文件预览与语音」模块并入燧岚开发盒子：
+  - **文件快速预览**：在资源管理器中选中文件按空格即可弹出 Quick Look 式浮窗，支持 13 种内容类型——纯文本、代码、Markdown、网页、CSV、SVG、字体、图片、音视频、PDF、Office（Word / Excel / PowerPoint）、压缩包、十六进制二进制；Hex 编辑器支持查找 / 跳转 / 修改 / 保存
+  - **全局启动器**：任务栏聚焦时按空格唤起，可搜索并启动应用、打开文件、执行命令，支持固定常用项
+  - **文件浏览器**：目录导航 + 内嵌预览面板，支持前后翻页、拖入文件直接预览
+  - **语音输入**：基于 sherpa-onnx / SenseVoice 的本地语音转写，浮窗显示状态，结果可直接注入光标处
+  - **区域截图与 OCR**：拖动选区截图，支持整页 OCR 取字、像素取色、复制与保存；OCR 模型本地管理
+  - **命令行直接预览**：`DevEnv.exe <文件路径>` 打开预览浮窗；二次启动时经命名管道把路径转给主实例
+- 新增 SigXor 模块自检探针 `--sigxor-check`（含 `--sigxor-smoke` / `--sigxor-preview-smoke` / `--sigxor-theme-smoke`）：自动验证 34 个窗口 / 视图能否加载、13 类预览内容能否渲染、深浅主题切换是否生效。WPF 的页面级 XAML 异常是静默的，靠肉眼点菜单不可靠
+- 「工具」菜单与系统托盘新增文件预览相关入口：文件快速预览、全局启动器、文件浏览器、区域截图、语音与截屏设置、关于文件预览模块
+- 新增 SigXor 合并脚本 `scripts/merge-sigxor.ps1`（搬运）、`scripts/rewrite-sigxor-namespace.ps1`（命名空间改写）、`scripts/verify-sigxor-merge.ps1`（逐字校验合并完整性），以及主题化脚本 `scripts/theme-sigxor-xaml.ps1` 与 `theme-sigxor-xaml-round2.ps1`
 
 - 「开发环境」页改为**自定义后台服务**：服务列表由用户维护，支持添加 / 编辑 / 移除，每条可配置名称、工作目录、启动命令、停止命令与进程名；命令通过 `cmd /c` 执行，`npm run dev`、批处理与带参数的 exe 都能直接填，停止时优先执行停止命令、失败再结束进程树。配置存于 `data.json` 的 `DevServiceList`，取代原先写死的 MySQL / Redis / PostgreSQL 三项与本机绝对路径
 - 开发环境服务支持**查看运行日志**：标准输出与错误输出实时进入非模态日志窗口（可跟随最新、清空、打开日志目录），同时写入 `文档\FNSoftware\DevEnv\logs\`，停止后与重启程序后都能回看；日志按行自动识别 UTF-8 与系统 ANSI 代码页（PostgreSQL 等按 GBK 输出的中文不再乱码），窗口顶对齐、自动折行并显示行号
@@ -25,6 +35,13 @@
 
 ### Changed
 
+- 恢复熔岩运行时配置模板 `DevEnv.Core/LavaEnv/Resources/config.json`：该文件在镜像清单外置（提交 743c6eb）时一并丢失，导致首次运行无法从模板生成 `config.json`，`BundledConfigTests` 断言失败。模板内容取自原始版本，字段与 `AppSettings` 模型一致
+- SigXor 合并后的命名空间与目录对齐：`DevEnv.Core/SigXor/` 下的纯逻辑层由 `DevEnv.Host.SigXor.Core` 改回 `DevEnv.Core.SigXor`，SigXor 单元测试命名空间由 `DevEnv.Host.SigXor.Tests` 改为 `DevEnv.Tests.SigXor`，符合「命名空间与目录一致」的约定；`rewrite-sigxor-namespace.ps1` 与 `verify-sigxor-merge.ps1` 的改写规则同步修正（裸名 `SigXor.Core;` 此前会被误改成 Host 命名空间）
+- SigXor 并入后按宿主规范改造，删除其自带的第二套基础设施：独立 `App` / `Program` 入口、单实例服务、托盘服务、自研更新 / 回滚器（改用 DevEnv 的 Velopack 自更新，更新源与主程序一致）
+- SigXor 的「开机自启」并入 DevEnv 设置里的唯一开关（`data.json` 的 `SelfStarting`，落盘到注册表 `HKCU\...\Run`），并清理旧版遗留的启动文件夹快捷方式，避免重复启动两次
+- SigXor 模块配色统一走 `DynamicResource` 主题资源（110 处硬编码颜色已替换），深色主题下不再露白；截图 / 取色 / 选区 / 语音浮窗的功能性黑白配色保持不变
+- SigXor 语法高亮沿用 VS Code Dark 配色（固定深色方案），代码编辑区底色相应固定为深色，不随主题切换
+- 文件浏览器的关闭行为由「隐藏到托盘」改为正常关闭（托盘统一由 DevEnv 提供），预览浮窗、启动器、设置、关于、更新窗口均按单实例复用
 - 熔岩「镜像配置」的镜像清单改为外部文件 `文档\FNSoftware\DevEnv\mirrors_config.json`：首次运行从内置模板生成，可直接编辑，镜像页新增「编辑镜像清单」入口，保存后点「刷新」生效；清单解析失败时自动回退到内置模板。内置清单同步校正为可用地址（移除已停用的豆瓣 pip 源与 Azure 中国 NuGet 源，补充南京大学 pip 源）
 - 「开发环境」页去掉标题、说明与环境根目录展示，顶部操作区改为紧凑工具条；`BaseEnvPath` 仍可在设置中修改。添加、编辑、启停与移除等操作结果统一显示在主窗底部状态栏，不再占用页面空间
 - 「网络监控」「进程监控」「系统工具」三页同样去掉页面标题与说明，内容整体上移；网络监控的「管理员重启」并入流量页工具条，系统工具的搜索框移到页面顶部

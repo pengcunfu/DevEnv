@@ -17,4 +17,20 @@ public static class HostCallbacks
     public static Action<string>? SetClipboardText { get; set; }
     public static Action<string>? SetClipboardImagePath { get; set; }
     public static Action<bool>? RestartElevated { get; set; }
+
+    // SigXor 模块（文件快速预览 / 语音输入 / 区域截图 OCR 取色）
+    /// <summary>打开文件快速预览（选择文件后弹预览浮窗）。</summary>
+    public static Action? OnOpenFilePreview { get; set; }
+    /// <summary>开始区域截图（选区 → OCR / 取色 / 保存）。</summary>
+    public static Action? OnOpenScreenshot { get; set; }
+    /// <summary>打开模块设置窗口。</summary>
+    public static Action? OnOpenSigXorSettings { get; set; }
+    /// <summary>打开全局启动器（应用 / 文件 / 命令启动）。</summary>
+    public static Action? OnOpenSigXorLauncher { get; set; }
+    /// <summary>打开文件浏览器窗口（目录导航 + 内嵌预览）。</summary>
+    public static Action? OnOpenSigXorBrowser { get; set; }
+    /// <summary>打开模块关于窗口。</summary>
+    public static Action? OnOpenSigXorAbout { get; set; }
+    /// <summary>打开模块更新窗口。</summary>
+    public static Action? OnOpenSigXorUpdate { get; set; }
 }
