@@ -55,7 +55,7 @@
 
 ```bash
 make build                        # 构建全部（Release，= dotnet build DevEnv.sln -c Release）；产物在各项目的 bin/、obj/ 下
-make run                          # 运行 make build 产出的主程序（Release，不重复编译）
+make run                          # 编译并运行主程序（Release，dotnet run 增量编译后启动，无需先 make build）
 make test                         # 跑单元测试（DevEnv.Tests，xunit）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
 make publish                      # 单文件发布到 publish/win-x64/

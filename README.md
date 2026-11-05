@@ -40,7 +40,7 @@ git clone https://github.com/pengcunfu/DevEnv.git
 cd DevEnv
 
 make build                # 构建整个解决方案（DevEnv.sln，Release）
-make run                  # 运行 make build 的产物（Release，不重复编译）
+make run                  # 编译并运行主程序（Release，增量编译后启动）
 make test                 # 服务层单元测试（DevEnv.Tests，Release）
 ```
 

@@ -16,11 +16,11 @@ cd DevEnv
 
 make build   # 构建整个解决方案，等价于 dotnet build DevEnv.sln -c Release
 
-# 启动主程序（WPF），直接运行上面的构建产物，不会重新编译
+# 编译并运行主程序（WPF），等价于 dotnet run --project DevEnv/DevEnv.csproj -c Release
 make run
 ```
 
-`make run` 只运行已经生成的主程序；尚未构建时会提示先执行 `make build`，不会隐式编译。
+`make run` 内部调用 `dotnet run`：有改动时增量编译后启动，没有改动时直接启动，因此不必先执行 `make build`。
 
 编译产物位于各项目自己的 `bin/`、`obj/` 目录，例如 `DevEnv/bin/Release/net10.0-windows/DevEnv.exe`、`DevEnv.Core/bin/Release/net10.0-windows/`。`make clean` 会清理各项目产物，并兼容清理旧的仓库根目录 `bin/`、`obj/` 残留。
 
