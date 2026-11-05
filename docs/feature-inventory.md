@@ -42,7 +42,7 @@
 | 分组 | 接口数 | 现在的实现 | 界面入口 | 状态 |
 |------|-------:|-----------|---------|------|
 | 主壳 / 配置 / 对话框 | 12 | `SettingsService` + `HostCallbacks` | 设置页 / 各页按钮 / 菜单 | ✅ |
-| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` | 本地应用 / 文件夹 / 网站 三页 | ✅ |
+| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` | 启动器（Launchpad）三个横向页签 | ✅ |
 | 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 系统工具页 | ✅ |
 | 进程监控 | 3 | `ProcessService` | 进程监控页 | ✅ |
 | 网络监控 | 8 | `NetworkService` | 网络监控页（流量/端口/测速） | ✅ |
@@ -86,9 +86,7 @@
 | `Layout`（菜单/侧栏/状态栏） | `MainWindow.xaml` | — | ✅ |
 | `AppMenuBar`（含关于窗） | `Menu` + `AboutWindow` | — | ✅ |
 | `ContextMenu`（卡片右键） | 三个视图的 `ContextMenu`（Tag 分派） | — | ✅ 本轮修复 |
-| `AppsPage` | `AppsView` | `apps` | ✅ |
-| `FoldersPage` | `FoldersView` | `folders` | ✅ |
-| `WebsPage` | `WebsView` | `webs` | ✅ |
+| `AppsPage` / `FoldersPage` / `WebsPage` | `ShortcutsWindow`（Launchpad 启动器） | `apps` / `folders` / `webs` | ✅ |
 | `DevEnvPage` | `DevEnvView` | `devenv` | ✅ |
 | `LavaPage`（7 个 Tab） | `LavaView`（7 个页签） | `lava` | ✅ |
 | `NetworkPage`（3 个 Tab） | `NetworkView`（3 个页签） | `network` | ✅ |
@@ -109,9 +107,7 @@
 
 | 视图 | 按钮 | 菜单项 | 表格列 | 输入控件 |
 |------|-----:|-------:|-------:|--------:|
-| AppsView | 1 | 7 | 0 | 0 |
-| FoldersView | 1 | 5 | 0 | 0 |
-| WebsView | 1 | 6 | 0 | 0 |
+| ShortcutsWindow（启动器） | 1 | 8 | 0 | 1 |
 | DevEnvView | 3 | 0 | 5 | 0 |
 | LavaView | 28 | 0 | 27 | 4 |
 | NetworkView | 7 | 0 | 17 | 2 |

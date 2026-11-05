@@ -51,6 +51,15 @@
 - **截图 / 取色 / 选区 / 语音浮窗里的黑白配色是功能性颜色**，必须保持不透明与高对比，不随主题变化（`scripts/theme-sigxor-xaml.ps1` 已把它们列为例外）。
 - **合并脚本**：`scripts/merge-sigxor.ps1`（搬运）+ `scripts/rewrite-sigxor-namespace.ps1`（改写命名空间）+ `scripts/verify-sigxor-merge.ps1`（逐字校验）。合并 SigXor 新版本后跑一次 verify，确认「除预期的宿主适配外与源仓库逐字一致」。
 
+### 快捷方式启动器（Launchpad）
+
+- 入口：主菜单「快捷方式」→ `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站是三个**横向页签**（`ShortcutLauncherViewModel`）。
+- 交互：单击图标启动（设置「双击启动快捷方式」打开时按双击判断）、`Esc` / 点击空白处关闭、`←` / `→` 切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。
+- 数据仍走 `ShortcutService`；原先的 `AppsView` / `FoldersView` / `WebsView` 与对应 ViewModel **已删除**，不要再恢复卡片页。
+- `DEVENV_START_PAGE=apps|folders|webs`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签；窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
+- 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 56px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。
+- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、三个页签切换、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
+
 ## 常用命令
 
 ```bash
@@ -60,8 +69,8 @@ make test                         # 跑单元测试（DevEnv.Tests，xunit）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
 make publish                      # 单文件发布到 publish/win-x64/
 make installer                    # publish + vpk pack，产出 Velopack Setup.exe
-cd website && npm run dev         # 文档站本地预览
-cd website && npm run deploy      # 文档站构建并部署
+make docs                         # 文档站本地预览（vite dev server）
+make deploy-docs                  # 文档站构建并部署到 Cloudflare Pages（仅本机执行，不走 CI）
 ```
 
 调试主程序时可用环境变量直接启动到指定页：`DEVENV_START_PAGE=lava make run`（导航 id 见 `Views/ViewFactory.cs`）。

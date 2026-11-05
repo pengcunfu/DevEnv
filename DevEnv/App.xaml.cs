@@ -102,6 +102,16 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        // 快捷方式启动器自检：三个页签能加载、搜索可用、没有数据绑定错误
+        int shortcutsIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, ShortcutLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
+        if (shortcutsIndex >= 0)
+        {
+            string report = shortcutsIndex + 1 < e.Args.Length ? e.Args[shortcutsIndex + 1] : "";
+            Shutdown(ShortcutLauncherProbe.Run(string.IsNullOrWhiteSpace(report) ? [] : [report]));
+            return;
+        }
+
         // 右键菜单管理提权子进程：执行完立即退出（绕过单实例）
         var applyIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ContextMenuService.ElevatedArgument, StringComparison.OrdinalIgnoreCase));

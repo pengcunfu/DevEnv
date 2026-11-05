@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,6 +9,9 @@ namespace DevEnv.Core;
 /// <summary>图标缓存：文档\FNSoftware\DevEnv\icons。</summary>
 public static class IconHelper
 {
+    /// <summary>启动器里的图标要显示到 56px 以上，低于这个宽度的缓存视为旧图需要重提。</summary>
+    private const int LauncherIconSize = 64;
+
     public static string IconsDirectory => Path.Combine(AppPaths.UserDataDirectory, "icons");
 
     public static string ComputeHash(string key)
@@ -16,20 +20,97 @@ public static class IconHelper
         return Convert.ToHexString(bytes)[..16].ToLowerInvariant();
     }
 
+    /// <summary>
+    /// 提取 exe 图标并写回缓存。优先取 256px 大图标（全屏启动器需要），
+    /// 取不到再退回系统默认的 32px；每次调用都会覆盖，刷新图标才真正生效。
+    /// </summary>
     public static string? ExtractExecutableIcon(string exePath)
     {
+        var destPath = Path.Combine(IconsDirectory, $"exe_{ComputeHash(exePath)}.png");
         try
         {
-            using var icon = Icon.ExtractAssociatedIcon(exePath);
-            if (icon is null)
-                return null;
-            return SaveIcon(icon, $"exe_{ComputeHash(exePath)}");
+            using var bitmap = ExtractLargeBitmap(exePath);
+            if (bitmap is null)
+                return File.Exists(destPath) ? destPath : null;
+
+            Directory.CreateDirectory(IconsDirectory);
+            bitmap.Save(destPath, ImageFormat.Png);
+            return destPath;
         }
         catch
         {
-            return null;
+            return File.Exists(destPath) ? destPath : null;
         }
     }
+
+    /// <summary>
+    /// 旧版本按 32px 缓存图标，放到启动器里会发虚。这里检查现有缓存宽度，
+    /// 不够大就重新提取；返回可用的图标路径。
+    /// </summary>
+    public static string? EnsureLargeIcon(string exePath, string? iconPath, int minSize = LauncherIconSize)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(iconPath)
+                && File.Exists(iconPath)
+                && GetPixelWidth(iconPath) >= minSize)
+            {
+                return iconPath;
+            }
+            return ExtractExecutableIcon(exePath) ?? iconPath;
+        }
+        catch
+        {
+            return iconPath;
+        }
+    }
+
+    private static int GetPixelWidth(string path)
+    {
+        using var image = Image.FromFile(path);
+        return image.Width;
+    }
+
+    /// <summary>按从大到小的尺寸尝试提取，取第一个成功的；都失败时退回 32px 关联图标。</summary>
+    private static Bitmap? ExtractLargeBitmap(string exePath)
+    {
+        foreach (var size in new[] { 256, 128, 96, 64, 48 })
+        {
+            var handles = new IntPtr[1];
+            var ids = new uint[1];
+            var count = PrivateExtractIcons(exePath, 0, size, size, handles, ids, 1, 0);
+            if (count == 0 || handles[0] == IntPtr.Zero)
+                continue;
+
+            try
+            {
+                using var icon = Icon.FromHandle(handles[0]);
+                return icon.ToBitmap();
+            }
+            finally
+            {
+                DestroyIcon(handles[0]);
+            }
+        }
+
+        using var fallback = Icon.ExtractAssociatedIcon(exePath);
+        return fallback?.ToBitmap();
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint PrivateExtractIcons(
+        string szFileName,
+        int nIconIndex,
+        int cxIcon,
+        int cyIcon,
+        IntPtr[] phicon,
+        uint[] piconid,
+        uint nIcons,
+        uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DestroyIcon(IntPtr hIcon);
 
     public static string GetDisplayName(string exePath)
     {

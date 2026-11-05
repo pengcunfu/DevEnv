@@ -87,11 +87,23 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        // 本地应用 / 文件夹 / 网站已移到独立的快捷方式窗口，
+        // 本地应用 / 文件夹 / 网站已移到独立的启动器窗口，
         // 拖放、DEVENV_START_PAGE 等入口统一改为打开该窗口的对应页签。
+        // 延后到空闲时打开：启动阶段（DEVENV_START_PAGE）主窗还没 Show，
+        // 立刻弹出的全屏启动器会被主窗自己的激活操作挤掉。
         if (IsShortcutPage(normalized))
         {
-            ShortcutWindowHost.Open(normalized);
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher is not null)
+            {
+                dispatcher.BeginInvoke(
+                    new Action(() => ShortcutWindowHost.Open(normalized)),
+                    System.Windows.Threading.DispatcherPriority.Background);
+            }
+            else
+            {
+                ShortcutWindowHost.Open(normalized);
+            }
             return;
         }
 

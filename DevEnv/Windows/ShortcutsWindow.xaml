@@ -1,54 +1,444 @@
 <Window x:Class="DevEnv.Host.Windows.ShortcutsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:views="clr-namespace:DevEnv.Host.Views"
+        xmlns:controls="clr-namespace:DevEnv.Host.Controls"
+        xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
         Title="快捷方式"
-        Width="1000"
-        Height="680"
-        MinWidth="720"
-        MinHeight="480"
-        WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource AppBackgroundBrush}"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="Manual"
         UseLayoutRounding="True"
-        TextOptions.TextFormattingMode="Display">
-    <!-- 本地应用 / 文件夹 / 网站三页并到独立窗口，用横向页签切换；
-         卡片布局、右键菜单与单击/双击策略仍由各自视图负责。 -->
-    <TabControl x:Name="Tabs" Margin="10,6,10,10">
-        <TabItem>
-            <TabItem.Header>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE8A9;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="13"
-                               VerticalAlignment="Center" />
-                    <TextBlock Text="本地应用" Margin="7,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </TabItem.Header>
-            <views:AppsView x:Name="AppsTab" />
-        </TabItem>
-        <TabItem>
-            <TabItem.Header>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE8B7;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="13"
-                               VerticalAlignment="Center" />
-                    <TextBlock Text="文件夹" Margin="7,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </TabItem.Header>
-            <views:FoldersView x:Name="FoldersTab" />
-        </TabItem>
-        <TabItem>
-            <TabItem.Header>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE774;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="13"
-                               VerticalAlignment="Center" />
-                    <TextBlock Text="网站" Margin="7,0,0,0" VerticalAlignment="Center" />
-                </StackPanel>
-            </TabItem.Header>
-            <views:WebsView x:Name="WebsTab" />
-        </TabItem>
-    </TabControl>
+        TextOptions.TextFormattingMode="Display"
+        PreviewKeyDown="OnPreviewKeyDown"
+        Deactivated="OnDeactivated">
+    <!-- 全屏启动器（Launchpad 样式）：铺满屏幕的半透明深色背景上，
+         顶部搜索、中部大图标网格、底部横向页签；单击图标即启动，Esc / 点击空白处关闭。 -->
+    <Window.DataContext>
+        <vm:ShortcutLauncherViewModel />
+    </Window.DataContext>
+
+    <Window.Resources>
+        <!-- 搜索框：启动器背景恒为深色，文字与占位提示固定用白色系，不跟随主题 -->
+        <Style x:Key="LaunchpadSearchBox" TargetType="TextBox">
+            <Setter Property="Foreground" Value="#FFFFFFFF" />
+            <Setter Property="CaretBrush" Value="#FFFFFFFF" />
+            <Setter Property="SelectionBrush" Value="#CC5B9BFF" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          VerticalAlignment="Center"
+                                          Focusable="False" />
+                            <TextBlock x:Name="Placeholder"
+                                       Text="搜索应用、文件夹或网站"
+                                       FontSize="15"
+                                       Foreground="#80FFFFFF"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"
+                                       Visibility="Collapsed" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 图标卡片 -->
+        <Style x:Key="LaunchpadTile" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Tile"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="8,10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Top" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Tile" Property="Background" Value="#1FFFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Tile" Property="Background" Value="#2EFFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Tile" Property="BorderBrush" Value="#8C5B9BFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 底部页签（横向胶囊） -->
+        <Style x:Key="LaunchpadTabItem" TargetType="ListBoxItem">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="4,0" />
+            <Setter Property="Foreground" Value="#8CFFFFFF" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Pill"
+                                Background="#14FFFFFF"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="14"
+                                Padding="15,6">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Pill" Property="Background" Value="#26FFFFFF" />
+                                <Setter Property="Foreground" Value="#E6FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Pill" Property="Background" Value="#33FFFFFF" />
+                                <Setter Property="Foreground" Value="#FFFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 右下角圆形「＋」 -->
+        <Style x:Key="LaunchpadCircleButton" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#E6FFFFFF" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="#26FFFFFF"
+                                BorderBrush="#33FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="23">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#40FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#59FFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="Root"
+          PreviewMouseLeftButtonDown="OnRootPreviewMouseLeftButtonDown">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Offset="0" Color="#E6141820" />
+                <GradientStop Offset="0.55" Color="#E60A0C10" />
+                <GradientStop Offset="1" Color="#E6171A22" />
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Grid.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="添加本地应用…" Click="OnAddAppMenu" />
+                <MenuItem Header="添加文件夹…" Click="OnAddFolderMenu" />
+                <MenuItem Header="添加网站…" Click="OnAddWebMenu" />
+                <Separator />
+                <MenuItem Header="刷新" Click="OnReloadMenu" />
+                <MenuItem Header="关闭启动器" Click="OnCloseMenu" />
+            </ContextMenu>
+        </Grid.ContextMenu>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部：提示 + 搜索框 -->
+        <TextBlock Grid.Row="0"
+                   Margin="28,24,0,0"
+                   HorizontalAlignment="Left"
+                   Text="拖入 .exe 或文件夹即可添加"
+                   FontSize="11"
+                   Foreground="#73FFFFFF" />
+        <TextBlock Grid.Row="0"
+                   Margin="0,24,28,0"
+                   HorizontalAlignment="Right"
+                   Text="Esc 关闭"
+                   FontSize="11"
+                   Foreground="#73FFFFFF" />
+
+        <Border x:Name="SearchShell"
+                Grid.Row="0"
+                Width="560"
+                Height="46"
+                Margin="0,54,0,0"
+                HorizontalAlignment="Center"
+                Background="#22FFFFFF"
+                BorderBrush="#33FFFFFF"
+                BorderThickness="1"
+                CornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Margin="16,0,10,0"
+                           VerticalAlignment="Center"
+                           Text="&#xE721;"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="16"
+                           Foreground="#99FFFFFF" />
+                <TextBox x:Name="SearchBox"
+                         Grid.Column="1"
+                         Margin="0,0,12,0"
+                         Style="{StaticResource LaunchpadSearchBox}"
+                         Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+        </Border>
+
+        <!-- 中部：图标网格 -->
+        <Grid Grid.Row="1" Margin="0,16,0,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="24,0,24,0"
+                          Background="Transparent">
+                <ItemsControl x:Name="EntryGrid"
+                              ItemsSource="{Binding VisibleEntries}"
+                              HorizontalAlignment="Stretch">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <controls:CenteredWrapPanel ItemWidth="132" ItemHeight="150" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource LaunchpadTile}"
+                                    ToolTip="{Binding TargetPath}"
+                                    MouseLeftButtonUp="OnEntryMouseUp"
+                                    ContextMenuOpening="OnEntryContextMenuOpening">
+                                <StackPanel Width="116">
+                                    <Grid Height="76">
+                                        <Border Width="72"
+                                                Height="72"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Background="#1FFFFFFF"
+                                                CornerRadius="17">
+                                            <Grid>
+                                                <Image Width="56"
+                                                       Height="56"
+                                                       Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
+                                                       Stretch="Uniform"
+                                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                                       Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
+                                                <TextBlock Text="{Binding KindGlyph}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="30"
+                                                           Foreground="#E6FFFFFF"
+                                                           Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Margin="0,8,0,0"
+                                               MaxWidth="116"
+                                               MaxHeight="34"
+                                               Text="{Binding Name}"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               FontSize="12.5"
+                                               Foreground="#F2FFFFFF" />
+                                    <TextBlock Margin="0,2,0,0"
+                                               Text="{Binding KindText}"
+                                               TextAlignment="Center"
+                                               FontSize="10.5"
+                                               Foreground="#80FFFFFF">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DataContext.IsSearching, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                 Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- 空状态（当前页还没有快捷方式） -->
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsHitTestVisible="False">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsEmpty}" Value="True" />
+                                    <Condition Binding="{Binding IsSearching}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="&#xE8A9;"
+                           HorizontalAlignment="Center"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="40"
+                           Foreground="#59FFFFFF" />
+                <TextBlock Margin="0,12,0,0"
+                           HorizontalAlignment="Center"
+                           Text="这里还没有快捷方式"
+                           FontSize="15"
+                           Foreground="#B3FFFFFF" />
+                <TextBlock Margin="0,6,0,0"
+                           HorizontalAlignment="Center"
+                           Text="把 .exe 或文件夹拖进来，或点右下角 ＋ 添加"
+                           FontSize="12"
+                           Foreground="#73FFFFFF" />
+            </StackPanel>
+
+            <!-- 空状态（搜索没有命中） -->
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsHitTestVisible="False">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsEmpty}" Value="True" />
+                                    <Condition Binding="{Binding IsSearching}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="&#xE721;"
+                           HorizontalAlignment="Center"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="36"
+                           Foreground="#59FFFFFF" />
+                <TextBlock Margin="0,12,0,0"
+                           HorizontalAlignment="Center"
+                           Text="没有找到匹配的快捷方式"
+                           FontSize="15"
+                           Foreground="#B3FFFFFF" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 底部：提示 + 横向页签 -->
+        <StackPanel Grid.Row="2"
+                    Margin="0,4,0,34"
+                    HorizontalAlignment="Center">
+            <TextBlock Margin="0,0,0,10"
+                       HorizontalAlignment="Center"
+                       Text="{Binding Summary}"
+                       FontSize="12"
+                       Foreground="#8CFFFFFF"
+                       Visibility="{Binding Summary, Converter={StaticResource NonEmptyString}}" />
+            <TextBlock Margin="0,0,0,8"
+                       HorizontalAlignment="Center"
+                       Text="{Binding Message}"
+                       FontSize="12"
+                       Foreground="#FFFF9A9A"
+                       TextWrapping="Wrap"
+                       MaxWidth="640"
+                       Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
+            <ListBox x:Name="PageTabs"
+                     ItemsSource="{Binding Pages}"
+                     SelectedIndex="{Binding SelectedPage, Mode=TwoWay}"
+                     ItemContainerStyle="{StaticResource LaunchpadTabItem}"
+                     Focusable="False">
+                <ListBox.Style>
+                    <Style TargetType="ListBox">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Setter Property="ItemsPanel">
+                            <Setter.Value>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSearching}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.Style>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="{Binding Glyph}"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="12"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                            <TextBlock Margin="6,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Title}"
+                                       FontSize="12.5"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+
+        <!-- 右下角添加 -->
+        <Button Grid.Row="2"
+                Margin="0,0,40,36"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Style="{StaticResource LaunchpadCircleButton}"
+                ToolTip="添加当前页的快捷方式"
+                Click="OnAddClick">
+            <TextBlock Text="&#xE710;"
+                       FontFamily="Segoe MDL2 Assets"
+                       FontSize="16"
+                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+        </Button>
+    </Grid>
 </Window>

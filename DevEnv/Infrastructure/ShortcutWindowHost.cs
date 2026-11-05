@@ -4,7 +4,7 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 快捷方式窗口宿主：本地应用 / 文件夹 / 网站三页共用一个独立窗口。
+/// 快捷方式启动器宿主：本地应用 / 文件夹 / 网站三页共用一个全屏窗口。
 /// 单实例，重复打开是「切到对应页签并前置已有窗口」，不再开一堆。
 /// </summary>
 public static class ShortcutWindowHost
