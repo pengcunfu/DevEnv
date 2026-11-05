@@ -12,7 +12,7 @@
 [CmdletBinding()]
 param(
     [switch]$SkipBuild,
-    [string]$ProjectName = "devenv-docs",
+    [string]$ProjectName = "devbox-docs",
     [string]$Branch = "main"
 )
 

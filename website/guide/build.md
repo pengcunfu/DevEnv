@@ -92,7 +92,4 @@ npm run deploy    # 构建并部署（等价于 .\deploy.ps1）
 `website/deploy.ps1` 会检查 Cloudflare 登录（未登录自动 `wrangler login`）、必要时创建 Pages 项目，再部署 `dist/`。也可使用 API Token：设置 `CLOUDFLARE_API_TOKEN`（建议同时设置 `CLOUDFLARE_ACCOUNT_ID`）。
 :::
 
-推送至 `master`/`main` 且变更 `website/**` 时，GitHub Actions 会调用 wrangler 部署到同一 Pages 项目。仓库需配置 Secrets：
-
-- `CLOUDFLARE_API_TOKEN`（Cloudflare Pages: Edit）
-- `CLOUDFLARE_ACCOUNT_ID`
+文档站不经过 GitHub Actions：推送只提交源码，不会自动上线。更新文档后在本机执行 `npm run deploy`（或仓库根目录 `make deploy-docs`）即可发布。

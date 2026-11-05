@@ -59,9 +59,10 @@ website/
 ## 部署
 
 ```bash
-npm run deploy
+npm run deploy       # 在 website/ 目录下
+make deploy-docs     # 或在仓库根目录执行，等价
 ```
 
 需要已登录 wrangler（未登录会自动打开浏览器），或设置 `CLOUDFLARE_API_TOKEN`（建议同时设置 `CLOUDFLARE_ACCOUNT_ID`）。Cloudflare Pages 项目名为 `devbox-docs`，自定义域为 `devenv.cn`。
 
-CI 在推送 `master` / `main` 且改动 `website/**` 时自动构建并部署，见 `.github/workflows/docs.yml`。
+文档站不经过 GitHub Actions：推送只提交源码，发布由本机手动执行上面的命令。

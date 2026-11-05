@@ -100,6 +100,7 @@
 
 ### Removed
 
+- 移除文档站部署工作流 `.github/workflows/docs.yml`：文档站不再由 GitHub Actions 发布，改由本机 `make deploy-docs`（或 `website/` 下 `npm run deploy`）构建并部署到 Cloudflare Pages
 - 移除本机 HTTP API：`:35174` 端口、会话 token 鉴权、`wwwroot` 静态资源托管（图片不再经 HTTP，直接绑本地文件）
 - 移除主壳 WebView2：界面不再嵌入 Chromium，只有熔岩翻译窗保留 WebView2（DOM 填充需要真实浏览器）
 - 移除 Avalonia 主程序 `DevEnv/` 与共享控件库 `Lava.UI/`

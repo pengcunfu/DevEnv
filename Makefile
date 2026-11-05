@@ -64,7 +64,7 @@ ARGS   ?=
 # ============================================================
 .DEFAULT_GOAL := help
 
-.PHONY: help build run test publish installer verify release docs clean
+.PHONY: help build run test publish installer verify release docs deploy-docs clean
 
 help:
 	@echo "DevEnv - available commands"
@@ -78,6 +78,7 @@ help:
 	@echo "  make verify       Check VERSION / DevEnv.csproj / CHANGELOG agree"
 	@echo "  make release      verify, then tag v<VER> and push (starts the CI release)"
 	@echo "  make docs         Vite dev server for website/ (npm install on first run)"
+	@echo "  make deploy-docs  Build and deploy website/ to Cloudflare Pages"
 	@echo "  make clean        Remove project bin/ obj/, legacy root output and publish artifacts"
 	@echo ""
 	@echo "  make publish ARGS=-Zip    also emit DevEnv-<ver>-$(RUNTIME).zip"
@@ -164,6 +165,11 @@ docs:
 	@[ -d website/node_modules ] || { echo "docs deps missing - running npm install (first run only)"; cd website && npm install; }
 	@echo "[ok] starting vite dev server"
 	@cd website && npm run dev
+
+# Docs ship from this machine, not CI: one manual step. The script handles
+# npm install, build and wrangler deploy (browser login on first run).
+deploy-docs:
+	@$(PS) -NoProfile -ExecutionPolicy Bypass -File website/deploy.ps1 $(ARGS)
 
 # Only removes what this makefile produces, and only gitignored paths.
 # publish/ is left alone apart from the two generated subdirs: the icon

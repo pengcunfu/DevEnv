@@ -85,4 +85,4 @@ Actions → **Release** → **Run workflow**，输入标签如 `v1.1.1`（须与
 ## CI
 
 - **Release**：推送 `v*.*.*` 标签时自动构建并发布
-- **Docs**：推送 `website/**` 时构建 Vue + Vite 站点并部署到 Cloudflare Pages（`devenv.cn`）
+- **Docs**：不经过 CI，本机执行 `make deploy-docs`（或 `website/` 下 `npm run deploy`）发布到 Cloudflare Pages（`devenv.cn`）
