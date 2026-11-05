@@ -29,6 +29,7 @@ public partial class App : System.Windows.Application
     private GlobalHotkeys? _hotkeys;
     private HwndSourceHook? _hotkeyHook;
     private ClipboardWatcher? _clipboardWatcher;
+    private WinKeyLauncherHook? _winKeyHook;
     private TranslatorWindow? _translatorWindow;
     private ClipboardWindow? _clipboardWindow;
     private SigXorHost? _sigXor;
@@ -99,6 +100,16 @@ public partial class App : System.Windows.Application
             string report = settingsIndex + 1 < e.Args.Length ? e.Args[settingsIndex + 1] : "";
             Shutdown(SettingsDialogProbe.Run(
                 string.IsNullOrWhiteSpace(report) ? [] : [report]));
+            return;
+        }
+
+        // Win 键拦截自检：真实安装钩子 + SendInput 模拟按键，验证触发与放行
+        int winKeyIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, WinKeyLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
+        if (winKeyIndex >= 0)
+        {
+            string report = winKeyIndex + 1 < e.Args.Length ? e.Args[winKeyIndex + 1] : "";
+            Shutdown(WinKeyLauncherProbe.Run(string.IsNullOrWhiteSpace(report) ? [] : [report]));
             return;
         }
 
@@ -211,6 +222,39 @@ public partial class App : System.Windows.Application
 
         _clipboardWatcher = new ClipboardWatcher();
         _clipboardWatcher.Captured += OnClipboardCaptured;
+
+        // Win 键拦截放在启动流程最后安装：前面的探针 / 提权子进程早已 return，
+        // 不会把键盘钩子带进那些只跑一次就退出的进程。
+        ApplyWinKeyLauncher(CoreServices.Settings.GetConfig().WinKeyLauncher);
+    }
+
+    /// <summary>
+    /// 按设置安装 / 卸载 Win 键拦截钩子。
+    /// 开启时单独按 Win 键唤起快捷方式启动台，Win+组合键原样放行。
+    /// </summary>
+    private void ApplyWinKeyLauncher(bool enabled)
+    {
+        if (!enabled)
+        {
+            _winKeyHook?.Uninstall();
+            return;
+        }
+
+        if (_winKeyHook is null)
+        {
+            _winKeyHook = new WinKeyLauncherHook(Dispatcher)
+            {
+                // 模态对话框开着时不抢 Win 键，让系统开始菜单照常弹出
+                CanTrigger = ShortcutWindowHost.CanHandleWinKey,
+            };
+            _winKeyHook.LauncherRequested += () => ShortcutWindowHost.TryToggleFromWinKey();
+        }
+
+        if (!_winKeyHook.Install())
+        {
+            _tray?.ShowBalloon("Win 键拦截失败：无法安装键盘钩子，Win 键仍打开系统开始菜单。",
+                Forms.ToolTipIcon.Warning);
+        }
     }
 
     /// <summary>打开设置对话框的指定页签（菜单 / 托盘 / 系统工具入口共用）。</summary>
@@ -357,6 +401,10 @@ public partial class App : System.Windows.Application
         _hotkeys?.Dispose();
         _hotkeys = null;
 
+        // 先摘键盘钩子：退出路径上继续拦截 Win 键会把开始菜单吞掉
+        _winKeyHook?.Dispose();
+        _winKeyHook = null;
+
         ToolWindowHost.CloseAll();
         ShortcutWindowHost.Close();
         SettingsDialogHost.Close();
@@ -502,6 +550,8 @@ public partial class App : System.Windows.Application
             Dispatcher.BeginInvoke(new Action(() => _tray!.Visible = visible));
         HostCallbacks.OnShowWindowHotkeyChanged += hotkey =>
             Dispatcher.BeginInvoke(new Action(() => _hotkeys?.ApplyShowWindowHotkey(hotkey)));
+        HostCallbacks.OnWinKeyLauncherChanged += enabled =>
+            Dispatcher.BeginInvoke(new Action(() => ApplyWinKeyLauncher(enabled)));
         HostCallbacks.OnExitApp += () => Dispatcher.BeginInvoke(ExitApp);
         HostCallbacks.OnBeforeExitForUpdate += () => _exiting = true;
         HostCallbacks.SetClipboardText += text =>

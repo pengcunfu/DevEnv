@@ -62,6 +62,9 @@ public partial class ShortcutsWindow : Window
         }
 
         Activate();
+        // 从全局 Win 键唤起时前台焦点还在别的程序，普通 Activate 可能被系统拒绝
+        if (!IsActive)
+            SigXor.Services.WindowPlacement.ForceForeground(this);
         FocusSearch();
 
         if (wasVisible)
@@ -84,6 +87,9 @@ public partial class ShortcutsWindow : Window
         "webs" => 2,
         _ => 0,
     };
+
+    /// <summary>从外部收起（Win 键再次按下、托盘入口等）。</summary>
+    public void Dismiss() => HideLauncher();
 
     private void HideLauncher()
     {

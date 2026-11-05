@@ -14,6 +14,8 @@ public static class HostCallbacks
     public static Action? OnBeforeExitForUpdate { get; set; }
     public static Action? OnExitApp { get; set; }
     public static Action<string?>? OnShowWindowHotkeyChanged { get; set; }
+    /// <summary>「按 Win 键打开启动台」开关变化（true = 拦截 Win 键）。</summary>
+    public static Action<bool>? OnWinKeyLauncherChanged { get; set; }
     public static Action<string>? SetClipboardText { get; set; }
     public static Action<string>? SetClipboardImagePath { get; set; }
     public static Action<bool>? RestartElevated { get; set; }

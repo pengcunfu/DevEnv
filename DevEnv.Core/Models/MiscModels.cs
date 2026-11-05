@@ -10,6 +10,9 @@ public sealed class AppConfig
     public bool DarkMode { get; set; }
     public bool DoubleClickToLaunch { get; set; }
     public string ShowWindowHotkey { get; set; } = "Ctrl+Alt+D";
+
+    /// <summary>单独按 Win 键打开快捷方式启动台（默认开启）；关闭后 Win 键回到系统开始菜单。</summary>
+    public bool WinKeyLauncher { get; set; } = true;
 }
 
 /// <summary>

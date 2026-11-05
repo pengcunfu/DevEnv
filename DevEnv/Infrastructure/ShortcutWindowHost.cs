@@ -31,6 +31,40 @@ public static class ShortcutWindowHost
         window.Activate();
     }
 
+    /// <summary>
+    /// 单独按 Win 键的入口：启动台已打开就收起，否则打开。
+    /// 打开前返回 false 表示此刻不该由启动台接手（模态设置框正开着），
+    /// 此时不吞 Win 键，让系统开始菜单照常弹出。
+    /// </summary>
+    public static bool TryToggleFromWinKey()
+    {
+        if (_window is { IsVisible: true })
+        {
+            _window.Dismiss();
+            return true;
+        }
+
+        if (!CanHandleWinKey())
+            return false;
+
+        Open();
+        return true;
+    }
+
+    /// <summary>Win 键手势是否可由启动台接手：模态对话框会禁用其它窗口，这时让给系统。</summary>
+    public static bool CanHandleWinKey()
+    {
+        if (SettingsDialogHost.IsOpen)
+            return false;
+
+        var app = Application.Current;
+        if (app is null)
+            return true;
+
+        // ShowDialog 会话期间被禁用的窗口 IsEnabled == false
+        return !app.Windows.OfType<Window>().Any(w => w.IsVisible && !w.IsEnabled);
+    }
+
     /// <summary>主窗恢复显示时，把已打开的快捷方式窗口一起带出来。</summary>
     public static void RefreshAll()
     {

@@ -60,6 +60,16 @@
 - 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 56px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、三个页签切换、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
 
+### Win 键拦截
+
+- 单独按一下 Win 键打开启动台，再按一次收起；`Win+E` / `Win+R` / `Win+D` 等组合键原样放行。开关是 `data.json` 的 `Config.WinKeyLauncher`（默认 `true`），在「设置 → 常规」里可关。
+- 判定逻辑在 `DevEnv.Core/Input/WinKeyGestureTracker.cs`（纯逻辑，单测覆盖）；钩子 `DevEnv/Infrastructure/WinKeyLauncherHook.cs` 只做 `WH_KEYBOARD_LL` 转发。
+- **只吞 Win 键抬起，不吞按下**：开始菜单是抬起时弹出的，吞抬起即可挡住它；吞按下会让 Win+组合键全部失效，所以按下阶段必须放行。按住 Win 的自动重复、左右 Win 同时按都已单独处理。
+- 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的 Win 键不会弹启动台；只有自检探针通过 `AllowInjectedInput` 打开它。
+- 模态对话框打开期间（`ShortcutWindowHost.CanHandleWinKey()` 为 false）不吞 Win 键，让系统开始菜单照常弹出。
+- 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，否则进程退出后开始菜单仍会被吞。
+- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --winkey-check %TEMP%\winkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 卸载后失效」。
+
 ## 常用命令
 
 ```bash

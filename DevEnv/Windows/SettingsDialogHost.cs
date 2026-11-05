@@ -24,6 +24,9 @@ public static class SettingsDialogHost
     /// <summary>模块提供的分区内容（由 App 在模块初始化后注入）。</summary>
     public static ISettingsSections? Sections { get; set; }
 
+    /// <summary>设置对话框是否正开着（模态期间 Win 键不弹启动台）。</summary>
+    public static bool IsOpen => _window is { IsVisible: true };
+
     /// <summary>打开设置窗口；已打开时仅切到目标页签并激活。</summary>
     public static void Open(int tabIndex = GeneralTabIndex)
     {

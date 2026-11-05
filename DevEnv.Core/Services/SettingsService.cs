@@ -21,6 +21,8 @@ public sealed class SettingsService
             DarkMode = json.Value<bool?>("DarkMode") == true,
             DoubleClickToLaunch = json.Value<bool?>("DoubleClickToLaunch") == true,
             ShowWindowHotkey = json.Value<string>("ShowWindowHotkey") ?? "Ctrl+Alt+D",
+            // 缺省开启：新用户装上就能用 Win 键唤出启动台
+            WinKeyLauncher = json.Value<bool?>("WinKeyLauncher") != false,
         };
     }
 
@@ -36,6 +38,7 @@ public sealed class SettingsService
             ["DarkMode"] = config.DarkMode,
             ["DoubleClickToLaunch"] = config.DoubleClickToLaunch,
             ["ShowWindowHotkey"] = config.ShowWindowHotkey,
+            ["WinKeyLauncher"] = config.WinKeyLauncher,
         };
 
         var saved = _store.SaveConfig(patch);
@@ -45,6 +48,8 @@ public sealed class SettingsService
             HostCallbacks.OnTrayIconChanged?.Invoke(saved.Value<bool?>("TrayIcon") != false);
         if (saved["ShowWindowHotkey"] is not null)
             HostCallbacks.OnShowWindowHotkeyChanged?.Invoke(saved.Value<string>("ShowWindowHotkey"));
+        if (saved["WinKeyLauncher"] is not null)
+            HostCallbacks.OnWinKeyLauncherChanged?.Invoke(saved.Value<bool?>("WinKeyLauncher") != false);
 
         return OperationResult.Success("已保存");
     }
