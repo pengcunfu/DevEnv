@@ -38,7 +38,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PageTitle))]
-    private string _currentPageId = "apps";
+    private string _currentPageId = "devenv";
 
     [ObservableProperty]
     private UserControl? _currentView;
@@ -87,6 +87,14 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        // 本地应用 / 文件夹 / 网站已移到独立的快捷方式窗口，
+        // 拖放、DEVENV_START_PAGE 等入口统一改为打开该窗口的对应页签。
+        if (IsShortcutPage(normalized))
+        {
+            ShortcutWindowHost.Open(normalized);
+            return;
+        }
+
         // 从左侧导航进入时同步高亮；工具子页不属于导航项，保持现状即可
         var nav = NavItems.FirstOrDefault(n => n.Id == normalized);
         if (nav is not null && !ReferenceEquals(nav, CurrentNav))
@@ -104,6 +112,10 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>设置以模态对话框打开；已打开时仅激活，避免重复弹窗。</summary>
     [RelayCommand]
     private void OpenSettings() => SettingsDialogHost.Open();
+
+    /// <summary>快捷方式窗口：本地应用 / 文件夹 / 网站三个横向页签。</summary>
+    [RelayCommand]
+    private void OpenShortcuts() => ShortcutWindowHost.Open();
 
     /// <summary>工具一律开独立非模态窗口，不再嵌入主窗内容区。</summary>
     [RelayCommand]
@@ -180,6 +192,12 @@ public sealed partial class MainViewModel : ObservableObject
         if (!result.Ok)
             StatusText = result.DisplayMessage;
     }
+
+    /// <summary>是否为快捷方式窗口的页签 id（apps / folders / webs）。</summary>
+    private static bool IsShortcutPage(string id) =>
+        id.Equals("apps", StringComparison.OrdinalIgnoreCase)
+        || id.Equals("folders", StringComparison.OrdinalIgnoreCase)
+        || id.Equals("webs", StringComparison.OrdinalIgnoreCase);
 
     private static string CurrentVersion()
     {

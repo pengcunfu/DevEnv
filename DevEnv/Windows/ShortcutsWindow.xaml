@@ -1,0 +1,54 @@
+<Window x:Class="DevEnv.Host.Windows.ShortcutsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:DevEnv.Host.Views"
+        Title="快捷方式"
+        Width="1000"
+        Height="680"
+        MinWidth="720"
+        MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppBackgroundBrush}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+    <!-- 本地应用 / 文件夹 / 网站三页并到独立窗口，用横向页签切换；
+         卡片布局、右键菜单与单击/双击策略仍由各自视图负责。 -->
+    <TabControl x:Name="Tabs" Margin="10,6,10,10">
+        <TabItem>
+            <TabItem.Header>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE8A9;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="13"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="本地应用" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </TabItem.Header>
+            <views:AppsView x:Name="AppsTab" />
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE8B7;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="13"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="文件夹" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </TabItem.Header>
+            <views:FoldersView x:Name="FoldersTab" />
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE774;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="13"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="网站" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </TabItem.Header>
+            <views:WebsView x:Name="WebsTab" />
+        </TabItem>
+    </TabControl>
+</Window>

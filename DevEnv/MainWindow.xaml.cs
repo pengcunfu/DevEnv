@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using DevEnv.Core.Services;
+using DevEnv.Host.Infrastructure;
 using DevEnv.Host.ViewModels;
 using DevEnv.Host.Views;
 
@@ -66,7 +67,7 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    /// <summary>把拖进来的 .exe / 文件夹落到对应列表，并跳到相应页面。</summary>
+    /// <summary>把拖进来的 .exe / 文件夹落到快捷方式窗口的对应页签。</summary>
     private void OnDrop(object sender, DragEventArgs e)
     {
         if (e.Data?.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
@@ -99,10 +100,7 @@ public partial class MainWindow : Window
         }
 
         ViewModel.SetStatus($"已添加 {added} 项");
-        if (addedFolders > 0 && addedApps == 0)
-            NavigateTo("folders");
-        else
-            NavigateTo("apps");
+        ShortcutWindowHost.Open(addedFolders > 0 && addedApps == 0 ? "folders" : "apps");
     }
 
     /// <summary>点关闭 = 进托盘而不是退出；只有显式退出才真正关闭。</summary>

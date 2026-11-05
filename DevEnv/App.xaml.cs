@@ -292,6 +292,7 @@ public partial class App : System.Windows.Application
         if (_mainWindow is null)
             return;
         ToolWindowHost.RefreshAll();
+        ShortcutWindowHost.RefreshAll();
         // ShowInTaskbar 要在 Show() 之前设，否则隐藏到托盘后再改会闪一下任务栏按钮
         _mainWindow.ShowInTaskbar = true;
         if (!_mainWindow.IsVisible)
@@ -347,6 +348,7 @@ public partial class App : System.Windows.Application
         _hotkeys = null;
 
         ToolWindowHost.CloseAll();
+        ShortcutWindowHost.Close();
         SettingsDialogHost.Close();
         _translatorWindow?.PrepareForExit();
         _clipboardWindow?.PrepareForExit();
