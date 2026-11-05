@@ -57,7 +57,17 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;
-        _notifyIcon.DoubleClick += (_, _) => Raise(ShowWindowRequested);
+
+        // 单击即唤回主窗口：托盘是最常用的入口，等双击体验很差。
+        // 右键仍然弹出菜单（NotifyIcon 挂上 ContextMenuStrip 后的默认行为）。
+        _notifyIcon.MouseClick += OnMouseClick;
+    }
+
+    private void OnMouseClick(object? sender, Forms.MouseEventArgs e)
+    {
+        if (e.Button != Forms.MouseButtons.Left)
+            return;
+        Raise(ShowWindowRequested);
     }
 
     /// <summary>语音服务运行时，把「启动语音服务」置灰，只留「停止」。</summary>

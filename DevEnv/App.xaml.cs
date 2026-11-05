@@ -155,7 +155,8 @@ public partial class App : System.Windows.Application
         SingleInstance.StartFileListener(Dispatcher, paths => _sigXor?.ShowPreviewForPaths(paths));
 
         _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
-        _tray.ShowWindowRequested += ShowMainWindow;
+        // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
+        _tray.ShowWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
         _tray.TranslatorRequested += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest { Visible = true }));
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
         _tray.ExitRequested += ExitApp;
@@ -272,11 +273,22 @@ public partial class App : System.Windows.Application
         if (_mainWindow is null)
             return;
         ToolWindowHost.RefreshAll();
-        _mainWindow.Show();
+        // ShowInTaskbar 要在 Show() 之前设，否则隐藏到托盘后再改会闪一下任务栏按钮
         _mainWindow.ShowInTaskbar = true;
+        if (!_mainWindow.IsVisible)
+            _mainWindow.Show();
         if (_mainWindow.WindowState == WindowState.Minimized)
             _mainWindow.WindowState = WindowState.Normal;
         _mainWindow.Activate();
+        // 托盘点击不一定会把前台权限交给本进程：先置顶再取消，强制拿到焦点。
+        // 取消置顶要延后一拍，立刻改会被系统当成同一次布局而吞掉。
+        _mainWindow.Topmost = true;
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (_mainWindow is not null)
+                _mainWindow.Topmost = false;
+        }), System.Windows.Threading.DispatcherPriority.Background);
+        _mainWindow.Focus();
     }
 
     /// <summary>关闭主窗 → 进托盘而不是退出；返回 true 表示已隐藏（调用方应取消关闭）。</summary>

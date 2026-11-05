@@ -82,6 +82,7 @@
 
 ### Fixed
 
+- 修复托盘图标单击无反应：此前只绑定了 `DoubleClick`，单击图标什么也不会发生。现在单击托盘图标即显示 / 唤回主窗口（右键仍弹出菜单），并强制置前拿到焦点；托盘事件统一经 `Dispatcher` 回 UI 线程处理
 - 修复镜像配置的遗留状态：pip 切回官方源时清理旧的 `trusted-host`；Maven 只替换 Lava 托管的 mirror（旧版本按域名生成的条目一并清理），不再整份覆盖 `settings.xml`；NuGet 切换镜像时清掉上一轮的 `Lava-*` 源，恢复官方源改用 update / enable，避免先删后加失败
 - 修复下拉框选中项显示成对象类型名（如 `DevEnv.Core.Translator.Models.TranslateSiteInfo`）：自定义 `ComboBox` 模板的选中项 `ContentPresenter` 漏了 `ContentTemplateSelector`，而 `DisplayMemberPath` 在 WPF 里是通过 `ItemTemplateSelector` 生效的，`SelectionBoxItemTemplate` 此时为 `null`。补上该绑定后，默认翻译引擎、软件版本、镜像工具等下拉框恢复显示正常名称
 - 修复程序化导航重复创建页面：`Navigate` 同步左侧导航高亮时触发了 `OnCurrentNavChanged` 再次导航，`DEVENV_START_PAGE`、托盘唤回等入口会创建两份同一页面。旧实例没有进入可视树，`Unloaded` 不触发，其定时器会一直在后台采样；现在用 `_syncingNav` 守卫，含网络监控、进程监控在内的页面切换只创建一份视图
