@@ -95,7 +95,7 @@ public static class WindowsToolRunner
                     HostCallbacks.OnOpenScreenshot?.Invoke();
                     break;
                 case "sigxor_settings":
-                    HostCallbacks.OnOpenSigXorSettings?.Invoke();
+                    HostCallbacks.OnOpenSigXorSettings?.Invoke(SettingsSection.Voice);
                     break;
                 default:
                     error = $"未知工具: {key}";

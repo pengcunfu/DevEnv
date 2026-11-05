@@ -6,10 +6,20 @@
         Topmost="True" ShowInTaskbar="False" ShowActivated="False"
         ResizeMode="NoResize" WindowStartupLocation="Manual">
     <Window.Resources>
+        <!-- 按钮内文字：跟随按钮自身的 Foreground。
+             不设这层的话，全局隐式 TextBlock 样式会把前景固定成 TextPrimaryBrush，
+             在深色工具条底上就是一团看不清的深色字。 -->
+        <Style x:Key="ToolButtonText" TargetType="TextBlock">
+            <Setter Property="Foreground"
+                    Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" />
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        </Style>
+
         <!-- 深色底上的常规按钮：透明底 + 圆角，悬停时叠一层半透明白 -->
         <Style x:Key="ToolButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#F2FFFFFF"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="11,6"/>
             <Setter Property="Margin" Value="2,0"/>
@@ -24,7 +34,11 @@
                                 CornerRadius="7" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                              RecognizesAccessKey="True"/>
+                                              RecognizesAccessKey="True">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource ToolButtonText}" />
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsEnabled" Value="False">
@@ -55,7 +69,7 @@
         <!-- 次级功能（OCR）：深蓝底，保持白字可读 -->
         <Style x:Key="AccentToolButton" TargetType="Button" BasedOn="{StaticResource ToolButton}">
             <Setter Property="Background" Value="#1E3D6B"/>
-            <Setter Property="Foreground" Value="#D3E4FF"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
             <Style.Triggers>
                 <MultiTrigger>
                     <MultiTrigger.Conditions>
@@ -106,7 +120,7 @@
                 <Button x:Name="DoneButton" Content="完成" Style="{StaticResource PrimaryToolButton}" Click="OnDoneClick"/>
             </StackPanel>
             <TextBlock x:Name="StatusText" Visibility="Collapsed" MaxWidth="340"
-                       Margin="8,4,8,1" Foreground="#C7D2DF"
+                       Margin="8,4,8,1" Foreground="#FFFFFF"
                        FontSize="11" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
         </StackPanel>
     </Border>

@@ -10,12 +10,13 @@
         <vm:SettingsViewModel />
     </UserControl.DataContext>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="14" MaxWidth="680" HorizontalAlignment="Left">
+    <!-- 只提供内容，不自带 ScrollViewer：
+         设置对话框的页签统一负责滚动，避免嵌套出现双滚动条。 -->
+    <StackPanel MaxWidth="680" HorizontalAlignment="Left">
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="设置" Style="{DynamicResource PageTitleStyle}" />
-                    <TextBlock Text="常规选项（与 data.json 的 Config 段对齐）" Style="{DynamicResource PageHintStyle}" />
+                    <TextBlock Text="常规选项" Style="{DynamicResource PageTitleStyle}" />
+                    <TextBlock Text="托盘、自启、主题与快捷键等全局选项（与 data.json 的 Config 段对齐）" Style="{DynamicResource PageHintStyle}" />
 
                     <CheckBox Content="显示托盘图标" Margin="0,14,0,0" IsChecked="{Binding Config.TrayIcon}" />
                     <CheckBox Content="开机自启动" Margin="0,8,0,0" IsChecked="{Binding Config.SelfStarting}" />
@@ -85,5 +86,4 @@
                 </StackPanel>
             </Border>
         </StackPanel>
-    </ScrollViewer>
 </UserControl>

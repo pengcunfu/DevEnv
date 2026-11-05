@@ -7,7 +7,6 @@ using System.Windows.Media.Imaging;
 using DevEnv.Core;
 using DevEnv.Core.Services;
 using DevEnv.Core.LavaEnv.Services;
-using DevEnv.Host.SigXor;
 using DevEnv.Host.Infrastructure;
 using DevEnv.Host.SigXor;
 using DevEnv.Host.SigXor.Diagnostics;
@@ -92,6 +91,17 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        // 合并后的设置对话框探针：验证「常规」「语音与截屏」「服务与模型」三个页签
+        int settingsIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, SettingsDialogProbe.Argument, StringComparison.OrdinalIgnoreCase));
+        if (settingsIndex >= 0)
+        {
+            string report = settingsIndex + 1 < e.Args.Length ? e.Args[settingsIndex + 1] : "";
+            Shutdown(SettingsDialogProbe.Run(
+                string.IsNullOrWhiteSpace(report) ? [] : [report]));
+            return;
+        }
+
         // 右键菜单管理提权子进程：执行完立即退出（绕过单实例）
         var applyIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ContextMenuService.ElevatedArgument, StringComparison.OrdinalIgnoreCase));
@@ -169,15 +179,18 @@ public partial class App : System.Windows.Application
             Dispatcher.BeginInvoke(new Action(() => _tray?.SetVoiceServiceState(status.IsRunning)));
         _sigXor.Initialize();
 
+        // 设置对话框的分区内容由 SigXor 模块提供
+        SettingsDialogHost.Sections = _sigXor?.CreateSettingsSections();
+
         _tray.FilePreviewRequested += () => Dispatcher.InvokeAsync(() => ShowFilePreviewDialog());
         _tray.ScreenshotRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StartCapture());
         _tray.StartVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StartVoiceService());
         _tray.StopVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StopVoiceService());
-        _tray.SigXorSettingsRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.OpenSettings());
+        _tray.SigXorSettingsRequested += () => Dispatcher.InvokeAsync(() => OpenSigXorSettingsTab(SettingsSection.Voice));
         _tray.SigXorLauncherRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowLauncher());
         _tray.SigXorBrowserRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowBrowser());
         _tray.SigXorAboutRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.OpenAbout());
-        _tray.SetVoiceServiceState(_sigXor.IsVoiceServiceRunning);
+        _tray.SetVoiceServiceState(_sigXor?.IsVoiceServiceRunning ?? false);
 
         // 首次启动就带了文件路径：直接弹预览浮窗
         if (fileArgs.Length > 0)
@@ -188,6 +201,12 @@ public partial class App : System.Windows.Application
 
         _clipboardWatcher = new ClipboardWatcher();
         _clipboardWatcher.Captured += OnClipboardCaptured;
+    }
+
+    /// <summary>打开设置对话框的指定页签（菜单 / 托盘 / 系统工具入口共用）。</summary>
+    private void OpenSigXorSettingsTab(SettingsSection section)
+    {
+        _sigXor?.OpenSettings(section);
     }
 
     /// <summary>托盘「文件快速预览…」：选择文件后弹出预览浮窗。</summary>
@@ -328,6 +347,7 @@ public partial class App : System.Windows.Application
         _hotkeys = null;
 
         ToolWindowHost.CloseAll();
+        SettingsDialogHost.Close();
         _translatorWindow?.PrepareForExit();
         _clipboardWindow?.PrepareForExit();
         try { _translatorWindow?.Close(); } catch { /* 已在退出路径 */ }
@@ -543,7 +563,7 @@ public partial class App : System.Windows.Application
         // SigXor 模块接线：核心层与工具目录通过 HostCallbacks 触发模块能力
         HostCallbacks.OnOpenFilePreview += () => Dispatcher.BeginInvoke(new Action(ShowFilePreviewDialog));
         HostCallbacks.OnOpenScreenshot += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.StartCapture()));
-        HostCallbacks.OnOpenSigXorSettings += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenSettings()));
+        HostCallbacks.OnOpenSigXorSettings += section => Dispatcher.BeginInvoke(new Action(() => OpenSigXorSettingsTab(section)));
         HostCallbacks.OnOpenSigXorLauncher += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowLauncher()));
         HostCallbacks.OnOpenSigXorBrowser += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowBrowser()));
         HostCallbacks.OnOpenSigXorAbout += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenAbout()));

@@ -69,10 +69,23 @@ public static class SigXorSmokeProbe
         Probe("Views.LauncherWindow", () =>
             new Views.LauncherWindow(new Services.LauncherService(), () => { }));
         Probe("MainWindow", () => new MainWindow());
-        Probe("SettingsWindow", () => new SettingsWindow(new Services.SettingsService()));
+        Probe("Views.SigXorGeneralView", () =>
+            new Views.SigXorGeneralView(new Services.SettingsService()));
+        Probe("Views.SigXorVoiceView", () =>
+            new Views.SigXorVoiceView(new Services.SettingsService()));
+        Probe("Views.SigXorServiceView", () => new Views.SigXorServiceView());
         Probe("UpdateWindow", () => new UpdateWindow(new ViewModels.UpdateViewModel(new Services.UpdateService())));
         Probe("AboutWindow", () => new AboutWindow(() => { }));
 
+        // ---- 宿主设置对话框（平铺三页签）----
+        Probe("Windows.SettingsWindow", () =>
+        {
+            var settings = new Services.SettingsService();
+            var window = new Windows.SettingsWindow();
+            window.SetGeneralContent(new Views.SigXorGeneralView(settings));
+            window.SetVoiceContent(new Views.SigXorVoiceView(settings));
+            window.SetServiceContent(new Views.SigXorServiceView());
+        });
         // ---- 工具窗口 ----
         Probe("Toolkit.Capture.RegionSelectorWindow", () =>
             new Toolkit.Capture.RegionSelectorWindow(null!, default, 1.0));

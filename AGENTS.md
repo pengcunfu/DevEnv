@@ -36,14 +36,15 @@
 - 模块要暴露能力给宿主，走 `DevEnv.Core.HostCallbacks`（`OnOpenFilePreview` / `OnOpenScreenshot` / `OnOpenSigXorSettings` / `OnOpenSigXorLauncher` / `OnOpenSigXorBrowser` / `OnOpenSigXorAbout`），不要在 Core 里直接碰 UI。
 - SigXor 的数据目录仍是 `文档\FNSoftware\SigXor`（与 DevEnv 的 `文档\FNSoftware\DevEnv` 并存），旧版 SigXor 配置与模型在首次启动时自动迁移。
 - 全局键盘钩子：SigXor 用自己的 `GlobalHotkeyService`（`WH_KEYBOARD_LL`，处理空格 / Esc / 语音键 / 反引号），与 DevEnv 的 `RegisterHotKey` 体系**并存但不冲突**（前者管预览与语音，后者管显示窗口 / 翻译 / 剪贴板）。多个 SigXor 功能共用一个钩子时靠 `GlobalHotkeyRouter` 的**优先级**排序：截图 300 > 语音 200 > 预览 100。
-- **开机自启只有一个开关**：DevEnv 主界面「设置」里的 `SelfStarting`（data.json）是唯一事实来源，落盘到注册表 `HKCU\...\Run`。SigXor 设置窗里的同名勾选框读写的是同一项（`Services/AutoStartService.cs` 是适配层），不要让两边各写一套。
+- **开机自启只有一个开关**：DevEnv 主界面「设置」里的 `SelfStarting`（data.json）是唯一事实来源，落盘到注册表 `HKCU\...\Run`。SigXor 的设置页里**不再有**同名勾选框（已并入宿主设置对话框），需要改自启就去宿主的「常规」页签。
+- **设置统一在宿主设置对话框里**：SigXor 原独立设置窗口（`DevEnv/SigXor/SettingsWindow.*`）**已删除**，内容拆成三个视图（`DevEnv/SigXor/Views/SigXorGeneralView.xaml` / `SigXorVoiceView.xaml` / `SigXorServiceView.xaml`），并入燧岚开发盒子设置对话框的**平铺三页签**（**不要二级页签**）：「常规」= 主程序设置 + 文件预览的常规选项，「语音与截屏」，「服务与模型」。页签内容由 `SettingsDialogHost.Sections`（`ISettingsSections`）在运行时注入（`SigXorHost.CreateSettingsSections`），不要再造第二个模态设置框。
 - **自检探针**：SigXor 有 34 个 XAML（11 个窗口 + 15 个预览视图 + 7 个 WebView2 宿主），而 WPF 的 XAML 异常是静默的（AGENTS.md 第 12 条），靠肉眼点菜单不可靠。改动模块后跑：
 
  ```bash
  DevEnv\bin\Release\net10.0-windows\DevEnv.exe --sigxor-check %TEMP%\sigxor.txt
  ```
 
- 三组探针：窗口 / 视图能否加载、预览内容能否渲染、深浅主题切换是否生效。单个探针也有独立开关：`--sigxor-smoke` / `--sigxor-preview-smoke` / `--sigxor-theme-smoke`。
+ 三组探针：窗口 / 视图能否加载、预览内容能否渲染、深浅主题切换是否生效。单个探针也有独立开关：`--sigxor-smoke` / `--sigxor-preview-smoke` / `--sigxor-theme-smoke`。合并设置对话框后另有 `--settings-check`：验证设置窗口平铺的「常规」「语音与截屏」「服务与模型」三个页签都能加载并切换。
 - **预览内容类型共 13 种**（`ContentKind`）：Text / Code / Image / Svg / Archive / Csv / Font / Document / Markdown / WebPage / Audio / Video / Pdf / Binary。新增类型要同时改 `DevEnv.Core/SigXor/FileTypeDetector.cs` 与 `DevEnv/SigXor/ViewModels/PreviewViewModel.cs` 的分发，并补一条预览探针用例。
 - **webassets 是嵌入 exe 的资源**（`EmbeddedResource` + `LogicalName="webassets/..."`），运行时由 `DevEnv/SigXor/WebAssets.cs` 按内容指纹解压到 `%LOCALAPPDATA%\SigXor\WebAssets\{指纹}`。**不要**改成复制到输出目录——WebView2 的虚拟主机映射只接受真实目录。
 - **语法高亮是 VS Code Dark 配色**（`SyntaxHighlightingService`），固定深色方案不跟主题走，因此 `TextView` 的编辑器底色也必须恒为深色（见 `Views/TextView.xaml.cs`），否则浅色主题下看不清。其余界面颜色一律走 `DynamicResource`。

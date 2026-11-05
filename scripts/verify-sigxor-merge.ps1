@@ -76,7 +76,10 @@ $expectedMissing = @(
     'UI\Program.cs',                     # 独立入口 → 并入 DevEnv 的 Program
     'UI\Services\SingleInstanceService.cs', # 单例由 DevEnv 统一提供
     'UI\Services\TrayIconService.cs',    # 托盘由 DevEnv 的 TrayIconHost 统一提供
-    'UI\Services\Updater.cs'             # 自研更新器 → 改用 Velopack
+    'UI\Services\Updater.cs',            # 自研更新器 → 改用 Velopack
+    'UI\Services\AutoStartService.cs',   # 自启改由 DevEnv 的 SelfStarting 统一管理
+    'UI\SettingsWindow.xaml',            # 独立设置窗口 → 并入宿主设置对话框的页签
+    'UI\SettingsWindow.xaml.cs'
 )
 
 # 有意改写的文件：为适配 DevEnv 宿主而做的必要改动。
@@ -84,14 +87,17 @@ $expectedChanged = @(
     'UI\MainWindow.xaml',                # 去掉失效的 /SigXor.exe 图标与托盘耦合
     'UI\MainWindow.xaml.cs',             # 关闭行为从「隐藏到托盘」改为正常关闭
     'UI\UpdateWindow.xaml.cs',           # 下载命令从异步改为同步（Velopack 后台下载）
-    'UI\Services\AutoStartService.cs',   # 自启改走 DevEnv 注册表 + SelfStarting
     'UI\Services\UpdateService.cs',      # 改为包装 DevEnv 的 Velopack 更新服务
     'UI\ViewModels\UpdateViewModel.cs',  # 适配新的更新接口
     'UI\Views\TextView.xaml.cs',         # 编辑器底色固定为深色，配 VS Code Dark 语法配色
+    'UI\Views\LauncherWindow.xaml.cs',   # 设置入口改为打开宿主设置对话框的对应页签
+    'UI\Services\ShellPreviewService.cs', # 设置入口改为打开宿主设置对话框的对应页签
+    'UI\Services\WindowVisibilityScope.cs', # 设置窗口已并入宿主，截图前改为隐藏宿主设置对话框
+    'UI\Toolkit\Capture\ScreenshotToolbarWindow.xaml', # 深色工具条上的按钮文字改为跟随按钮 Foreground
+    'UI\Toolkit\Ocr\OcrResultWindow.xaml',             # 同上（标题栏按钮文字）
 
     # 主题化：硬编码颜色改为 DynamicResource 主题资源
     'UI\AboutWindow.xaml',
-    'UI\SettingsWindow.xaml',
     'UI\UpdateWindow.xaml',
     'UI\Views\ArchiveView.xaml',
     'UI\Views\AudioView.xaml',

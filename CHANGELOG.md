@@ -35,6 +35,8 @@
 
 ### Changed
 
+- SigXor 的「文件预览与语音设置」独立模态窗口**已删除**，内容并入燧岚开发盒子的设置对话框，设置窗口改为**平铺三页签**（无二级页签）：「常规」= 主程序设置 + 文件预览的常规选项（字体 / 备份），「语音与截屏」，「服务与模型」；主菜单「设置」相应拆成「常规 / 语音与截屏 / 服务与模型」三项。原先散落在 SigXor 设置里的开机自启、托盘图标等全局选项去掉重复入口，统一在「常规」页签管理。设置窗口改为全局单实例（`SettingsDialogHost`），多个入口不再各弹一个框
+- 设置对话框去掉嵌套结构：原「文件预览与语音」二级页签里的三个子页签（常规 / 语音与截屏 / 服务与模型）提升为顶层页签，与宿主「常规」页并列，不再有两层 TabControl；`SigXorSettingsView` 拆成 `SigXorGeneralView` / `SigXorVoiceView` / `SigXorServiceView` 三个独立视图，通过 `DevEnv.Core.ISettingsSections` 契约交给宿主注入
 - 恢复熔岩运行时配置模板 `DevEnv.Core/LavaEnv/Resources/config.json`：该文件在镜像清单外置（提交 743c6eb）时一并丢失，导致首次运行无法从模板生成 `config.json`，`BundledConfigTests` 断言失败。模板内容取自原始版本，字段与 `AppSettings` 模型一致
 - SigXor 合并后的命名空间与目录对齐：`DevEnv.Core/SigXor/` 下的纯逻辑层由 `DevEnv.Host.SigXor.Core` 改回 `DevEnv.Core.SigXor`，SigXor 单元测试命名空间由 `DevEnv.Host.SigXor.Tests` 改为 `DevEnv.Tests.SigXor`，符合「命名空间与目录一致」的约定；`rewrite-sigxor-namespace.ps1` 与 `verify-sigxor-merge.ps1` 的改写规则同步修正（裸名 `SigXor.Core;` 此前会被误改成 Host 命名空间）
 - SigXor 并入后按宿主规范改造，删除其自带的第二套基础设施：独立 `App` / `Program` 入口、单实例服务、托盘服务、自研更新 / 回滚器（改用 DevEnv 的 Velopack 自更新，更新源与主程序一致）

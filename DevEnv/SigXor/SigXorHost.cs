@@ -2,13 +2,14 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
-using DevEnv.Core.SigXor;
+using DevEnv.Core;
 using DevEnv.Core.SigXor;
 using DevEnv.Host.SigXor.Services;
 using DevEnv.Host.SigXor.Toolkit.Capture;
 using DevEnv.Host.SigXor.Toolkit.Voice;
 using DevEnv.Host.SigXor.ViewModels;
 using DevEnv.Host.SigXor.Views;
+using HostWindows = DevEnv.Host.Windows;
 
 namespace DevEnv.Host.SigXor;
 
@@ -36,7 +37,10 @@ public sealed class SigXorHost : IDisposable
     private VoiceInputService? _voiceService;
     private ScreenshotService? _screenshotService;
 
-    private SettingsWindow? _settingsWindow;
+    private SigXorGeneralView? _generalView;
+    private SigXorVoiceView? _voiceView;
+    private SigXorServiceView? _serviceView;
+    private ISettingsSections? _sections;
     private AboutWindow? _aboutWindow;
     private UpdateWindow? _updateWindow;
     private MainWindow? _browserWindow;
@@ -164,37 +168,53 @@ public sealed class SigXorHost : IDisposable
     /// <summary>停止语音服务。</summary>
     public void StopVoiceService() => _voiceService?.StopService();
 
-    /// <summary>打开设置窗口（单实例复用，关闭后重建）。</summary>
-    public void OpenSettings(SettingsTab tab = SettingsTab.General)
+    /// <summary>
+    /// 打开设置：内容已并入燧岚开发盒子的设置对话框，这里只负责跳转到对应页签。
+    /// </summary>
+    /// <param name="section">目标页签（常规 / 语音与截屏 / 服务与模型）。</param>
+    public void OpenSettings(SettingsSection section = SettingsSection.General)
     {
         if (!_dispatcher.CheckAccess())
         {
-            _dispatcher.Invoke(() => OpenSettings(tab));
+            _dispatcher.Invoke(() => OpenSettings(section));
             return;
         }
 
-        if (_settingsWindow is not null)
-        {
-            try
-            {
-                _settingsWindow.SelectTab(tab);
-                _settingsWindow.Show();
-                _settingsWindow.Activate();
-                _settingsWindow.WindowState = WindowState.Normal;
-                return;
-            }
-            catch (ArgumentException)
-            {
-                // 窗口 VisualTree 已损坏（如跨线程关闭后引用未清空），重建窗口
-                try { _settingsWindow.Close(); } catch { }
-                _settingsWindow = null;
-            }
-        }
+        // 先确保分区内容已就绪，宿主取内容时才有东西可注入
+        EnsureSettingsSections();
 
-        _settingsWindow = new SettingsWindow(_settings, _voiceService, tab);
-        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
-        _settingsWindow.Show();
-        _settingsWindow.Activate();
+        int index = section switch
+        {
+            SettingsSection.Voice => HostWindows.SettingsDialogHost.VoiceTabIndex,
+            SettingsSection.Service => HostWindows.SettingsDialogHost.ServiceTabIndex,
+            _ => HostWindows.SettingsDialogHost.GeneralTabIndex,
+        };
+        HostWindows.SettingsDialogHost.Open(index);
+    }
+
+    /// <summary>创建设置对话框需要的三个分区内容（供宿主注入）。</summary>
+    public ISettingsSections CreateSettingsSections()
+    {
+        if (!_dispatcher.CheckAccess())
+            return _dispatcher.Invoke(CreateSettingsSections);
+
+        EnsureSettingsSections();
+        return _sections!;
+    }
+
+    /// <summary>构建（并缓存）三个分区视图。</summary>
+    private void EnsureSettingsSections()
+    {
+        if (_sections is not null) return;
+
+        _generalView ??= new SigXorGeneralView(_settings);
+        _voiceView ??= new SigXorVoiceView(_settings);
+        _serviceView ??= new SigXorServiceView(_voiceService);
+
+        // 快捷键提示跟着「语音与截屏」页走
+        _serviceView.SetShortcutHint(_voiceView.ShortcutHint);
+
+        _sections = new SettingsSections(_generalView, _voiceView, _serviceView);
     }
 
     /// <summary>打开关于窗口（单实例复用，关闭后重建）。</summary>
@@ -287,7 +307,7 @@ public sealed class SigXorHost : IDisposable
         if (_disposed) return;
         _disposed = true;
 
-        try { _settingsWindow?.CloseForExit(); } catch { }
+        try { _generalView = null; _voiceView = null; _serviceView = null; _sections = null; } catch { }
         try { _aboutWindow?.Close(); } catch { }
         try { _updateWindow?.Close(); } catch { }
         try { _browserWindow?.Close(); } catch { }

@@ -103,20 +103,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>设置以模态对话框打开；已打开时仅激活，避免重复弹窗。</summary>
     [RelayCommand]
-    private void OpenSettings()
-    {
-        var windows = System.Windows.Application.Current?.Windows;
-        if (windows?.OfType<SettingsWindow>().FirstOrDefault(w => w.IsVisible) is { } existing)
-        {
-            existing.Activate();
-            return;
-        }
-
-        var window = new SettingsWindow();
-        if (System.Windows.Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, window))
-            window.Owner = owner;
-        window.ShowDialog();
-    }
+    private void OpenSettings() => SettingsDialogHost.Open();
 
     /// <summary>工具一律开独立非模态窗口，不再嵌入主窗内容区。</summary>
     [RelayCommand]
@@ -165,7 +152,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     /// <summary>SigXor 模块：语音与截屏设置。</summary>
     [RelayCommand]
-    private void OpenSigXorSettings() => HostCallbacks.OnOpenSigXorSettings?.Invoke();
+    private void OpenSigXorSettings() => HostCallbacks.OnOpenSigXorSettings?.Invoke(SettingsSection.Voice);
+
+    /// <summary>SigXor 模块：服务与模型设置。</summary>
+    [RelayCommand]
+    private void OpenSigXorServiceSettings() => HostCallbacks.OnOpenSigXorSettings?.Invoke(SettingsSection.Service);
 
     /// <summary>SigXor 模块：全局启动器（应用 / 文件 / 命令启动）。</summary>
     [RelayCommand]

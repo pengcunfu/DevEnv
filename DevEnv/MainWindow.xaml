@@ -45,7 +45,11 @@
                 </MenuItem>
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩翻译(_L)" Command="{Binding ShowTranslatorCommand}" />
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩剪贴板(_C)" Command="{Binding ShowClipboardCommand}" />
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)" Command="{Binding OpenSettingsCommand}" />
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)">
+                <MenuItem Header="常规(_G)" Command="{Binding OpenSettingsCommand}" />
+                <MenuItem Header="语音与截屏(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
+                <MenuItem Header="服务与模型(_M)..." Command="{Binding OpenSigXorServiceSettingsCommand}" />
+            </MenuItem>
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_帮助(H)">
                 <MenuItem Header="官方文档(_D)" Command="{Binding OpenDocsCommand}" />
                 <MenuItem Header="关于燧岚开发盒子(_A)..." Command="{Binding AboutCommand}" />

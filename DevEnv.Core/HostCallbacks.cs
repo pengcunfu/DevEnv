@@ -23,8 +23,8 @@ public static class HostCallbacks
     public static Action? OnOpenFilePreview { get; set; }
     /// <summary>开始区域截图（选区 → OCR / 取色 / 保存）。</summary>
     public static Action? OnOpenScreenshot { get; set; }
-    /// <summary>打开模块设置窗口。</summary>
-    public static Action? OnOpenSigXorSettings { get; set; }
+    /// <summary>打开模块设置窗口的指定页签（常规 / 语音与截屏 / 服务与模型）。</summary>
+    public static Action<SettingsSection>? OnOpenSigXorSettings { get; set; }
     /// <summary>打开全局启动器（应用 / 文件 / 命令启动）。</summary>
     public static Action? OnOpenSigXorLauncher { get; set; }
     /// <summary>打开文件浏览器窗口（目录导航 + 内嵌预览）。</summary>
