@@ -84,6 +84,7 @@
 - 默认入口改为 `make run`（Host）；版本号与发布脚本指向 `DevEnv/DevEnv.csproj`
 - 文档站 CI / `make docs` 改指文档站目录
 - 逻辑库统一迁至 `libs/`（`Clipboard` / `DevEnv` / `NetworkWatch` / `ProcessWatch` / `Translator`）
+- `make run` 改为「即时运行」：直接调用 `dotnet run --project DevEnv/DevEnv.csproj -c Release`，有改动时增量编译后启动；不再要求先 `make build`，并去掉原先的产物存在性检查与 `--no-build`
 
 ### Fixed
 
