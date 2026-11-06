@@ -9,6 +9,7 @@ using DevEnv.Host.SigXor.Toolkit.Capture;
 using DevEnv.Host.SigXor.Toolkit.Voice;
 using DevEnv.Host.SigXor.ViewModels;
 using DevEnv.Host.SigXor.Views;
+using DevEnv.Host.Views;
 using HostWindows = DevEnv.Host.Windows;
 
 namespace DevEnv.Host.SigXor;
@@ -38,6 +39,7 @@ public sealed class SigXorHost : IDisposable
     private ScreenshotService? _screenshotService;
 
     private SigXorGeneralView? _generalView;
+    private HotkeysSettingsView? _hotkeysView;
     private SigXorVoiceView? _voiceView;
     private SigXorServiceView? _serviceView;
     private ISettingsSections? _sections;
@@ -171,7 +173,7 @@ public sealed class SigXorHost : IDisposable
     /// <summary>
     /// 打开设置：内容已并入燧岚开发盒子的设置对话框，这里只负责跳转到对应页签。
     /// </summary>
-    /// <param name="section">目标页签（常规 / 语音与截屏 / 服务与模型）。</param>
+    /// <param name="section">目标页签（常规 / 快捷键 / 语音与截屏 / 服务与模型）。</param>
     public void OpenSettings(SettingsSection section = SettingsSection.General)
     {
         if (!_dispatcher.CheckAccess())
@@ -185,6 +187,7 @@ public sealed class SigXorHost : IDisposable
 
         int index = section switch
         {
+            SettingsSection.Hotkeys => HostWindows.SettingsDialogHost.HotkeysTabIndex,
             SettingsSection.Voice => HostWindows.SettingsDialogHost.VoiceTabIndex,
             SettingsSection.Service => HostWindows.SettingsDialogHost.ServiceTabIndex,
             _ => HostWindows.SettingsDialogHost.GeneralTabIndex,
@@ -192,7 +195,7 @@ public sealed class SigXorHost : IDisposable
         HostWindows.SettingsDialogHost.Open(index);
     }
 
-    /// <summary>创建设置对话框需要的三个分区内容（供宿主注入）。</summary>
+    /// <summary>创建设置对话框需要的四个分区内容（供宿主注入）。</summary>
     public ISettingsSections CreateSettingsSections()
     {
         if (!_dispatcher.CheckAccess())
@@ -202,19 +205,27 @@ public sealed class SigXorHost : IDisposable
         return _sections!;
     }
 
-    /// <summary>构建（并缓存）三个分区视图。</summary>
+    /// <summary>构建（并缓存）四个分区视图。</summary>
     private void EnsureSettingsSections()
     {
         if (_sections is not null) return;
 
         _generalView ??= new SigXorGeneralView(_settings);
+        _hotkeysView ??= new HotkeysSettingsView(_settings, OnShortcutsSaved);
         _voiceView ??= new SigXorVoiceView(_settings);
         _serviceView ??= new SigXorServiceView(_voiceService);
 
-        // 快捷键提示跟着「语音与截屏」页走
-        _serviceView.SetShortcutHint(_voiceView.ShortcutHint);
+        RefreshShortcutHint();
 
-        _sections = new SettingsSections(_generalView, _voiceView, _serviceView);
+        _sections = new SettingsSections(_generalView, _hotkeysView, _voiceView, _serviceView);
+    }
+
+    /// <summary>「快捷键」页保存后，刷新「服务与模型」页里的使用说明。</summary>
+    private void OnShortcutsSaved() => RefreshShortcutHint();
+
+    private void RefreshShortcutHint()
+    {
+        _serviceView?.SetShortcutHint(_hotkeysView?.ShortcutHint ?? _voiceView?.ShortcutHint);
     }
 
     /// <summary>打开关于窗口（单实例复用，关闭后重建）。</summary>

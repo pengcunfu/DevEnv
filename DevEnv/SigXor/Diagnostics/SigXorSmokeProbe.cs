@@ -77,12 +77,13 @@ public static class SigXorSmokeProbe
         Probe("UpdateWindow", () => new UpdateWindow(new ViewModels.UpdateViewModel(new Services.UpdateService())));
         Probe("AboutWindow", () => new AboutWindow(() => { }));
 
-        // ---- 宿主设置对话框（平铺三页签）----
+        // ---- 宿主设置对话框（平铺四页签）----
         Probe("Windows.SettingsWindow", () =>
         {
             var settings = new Services.SettingsService();
             var window = new Windows.SettingsWindow();
             window.SetGeneralContent(new Views.SigXorGeneralView(settings));
+            window.SetHotkeysContent(new DevEnv.Host.Views.HotkeysSettingsView(settings));
             window.SetVoiceContent(new Views.SigXorVoiceView(settings));
             window.SetServiceContent(new Views.SigXorServiceView());
         });

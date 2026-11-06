@@ -23,6 +23,15 @@ public sealed class CaptureSettings
     public bool AllowBareBacktick { get; set; }
 }
 
+public sealed class PreviewSettings
+{
+    /// <summary>资源管理器里打开快速预览的按键（单键）。</summary>
+    public string OpenShortcut { get; set; } = "Space";
+
+    /// <summary>关闭预览浮窗的按键（单键）。</summary>
+    public string CloseShortcut { get; set; } = "Esc";
+}
+
 public sealed class UiSettings
 {
     public bool ShowNotifications { get; set; } = true;

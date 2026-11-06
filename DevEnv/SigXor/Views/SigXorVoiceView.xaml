@@ -15,20 +15,9 @@
                         <ComboBoxItem Content="SenseVoice（推荐）" Tag="sensevoice"/>
                     </ComboBox>
                 </Grid>
-                <Grid Margin="0,0,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="语音快捷键" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="VoiceShortcutCombo" Grid.Column="1">
-                        <ComboBoxItem Content="右 Alt（默认）" Tag="right-alt"/>
-                        <ComboBoxItem Content="左 Alt" Tag="left-alt"/>
-                        <ComboBoxItem Content="右 Ctrl" Tag="right-ctrl"/>
-                        <ComboBoxItem Content="左 Ctrl" Tag="left-ctrl"/>
-                        <ComboBoxItem Content="Caps Lock" Tag="caps-lock"/>
-                    </ComboBox>
-                </Grid>
+                <TextBlock Text="语音与截屏的快捷键已统一到「快捷键」页签修改。"
+                           Style="{DynamicResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
                 <Grid Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="100"/>
@@ -61,27 +50,6 @@
                     <TextBlock Grid.Column="2" Text="输入延迟(秒)" VerticalAlignment="Center" Margin="16,0,8,0"/>
                     <TextBox x:Name="TypingDelayBox" Grid.Column="3" VerticalContentAlignment="Center"/>
                 </Grid>
-            </StackPanel>
-        </GroupBox>
-
-        <GroupBox Header="区域截屏" Padding="10" Margin="0,12,0,0">
-            <StackPanel>
-                <CheckBox x:Name="CaptureEnabledCheck" Content="启用区域截屏快捷键" Margin="0,0,0,8"/>
-                <Grid Margin="0,0,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="截屏快捷键" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="CaptureShortcutCombo" Grid.Column="1">
-                        <ComboBoxItem Content="Alt + `" Tag="alt"/>
-                        <ComboBoxItem Content="Ctrl + `" Tag="ctrl"/>
-                        <ComboBoxItem Content="Ctrl + Shift + `" Tag="ctrl+shift"/>
-                        <ComboBoxItem Content="Win + `" Tag="win"/>
-                    </ComboBox>
-                </Grid>
-                <CheckBox x:Name="AllowBareBacktickCheck" Content="允许无修饰 ` 触发（兼容笔记本 Fn + `）" Margin="0,0,0,6"/>
-                <TextBlock x:Name="ShortcutHintText" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap"/>
             </StackPanel>
         </GroupBox>
 

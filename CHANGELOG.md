@@ -44,6 +44,7 @@
 
 ### Changed
 
+- **设置新增「快捷键」页签，所有程序绑定的快捷键集中可改**：显示主窗口（`Ctrl+Alt+D`）、快捷应用（`Alt+Space`）、Win 键启动器开关、语音输入、区域截屏、文件快速预览打开 / 关闭键统一到「设置 → 快捷键」。全局组合键点击后直接录制，要求至少含 Ctrl / Alt / Win 之一并拒绝系统保留组合；录制期间自动挂起 `RegisterHotKey`、Win 键钩子与 SigXor 预览 / 语音 / 截屏钩子，避免按到旧快捷键触发原动作。`AppConfig` 新增 `QuickAppHotkey`，SigXor 设置新增 `Preview.OpenShortcut` / `Preview.CloseShortcut`；常规页保存改为 `SaveGeneral`，快捷键页使用 `SaveHotkeys`，避免两个页签互相覆盖
 - **主窗口顶部菜单精简**：移除「文件」（含退出）、「熔岩翻译」「熔岩剪贴板」「全局启动器」四项，只保留「工具」「设置」「帮助」。翻译 / 剪贴板 / 全局启动器 / 退出仍可从托盘右键菜单或快捷应用顶部入口进入
 - **快捷应用入口位置调整**：剪贴板与翻译两个正方形磁贴从搜索框上方移到搜索框下方，搜索框保持在窗口最顶部，输入后视线自然落到结果列表
 - **翻译与剪贴板不再占用全局快捷键**：移除 `Alt+Space`（熔岩翻译）与 `Ctrl+Space`（熔岩剪贴板）的 `RegisterHotKey` 注册，`Ctrl+Space` 归还给系统、输入法与其它软件。快捷应用窗口顶部新增「剪贴板」「翻译」两个正方形入口：剪贴板直接打开剪贴板窗口，翻译打开翻译窗并沿用原行为自动填充剪贴板文本；相关设置、关于、入口提示与文档同步更新
@@ -56,7 +57,7 @@
 - 新增启动器自检探针 `--shortcuts-check [报告路径]`：加载窗口、遍历三个页签、跑一次搜索并收集 WPF 数据绑定错误，结果写报告文件；用法与 SigXor 自检探针一致
 - **单独按一下 Win 键打开全局启动器**，再按一次收起：新增 `WH_KEYBOARD_LL` 键盘钩子（`WinKeyLauncherHook`）与纯逻辑手势判定 `WinKeyGestureTracker`（10 个单测覆盖）；只吞 Win 键抬起、不吞按下，因此 `Win+E` / `Win+R` / `Win+D` / `Win+Tab` 等组合键完全不受影响，按住 Win 的自动重复、左右 Win 同时按、组合键后再单按都按预期处理；吞掉抬起后会补发「假按键 + Win 抬起」让系统按键状态复位（否则系统一直认为 Win 键按着，之后所有按键都会变成 Win+组合键），并用假按键打断开始菜单的单击判定；注入按键（宏键盘 / 自动化工具）不触发；模态对话框打开期间不抢 Win 键。启动台不挂 Owner，Win 键只唤出启动台本身，不会连带显示主窗口。开关为 `data.json` 的 `Config.WinKeyLauncher`（默认开启），可在「设置 → 常规」取消勾选恢复系统开始菜单，需要开始菜单时也可按 `Ctrl+Esc`
 - 新增 Win 键拦截自检探针 `--winkey-check [报告路径]`：真实安装钩子并用 `SendInput` 模拟按键，验证单按触发、组合键放行、卸载后失效
-- SigXor 的「文件预览与语音设置」独立模态窗口**已删除**，内容并入燧岚开发盒子的设置对话框，设置窗口改为**平铺三页签**（无二级页签）：「常规」= 主程序设置 + 文件预览的常规选项（字体 / 备份），「语音与截屏」，「服务与模型」；主菜单「设置」相应拆成「常规 / 语音与截屏 / 服务与模型」三项。原先散落在 SigXor 设置里的开机自启、托盘图标等全局选项去掉重复入口，统一在「常规」页签管理。设置窗口改为全局单实例（`SettingsDialogHost`），多个入口不再各弹一个框
+- SigXor 的「文件预览与语音设置」独立模态窗口**已删除**，内容并入燧岚开发盒子的设置对话框，设置窗口改为**平铺四页签**（无二级页签）：「常规」= 主程序设置 + 文件预览的常规选项（字体 / 备份），「快捷键」，「语音与截屏」，「服务与模型」；主菜单「设置」相应拆成「常规 / 快捷键 / 语音与截屏 / 服务与模型」四项。原先散落在 SigXor 设置里的开机自启、托盘图标等全局选项去掉重复入口，统一在「常规」页签管理。设置窗口改为全局单实例（`SettingsDialogHost`），多个入口不再各弹一个框
 - 设置对话框去掉嵌套结构：原「文件预览与语音」二级页签里的三个子页签（常规 / 语音与截屏 / 服务与模型）提升为顶层页签，与宿主「常规」页并列，不再有两层 TabControl；`SigXorSettingsView` 拆成 `SigXorGeneralView` / `SigXorVoiceView` / `SigXorServiceView` 三个独立视图，通过 `DevEnv.Core.ISettingsSections` 契约交给宿主注入
 - 恢复熔岩运行时配置模板 `DevEnv.Core/LavaEnv/Resources/config.json`：该文件在镜像清单外置（提交 743c6eb）时一并丢失，导致首次运行无法从模板生成 `config.json`，`BundledConfigTests` 断言失败。模板内容取自原始版本，字段与 `AppSettings` 模型一致
 - SigXor 合并后的命名空间与目录对齐：`DevEnv.Core/SigXor/` 下的纯逻辑层由 `DevEnv.Host.SigXor.Core` 改回 `DevEnv.Core.SigXor`，SigXor 单元测试命名空间由 `DevEnv.Host.SigXor.Tests` 改为 `DevEnv.Tests.SigXor`，符合「命名空间与目录一致」的约定；`rewrite-sigxor-namespace.ps1` 与 `verify-sigxor-merge.ps1` 的改写规则同步修正（裸名 `SigXor.Core;` 此前会被误改成 Host 命名空间）

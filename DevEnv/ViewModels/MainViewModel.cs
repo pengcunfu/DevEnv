@@ -125,6 +125,10 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings() => SettingsDialogHost.Open();
 
+    /// <summary>直接打开设置里的「快捷键」页。</summary>
+    [RelayCommand]
+    private void OpenHotkeysSettings() => SettingsDialogHost.Open(SettingsDialogHost.HotkeysTabIndex);
+
     /// <summary>工具一律开独立非模态窗口，不再嵌入主窗内容区。</summary>
     [RelayCommand]
     private void OpenTool(string? id)

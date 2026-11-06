@@ -8,7 +8,7 @@ using HostViews = DevEnv.Host.Views;
 namespace DevEnv.Host.SigXor.Diagnostics;
 
 /// <summary>
-/// 设置对话框探针：打开合并后的设置窗口，验证平铺的三页签都能加载并正确切换。
+/// 设置对话框探针：打开合并后的设置窗口，验证平铺的四页签都能加载并正确切换。
 ///
 /// 用法：DevEnv.exe --settings-check [报告路径]
 ///
@@ -42,25 +42,36 @@ public static class SettingsDialogProbe
         {
             var settings = new Services.SettingsService();
             var generalView = new Views.SigXorGeneralView(settings);
+            var hotkeysView = new HostViews.HotkeysSettingsView(settings);
             var voiceView = new Views.SigXorVoiceView(settings);
             var serviceView = new Views.SigXorServiceView();
 
             window = new Windows.SettingsWindow();
             window.SetGeneralContent(generalView);
+            window.SetHotkeysContent(hotkeysView);
             window.SetVoiceContent(voiceView);
             window.SetServiceContent(serviceView);
 
-            // 页签数量与标题：平铺三页签，不做二级
+            // 页签数量与标题：平铺四页签，不做二级
             var tabs = FindTabControl(window);
             Check("设置窗口包含 TabControl", tabs is not null);
             if (tabs is null)
                 throw new InvalidOperationException("未找到 TabControl");
 
             var headers = tabs.Items.OfType<TabItem>().Select(t => (t.Header as string) ?? "").ToList();
-            Check("页签为平铺三层", headers.Count == 3, string.Join(" / ", headers));
+            Check("页签为平铺四层", headers.Count == 4, string.Join(" / ", headers));
             Check("页签含「常规」", headers.Contains("常规"), string.Join(" / ", headers));
+            Check("页签含「快捷键」", headers.Contains("快捷键"), string.Join(" / ", headers));
             Check("页签含「语音与截屏」", headers.Contains("语音与截屏"), string.Join(" / ", headers));
             Check("页签含「服务与模型」", headers.Contains("服务与模型"), string.Join(" / ", headers));
+
+            var hotkeysTab = tabs.Items.OfType<TabItem>()
+                .FirstOrDefault(t => (t.Header as string) == "快捷键");
+            Check("「快捷键」页内容为 HotkeysSettingsView",
+                hotkeysTab?.Content is HostViews.HotkeysSettingsView
+                || FindDescendant<HostViews.HotkeysSettingsView>(hotkeysTab) is not null);
+            Check("「快捷键」页包含组合键录制控件",
+                FindDescendant<DevEnv.Host.Controls.HotkeyRecorderBox>(hotkeysTab) is not null);
 
             // 常规页里既有主程序设置，也有模块注入的常规选项
             var general = tabs.Items.OfType<TabItem>()
@@ -90,8 +101,8 @@ public static class SettingsDialogProbe
             window.UpdateLayout();
             Check("设置窗口可正常显示", window.IsVisible);
 
-            // 三个页签依次切换一遍
-            foreach (var header in new[] { "常规", "语音与截屏", "服务与模型" })
+            // 四个页签依次切换一遍
+            foreach (var header in new[] { "常规", "快捷键", "语音与截屏", "服务与模型" })
             {
                 var tab = tabs.Items.OfType<TabItem>().FirstOrDefault(t => (t.Header as string) == header);
                 tabs.SelectedItem = tab;

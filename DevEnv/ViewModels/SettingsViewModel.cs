@@ -66,10 +66,14 @@ public sealed partial class SettingsViewModel : ObservableObject, IDisposable
             ThemeManager.Apply(value.DarkMode);
     }
 
+    /// <summary>重新读取配置（从「快捷键」页切回常规页时刷新，避免旧值覆盖）。</summary>
+    public void Reload() => Config = CoreServices.Settings.GetConfig();
+
     [RelayCommand]
     private void Save()
     {
-        var result = CoreServices.Settings.Save(Config);
+        // 快捷键由「快捷键」页单独保存，这里只写常规字段
+        var result = CoreServices.Settings.SaveGeneral(Config);
         Message = result.DisplayMessage;
     }
 

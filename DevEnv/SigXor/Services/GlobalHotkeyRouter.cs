@@ -1,3 +1,5 @@
+using DevEnv.Core.Input;
+
 namespace DevEnv.Host.SigXor.Services;
 
 public sealed class GlobalHotkeyRouter
@@ -49,6 +51,9 @@ public sealed class GlobalHotkeyRouter
 
     public bool HandleKeyDown(int vkCode)
     {
+        // 设置页录制快捷键期间，让按键直接到达录制控件，不触发截图 / 语音 / 预览
+        if (HotkeyCaptureState.IsCapturing) return false;
+
         foreach (Registration handler in Snapshot())
         {
             if (handler.KeyDown?.Invoke(vkCode) == true)
@@ -59,6 +64,8 @@ public sealed class GlobalHotkeyRouter
 
     public bool HandleKeyUp(int vkCode)
     {
+        if (HotkeyCaptureState.IsCapturing) return false;
+
         bool handled = false;
         foreach (Registration handler in Snapshot())
         {

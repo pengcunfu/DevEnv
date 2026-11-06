@@ -5,6 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using DevEnv.Core.Services;
 using DevEnv.Core.SigXor;
+using DevEnv.Core.SigXor.Toolkit;
 using DevEnv.Host.SigXor.ViewModels;
 using DevEnv.Host.SigXor.Views;
 
@@ -67,21 +68,27 @@ public sealed class ShellPreviewService : IDisposable
 
     private bool OnKeyPressed(int vkCode)
     {
-        if (vkCode == GlobalHotkeyService.VK_ESCAPE)
+        PreviewSettings preview = _settings.Current.Preview;
+        int closeKey = ShortcutDefinition.ToPreviewVirtualKey(
+            preview.CloseShortcut, GlobalHotkeyService.VK_ESCAPE);
+        int openKey = ShortcutDefinition.ToPreviewVirtualKey(
+            preview.OpenShortcut, GlobalHotkeyService.VK_SPACE);
+
+        if (vkCode == closeKey)
         {
             if (!IsPreviewVisible || !ShouldHandlePreviewCloseKey()) return false;
             _dispatcher.BeginInvoke(ClosePreview);
             return true;
         }
 
-        if (vkCode != GlobalHotkeyService.VK_SPACE) return false;
+        if (vkCode != openKey) return false;
 
-        // 启动器已打开：不拦截空格，让搜索框正常输入
+        // 启动器已打开：不拦截预览键，让搜索框正常输入
         if (_launcherWindow is { IsVisible: true }) return false;
 
-        // 浮窗已打开：预览窗持有前台或在资源管理器里时，再按空格关闭（吞掉按键，避免传给 Explorer）。
-        // 失焦到其他应用后不拦截，空格交给当前应用，避免在别处打字时预览被误关。
-        // 编辑模式下同样放行，保证能输入空格。
+        // 浮窗已打开：预览窗持有前台或在资源管理器里时，再按预览键关闭（吞掉按键，避免传给 Explorer）。
+        // 失焦到其他应用后不拦截，预览键交给当前应用，避免在别处打字时预览被误关。
+        // 编辑模式下同样放行，保证能输入预览键。
         if (IsPreviewVisible)
         {
             if (_window?.IsInEditMode() == true) return false;

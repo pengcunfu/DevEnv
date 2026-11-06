@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using DevEnv.Core;
+using DevEnv.Core.Input;
 using DevEnv.Core.Services;
 using DevEnv.Core.LavaEnv.Services;
 using DevEnv.Host.Infrastructure;
@@ -92,7 +93,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // 合并后的设置对话框探针：验证「常规」「语音与截屏」「服务与模型」三个页签
+        // 合并后的设置对话框探针：验证「常规」「快捷键」「语音与截屏」「服务与模型」四个页签
         int settingsIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, SettingsDialogProbe.Argument, StringComparison.OrdinalIgnoreCase));
         if (settingsIndex >= 0)
@@ -244,6 +245,8 @@ public partial class App : System.Windows.Application
     /// </summary>
     private void ApplyWinKeyLauncher(bool enabled)
     {
+        _winKeyHook?.Resume();
+
         if (!enabled)
         {
             _winKeyHook?.Uninstall();
@@ -481,23 +484,70 @@ public partial class App : System.Windows.Application
         if (HwndSource.FromHwnd(hwnd) is { } source)
             source.AddHook(_hotkeyHook);
 
+        ApplyGlobalHotkeys(includeWinKey: false);
+    }
+
+    /// <summary>
+    /// 读取 data.json 并注册全局热键。录制快捷键结束后也走这里恢复注册。
+    /// </summary>
+    private void ApplyGlobalHotkeys(bool notify = true, bool includeWinKey = true)
+    {
+        string show = "Ctrl+Alt+D";
+        string quick = "Alt+Space";
+        bool winKeyLauncher = true;
         try
         {
             var cfg = CoreServices.Settings.GetConfig();
-            _hotkeys.ApplyShowWindowHotkey(string.IsNullOrWhiteSpace(cfg.ShowWindowHotkey) ? "Ctrl+Alt+D" : cfg.ShowWindowHotkey);
+            if (!string.IsNullOrWhiteSpace(cfg.ShowWindowHotkey))
+                show = cfg.ShowWindowHotkey;
+            if (!string.IsNullOrWhiteSpace(cfg.QuickAppHotkey))
+                quick = cfg.QuickAppHotkey;
+            winKeyLauncher = cfg.WinKeyLauncher;
         }
         catch
         {
-            _hotkeys.ApplyShowWindowHotkey("Ctrl+Alt+D");
+            // 配置损坏时使用默认值
         }
 
-        if (!_hotkeys.RegisterLauncherAltSpace())
+        if (_hotkeys is not null)
         {
-            // Alt+Space 可能被 PowerToys Run 等程序占用；托盘单击与菜单入口仍然可用
-            Dispatcher.BeginInvoke(new Action(() =>
-                _tray?.ShowBalloon("Alt+Space 已被其它程序占用，快捷应用快捷键注册失败。",
-                    Forms.ToolTipIcon.Warning)));
+            if (!_hotkeys.ApplyShowWindowHotkey(show) && notify)
+                ShowHotkeyFailure(show, "显示主窗口");
+            if (!_hotkeys.ApplyLauncherHotkey(quick) && notify)
+                ShowHotkeyFailure(quick, "快捷应用");
         }
+
+        if (includeWinKey)
+            ApplyWinKeyLauncher(winKeyLauncher);
+    }
+
+    private void ShowHotkeyFailure(string hotkey, string action)
+    {
+        Dispatcher.BeginInvoke(new Action(() =>
+            _tray?.ShowBalloon($"快捷键 {hotkey}（{action}）注册失败，可能已被其它程序占用或格式无效。",
+                Forms.ToolTipIcon.Warning)));
+    }
+
+    /// <summary>录制快捷键期间挂起全局热键；结束后恢复。</summary>
+    private void OnHotkeyCaptureChanged(bool capturing)
+    {
+        void Apply()
+        {
+            if (capturing)
+            {
+                _hotkeys?.Suspend();
+                _winKeyHook?.Suspend();
+                return;
+            }
+
+            _hotkeys?.Resume();
+            ApplyGlobalHotkeys(notify: false);
+        }
+
+        if (Dispatcher.CheckAccess())
+            Apply();
+        else
+            Dispatcher.BeginInvoke(new Action(Apply));
     }
 
     /// <summary>唤起 / 隐藏翻译窗（WPF 外壳 + WebView2）。</summary>
@@ -563,10 +613,9 @@ public partial class App : System.Windows.Application
     {
         HostCallbacks.OnTrayIconChanged += visible =>
             Dispatcher.BeginInvoke(new Action(() => _tray!.Visible = visible));
-        HostCallbacks.OnShowWindowHotkeyChanged += hotkey =>
-            Dispatcher.BeginInvoke(new Action(() => _hotkeys?.ApplyShowWindowHotkey(hotkey)));
-        HostCallbacks.OnWinKeyLauncherChanged += enabled =>
-            Dispatcher.BeginInvoke(new Action(() => ApplyWinKeyLauncher(enabled)));
+        HostCallbacks.OnGlobalHotkeysChanged += () =>
+            Dispatcher.BeginInvoke(new Action(() => ApplyGlobalHotkeys()));
+        HotkeyCaptureState.Changed += OnHotkeyCaptureChanged;
         HostCallbacks.OnExitApp += () => Dispatcher.BeginInvoke(ExitApp);
         HostCallbacks.OnBeforeExitForUpdate += () => _exiting = true;
         HostCallbacks.SetClipboardText += text =>

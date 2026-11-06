@@ -27,8 +27,12 @@
 | `BaseEnvPath` | string | 开发环境根目录 |
 | `Language` | string | 界面语言，如 `zh-CN` |
 | `DarkMode` | bool | 深色模式 |
+| `DoubleClickToLaunch` | bool | 快捷应用里双击启动快捷方式 |
+| `ShowWindowHotkey` | string | 显示主窗口的全局组合键，默认 `Ctrl+Alt+D` |
+| `QuickAppHotkey` | string | 全局唤起快捷应用的组合键，默认 `Alt+Space` |
+| `WinKeyLauncher` | bool | 单独按 Win 键打开全局启动器 |
 
-修改后重启应用生效。`SelfStarting` 开启/关闭会同步系统启动项。
+修改后重启应用生效。`SelfStarting` 开启/关闭会同步系统启动项。快捷键建议在「设置 → 快捷键」页修改，保存后立即重新注册；手工编辑 `data.json` 的快捷键字段后需重启。
 
 ### DevServiceList
 

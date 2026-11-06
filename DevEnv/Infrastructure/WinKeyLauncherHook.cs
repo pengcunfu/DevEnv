@@ -37,6 +37,7 @@ internal sealed class WinKeyLauncherHook : IDisposable
     private readonly LowLevelKeyboardProc _proc;
     private readonly WinKeyGestureTracker _tracker = new();
     private IntPtr _hookId;
+    private bool _suspended;
 
     public WinKeyLauncherHook(Dispatcher dispatcher)
     {
@@ -64,6 +65,15 @@ internal sealed class WinKeyLauncherHook : IDisposable
     /// <summary>累计吞掉的 Win 键抬起次数（开始菜单就是靠吞这一次抬起挡住的），供自检探针断言。</summary>
     public int SwallowedKeyUps { get; private set; }
 
+    /// <summary>录制快捷键期间暂停 Win 键手势，结束录制后恢复。</summary>
+    public void Suspend()
+    {
+        _suspended = true;
+        _tracker.Reset();
+    }
+
+    public void Resume() => _suspended = false;
+
     /// <summary>安装钩子；重复调用无副作用。</summary>
     public bool Install()
     {
@@ -90,6 +100,9 @@ internal sealed class WinKeyLauncherHook : IDisposable
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
+        if (_suspended)
+            return CallNextHookEx(_hookId, nCode, wParam, lParam);
+
         if (nCode >= 0 && lParam != IntPtr.Zero)
         {
             var data = Marshal.PtrToStructure<KbdLlHookStruct>(lParam);

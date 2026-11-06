@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using DevEnv.Core.SigXor.Toolkit;
 
 namespace DevEnv.Host.SigXor.Services;
 
@@ -39,7 +40,15 @@ public sealed class SettingsService
     {
         settings.Voice ??= new VoiceSettings();
         settings.Capture ??= new CaptureSettings();
+        settings.Preview ??= new PreviewSettings();
         settings.Ui ??= new UiSettings();
+
+        settings.Voice.Shortcut = ShortcutDefinition.NormalizeVoiceShortcut(settings.Voice.Shortcut);
+        settings.Capture.Modifier = ShortcutDefinition.NormalizeCaptureModifier(settings.Capture.Modifier);
+        settings.Preview.OpenShortcut = ShortcutDefinition.NormalizePreviewShortcut(
+            settings.Preview.OpenShortcut, ShortcutDefinition.PreviewSpace);
+        settings.Preview.CloseShortcut = ShortcutDefinition.NormalizePreviewShortcut(
+            settings.Preview.CloseShortcut, ShortcutDefinition.PreviewEscape);
     }
 
     public void Save()

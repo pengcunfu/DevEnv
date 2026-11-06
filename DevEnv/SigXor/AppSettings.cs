@@ -19,6 +19,7 @@ public sealed class AppSettings
 
     public VoiceSettings Voice { get; set; } = new();
     public CaptureSettings Capture { get; set; } = new();
+    public PreviewSettings Preview { get; set; } = new();
     public UiSettings Ui { get; set; } = new();
     public bool SigXorMigrated { get; set; }
 }

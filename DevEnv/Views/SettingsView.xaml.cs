@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using DevEnv.Host.ViewModels;
 
 namespace DevEnv.Host.Views;
 
@@ -12,6 +13,13 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
+        // 设置窗口每次打开会复用同一个视图；页签切回时重新读取，避免用旧值覆盖快捷键
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible)
+                (DataContext as SettingsViewModel)?.Reload();
+        };
+        Loaded += (_, _) => (DataContext as SettingsViewModel)?.Reload();
     }
 
     /// <summary>窗口关闭时释放页面持有的轮询等资源。</summary>

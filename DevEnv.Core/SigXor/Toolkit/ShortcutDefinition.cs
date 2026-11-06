@@ -1,3 +1,5 @@
+using DevEnv.Core.Input;
+
 namespace DevEnv.Core.SigXor.Toolkit;
 
 public static class ShortcutDefinition
@@ -12,6 +14,17 @@ public static class ShortcutDefinition
     public const string CaptureCtrl = "ctrl";
     public const string CaptureCtrlShift = "ctrl+shift";
     public const string CaptureWin = "win";
+
+    public const string PreviewSpace = "Space";
+    public const string PreviewEscape = "Esc";
+
+    /// <summary>文件预览打开 / 关闭键的可选单键（不含修饰键）。</summary>
+    public static IReadOnlyList<string> PreviewKeyNames { get; } =
+    [
+        "Space", "Enter", "Tab", "Esc", "`", "F1", "F2", "F3", "F4", "F5", "F6",
+        "F7", "F8", "F9", "F10", "F11", "F12", "Insert", "Delete", "Home", "End",
+        "PageUp", "PageDown", "Left", "Up", "Right", "Down",
+    ];
 
     public const int VkLeftAlt = 0xA4;
     public const int VkRightAlt = 0xA5;
@@ -87,4 +100,37 @@ public static class ShortcutDefinition
 
     public static bool IsCaptureModifier(string? value, string expected) =>
         NormalizeCaptureModifier(value) == NormalizeCaptureModifier(expected);
+
+    /// <summary>把预览键规范化成 <see cref="HotkeyParser"/> 的键名；非单键回退到默认值。</summary>
+    public static string NormalizePreviewShortcut(string? value, string fallback)
+    {
+        string candidate = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        if (HotkeyParser.TryParseKey(candidate, out int virtualKey) && !HotkeyParser.IsModifierKey(virtualKey))
+            return HotkeyParser.GetKeyName(virtualKey);
+
+        if (HotkeyParser.TryParseKey(fallback, out int fallbackKey) && !HotkeyParser.IsModifierKey(fallbackKey))
+            return HotkeyParser.GetKeyName(fallbackKey);
+
+        return PreviewSpace;
+    }
+
+    /// <summary>预览键的中文显示名。</summary>
+    public static string FormatPreviewShortcut(string? value)
+    {
+        string normalized = NormalizePreviewShortcut(value, PreviewSpace);
+        return normalized switch
+        {
+            "Space" => "空格",
+            "Enter" => "回车",
+            "Tab" => "Tab",
+            "Esc" => "Esc",
+            "`" => "反引号",
+            _ => normalized,
+        };
+    }
+
+    public static int ToPreviewVirtualKey(string? value, int fallback) =>
+        HotkeyParser.TryParseKey(NormalizePreviewShortcut(value, PreviewSpace), out int virtualKey)
+            ? virtualKey
+            : fallback;
 }

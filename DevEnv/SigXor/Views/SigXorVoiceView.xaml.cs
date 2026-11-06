@@ -15,11 +15,6 @@ public partial class SigXorVoiceView : UserControl
         InitializeComponent();
         _settings = settings;
 
-        VoiceShortcutCombo.SelectionChanged += (_, _) => UpdateShortcutHint();
-        CaptureShortcutCombo.SelectionChanged += (_, _) => UpdateShortcutHint();
-        AllowBareBacktickCheck.Checked += (_, _) => UpdateShortcutHint();
-        AllowBareBacktickCheck.Unchecked += (_, _) => UpdateShortcutHint();
-
         Load();
     }
 
@@ -27,10 +22,8 @@ public partial class SigXorVoiceView : UserControl
     {
         var s = _settings.Current;
         VoiceSettings v = s.Voice;
-        CaptureSettings c = s.Capture;
 
         SelectComboByTag(VoiceEngineCombo, string.IsNullOrWhiteSpace(v.Engine) ? "sensevoice" : v.Engine);
-        SelectComboByTag(VoiceShortcutCombo, ShortcutDefinition.NormalizeVoiceShortcut(v.Shortcut));
         SelectComboByTag(VoiceLanguageCombo, v.Language);
         UseClipboardCheck.IsChecked = v.UseClipboard;
         VoiceAutoStartCheck.IsChecked = v.AutoStartService;
@@ -39,11 +32,6 @@ public partial class SigXorVoiceView : UserControl
         SaveAudioCheck.IsChecked = v.SaveAudioFiles;
         HoldThresholdBox.Text = v.HoldThresholdSeconds.ToString("0.##", CultureInfo.InvariantCulture);
         TypingDelayBox.Text = v.TypingDelay.ToString("0.##", CultureInfo.InvariantCulture);
-
-        CaptureEnabledCheck.IsChecked = c.Enabled;
-        SelectComboByTag(CaptureShortcutCombo, ShortcutDefinition.NormalizeCaptureModifier(c.Modifier));
-        AllowBareBacktickCheck.IsChecked = c.AllowBareBacktick;
-        UpdateShortcutHint();
     }
 
     /// <summary>当前生效的快捷键说明（供「服务与模型」页复用）。</summary>
@@ -51,19 +39,14 @@ public partial class SigXorVoiceView : UserControl
     {
         get
         {
-            string voice = ShortcutDefinition.FormatVoiceShortcut(GetTag(VoiceShortcutCombo));
+            var s = _settings.Current;
+            string voice = ShortcutDefinition.FormatVoiceShortcut(s.Voice.Shortcut);
             string capture = ShortcutDefinition.FormatCaptureModifier(
-                GetTag(CaptureShortcutCombo),
-                GetTag(VoiceShortcutCombo),
-                AllowBareBacktickCheck.IsChecked == true);
+                s.Capture.Modifier,
+                s.Voice.Shortcut,
+                s.Capture.AllowBareBacktick);
             return $"语音：{voice}；截屏：{capture}。截屏会优先使用未被语音占用的另一侧 Alt/Ctrl。";
         }
-    }
-
-    private void UpdateShortcutHint()
-    {
-        if (ShortcutHintText is null) return;
-        ShortcutHintText.Text = ShortcutHint;
     }
 
     /// <summary>把控件上的值写回设置；校验失败返回 false。</summary>
@@ -87,7 +70,6 @@ public partial class SigXorVoiceView : UserControl
 
         var s = _settings.Current;
         s.Voice.Engine = GetTag(VoiceEngineCombo) ?? "sensevoice";
-        s.Voice.Shortcut = ShortcutDefinition.NormalizeVoiceShortcut(GetTag(VoiceShortcutCombo));
         s.Voice.Language = GetTag(VoiceLanguageCombo) ?? "auto";
         s.Voice.UseClipboard = UseClipboardCheck.IsChecked == true;
         s.Voice.AutoStartService = VoiceAutoStartCheck.IsChecked == true;
@@ -96,21 +78,27 @@ public partial class SigXorVoiceView : UserControl
         s.Voice.HoldThresholdSeconds = holdThreshold;
         s.Voice.TypingDelay = typingDelay;
 
-        s.Capture.Enabled = CaptureEnabledCheck.IsChecked == true;
-        s.Capture.Modifier = ShortcutDefinition.NormalizeCaptureModifier(GetTag(CaptureShortcutCombo));
-        s.Capture.AllowBareBacktick = AllowBareBacktickCheck.IsChecked == true;
-
         s.Ui.ShowNotifications = ShowNotificationsCheck.IsChecked == true;
         _settings.Save();
         return true;
     }
 
-    /// <summary>恢复语音与截屏的默认设置。</summary>
+    /// <summary>恢复语音相关设置；快捷键由「快捷键」页管理，这里保留当前值。</summary>
     public void ResetToDefaults()
     {
         var s = _settings.Current;
-        s.Voice = new VoiceSettings();
-        s.Capture = new CaptureSettings();
+        string voiceShortcut = s.Voice.Shortcut;
+        bool captureEnabled = s.Capture.Enabled;
+        string captureModifier = s.Capture.Modifier;
+        bool allowBareBacktick = s.Capture.AllowBareBacktick;
+
+        s.Voice = new VoiceSettings { Shortcut = voiceShortcut };
+        s.Capture = new CaptureSettings
+        {
+            Enabled = captureEnabled,
+            Modifier = captureModifier,
+            AllowBareBacktick = allowBareBacktick,
+        };
         s.Ui = new UiSettings();
         _settings.Save();
         Load();
@@ -119,7 +107,7 @@ public partial class SigXorVoiceView : UserControl
     private void OnResetClick(object sender, RoutedEventArgs e)
     {
         MessageBoxResult result = MessageBox.Show(
-            "恢复语音与截屏的默认设置？常规设置不会改变。",
+            "恢复语音输入与截屏的默认设置？快捷键与常规设置不会改变。",
             "燧岚开发盒子",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Question);

@@ -42,6 +42,7 @@
                 </MenuItem>
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)">
                 <MenuItem Header="常规(_G)" Command="{Binding OpenSettingsCommand}" />
+                <MenuItem Header="快捷键(_K)..." Command="{Binding OpenHotkeysSettingsCommand}" />
                 <MenuItem Header="语音与截屏(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
                 <MenuItem Header="服务与模型(_M)..." Command="{Binding OpenSigXorServiceSettingsCommand}" />
             </MenuItem>

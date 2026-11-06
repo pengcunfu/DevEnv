@@ -60,4 +60,39 @@ public class ShortcutDefinitionTests
     {
         Assert.Equal(expected, ShortcutDefinition.ToVoiceVirtualKey(shortcut));
     }
+
+    [Theory]
+    [InlineData("space", "Space")]
+    [InlineData("ESC", "Esc")]
+    [InlineData("enter", "Enter")]
+    [InlineData("`", "`")]
+    [InlineData("F2", "F2")]
+    [InlineData("unknown", "Space")]
+    [InlineData(null, "Space")]
+    public void NormalizePreviewShortcut_ReturnsCanonicalKey(string? input, string expected)
+    {
+        Assert.Equal(expected, ShortcutDefinition.NormalizePreviewShortcut(input, ShortcutDefinition.PreviewSpace));
+    }
+
+    [Theory]
+    [InlineData("Space", "空格")]
+    [InlineData("Enter", "回车")]
+    [InlineData("Esc", "Esc")]
+    [InlineData("`", "反引号")]
+    [InlineData("F2", "F2")]
+    public void FormatPreviewShortcut_ReturnsDisplayName(string input, string expected)
+    {
+        Assert.Equal(expected, ShortcutDefinition.FormatPreviewShortcut(input));
+    }
+
+    [Theory]
+    [InlineData("Space", 0x20)]
+    [InlineData("Esc", 0x1B)]
+    [InlineData("Enter", 0x0D)]
+    [InlineData("`", 0xC0)]
+    [InlineData("F2", 0x71)]
+    public void ToPreviewVirtualKey_ReturnsWindowsKeyCode(string shortcut, int expected)
+    {
+        Assert.Equal(expected, ShortcutDefinition.ToPreviewVirtualKey(shortcut, 0));
+    }
 }

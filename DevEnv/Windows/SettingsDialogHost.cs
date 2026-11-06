@@ -6,18 +6,20 @@ namespace DevEnv.Host.Windows;
 /// <summary>
 /// 设置对话框宿主：全局只保留一个设置窗口实例，多入口（主菜单 / 托盘 / SigXor 入口）共用。
 ///
-/// 设置窗口是平铺的三页签，不做二级页签：
-/// - 「常规」：主程序设置（托盘、自启、主题、热键、默认翻译引擎、检查更新）+ 模块的常规选项；
+/// 设置窗口是平铺的四页签，不做二级页签：
+/// - 「常规」：主程序设置（托盘、自启、主题、默认翻译引擎、检查更新）+ 模块的常规选项；
+/// - 「快捷键」：所有程序绑定的快捷键；
 /// - 「语音与截屏」：语音输入与区域截屏；
 /// - 「服务与模型」：语音 / OCR 模型与后台服务。
-/// 后两页签由模块通过 <see cref="ISettingsSections"/> 提供内容。
+/// 后三页签由模块通过 <see cref="ISettingsSections"/> 提供内容。
 /// </summary>
 public static class SettingsDialogHost
 {
-    /// <summary>页签索引：0 常规 / 1 语音与截屏 / 2 服务与模型。</summary>
+    /// <summary>页签索引：0 常规 / 1 快捷键 / 2 语音与截屏 / 3 服务与模型。</summary>
     public const int GeneralTabIndex = 0;
-    public const int VoiceTabIndex = 1;
-    public const int ServiceTabIndex = 2;
+    public const int HotkeysTabIndex = 1;
+    public const int VoiceTabIndex = 2;
+    public const int ServiceTabIndex = 3;
 
     private static SettingsWindow? _window;
 
@@ -46,6 +48,7 @@ public static class SettingsDialogHost
         if (Sections is { } sections)
         {
             window.SetGeneralContent(sections.General);
+            window.SetHotkeysContent(sections.Hotkeys);
             window.SetVoiceContent(sections.Voice);
             window.SetServiceContent(sections.Service);
         }
