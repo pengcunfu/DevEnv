@@ -61,6 +61,8 @@ public static class ShortcutLauncherProbe
             window.UpdateLayout();
 
             Check("启动器窗口可正常加载", window.IsVisible);
+            // 启动台不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
+            Check("启动台不挂 Owner（不会带出主窗口）", window.Owner is null);
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 

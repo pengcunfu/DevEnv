@@ -55,9 +55,21 @@ public static class WinKeyLauncherProbe
 
             // 1) 单独按一下 Win → 触发一次，且这次抬起被吞掉（开始菜单不弹）
             TapKey(VkLeftWin);
-            Pump();
+            Settle();
             Check("单独按 Win 键触发启动台", triggers == 1, $"触发 {triggers} 次");
             Check("Win 键抬起被吞掉（开始菜单不会弹出）", hook.SwallowedKeyUps == 1, $"吞键 {hook.SwallowedKeyUps} 次");
+
+            // 关键回归：吞掉抬起后必须补发 Win 抬起，否则系统认为 Win 一直按着，
+            // 之后按任何键都会被当成 Win+组合键（用户反馈的「按键异常」）。
+            Check("Win 键状态已复位（不会卡住修饰键）",
+                (GetAsyncKeyState(VkLeftWin) & 0x8000) == 0,
+                $"GetAsyncKeyState 仍为按下");
+
+            // 开始菜单不该被弹出：找到可见的 Start 窗口即视为失败
+            var startMenu = FindVisibleStartMenu();
+            Check("没有弹出系统开始菜单", startMenu is null, startMenu ?? "");
+            if (startMenu is not null)
+                CloseStartMenu();
 
             // 2) Win+F24 → 不应触发，抬起也应放行
             triggers = 0;
@@ -67,14 +79,14 @@ public static class WinKeyLauncherProbe
             Key(VkF24, up: false);
             Key(VkF24, up: true);
             Key(VkLeftWin, up: true);
-            Pump();
+            Settle();
             Check("Win+其它键不触发启动台", triggers == 0, $"触发 {triggers} 次");
             Check("Win+其它键的抬起原样放行", hook.SwallowedKeyUps == swallowedBefore, $"吞键 {hook.SwallowedKeyUps} 次");
 
             // 3) 组合键之后单独按 Win 仍能触发（手势状态已复位）
             triggers = 0;
             TapKey(VkLeftWin);
-            Pump();
+            Settle();
             Check("组合键后单按 Win 仍可触发", triggers == 1, $"触发 {triggers} 次");
 
             // 4) 卸载后不再拦截
@@ -82,7 +94,7 @@ public static class WinKeyLauncherProbe
             Check("键盘钩子可正常卸载", !hook.IsInstalled);
             triggers = 0;
             TapKey(VkLeftWin);
-            Pump();
+            Settle();
             Check("卸载后不再触发", triggers == 0, $"触发 {triggers} 次");
         }
         catch (Exception ex)
@@ -112,6 +124,69 @@ public static class WinKeyLauncherProbe
         Key(virtualKey, up: false);
         Key(virtualKey, up: true);
     }
+
+    /// <summary>等注入按键被系统处理完，再跑一轮消息循环。</summary>
+    private static void Settle()
+    {
+        Thread.Sleep(120);
+        Pump();
+    }
+
+    /// <summary>
+    /// 查找可见的系统开始菜单窗口（Win10/11 的 Start 都是 CoreWindow，
+    /// 中文系统标题为「开始」）。找不到返回 null。
+    /// </summary>
+    private static string? FindVisibleStartMenu()
+    {
+        string? found = null;
+        EnumWindows((hwnd, _) =>
+        {
+            if (!IsWindowVisible(hwnd))
+                return true;
+
+            var className = new StringBuilder(256);
+            GetClassName(hwnd, className, className.Capacity);
+            if (className.ToString() != "Windows.UI.Core.CoreWindow")
+                return true;
+
+            var title = new StringBuilder(256);
+            GetWindowText(hwnd, title, title.Capacity);
+            var caption = title.ToString();
+            if (caption is "Start" or "开始")
+            {
+                found = $"可见的 Start 窗口：{caption}";
+                return false;
+            }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+
+    /// <summary>开始菜单被意外弹出时用 Esc 关掉，避免探针把用户桌面卡住。</summary>
+    private static void CloseStartMenu()
+    {
+        const int vkEscape = 0x1B;
+        Key(vkEscape, up: false);
+        Key(vkEscape, up: true);
+        Thread.Sleep(80);
+    }
+
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
 
     /// <summary>跑一轮消息循环，让钩子里投递到 Dispatcher 的回调执行完。</summary>
     private static void Pump()

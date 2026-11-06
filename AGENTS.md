@@ -65,8 +65,10 @@
 - 单独按一下 Win 键打开启动台，再按一次收起；`Win+E` / `Win+R` / `Win+D` 等组合键原样放行。开关是 `data.json` 的 `Config.WinKeyLauncher`（默认 `true`），在「设置 → 常规」里可关。
 - 判定逻辑在 `DevEnv.Core/Input/WinKeyGestureTracker.cs`（纯逻辑，单测覆盖）；钩子 `DevEnv/Infrastructure/WinKeyLauncherHook.cs` 只做 `WH_KEYBOARD_LL` 转发。
 - **只吞 Win 键抬起，不吞按下**：开始菜单是抬起时弹出的，吞抬起即可挡住它；吞按下会让 Win+组合键全部失效，所以按下阶段必须放行。按住 Win 的自动重复、左右 Win 同时按都已单独处理。
+- **吞掉物理抬起后必须补发「假按键 + Win 抬起」**（`ReleaseWinKey`）：系统看到 Win 按下却收不到抬起，会一直认为 Win 修饰键按着，之后任何按键都变成 Win+组合键——这正是「Win 接管后按键异常」的根因。补发未分配虚拟键 `0xE8` 是为了打断开始菜单的「单击 Win」判定，再补发同侧 Win 抬起让按键状态复位。改动这段务必跑 `--winkey-check`，其中「Win 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
 - 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的 Win 键不会弹启动台；只有自检探针通过 `AllowInjectedInput` 打开它。
 - 模态对话框打开期间（`ShortcutWindowHost.CanHandleWinKey()` 为 false）不吞 Win 键，让系统开始菜单照常弹出。
+- 启动台**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；Win 键唤出时只允许出现启动台本身。
 - 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，否则进程退出后开始菜单仍会被吞。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --winkey-check %TEMP%\winkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 卸载后失效」。
 

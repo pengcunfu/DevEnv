@@ -22,6 +22,15 @@ internal sealed class WinKeyLauncherHook : IDisposable
     private const int WmSysKeyUp = 0x0105;
     private const uint LlkhfInjected = 0x10;
 
+    /// <summary>
+    /// 未分配的虚拟键（AHK 里常用的「假按键」）。单独按 Win 时用它打断
+    /// 「单击 Win」判定，开始菜单就不会弹出。
+    /// </summary>
+    private const int VkDummy = 0xE8;
+    private const uint InputKeyboard = 1;
+    private const uint KeyEventKeyUp = 0x0002;
+    private const uint KeyEventExtendedKey = 0x0001;
+
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     private readonly Dispatcher _dispatcher;
@@ -94,13 +103,18 @@ internal sealed class WinKeyLauncherHook : IDisposable
                 }
                 else if (message is WmKeyUp or WmSysKeyUp)
                 {
-                    var result = _tracker.OnKeyUp((int)data.vkCode);
+                    var virtualKey = (int)data.vkCode;
+                    var result = _tracker.OnKeyUp(virtualKey);
                     // 不可用时（模态框开着）不吞键，让系统开始菜单照常弹出
                     if (result.Trigger && (CanTrigger?.Invoke() ?? true))
                     {
+                        // 吞掉物理抬起后，系统仍认为 Win 键按着；若不管它，之后按任何键
+                        // 都会被当成 Win+组合键（这就是「Win 接管后按键异常」的根因）。
+                        // 这里补发「假按键 + Win 抬起」：假按键打断开始菜单的单击判定，
+                        // Win 抬起让系统的按键状态复位。
+                        ReleaseWinKey(virtualKey);
                         _dispatcher.BeginInvoke(new Action(() => LauncherRequested?.Invoke()), DispatcherPriority.Input);
                         SwallowedKeyUps++;
-                        // 吞掉这次抬起：开始菜单正是在 Win 抬起时弹出的
                         return new IntPtr(1);
                     }
                 }
@@ -108,6 +122,77 @@ internal sealed class WinKeyLauncherHook : IDisposable
         }
 
         return CallNextHookEx(_hookId, nCode, wParam, lParam);
+    }
+
+    /// <summary>
+    /// 吞掉物理 Win 抬起后补发按键：先送一个未分配的假按键（打断开始菜单的单击判定），
+    /// 再送 Win 抬起（让系统的按键状态复位，后续按键不再被当成 Win+组合键）。
+    /// </summary>
+    private static void ReleaseWinKey(int virtualKey)
+    {
+        // 右 Win 是扩展键，补发时带上 EXTENDEDKEY 才和真实抬起等价
+        var flags = virtualKey == WinKeyGestureTracker.VkRightWin ? KeyEventExtendedKey : 0;
+        Send(VkDummy, 0);
+        Send(VkDummy, KeyEventKeyUp);
+        Send(virtualKey, flags | KeyEventKeyUp);
+    }
+
+    private static void Send(int virtualKey, uint flags)
+    {
+        var input = new INPUT
+        {
+            type = InputKeyboard,
+            U = new InputUnion
+            {
+                ki = new KEYBDINPUT { wVk = (ushort)virtualKey, dwFlags = flags },
+            },
+        };
+        SendInput(1, [input], Marshal.SizeOf<INPUT>());
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct INPUT
+    {
+        public uint type;
+        public InputUnion U;
+    }
+
+    /// <summary>联合体的实际大小由最大的 MOUSEINPUT 决定，cbSize 传小会直接失败。</summary>
+    [StructLayout(LayoutKind.Explicit)]
+    private struct InputUnion
+    {
+        [FieldOffset(0)] public MOUSEINPUT mi;
+        [FieldOffset(0)] public KEYBDINPUT ki;
+        [FieldOffset(0)] public HARDWAREINPUT hi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MOUSEINPUT
+    {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct KEYBDINPUT
+    {
+        public ushort wVk;
+        public ushort wScan;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct HARDWAREINPUT
+    {
+        public uint uMsg;
+        public ushort wParamL;
+        public ushort wParamH;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -119,6 +204,9 @@ internal sealed class WinKeyLauncherHook : IDisposable
         public uint time;
         public IntPtr dwExtraInfo;
     }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);

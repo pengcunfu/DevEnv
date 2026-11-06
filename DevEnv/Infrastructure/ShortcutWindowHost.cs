@@ -6,6 +6,10 @@ namespace DevEnv.Host.Infrastructure;
 /// <summary>
 /// 快捷方式启动器宿主：本地应用 / 文件夹 / 网站三页共用一个全屏窗口。
 /// 单实例，重复打开是「切到对应页签并前置已有窗口」，不再开一堆。
+///
+/// 启动台**不设 Owner**：它铺满全屏且置顶，本来就不跟主窗最小化 / 隐藏联动；
+/// 一旦挂到主窗名下，从托盘（主窗隐藏）唤起时会把主窗一起拉出来，
+/// 所以这里刻意不走 ToolWindowHost 那套 owner 绑定。
 /// </summary>
 public static class ShortcutWindowHost
 {
@@ -21,7 +25,8 @@ public static class ShortcutWindowHost
         }
 
         var window = _window;
-        AttachOwner(window);
+        if (window.Owner is not null)
+            window.Owner = null;
 
         window.ShowPage(pageId);
         if (!window.IsVisible)
@@ -33,7 +38,7 @@ public static class ShortcutWindowHost
 
     /// <summary>
     /// 单独按 Win 键的入口：启动台已打开就收起，否则打开。
-    /// 打开前返回 false 表示此刻不该由启动台接手（模态设置框正开着），
+    /// 返回 false 表示此刻不该由启动台接手（模态设置框正开着），
     /// 此时不吞 Win 键，让系统开始菜单照常弹出。
     /// </summary>
     public static bool TryToggleFromWinKey()
@@ -65,14 +70,7 @@ public static class ShortcutWindowHost
         return !app.Windows.OfType<Window>().Any(w => w.IsVisible && !w.IsEnabled);
     }
 
-    /// <summary>主窗恢复显示时，把已打开的快捷方式窗口一起带出来。</summary>
-    public static void RefreshAll()
-    {
-        if (_window is not null)
-            AttachOwner(_window);
-    }
-
-    /// <summary>主窗真正退出前调用，避免 owned 窗口被 Cancel 影响退出流程。</summary>
+    /// <summary>主窗真正退出前调用，避免退出流程被未关闭的窗口阻塞。</summary>
     public static void Close()
     {
         var window = _window;
@@ -87,12 +85,5 @@ public static class ShortcutWindowHost
         {
             // 已在退出路径，忽略
         }
-    }
-
-    private static void AttachOwner(Window window)
-    {
-        var main = Application.Current?.MainWindow;
-        if (main is not null && !ReferenceEquals(main, window) && window.Owner != main)
-            window.Owner = main;
     }
 }
