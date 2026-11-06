@@ -34,6 +34,12 @@ public partial class ShortcutsWindow : Window
     /// <summary>启动器内部拖拽的数据格式；不与外部文件拖入的 FileDrop 混用。</summary>
     private const string EntryDragFormat = "DevEnv.LauncherEntries";
 
+    /// <summary>
+    /// 按下后移动多少 DIP 才视为拖拽。系统默认约 3.2，鼠标单击时轻微抖动就会
+    /// 误判成拖拽而丢掉这次点击；启动器里拖拽是管理操作，用更保守的阈值。
+    /// </summary>
+    private const double DragStartThreshold = 8;
+
     /// <summary>框选起点与状态。</summary>
     private Point _marqueeStart;
     private bool _marqueePressed;
@@ -300,12 +306,15 @@ public partial class ShortcutsWindow : Window
 
     /// <summary>
     /// 图标单击启动（Launchpad 习惯）。
+    /// 用 Button.Click 而不是 MouseLeftButtonUp：ButtonBase 在鼠标捕获与拖拽打断时
+    /// 对 Click 的处理最完整，也不会被手写捕获逻辑吞掉。
     /// 框选 / Ctrl+单击形成多选后，第一次点击只收窄选择，避免管理图标时误启动。
     /// </summary>
-    private void OnEntryMouseUp(object sender, MouseButtonEventArgs e)
+    private void OnEntryClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: LauncherEntry entry })
             return;
+
         var pressCtrl = _entryPressCtrl;
         _entryPress = null;
         _entryPressCtrl = false;
@@ -346,7 +355,11 @@ public partial class ShortcutsWindow : Window
         _entryPressPoint = e.GetPosition(Root);
 
         if (_entryPressCtrl)
+        {
             ViewModel.ToggleSelection(entry);
+            // 切换选中后 Button 仍会补发 Click，短暂屏蔽，避免顺手启动
+            _suppressEntryClickUntilUtc = DateTime.UtcNow.AddMilliseconds(400);
+        }
     }
 
     /// <summary>卡片移动超过阈值后进入拖拽；框选形成多选时拖动整个选择。</summary>
@@ -358,8 +371,8 @@ public partial class ShortcutsWindow : Window
             return;
 
         var current = e.GetPosition(Root);
-        if (Math.Abs(current.X - _entryPressPoint.X) < SystemParameters.MinimumHorizontalDragDistance
-            && Math.Abs(current.Y - _entryPressPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+        if (Math.Abs(current.X - _entryPressPoint.X) < DragStartThreshold
+            && Math.Abs(current.Y - _entryPressPoint.Y) < DragStartThreshold)
         {
             return;
         }

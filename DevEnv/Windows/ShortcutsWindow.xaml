@@ -306,7 +306,7 @@
                         <DataTemplate>
                             <Button Style="{StaticResource LaunchpadTile}"
                                     ToolTip="{Binding TargetPath}"
-                                    MouseLeftButtonUp="OnEntryMouseUp"
+                                    Click="OnEntryClick"
                                     PreviewMouseLeftButtonDown="OnEntryPreviewMouseLeftButtonDown"
                                     PreviewMouseMove="OnEntryPreviewMouseMove"
                                     ContextMenuOpening="OnEntryContextMenuOpening">
