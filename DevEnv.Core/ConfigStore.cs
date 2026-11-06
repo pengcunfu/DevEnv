@@ -67,7 +67,6 @@ public sealed class ConfigStore
         ["BaseEnvPath"] = @"D:\ProgramBox\env",
         ["Language"] = "zh-CN",
         ["DarkMode"] = false,
-        ["DoubleClickToLaunch"] = false,
         ["ShowWindowHotkey"] = "Ctrl+Alt+D",
         ["QuickAppHotkey"] = "Alt+Space",
         ["WinKeyLauncher"] = true,

@@ -27,7 +27,6 @@
 | `BaseEnvPath` | string | 开发环境根目录 |
 | `Language` | string | 界面语言，如 `zh-CN` |
 | `DarkMode` | bool | 深色模式 |
-| `DoubleClickToLaunch` | bool | 快捷应用里双击启动快捷方式 |
 | `ShowWindowHotkey` | string | 显示主窗口的全局组合键，默认 `Ctrl+Alt+D` |
 | `QuickAppHotkey` | string | 全局唤起快捷应用的组合键，默认 `Alt+Space` |
 | `WinKeyLauncher` | bool | 单独按 Win 键打开全局启动器 |

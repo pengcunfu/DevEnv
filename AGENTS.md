@@ -55,7 +55,7 @@
 ### 全局启动器（Launchpad）
 
 - 入口：单独按 Win 键或托盘右键菜单「全局启动器…」 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站 / 系统工具是四个**横向页签**（`ShortcutLauncherViewModel`）。系统工具页复用 `ShortcutService.GetSystemTools / RunSystemTool`，主窗不再保留「系统工具」导航页。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
-- 交互：单击图标启动（设置「双击启动快捷方式」打开时按双击判断）、`Esc` 关闭、`←` / `→` 或 `Ctrl` + 鼠标滚轮切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。**点击空白处不再关闭窗口**，而是开始框选；拖动空白绘制选框多选（`Ctrl` + 单击切换选中），拖动卡片调整顺序，把卡片拖到另一个卡片的图标中心合并成启动器文件夹，点击文件夹磁贴展开。滚轮监听在根 Grid 的 `PreviewMouseWheel`（滚动内容会被 `ScrollViewer` 标记已处理，冒泡阶段收不到），搜索期间与左右键一样不切页。
+- 交互：单击图标启动、`Esc` 关闭、`←` / `→` 或 `Ctrl` + 鼠标滚轮切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。**点击空白处不再关闭窗口**，而是开始框选；拖动空白绘制选框多选（`Ctrl` + 单击切换选中），拖动卡片调整顺序，把卡片拖到另一个卡片的图标中心合并成启动器文件夹，点击文件夹磁贴展开。滚轮监听在根 Grid 的 `PreviewMouseWheel`（滚动内容会被 `ScrollViewer` 标记已处理，冒泡阶段收不到），搜索期间与左右键一样不切页。
 - **布局与文件夹**：顺序和分组保存在 `data.json` 的顶层数组 `LauncherLayout`（每页 `Tiles`，普通条目用自然键 `app|路径` / `folder|路径` / `web|url`，文件夹用 `{Id,Name,Items[]}`），快捷方式本身仍以 `NativeAtomList` / `FolderAtomList` / `WebAtomList` 为唯一事实来源。打开时由 `LauncherLayout.Normalize` 对账：缺失条目剪掉、新增条目追加、空文件夹清理、单条目文件夹降级。系统工具页与搜索态只读，不参与排序与分组；分组只在同一页内创建，不支持嵌套。`--shortcuts-check` 需继续通过，并覆盖可编辑判定、选择 API 与文件夹展开/返回。
 - **预热要落在最终几何、内容保持全透明**：`ApplyScreenBounds` 的差异比较必须同时处理 `NaN`（新窗口 `Left/Top/Width/Height` 是 `NaN`，`Math.Abs(NaN) > x` 恒 false，漏判会让窗口带着 `NaN` 显示、由 WPF 临时挑位置）；**收起必须先淡出、后 `Hide()`**：分层窗口缓存最后一次合成结果，先 `Hide()` 再设透明是无效的（不可见就不会再渲染），下一次 `Show` 会把不透明缓存当作第一帧贴出来——表现为「第一次打开正常、之后每次都闪」。现在的顺序是 `Root.Opacity` 动画到 0 → `Completed` 里 `Hide()`；`IsHiding` 期间再次唤起会取消收起。
 - **启动时预热，不要按需创建**：`App.OnStartup` 在 `DispatcherPriority.ApplicationIdle` 调 `ShortcutWindowHost.Prewarm()`，窗口在屏幕外（-20000）、`Opacity=0`、`ShowActivated=false` 下显示一次再隐藏，让 WPF 完成 HWND / 模板 / 布局 / 首帧；`ShowPage` 里另有保险，未预热就直接 `Show` 时会先补预热。按需创建会让“可见”发生在布局之前，表现为先闪空白再闪内容。
@@ -82,9 +82,9 @@
 ## 常用命令
 
 ```bash
-make build                        # 构建全部（Release，= dotnet build DevEnv.sln -c Release）；产物在各项目的 bin/、obj/ 下
-make run                          # 编译并运行主程序（Release，dotnet run 增量编译后启动，无需先 make build）
-make test                         # 跑单元测试（DevEnv.Tests，xunit）
+make build                        # 构建全部（Release，= dotnet build DevEnv.sln -c Release）；产物在各项目的 bin/Release
+make run                          # 以 Debug 配置编译并运行主程序（产物在 bin/Debug，避免锁住 make build 的 Release 输出）
+make test                         # 跑单元测试（DevEnv.Tests，xunit，Release）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
 make publish                      # 单文件发布到 publish/win-x64/
 make installer                    # publish + vpk pack，产出 Velopack Setup.exe
@@ -93,6 +93,8 @@ make deploy-docs                  # 文档站构建并部署到 Cloudflare Pages
 ```
 
 调试主程序时可用环境变量直接启动到指定页：`DEVENV_START_PAGE=lava make run`（导航 id 见 `Views/ViewFactory.cs`）。
+
+**编译检查与测试统一用 `make build` / `make test`，不要用 `make run` 代替**：`make build` 固定写入 Release 输出，`make run` 固定以 Debug 运行；正在运行的 `make run` 实例只会锁住 `bin/Debug`，不会让下一次 `make build` 因为 `bin/Release/DevEnv.Core.dll` 被占用而失败。只有确实要启动界面时才用 `make run`。
 
 ## 硬性约定
 

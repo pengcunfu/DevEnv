@@ -21,7 +21,6 @@
                     <CheckBox Content="显示托盘图标" Margin="0,14,0,0" IsChecked="{Binding Config.TrayIcon}" />
                     <CheckBox Content="开机自启动" Margin="0,8,0,0" IsChecked="{Binding Config.SelfStarting}" />
                     <CheckBox Content="深色模式" Margin="0,8,0,0" IsChecked="{Binding Config.DarkMode}" />
-                    <CheckBox Content="双击启动快捷方式" Margin="0,8,0,0" IsChecked="{Binding Config.DoubleClickToLaunch}" />
                     <TextBlock Text="显示窗口、快捷应用、语音、截屏与文件预览快捷键统一在「快捷键」页签管理。"
                                Style="{DynamicResource MutedTextStyle}"
                                TextWrapping="Wrap"

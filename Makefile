@@ -55,9 +55,10 @@ VER := $(strip $(file <VERSION))
 PS ?= $(if $(wildcard C:/Program$(sp)Files/PowerShell/7/pwsh.exe),pwsh,powershell)
 
 # Overridable knobs (never set as environment variables by these recipes).
-# Release is the default for build, run, test and publish - what ships is what
-# you run. Debug is opt-in only via an explicit `CONFIG=Debug` on the command
-# line; never document or default to it.
+# Release is the default for build, test and publish - what ships is what you
+# test. `run` is deliberately pinned to Debug: a running dev instance then
+# locks bin/Debug only and `make build` can keep rewriting the Release output.
+# Use `make build` / `make test` for compile checks, not `make run`.
 CONFIG ?= Release
 ARGS   ?=
 
@@ -71,7 +72,7 @@ help:
 	@echo "$(if $(VER),  current version: $(VER),[warn] VERSION file missing)"
 	@echo ""
 	@echo "  make build        Build DevEnv.sln ($(CONFIG))"
-	@echo "  make run          Build and run the WPF host ($(CONFIG))"
+	@echo "  make run          Build and run the WPF host (Debug)"
 	@echo "  make test         Run the xunit suite (DevEnv.Tests)"
 	@echo "  make publish      Single-file publish -> $(PUBLISH_DIR)/"
 	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
@@ -99,8 +100,11 @@ build:
 # One step: `dotnet run` builds incrementally and launches, so `make build` is
 # not a prerequisite. `--no-build` is deliberately omitted - it is what made
 # run depend on a prior build.
+# Pinned to Debug: the running app locks its output directory, and Release is
+# reserved for `make build` / `make test` / packaging. Do not switch this back
+# to $(CONFIG), or a dev instance blocks the next Release build.
 run:
-	@dotnet run --project $(CSPROJ) -c $(CONFIG)
+	@dotnet run --project $(CSPROJ) -c Debug
 
 # Unit tests for the service layer. Kept as its own project (not a `dotnet test`
 # over the whole solution) so the WPF host never has to be launched for a

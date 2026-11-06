@@ -8,7 +8,6 @@ public sealed class AppConfig
     public string BaseEnvPath { get; set; } = string.Empty;
     public string Language { get; set; } = "zh-CN";
     public bool DarkMode { get; set; }
-    public bool DoubleClickToLaunch { get; set; }
     public string ShowWindowHotkey { get; set; } = "Ctrl+Alt+D";
 
     /// <summary>全局唤起快捷应用（SigXor 搜索框）。</summary>

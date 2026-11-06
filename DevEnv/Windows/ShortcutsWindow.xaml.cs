@@ -299,8 +299,7 @@ public partial class ShortcutsWindow : Window
     #region 交互
 
     /// <summary>
-    /// 图标单击启动。设置里开了「双击启动快捷方式」时按双击次数判断，
-    /// 与原先三页卡片的行为保持一致；默认单击即启动（Launchpad 习惯）。
+    /// 图标单击启动（Launchpad 习惯）。
     /// 框选 / Ctrl+单击形成多选后，第一次点击只收窄选择，避免管理图标时误启动。
     /// </summary>
     private void OnEntryMouseUp(object sender, MouseButtonEventArgs e)
@@ -325,13 +324,6 @@ public partial class ShortcutsWindow : Window
             }
 
             ViewModel.ClearSelection();
-        }
-
-        if (!entry.IsGroup
-            && CoreServices.Settings.GetConfig().DoubleClickToLaunch
-            && e.ClickCount < 2)
-        {
-            return;
         }
 
         LaunchEntry(entry);

@@ -38,7 +38,6 @@ public sealed class DataStore
                     ["BaseEnvPath"] = @"D:\ProgramBox\env",
                     ["Language"] = "zh-CN",
                     ["DarkMode"] = false,
-                    ["DoubleClickToLaunch"] = false,
                     ["ShowWindowHotkey"] = "Ctrl+Alt+D",
                     ["QuickAppHotkey"] = "Alt+Space",
                     ["WinKeyLauncher"] = true,

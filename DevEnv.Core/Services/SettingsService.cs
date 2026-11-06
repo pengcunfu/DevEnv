@@ -20,7 +20,6 @@ public sealed class SettingsService
             BaseEnvPath = json.Value<string>("BaseEnvPath") ?? string.Empty,
             Language = json.Value<string>("Language") ?? "zh-CN",
             DarkMode = json.Value<bool?>("DarkMode") == true,
-            DoubleClickToLaunch = json.Value<bool?>("DoubleClickToLaunch") == true,
             ShowWindowHotkey = json.Value<string>("ShowWindowHotkey") ?? "Ctrl+Alt+D",
             QuickAppHotkey = json.Value<string>("QuickAppHotkey") ?? "Alt+Space",
             // 缺省开启：新用户装上就能用 Win 键唤出全局启动器
@@ -29,7 +28,7 @@ public sealed class SettingsService
     }
 
     /// <summary>
-    /// 保存常规页拥有的字段（托盘 / 自启 / 环境目录 / 语言 / 主题 / 双击启动）。
+    /// 保存常规页拥有的字段（托盘 / 自启 / 环境目录 / 语言 / 主题）。
     /// 不写快捷键字段，避免常规页用打开设置时的旧值覆盖「快捷键」页刚保存的值。
     /// </summary>
     public OperationResult SaveGeneral(AppConfig config)
@@ -41,7 +40,6 @@ public sealed class SettingsService
             ["BaseEnvPath"] = config.BaseEnvPath,
             ["Language"] = config.Language,
             ["DarkMode"] = config.DarkMode,
-            ["DoubleClickToLaunch"] = config.DoubleClickToLaunch,
         };
 
         var saved = _store.SaveConfig(patch);
