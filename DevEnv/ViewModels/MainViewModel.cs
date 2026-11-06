@@ -125,10 +125,6 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings() => SettingsDialogHost.Open();
 
-    /// <summary>全局启动器：本地应用 / 文件夹 / 网站三个横向页签。</summary>
-    [RelayCommand]
-    private void OpenShortcuts() => ShortcutWindowHost.Open();
-
     /// <summary>工具一律开独立非模态窗口，不再嵌入主窗内容区。</summary>
     [RelayCommand]
     private void OpenTool(string? id)
@@ -143,20 +139,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ExitApp() => HostCallbacks.OnExitApp?.Invoke();
-
-    [RelayCommand]
-    private void ShowTranslator()
-    {
-        var siteId = CoreServices.Translator.GetLastSiteId();
-        TranslatorService.ShowTranslator(new TranslatorRequest { Visible = true, SiteId = siteId });
-    }
-
-    [RelayCommand]
     private void HideTranslator() => TranslatorService.HideTranslator();
-
-    [RelayCommand]
-    private void ShowClipboard() => HostCallbacks.OnShowClipboard?.Invoke(true);
 
     [RelayCommand]
     private void About() => HostServices.ShowAbout();

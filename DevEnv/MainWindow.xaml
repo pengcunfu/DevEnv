@@ -22,9 +22,6 @@
     <DockPanel>
         <!-- 顶部菜单 -->
         <Menu DockPanel.Dock="Top">
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_文件(F)">
-                <MenuItem Header="退出(_X)" Command="{Binding ExitAppCommand}" />
-            </MenuItem>
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_工具(T)">
                 <MenuItem Header="JSON 格式化器" Command="{Binding OpenToolCommand}" CommandParameter="json" />
                 <MenuItem Header="Hosts 文件编辑器" Command="{Binding OpenToolCommand}" CommandParameter="hosts" />
@@ -43,9 +40,6 @@
                 <Separator />
                 <MenuItem Header="关于文件预览模块(_A)..." Command="{Binding OpenSigXorAboutCommand}" />
                 </MenuItem>
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩翻译(_L)" Command="{Binding ShowTranslatorCommand}" />
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩剪贴板(_C)" Command="{Binding ShowClipboardCommand}" />
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="全局启动器(_K)" Command="{Binding OpenShortcutsCommand}" />
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)">
                 <MenuItem Header="常规(_G)" Command="{Binding OpenSettingsCommand}" />
                 <MenuItem Header="语音与截屏(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
