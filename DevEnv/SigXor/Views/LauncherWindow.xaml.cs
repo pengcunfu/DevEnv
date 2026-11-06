@@ -189,6 +189,13 @@ public partial class LauncherWindow : Window
         HostCallbacks.OnShowMainWindow?.Invoke();
     }
 
+    /// <summary>文件浏览器入口：收起快捷应用并打开文件浏览器窗口。</summary>
+    private void OnOpenBrowserEntry(object sender, RoutedEventArgs e)
+    {
+        CloseLauncher();
+        HostCallbacks.OnOpenSigXorBrowser?.Invoke();
+    }
+
     #endregion
 
     #region 列表交互

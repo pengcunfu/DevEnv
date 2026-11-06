@@ -216,8 +216,10 @@ public partial class MainWindow : Window
                 s.WindowHeight = Height;
                 s.WindowMaximized = WindowState == WindowState.Maximized;
 
-                _hideRequested = false;
                 _settings.Save();
+                // 这次是真正的关闭：放行下一次 Closing，否则又会取消并重新排队，窗口永远关不掉。
+                _hideRequested = false;
+                _exitRequested = true;
                 Close();
             }
             catch (Exception ex)

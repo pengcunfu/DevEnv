@@ -133,13 +133,24 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource QuickEntryStyle}" Margin="0" Click="OnOpenMainWindowEntry"
+                <Button Style="{StaticResource QuickEntryStyle}" Click="OnOpenMainWindowEntry"
                         ToolTip="开发环境（显示主窗口）">
                     <StackPanel>
                         <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="开发环境" FontSize="10.5" Margin="0,5,0,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickEntryStyle}" Margin="0" Click="OnOpenBrowserEntry"
+                        ToolTip="文件浏览器（目录导航 + 内嵌预览）">
+                    <StackPanel>
+                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="文件浏览器" FontSize="10.5" Margin="0,5,0,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
