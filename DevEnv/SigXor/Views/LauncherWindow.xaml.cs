@@ -281,8 +281,18 @@ public partial class LauncherWindow : Window
         RunSearch(query);
     }
 
-    private void OnResultDoubleClick(object sender, MouseButtonEventArgs e)
+    /// <summary>快捷应用按单击操作：点中哪一项就立即启动，不再要求双击。</summary>
+    private void OnResultClick(object sender, MouseButtonEventArgs e)
     {
+        if (e.ChangedButton != MouseButton.Left) return;
+        if (e.OriginalSource is not DependencyObject source) return;
+        if (ResultsList.ContainerFromElement(source) is not ListBoxItem container) return;
+
+        int index = ResultsList.ItemContainerGenerator.IndexFromContainer(container);
+        if (index < 0 || index >= _results.Count) return;
+
+        ResultsList.SelectedIndex = index;
+        e.Handled = true;
         ExecuteSelected();
     }
 

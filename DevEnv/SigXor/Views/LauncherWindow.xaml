@@ -145,7 +145,7 @@
                      BorderThickness="0" Background="Transparent"
                      SelectionChanged="OnSelectionChanged"
                      PreviewMouseRightButtonDown="OnResultsRightButtonDown"
-                     MouseDoubleClick="OnResultDoubleClick"
+                     PreviewMouseLeftButtonUp="OnResultClick"
                      ItemContainerStyle="{StaticResource LauncherItemStyle}"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
@@ -200,7 +200,7 @@
                         <Run Text="↑↓"/><Run Text=" 选择"/>
                     </TextBlock>
                     <TextBlock FontSize="10.5" Foreground="#AAA" Margin="0,0,16,0">
-                        <Run Text="Enter"/><Run Text=" 打开"/>
+                        <Run Text="单击 / Enter"/><Run Text=" 打开"/>
                     </TextBlock>
                     <TextBlock FontSize="10.5" Foreground="#AAA" Margin="0,0,16,0">
                         <Run Text="Esc"/><Run Text=" 关闭"/>
