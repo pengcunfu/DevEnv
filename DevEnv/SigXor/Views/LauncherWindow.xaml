@@ -33,7 +33,7 @@
             </Setter>
         </Style>
 
-        <!-- 顶部常用工具入口：正方形磁贴 -->
+        <!-- 搜索框下方的常用工具入口：正方形磁贴 -->
         <Style x:Key="QuickEntryStyle" TargetType="Button">
             <Setter Property="Width" Value="64"/>
             <Setter Property="Height" Value="64"/>
@@ -110,7 +110,7 @@
             </Grid.RowDefinitions>
 
             <!-- 常用工具入口：剪贴板 / 翻译（不再占用全局快捷键） -->
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="12,12,12,0">
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12,8,12,0">
                 <Button Style="{StaticResource QuickEntryStyle}" Click="OnOpenClipboardEntry"
                         ToolTip="熔岩剪贴板">
                     <StackPanel>
@@ -136,7 +136,7 @@
             </StackPanel>
 
             <!-- 搜索框 -->
-            <Border Grid.Row="1" Margin="12,12,12,0" CornerRadius="6"
+            <Border Grid.Row="0" Margin="12,12,12,0" CornerRadius="6"
                     BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Background="{DynamicResource SurfaceAltBrush}">
                 <Grid>
                     <Grid.ColumnDefinitions>
