@@ -36,7 +36,7 @@
                 <MenuItem Header="右键菜单管理" Command="{Binding OpenToolCommand}" CommandParameter="context-menu" />
                 <Separator />
                 <MenuItem Header="文件快速预览(_Q)" Command="{Binding OpenFilePreviewCommand}" />
-                <MenuItem Header="全局启动器(_L)..." Command="{Binding OpenSigXorLauncherCommand}" />
+                <MenuItem Header="快捷应用(_L)..." Command="{Binding OpenSigXorLauncherCommand}" />
                 <MenuItem Header="文件浏览器(_B)..." Command="{Binding OpenSigXorBrowserCommand}" />
                 <MenuItem Header="区域截图(_S)" Command="{Binding OpenScreenshotCommand}" />
                 <MenuItem Header="语音与截屏设置(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
@@ -45,7 +45,7 @@
                 </MenuItem>
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩翻译(_L)" Command="{Binding ShowTranslatorCommand}" />
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="熔岩剪贴板(_C)" Command="{Binding ShowClipboardCommand}" />
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="快捷方式(_K)" Command="{Binding OpenShortcutsCommand}" />
+            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="全局启动器(_K)" Command="{Binding OpenShortcutsCommand}" />
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)">
                 <MenuItem Header="常规(_G)" Command="{Binding OpenSettingsCommand}" />
                 <MenuItem Header="语音与截屏(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />

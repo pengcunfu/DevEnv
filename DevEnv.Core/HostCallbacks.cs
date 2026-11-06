@@ -14,7 +14,7 @@ public static class HostCallbacks
     public static Action? OnBeforeExitForUpdate { get; set; }
     public static Action? OnExitApp { get; set; }
     public static Action<string?>? OnShowWindowHotkeyChanged { get; set; }
-    /// <summary>「按 Win 键打开启动台」开关变化（true = 拦截 Win 键）。</summary>
+    /// <summary>「按 Win 键打开全局启动器」开关变化（true = 拦截 Win 键）。</summary>
     public static Action<bool>? OnWinKeyLauncherChanged { get; set; }
     public static Action<string>? SetClipboardText { get; set; }
     public static Action<string>? SetClipboardImagePath { get; set; }
@@ -27,7 +27,7 @@ public static class HostCallbacks
     public static Action? OnOpenScreenshot { get; set; }
     /// <summary>打开模块设置窗口的指定页签（常规 / 语音与截屏 / 服务与模型）。</summary>
     public static Action<SettingsSection>? OnOpenSigXorSettings { get; set; }
-    /// <summary>打开全局启动器（应用 / 文件 / 命令启动）。</summary>
+    /// <summary>打开快捷应用（搜索并启动应用 / 文件 / 命令）。</summary>
     public static Action? OnOpenSigXorLauncher { get; set; }
     /// <summary>打开文件浏览器窗口（目录导航 + 内嵌预览）。</summary>
     public static Action? OnOpenSigXorBrowser { get; set; }

@@ -67,7 +67,7 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    /// <summary>把拖进来的 .exe / 文件夹落到快捷方式窗口的对应页签。</summary>
+    /// <summary>把拖进来的 .exe / 文件夹落到全局启动器的对应页签。</summary>
     private void OnDrop(object sender, DragEventArgs e)
     {
         if (e.Data?.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)

@@ -125,7 +125,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings() => SettingsDialogHost.Open();
 
-    /// <summary>快捷方式窗口：本地应用 / 文件夹 / 网站三个横向页签。</summary>
+    /// <summary>全局启动器：本地应用 / 文件夹 / 网站三个横向页签。</summary>
     [RelayCommand]
     private void OpenShortcuts() => ShortcutWindowHost.Open();
 
@@ -164,7 +164,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenDocs() => HostServices.OpenUrl("https://devenv.cn/");
 
-    // SigXor 模块：文件快速预览 / 区域截图 / 语音与截屏 / 全局启动器 / 文件浏览器
+    // SigXor 模块：文件快速预览 / 区域截图 / 语音与截屏 / 快捷应用 / 文件浏览器
 
     /// <summary>SigXor 模块：文件快速预览（选择文件后弹预览浮窗）。</summary>
     [RelayCommand]
@@ -182,7 +182,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSigXorServiceSettings() => HostCallbacks.OnOpenSigXorSettings?.Invoke(SettingsSection.Service);
 
-    /// <summary>SigXor 模块：全局启动器（应用 / 文件 / 命令启动）。</summary>
+    /// <summary>SigXor 模块：快捷应用（搜索并启动应用 / 文件 / 命令）。</summary>
     [RelayCommand]
     private void OpenSigXorLauncher() => HostCallbacks.OnOpenSigXorLauncher?.Invoke();
 
@@ -205,7 +205,7 @@ public sealed partial class MainViewModel : ObservableObject
             StatusText = result.DisplayMessage;
     }
 
-    /// <summary>是否为快捷方式窗口的页签 id（apps / folders / webs）。</summary>
+    /// <summary>是否为全局启动器的页签 id（apps / folders / webs）。</summary>
     private static bool IsShortcutPage(string id) =>
         id.Equals("apps", StringComparison.OrdinalIgnoreCase)
         || id.Equals("folders", StringComparison.OrdinalIgnoreCase)

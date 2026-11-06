@@ -21,7 +21,7 @@ public sealed class SettingsService
             DarkMode = json.Value<bool?>("DarkMode") == true,
             DoubleClickToLaunch = json.Value<bool?>("DoubleClickToLaunch") == true,
             ShowWindowHotkey = json.Value<string>("ShowWindowHotkey") ?? "Ctrl+Alt+D",
-            // 缺省开启：新用户装上就能用 Win 键唤出启动台
+            // 缺省开启：新用户装上就能用 Win 键唤出全局启动器
             WinKeyLauncher = json.Value<bool?>("WinKeyLauncher") != false,
         };
     }

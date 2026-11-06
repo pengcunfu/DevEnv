@@ -12,7 +12,7 @@ using DevEnv.Host.SigXor.Services;
 namespace DevEnv.Host.SigXor.Views;
 
 /// <summary>
-/// 全局启动器窗口：搜索应用、文件，执行命令，拖拽固定应用。
+/// 快捷应用窗口：搜索应用、文件，执行命令，拖拽固定应用。
 /// </summary>
 public partial class LauncherWindow : Window
 {

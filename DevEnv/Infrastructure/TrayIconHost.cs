@@ -13,7 +13,7 @@ internal sealed class TrayIconHost : IDisposable
 
     /// <summary>右键菜单「显示主窗口」：主窗口只从菜单进入，单击托盘图标不再唤出它。</summary>
     public event Action? MainWindowRequested;
-    /// <summary>右键菜单「快捷方式启动台…」（单击托盘图标打开的是 SigXor 全局启动器）。</summary>
+    /// <summary>右键菜单「全局启动器…」（单击托盘图标打开的是 SigXor 快捷应用）。</summary>
     public event Action? ShortcutsRequested;
     public event Action? TranslatorRequested;
     public event Action? ClipboardRequested;
@@ -29,7 +29,7 @@ internal sealed class TrayIconHost : IDisposable
     public event Action? StopVoiceRequested;
     /// <summary>SigXor 模块：打开模块设置。</summary>
     public event Action? SigXorSettingsRequested;
-    /// <summary>SigXor 模块：打开全局启动器。</summary>
+    /// <summary>SigXor 模块：打开快捷应用（搜索并启动应用 / 文件 / 命令）。</summary>
     public event Action? SigXorLauncherRequested;
     /// <summary>SigXor 模块：打开文件浏览器窗口。</summary>
     public event Action? SigXorBrowserRequested;
@@ -46,12 +46,12 @@ internal sealed class TrayIconHost : IDisposable
         };
 
         _menu.Items.Add("显示主窗口", null, (_, _) => Raise(MainWindowRequested));
-        _menu.Items.Add("快捷方式启动台…", null, (_, _) => Raise(ShortcutsRequested));
+        _menu.Items.Add("全局启动器…", null, (_, _) => Raise(ShortcutsRequested));
         _menu.Items.Add("熔岩翻译", null, (_, _) => Raise(TranslatorRequested));
         _menu.Items.Add("熔岩剪贴板", null, (_, _) => Raise(ClipboardRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("文件快速预览…", null, (_, _) => Raise(FilePreviewRequested));
-        _menu.Items.Add("全局启动器…", null, (_, _) => Raise(SigXorLauncherRequested));
+        _menu.Items.Add("快捷应用…", null, (_, _) => Raise(SigXorLauncherRequested));
         _menu.Items.Add("文件浏览器…", null, (_, _) => Raise(SigXorBrowserRequested));
         _menu.Items.Add("区域截图", null, (_, _) => Raise(ScreenshotRequested));
         _menu.Items.Add("启动语音服务", null, (_, _) => Raise(StartVoiceRequested));
@@ -62,8 +62,8 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;
 
-        // 单击托盘图标打开 SigXor 全局启动器（搜索并启动应用 / 文件 / 命令）；
-        // 快捷方式启动台与主窗口都从右键菜单进入。
+        // 单击托盘图标打开 SigXor 快捷应用（搜索并启动应用 / 文件 / 命令）；
+        // 全局启动器（Launchpad）与主窗口都从右键菜单进入。
         // 右键仍然弹出菜单（NotifyIcon 挂上 ContextMenuStrip 后的默认行为）。
         _notifyIcon.MouseClick += OnMouseClick;
     }

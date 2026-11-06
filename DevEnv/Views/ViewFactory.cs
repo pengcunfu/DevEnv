@@ -3,7 +3,7 @@ using DevEnv.Host.ViewModels;
 
 namespace DevEnv.Host.Views;
 
-/// <summary>导航 id → 页面实例。本地应用 / 文件夹 / 网站已移到独立的快捷方式窗口。</summary>
+/// <summary>导航 id → 页面实例。本地应用 / 文件夹 / 网站已移到独立的全局启动器口。</summary>
 public static class ViewFactory
 {
     public static IReadOnlyList<NavItem> NavItems { get; } =

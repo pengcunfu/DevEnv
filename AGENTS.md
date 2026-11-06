@@ -25,7 +25,7 @@
 | 位置 | 内容 |
 |------|------|
 | `DevEnv.Core/SigXor/` | 纯逻辑：HexDocument、文件类型识别、编码检测、Office / RTF / ODF 解析、CSV 解析、Markdown 渲染、快捷键与屏幕几何。命名空间 `DevEnv.Core.SigXor.*` |
-| `DevEnv/SigXor/` | WPF 界面与系统能力：预览浮窗、语音输入、截图 / OCR / 取色、全局启动器、文件浏览器。命名空间 `DevEnv.Host.SigXor.*` |
+| `DevEnv/SigXor/` | WPF 界面与系统能力：预览浮窗、语音输入、截图 / OCR / 取色、快捷应用、文件浏览器。命名空间 `DevEnv.Host.SigXor.*` |
 | `DevEnv/SigXor/SigXorHost.cs` | **模块装配入口**。原 SigXor 的 `App` 已改造为此类：不再继承 `Application`、不再自带托盘 / 单实例 / 独立入口（这些统一由 `DevEnv.Host.App` 提供），只保留模块自己的接线与生命周期 |
 | `DevEnv/SigXor/SigXorStyles.xaml` | 原 `App.xaml` 里的 `EngineToggle` 样式，已改为 `ResourceDictionary` 并入主 `App.xaml` |
 | `DevEnv.Tests/` 根目录 | SigXor 的 12 个测试文件（`namespace DevEnv.Tests.SigXor`），与 DevEnv 原有测试同工程 |
@@ -51,9 +51,9 @@
 - **截图 / 取色 / 选区 / 语音浮窗里的黑白配色是功能性颜色**，必须保持不透明与高对比，不随主题变化（`scripts/theme-sigxor-xaml.ps1` 已把它们列为例外）。
 - **合并脚本**：`scripts/merge-sigxor.ps1`（搬运）+ `scripts/rewrite-sigxor-namespace.ps1`（改写命名空间）+ `scripts/verify-sigxor-merge.ps1`（逐字校验）。合并 SigXor 新版本后跑一次 verify，确认「除预期的宿主适配外与源仓库逐字一致」。
 
-### 快捷方式启动器（Launchpad）
+### 全局启动器（Launchpad）
 
-- 入口：主菜单「快捷方式」→ `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站是三个**横向页签**（`ShortcutLauncherViewModel`）。
+- 入口：主菜单「全局启动器」或单独按 Win 键 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站是三个**横向页签**（`ShortcutLauncherViewModel`）。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
 - 交互：单击图标启动（设置「双击启动快捷方式」打开时按双击判断）、`Esc` / 点击空白处关闭、`←` / `→` 切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。
 - 数据仍走 `ShortcutService`；原先的 `AppsView` / `FoldersView` / `WebsView` 与对应 ViewModel **已删除**，不要再恢复卡片页。
 - `DEVENV_START_PAGE=apps|folders|webs`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签；窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
@@ -62,15 +62,15 @@
 
 ### Win 键拦截
 
-- 单独按一下 Win 键打开启动台，再按一次收起；`Win+E` / `Win+R` / `Win+D` 等组合键原样放行。开关是 `data.json` 的 `Config.WinKeyLauncher`（默认 `true`），在「设置 → 常规」里可关。
+- 单独按一下 Win 键打开全局启动器，再按一次收起；`Win+E` / `Win+R` / `Win+D` 等组合键原样放行。开关是 `data.json` 的 `Config.WinKeyLauncher`（默认 `true`），在「设置 → 常规」里可关。
 - 判定逻辑在 `DevEnv.Core/Input/WinKeyGestureTracker.cs`（纯逻辑，单测覆盖）；钩子 `DevEnv/Infrastructure/WinKeyLauncherHook.cs` 只做 `WH_KEYBOARD_LL` 转发。
 - **只吞 Win 键抬起，不吞按下**：开始菜单是抬起时弹出的，吞抬起即可挡住它；吞按下会让 Win+组合键全部失效，所以按下阶段必须放行。按住 Win 的自动重复、左右 Win 同时按都已单独处理。
 - **吞掉物理抬起后必须补发「假按键 + Win 抬起」**（`ReleaseWinKey`）：系统看到 Win 按下却收不到抬起，会一直认为 Win 修饰键按着，之后任何按键都变成 Win+组合键——这正是「Win 接管后按键异常」的根因。补发未分配虚拟键 `0xE8` 是为了打断开始菜单的「单击 Win」判定，再补发同侧 Win 抬起让按键状态复位。改动这段务必跑 `--winkey-check`，其中「Win 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
-- 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的 Win 键不会弹启动台；只有自检探针通过 `AllowInjectedInput` 打开它。
+- 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的 Win 键不会弹全局启动器；只有自检探针通过 `AllowInjectedInput` 打开它。
 - 模态对话框打开期间（`ShortcutWindowHost.CanOpen()` 为 false）不吞 Win 键，让系统开始菜单照常弹出。
-- 启动台**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；Win 键唤出时只允许出现启动台本身。
+- 全局启动器**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；Win 键唤出时只允许出现启动器本身。
 - 启动行为：`App.OnStartup` **不显示主窗**（`new MainWindow { ShowInTaskbar = false }` + `EnsureHotkeys`，句柄由 `EnsureHandle` 提前创建），程序只驻留托盘；主窗由托盘菜单 / `Ctrl+Alt+D` / 二次启动唤出。给窗口挂 Owner 前必须确认主窗 `IsVisible`——owner 隐藏时 owned 窗口不会显示（翻译窗、剪贴板窗已按此处理，主窗显示时由 `AttachAuxiliaryWindows` 补挂）。
-- 托盘入口：**单击托盘图标 = SigXor 全局启动器**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令）；快捷方式启动台从右键菜单「快捷方式启动台…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或 Win 键进入；主窗口只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**全局启动器**是 SigXor 的搜索框式启动器，**快捷方式启动台**是本仓库的 Launchpad 式全屏窗口。`ShortcutWindowHost.Toggle` 带 500ms 宽限：启动台因失焦收起后紧接着的这次调用按「关闭」处理。
+- 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令）；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或 Win 键进入；**主窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
 - 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，否则进程退出后开始菜单仍会被吞。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --winkey-check %TEMP%\winkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 卸载后失效」。
 

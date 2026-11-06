@@ -122,7 +122,7 @@ public sealed class SigXorHost : IDisposable
         _shellPreview?.ShowPreviewForPaths(paths);
     }
 
-    /// <summary>打开全局启动器（应用 / 文件 / 命令启动）。</summary>
+    /// <summary>打开快捷应用（应用 / 文件 / 命令启动）。</summary>
     public void ShowLauncher()
     {
         if (!IsInitialized) Initialize();

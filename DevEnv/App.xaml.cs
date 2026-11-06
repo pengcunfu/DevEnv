@@ -113,7 +113,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // 快捷方式启动器自检：三个页签能加载、搜索可用、没有数据绑定错误
+        // 全局启动器自检：三个页签能加载、搜索可用、没有数据绑定错误
         int shortcutsIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ShortcutLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
         if (shortcutsIndex >= 0)
@@ -189,14 +189,14 @@ public partial class App : System.Windows.Application
 
         _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
         // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
-        // 单击托盘图标 = 全局启动器；快捷方式启动台与主窗口都从右键菜单进入
+        // 单击托盘图标 = 快捷应用；全局启动器与主窗口都从右键菜单进入
         _tray.ShortcutsRequested += () => Dispatcher.InvokeAsync(() => ShortcutWindowHost.Toggle());
         _tray.MainWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
         _tray.TranslatorRequested += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest { Visible = true }));
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
         _tray.ExitRequested += ExitApp;
 
-        // SigXor 模块：文件快速预览 / 语音输入 / 区域截图 OCR 取色 / 全局启动器
+        // SigXor 模块：文件快速预览 / 语音输入 / 区域截图 OCR 取色 / 快捷应用
         _sigXor = new SigXorHost(Dispatcher);
         _sigXor.NotificationRequested += (title, message) =>
             Dispatcher.BeginInvoke(new Action(() => _tray?.ShowBalloon(message, Forms.ToolTipIcon.Info)));
@@ -234,7 +234,7 @@ public partial class App : System.Windows.Application
 
     /// <summary>
     /// 按设置安装 / 卸载 Win 键拦截钩子。
-    /// 开启时单独按 Win 键唤起快捷方式启动台，Win+组合键原样放行。
+    /// 开启时单独按 Win 键唤起全局启动器，Win+组合键原样放行。
     /// </summary>
     private void ApplyWinKeyLauncher(bool enabled)
     {

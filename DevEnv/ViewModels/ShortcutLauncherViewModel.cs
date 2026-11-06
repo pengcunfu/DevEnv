@@ -57,7 +57,7 @@ public sealed class LauncherEntry
 }
 
 /// <summary>
-/// 快捷方式启动器（Launchpad 样式）的视图模型：汇总本地应用 / 文件夹 / 网站，
+/// 全局启动器（Launchpad 样式）的视图模型：汇总本地应用 / 文件夹 / 网站，
 /// 支持搜索、页签切换、添加、改名、刷新图标与移除。
 /// </summary>
 public sealed partial class ShortcutLauncherViewModel : ObservableObject

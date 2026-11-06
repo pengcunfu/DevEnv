@@ -5,10 +5,10 @@ using DevEnv.Core.Input;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// Win 键拦截钩子：单独按一下 Win 键时打开快捷方式启动台，组合键原样放行。
+/// Win 键拦截钩子：单独按一下 Win 键时打开全局启动器，组合键原样放行。
 ///
 /// - 用 <c>WH_KEYBOARD_LL</c> 低级键盘钩子，只对真实按键生效（忽略注入事件，
-///   自动化工具模拟的 Win 键不会弹启动台）；
+///   自动化工具模拟的 Win 键不会弹全局启动器）；
 /// - 手势判断在 <see cref="WinKeyGestureTracker"/> 里，这里只负责转发与吞键；
 /// - 钩子回调运行在安装线程（UI 线程）上，必须尽快返回，真正的打开动作经
 ///   Dispatcher 投递到消息队列，避免触发系统的 LowLevelHooksTimeout 而被摘钩。
@@ -49,12 +49,12 @@ internal sealed class WinKeyLauncherHook : IDisposable
 
     /// <summary>
     /// 触发前的可用性判断。返回 false 时既不吞键也不触发，让 Win 键照常打开系统开始菜单
-    /// （例如本程序的模态设置框正开着，此刻弹启动台没有意义）。
+    /// （例如本程序的模态设置框正开着，此刻弹全局启动器没有意义）。
     /// </summary>
     public Func<bool>? CanTrigger { get; set; }
 
     /// <summary>
-    /// 是否处理注入的按键。默认 false：自动化工具 / 宏键盘模拟的 Win 键不该弹启动台；
+    /// 是否处理注入的按键。默认 false：自动化工具 / 宏键盘模拟的 Win 键不该弹全局启动器；
     /// 只有自检探针需要打开它，用 SendInput 模拟按键来验证拦截链路。
     /// </summary>
     public bool AllowInjectedInput { get; init; }

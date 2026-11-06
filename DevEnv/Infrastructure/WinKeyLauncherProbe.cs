@@ -57,7 +57,7 @@ public static class WinKeyLauncherProbe
             // 1) 单独按一下 Win → 触发一次，且这次抬起被吞掉（开始菜单不弹）
             TapKey(VkLeftWin);
             Settle();
-            Check("单独按 Win 键触发启动台", triggers == 1, $"触发 {triggers} 次");
+            Check("单独按 Win 键触发全局启动器", triggers == 1, $"触发 {triggers} 次");
             Check("Win 键抬起被吞掉（开始菜单不会弹出）", hook.SwallowedKeyUps == 1, $"吞键 {hook.SwallowedKeyUps} 次");
 
             // 关键回归：吞掉抬起后必须补发 Win 抬起，否则系统认为 Win 一直按着，
@@ -81,14 +81,14 @@ public static class WinKeyLauncherProbe
             Key(VkF24, up: true);
             Key(VkLeftWin, up: true);
             Settle();
-            Check("Win+其它键不触发启动台", triggers == 0, $"触发 {triggers} 次");
+            Check("Win+其它键不触发全局启动器", triggers == 0, $"触发 {triggers} 次");
             Check("Win+其它键的抬起原样放行", hook.SwallowedKeyUps == swallowedBefore, $"吞键 {hook.SwallowedKeyUps} 次");
 
             // 3) 组合键之后单独按 Win 仍能触发（手势状态已复位）
             triggers = 0;
             TapKey(VkLeftWin);
             Settle();
-            Check("组合键后单按 Win 仍可触发", triggers == 1, $"触发 {triggers} 次");
+            Check("组合键后单按 Win 仍可触发全局启动器", triggers == 1, $"触发 {triggers} 次");
 
             // 4) 卸载后不再拦截
             hook.Uninstall();

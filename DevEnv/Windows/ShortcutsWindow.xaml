@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DevEnv.Host.Controls"
         xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
-        Title="快捷方式"
+        Title="全局启动器"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"

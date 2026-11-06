@@ -2,7 +2,7 @@ namespace DevEnv.Core.Input;
 
 /// <summary>一次按键事件的处理结论。</summary>
 /// <param name="Swallow">是否吞掉这次按键（不交给系统处理）。</param>
-/// <param name="Trigger">是否触发启动台（只在单独按下 Win 键并抬起时为 true）。</param>
+/// <param name="Trigger">是否触发全局启动器（只在单独按下 Win 键并抬起时为 true）。</param>
 public readonly record struct WinKeyGestureResult(bool Swallow, bool Trigger);
 
 /// <summary>
@@ -11,7 +11,7 @@ public readonly record struct WinKeyGestureResult(bool Swallow, bool Trigger);
 /// 规则：
 /// - Win 按下 → 记下是哪一侧的 Win，暂不吞键；
 /// - 其它键按下（或另一侧 Win 也按下）→ 视为组合键，本次手势不再触发；
-/// - Win 抬起时，若期间没有按过其它键 → 吞掉这次抬起并触发启动台。
+/// - Win 抬起时，若期间没有按过其它键 → 吞掉这次抬起并触发全局启动器。
 ///
 /// 之所以只吞抬起：Windows 的开始菜单是在 Win 键**抬起**时才弹出的，
 /// 吞掉抬起即可阻止开始菜单，同时 Win+E / Win+R / Win+D 等组合键完全不受影响。
@@ -47,7 +47,7 @@ public sealed class WinKeyGestureTracker
             }
             else if (virtualKey != _winKey)
             {
-                // 左右 Win 同时按：当成组合键，避免误弹启动台
+                // 左右 Win 同时按：当成组合键，避免误弹全局启动器
                 _combo = true;
             }
             // 同一侧 Win 的按住自动重复不算组合键，保持原判断

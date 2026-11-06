@@ -10,7 +10,7 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 快捷方式启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
+/// 全局启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
 /// 这里加载启动器、遍历三个页签、跑一次搜索，并收集数据绑定错误。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
@@ -61,8 +61,8 @@ public static class ShortcutLauncherProbe
             window.UpdateLayout();
 
             Check("启动器窗口可正常加载", window.IsVisible);
-            // 启动台不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
-            Check("启动台不挂 Owner（不会带出主窗口）", window.Owner is null);
+            // 全局启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
+            Check("全局启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 

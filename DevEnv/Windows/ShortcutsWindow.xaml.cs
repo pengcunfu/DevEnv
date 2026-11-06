@@ -11,7 +11,7 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全屏快捷方式启动器（Launchpad 样式）：本地应用 / 文件夹 / 网站三个横向页签，
+/// 全屏全局启动器（Launchpad 样式）：本地应用 / 文件夹 / 网站三个横向页签，
 /// 顶部搜索、中部大图标网格、底部页签；单击图标即启动，Esc 或点击空白处关闭。
 /// 非模态、单实例（由 <see cref="Infrastructure.ShortcutWindowHost"/> 管理）。
 /// </summary>

@@ -11,7 +11,7 @@ public sealed class AppConfig
     public bool DoubleClickToLaunch { get; set; }
     public string ShowWindowHotkey { get; set; } = "Ctrl+Alt+D";
 
-    /// <summary>单独按 Win 键打开快捷方式启动台（默认开启）；关闭后 Win 键回到系统开始菜单。</summary>
+    /// <summary>单独按 Win 键打开全局启动器（默认开启）；关闭后 Win 键回到系统开始菜单。</summary>
     public bool WinKeyLauncher { get; set; } = true;
 }
 

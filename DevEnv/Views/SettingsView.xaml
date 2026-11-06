@@ -22,8 +22,8 @@
                     <CheckBox Content="开机自启动" Margin="0,8,0,0" IsChecked="{Binding Config.SelfStarting}" />
                     <CheckBox Content="深色模式" Margin="0,8,0,0" IsChecked="{Binding Config.DarkMode}" />
                     <CheckBox Content="双击启动快捷方式" Margin="0,8,0,0" IsChecked="{Binding Config.DoubleClickToLaunch}" />
-                    <CheckBox Content="按 Win 键打开快捷方式启动台" Margin="0,8,0,0" IsChecked="{Binding Config.WinKeyLauncher}" />
-                    <TextBlock Text="开启后单独按一下 Win 键打开启动台，再次按下收起；Win+E / Win+R / Win+D 等组合键不受影响。关闭后 Win 键恢复系统开始菜单。需要开始菜单时可按 Ctrl+Esc。"
+                    <CheckBox Content="按 Win 键打开全局启动器" Margin="0,8,0,0" IsChecked="{Binding Config.WinKeyLauncher}" />
+                    <TextBlock Text="开启后单独按一下 Win 键打开全局启动器，再次按下收起；Win+E / Win+R / Win+D 等组合键不受影响。关闭后 Win 键恢复系统开始菜单。需要开始菜单时可按 Ctrl+Esc。"
                                Style="{DynamicResource MutedTextStyle}"
                                TextWrapping="Wrap"
                                Margin="0,4,0,0" />
