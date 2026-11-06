@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using NAudio.Wave;
 using DevEnv.Host.SigXor.Services;
 using SherpaOnnx;
@@ -66,6 +67,13 @@ public sealed class SpeechRecognizer : IDisposable
 
 public sealed class SenseVoiceEngine : ISpeechEngine
 {
+    // sherpa-onnx 的托管封装在构造失败时对象仍然存在，GC 会执行
+    // Finalize → Cleanup → SherpaOnnxDestroyOfflineRecognizer。如果原生库本身
+    // 加载不了，析构里的 P/Invoke 会再抛一次 DllNotFoundException；finalizer
+    // 线程上的未处理异常会直接终止进程（退出码 0xE0434352），表现为程序启动后
+    // 无声退出。所以先探测原生库，加载失败就根本不要构造 OfflineRecognizer。
+    private static IntPtr s_nativeHandle;
+
     private readonly SettingsService _settings;
     private readonly object _lock = new();
     private OfflineRecognizer? _recognizer;
@@ -96,6 +104,13 @@ public sealed class SenseVoiceEngine : ISpeechEngine
             string tokens = Path.Combine(dir, SpeechModelManager.TokensFileName);
             StatusChanged?.Invoke(this, "正在初始化 SenseVoice 引擎...");
 
+            if (!EnsureNativeLibrary())
+            {
+                Error?.Invoke(this, new InvalidOperationException(
+                    "无法加载 sherpa-onnx 原生库，语音识别不可用。请安装 Microsoft Visual C++ 2015-2022 运行库（x64）后重试。"));
+                return false;
+            }
+
             await Task.Run(() =>
             {
                 lock (_lock)
@@ -114,6 +129,20 @@ public sealed class SenseVoiceEngine : ISpeechEngine
             Error?.Invoke(this, new Exception($"SenseVoice 初始化失败：{ex.Message}", ex));
             return false;
         }
+    }
+
+    private static bool EnsureNativeLibrary()
+    {
+        if (s_nativeHandle != IntPtr.Zero) return true;
+
+        // 走与 DllImport 相同的程序集上下文探测，才能找到 deps.json 里
+        // runtimes/win-x64/native 下的原生库；失败时只返回 false，不抛异常。
+        if (!NativeLibrary.TryLoad("sherpa-onnx-c-api", typeof(OfflineRecognizer).Assembly, null, out IntPtr handle))
+            return false;
+
+        // 句柄一直持有到进程结束，避免库被卸载后又触发 P/Invoke
+        s_nativeHandle = handle;
+        return true;
     }
 
     private OfflineRecognizerConfig BuildConfig(string model, string tokens)

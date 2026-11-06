@@ -141,10 +141,14 @@ public partial class LauncherWindow : Window
         {
             ResultsList.SelectedIndex = 0;
             int appCount = _results.Count(r => r.Category == LauncherCategory.Application);
+            int folderCount = _results.Count(r => r.Category == LauncherCategory.Folder);
+            int webCount = _results.Count(r => r.Category == LauncherCategory.Website);
             int fileCount = _results.Count(r => r.Category == LauncherCategory.File);
             int cmdCount = _results.Count(r => r.Category == LauncherCategory.Command);
             var parts = new List<string>();
             if (appCount > 0) parts.Add($"{appCount} 个应用");
+            if (folderCount > 0) parts.Add($"{folderCount} 个文件夹");
+            if (webCount > 0) parts.Add($"{webCount} 个网站");
             if (fileCount > 0) parts.Add($"{fileCount} 个文件");
             if (cmdCount > 0) parts.Add($"{cmdCount} 个命令");
             CategoryLabel.Text = string.Join(" · ", parts);
@@ -194,13 +198,20 @@ public partial class LauncherWindow : Window
         var item = _results[index];
         bool isCommand = item.Category == LauncherCategory.Command;
         bool isFile = item.Category == LauncherCategory.File;
+        bool isFolder = item.Category == LauncherCategory.Folder;
+        bool isWebsite = item.Category == LauncherCategory.Website;
         bool canRunElevated = item.Category == LauncherCategory.Application
             || isCommand
             || (isFile && LauncherService.IsExecutablePath(item.Path));
 
-        RunMenuItem.Header = isFile ? "打开" : (isCommand ? "运行命令" : "运行");
+        RunMenuItem.Header = isFolder ? "打开文件夹"
+            : isWebsite ? "打开网站"
+            : isFile ? "打开"
+            : isCommand ? "运行命令"
+            : "运行";
         RunAsAdminMenuItem.Visibility = canRunElevated ? Visibility.Visible : Visibility.Collapsed;
-        RevealMenuItem.Visibility = !isCommand && File.Exists(item.Path)
+        RevealMenuItem.Visibility = !isCommand && !isWebsite
+                                    && (File.Exists(item.Path) || Directory.Exists(item.Path))
             ? Visibility.Visible
             : Visibility.Collapsed;
 
@@ -465,6 +476,8 @@ public sealed class LauncherItemViewModel(LauncherResult result)
     {
         LauncherCategory.Application => " ",
         LauncherCategory.File => " ",
+        LauncherCategory.Folder => "",
+        LauncherCategory.Website => "",
         LauncherCategory.Command => "",
         _ => " ",
     };
@@ -473,6 +486,8 @@ public sealed class LauncherItemViewModel(LauncherResult result)
     {
         LauncherCategory.Application => "应用",
         LauncherCategory.File => "文件",
+        LauncherCategory.Folder => "文件夹",
+        LauncherCategory.Website => "网站",
         LauncherCategory.Command => "命令",
         _ => "",
     };

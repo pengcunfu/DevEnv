@@ -176,7 +176,7 @@
             </ListBox>
 
             <!-- 空状态提示 -->
-            <TextBlock x:Name="EmptyHint" Grid.Row="2" Text="输入关键词搜索应用、文件…"
+            <TextBlock x:Name="EmptyHint" Grid.Row="2" Text="输入关键词搜索应用、文件夹、网站、文件…"
                        FontSize="13" Foreground="#BBB" HorizontalAlignment="Center"
                        VerticalAlignment="Center" IsHitTestVisible="False"/>
 

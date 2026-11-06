@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Media.Imaging;
+using DevEnv.Core.Services;
 
 namespace DevEnv.Host.SigXor.Services;
 
@@ -18,6 +19,8 @@ public sealed class LauncherResult
     public string? Description { get; init; }
     /// <summary>可执行文件/快捷方式的实际图标（WPF ImageSource）。</summary>
     public BitmapSource? Icon { get; init; }
+    /// <summary>来自全局启动器（本地应用 / 文件夹 / 网站），不再提供「固定」操作。</summary>
+    public bool IsShortcutEntry { get; init; }
 }
 
 public enum LauncherCategory
@@ -25,6 +28,8 @@ public enum LauncherCategory
     Application,
     File,
     Command,
+    Folder,
+    Website,
 }
 
 /// <summary>
@@ -35,13 +40,16 @@ public sealed class LauncherService
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(5);
 
     private readonly object _cacheGate = new();
+    private readonly ShortcutService? _shortcuts;
     private List<LauncherResult>? _appCache;
     private DateTime _appCacheTime = DateTime.MinValue;
     private Task? _cacheTask;
     private List<PinnedAppEntry> _pinnedApps = [];
 
-    public LauncherService()
+    /// <param name="shortcuts">全局启动器的本地应用 / 文件夹 / 网站；为空时只搜索应用、文件与命令。</param>
+    public LauncherService(ShortcutService? shortcuts = null)
     {
+        _shortcuts = shortcuts;
         LoadPinnedApps();
     }
 
@@ -144,13 +152,119 @@ public sealed class LauncherService
             return results;
         }
 
-        var apps = SearchApplications(query);
-        var files = SearchFiles(query);
+        // 全局启动器里的快捷方式排在前面：它们是用户手工维护的常用入口
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AddShortcutResults(query, results, seen);
 
-        results.AddRange(apps);
-        results.AddRange(files);
+        foreach (var app in SearchApplications(query))
+        {
+            if (seen.Add(app.Path)) results.Add(app);
+        }
+
+        foreach (var file in SearchFiles(query))
+        {
+            if (seen.Add(file.Path)) results.Add(file);
+        }
+
         return results;
     }
+
+    #region 全局启动器快捷方式
+
+    /// <summary>
+    /// 把全局启动器维护的本地应用 / 文件夹 / 网站并入搜索结果。
+    /// data.json 随时可能被其他入口修改，所以每次搜索都重新读取。
+    /// </summary>
+    private void AddShortcutResults(string query, List<LauncherResult> results, HashSet<string> seen)
+    {
+        if (_shortcuts is null) return;
+
+        foreach (var item in _shortcuts.GetApps())
+        {
+            if (string.IsNullOrWhiteSpace(item.ExecPath)) continue;
+            if (!MatchesShortcut(item.Name, item.ExecPath, "应用", query)) continue;
+            if (!seen.Add(item.ExecPath)) continue;
+
+            results.Add(new LauncherResult
+            {
+                Name = string.IsNullOrWhiteSpace(item.Name)
+                    ? System.IO.Path.GetFileNameWithoutExtension(item.ExecPath)
+                    : item.Name,
+                Path = item.ExecPath,
+                Category = LauncherCategory.Application,
+                Description = string.IsNullOrWhiteSpace(item.Description) ? item.ExecPath : item.Description,
+                Icon = LoadIconFile(item.IconPath),
+                IsShortcutEntry = true,
+            });
+        }
+
+        foreach (var item in _shortcuts.GetFolders())
+        {
+            if (string.IsNullOrWhiteSpace(item.FolderPath)) continue;
+            if (!MatchesShortcut(item.Name, item.FolderPath, "文件夹", query)) continue;
+            if (!seen.Add(item.FolderPath)) continue;
+
+            results.Add(new LauncherResult
+            {
+                Name = string.IsNullOrWhiteSpace(item.Name)
+                    ? new DirectoryInfo(item.FolderPath).Name
+                    : item.Name,
+                Path = item.FolderPath,
+                Category = LauncherCategory.Folder,
+                Description = string.IsNullOrWhiteSpace(item.Description) ? item.FolderPath : item.Description,
+                Icon = LoadIconFile(item.IconPath),
+                IsShortcutEntry = true,
+            });
+        }
+
+        foreach (var item in _shortcuts.GetWebs())
+        {
+            if (string.IsNullOrWhiteSpace(item.Url)) continue;
+            if (!MatchesShortcut(item.Name, item.Url, "网站", query)) continue;
+            if (!seen.Add(item.Url)) continue;
+
+            results.Add(new LauncherResult
+            {
+                Name = string.IsNullOrWhiteSpace(item.Name) ? item.Url : item.Name,
+                Path = item.Url,
+                Category = LauncherCategory.Website,
+                Description = string.IsNullOrWhiteSpace(item.Description) ? item.Url : item.Description,
+                Icon = LoadIconFile(item.IconPath),
+                IsShortcutEntry = true,
+            });
+        }
+    }
+
+    /// <summary>与全局启动器一致的匹配规则：名称、目标路径 / 网址、类型名都参与。</summary>
+    private static bool MatchesShortcut(string? name, string? target, string kindText, string query) =>
+        (name?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false)
+        || (target?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false)
+        || kindText.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>从快捷方式缓存图标文件加载 WPF 位图（文件缺失或损坏时回退字体图标）。</summary>
+    private static BitmapSource? LoadIconFile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return null;
+
+        try
+        {
+            using var stream = File.OpenRead(path);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = stream;
+            bitmap.DecodePixelWidth = 32;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    #endregion
 
     /// <summary>执行选中的启动器项。</summary>
     public void Execute(LauncherResult result)
@@ -159,6 +273,29 @@ public sealed class LauncherService
         {
             case LauncherCategory.Application:
             case LauncherCategory.File:
+                try
+                {
+                    Process.Start(new ProcessStartInfo(result.Path)
+                    {
+                        UseShellExecute = true,
+                    });
+                }
+                catch { }
+                break;
+
+            case LauncherCategory.Folder:
+                try
+                {
+                    Process.Start(new ProcessStartInfo("explorer.exe")
+                    {
+                        Arguments = $"\"{result.Path}\"",
+                        UseShellExecute = true,
+                    });
+                }
+                catch { }
+                break;
+
+            case LauncherCategory.Website:
                 try
                 {
                     Process.Start(new ProcessStartInfo(result.Path)
@@ -187,6 +324,8 @@ public sealed class LauncherService
     /// <summary>以管理员身份运行（触发 UAC；用户取消时静默返回）。</summary>
     public void ExecuteAsAdministrator(LauncherResult result)
     {
+        if (result.Category is LauncherCategory.Folder or LauncherCategory.Website) return;
+
         try
         {
             ProcessStartInfo startInfo = result.Category == LauncherCategory.Command
@@ -212,8 +351,8 @@ public sealed class LauncherService
     /// <summary>在资源管理器中选中该文件或快捷方式。</summary>
     public void Reveal(LauncherResult result)
     {
-        if (result.Category == LauncherCategory.Command) return;
-        if (!File.Exists(result.Path)) return;
+        if (result.Category is LauncherCategory.Command or LauncherCategory.Website) return;
+        if (!File.Exists(result.Path) && !Directory.Exists(result.Path)) return;
 
         try
         {
@@ -228,7 +367,8 @@ public sealed class LauncherService
 
     /// <summary>当前项是否可以固定到快捷应用（应用结果或搜索到的可执行文件）。</summary>
     public bool CanPin(LauncherResult result) =>
-        result.Category is LauncherCategory.Application or LauncherCategory.File
+        !result.IsShortcutEntry
+        && result.Category is LauncherCategory.Application or LauncherCategory.File
         && !IsPinned(result.Path)
         && IsExecutablePath(result.Path);
 

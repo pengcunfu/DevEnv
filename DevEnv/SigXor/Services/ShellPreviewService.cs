@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using DevEnv.Core.Services;
 using DevEnv.Core.SigXor;
 using DevEnv.Host.SigXor.ViewModels;
 using DevEnv.Host.SigXor.Views;
@@ -20,7 +21,8 @@ public sealed class ShellPreviewService : IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly IDisposable _hotkeyRegistration;
     private readonly ExplorerSelectionService _selection = new();
-    private readonly LauncherService _launcher = new();
+    // 快捷应用同时搜索全局启动器里的本地应用 / 文件夹 / 网站
+    private readonly LauncherService _launcher = new(CoreServices.Shortcuts);
     private readonly Action _openSettings;
     private ShellPreviewViewModel? _viewModel;
     private ShellPreviewWindow? _window;
