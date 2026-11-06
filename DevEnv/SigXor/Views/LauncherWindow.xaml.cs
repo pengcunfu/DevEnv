@@ -182,6 +182,13 @@ public partial class LauncherWindow : Window
         });
     }
 
+    /// <summary>开发环境入口：收起快捷应用并显示主窗口。</summary>
+    private void OnOpenMainWindowEntry(object sender, RoutedEventArgs e)
+    {
+        CloseLauncher();
+        HostCallbacks.OnShowMainWindow?.Invoke();
+    }
+
     #endregion
 
     #region 列表交互

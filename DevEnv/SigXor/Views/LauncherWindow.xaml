@@ -122,13 +122,24 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource QuickEntryStyle}" Margin="0" Click="OnOpenTranslatorEntry"
+                <Button Style="{StaticResource QuickEntryStyle}" Click="OnOpenTranslatorEntry"
                         ToolTip="熔岩翻译（打开时填充剪贴板文本）">
                     <StackPanel>
                         <TextBlock Text="&#xE8C1;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="翻译" FontSize="10.5" Margin="0,5,0,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickEntryStyle}" Margin="0" Click="OnOpenMainWindowEntry"
+                        ToolTip="开发环境（显示主窗口）">
+                    <StackPanel>
+                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="开发环境" FontSize="10.5" Margin="0,5,0,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>

@@ -636,6 +636,7 @@ public partial class App : System.Windows.Application
         }));
         HostCallbacks.OnShowTranslator += request => Dispatcher.BeginInvoke(new Action(() => ShowTranslatorWindow(request)));
         HostCallbacks.OnShowClipboard += visible => Dispatcher.BeginInvoke(new Action(() => ShowClipboardWindow(visible)));
+        HostCallbacks.OnShowMainWindow += () => Dispatcher.BeginInvoke(new Action(ShowMainWindow));
 
         // SigXor 模块接线：核心层与工具目录通过 HostCallbacks 触发模块能力
         HostCallbacks.OnOpenFilePreview += () => Dispatcher.BeginInvoke(new Action(ShowFilePreviewDialog));

@@ -11,6 +11,8 @@ public static class HostCallbacks
     public static Action<string?>? OnActivateTab { get; set; }
     public static Action<TranslatorRequest>? OnShowTranslator { get; set; }
     public static Action<bool>? OnShowClipboard { get; set; }
+    /// <summary>显示并激活主窗口（从托盘、快捷应用等入口唤回）。</summary>
+    public static Action? OnShowMainWindow { get; set; }
     public static Action? OnBeforeExitForUpdate { get; set; }
     public static Action? OnExitApp { get; set; }
     public static Action<string?>? OnShowWindowHotkeyChanged { get; set; }
