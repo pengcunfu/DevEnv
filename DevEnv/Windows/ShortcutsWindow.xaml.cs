@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -23,6 +25,15 @@ public partial class ShortcutsWindow : Window
     /// <summary>右键菜单打开期间不自动收起。</summary>
     private bool _menuOpen;
 
+    /// <summary>预热期间（屏幕外显示一次又隐藏）不处理失焦收起。</summary>
+    private bool _prewarming;
+
+    /// <summary>正在淡出、尚未真正隐藏。</summary>
+    private bool _hiding;
+
+    /// <summary>是否已经预热过：预热后视觉树已构建，首次打开不再临时创建。</summary>
+    public bool IsPrewarmed { get; private set; }
+
     public ShortcutsWindow()
     {
         InitializeComponent();
@@ -41,6 +52,76 @@ public partial class ShortcutsWindow : Window
 
     private ShortcutLauncherViewModel ViewModel => (ShortcutLauncherViewModel)DataContext;
 
+    /// <summary>
+    /// 把窗口在内存里准备好：在屏幕外以完全透明、不抢焦点的状态显示一次再隐藏，
+    /// 让 WPF 完成 HWND 创建、模板加载、布局与首帧渲染。
+    ///
+    /// 不预热的话，首次打开时这些工作都在“已经可见”之后才做，表现出来就是
+    /// 先闪一下空白、再闪一下内容。预热之后 Show() 只是把已经画好的窗口摆出来。
+    /// </summary>
+    public void Prewarm()
+    {
+        if (IsPrewarmed || IsVisible)
+            return;
+
+        IsPrewarmed = true;
+        _prewarming = true;
+        var showActivated = ShowActivated;
+        try
+        {
+            ShowActivated = false;
+            // 用最终尺寸/位置预热：显示时不再挪窗口，DWM 也就没有重新合成可看
+            ApplyScreenBounds();
+
+            // 内容保持全透明（不碰 Window.Opacity）。
+            // 分层窗口会把最后一次合成结果缓存下来：若预热时把内容画成不透明，
+            // 下次 Show 的头一帧就是那张不透明缓存 —— 这正是「先闪一下」的来源。
+            Root.BeginAnimation(OpacityProperty, null);
+            Root.Opacity = 0;
+
+            Show();
+            UpdateLayout();
+            // 强制走完一次渲染，确保首帧真的画过（UpdateLayout 只排版不绘制）
+            Dispatcher.Invoke(new Action(() => { }), DispatcherPriority.Render);
+        }
+        catch
+        {
+            // 预热失败不影响正常打开（只是首帧慢一点），忽略即可
+        }
+        finally
+        {
+            // 保持 Root.Opacity = 0 再隐藏：缓存的表层是全透明的，Show 不会闪
+            Hide();
+            ShowActivated = showActivated;
+            _prewarming = false;
+        }
+    }
+
+    /// <summary>
+    /// 只在尺寸/位置确实不同时才改。显示过程中改窗口几何会让 DWM 重新合成，
+    /// 肉眼就是闪一下；预热已经是最终几何后，这里通常一次都不改。
+    /// </summary>
+    private void ApplyScreenBounds()
+    {
+        var width = SystemParameters.PrimaryScreenWidth;
+        var height = SystemParameters.PrimaryScreenHeight;
+
+        if (WindowState != WindowState.Normal)
+            WindowState = WindowState.Normal;
+
+        // 注意 NaN：新窗口没设过位置时 Left/Top 是 NaN，而 "Math.Abs(NaN) > 0.5" 恒为 false，
+        // 漏掉这个判断会让窗口带着 NaN 显示，由 WPF 临时挑一个位置（屏幕中间偏一点），
+        // 表现出来就是显示时窗口先出现在错误位置再跳过来。
+        if (double.IsNaN(Left) || Math.Abs(Left) > 0.5)
+            Left = 0;
+        if (double.IsNaN(Top) || Math.Abs(Top) > 0.5)
+            Top = 0;
+        if (double.IsNaN(Width) || Math.Abs(Width - width) > 0.5)
+            Width = width;
+        if (double.IsNaN(Height) || Math.Abs(Height - height) > 0.5)
+            Height = height;
+    }
+
     /// <summary>铺满主屏并切到指定页签（apps / folders / webs），每次打开都重新读取数据。</summary>
     public void ShowPage(string? pageId)
     {
@@ -49,37 +130,64 @@ public partial class ShortcutsWindow : Window
         ViewModel.Reload();
         ViewModel.SelectedPage = NormalizePageId(pageId);
 
-        Left = 0;
-        Top = 0;
-        Width = SystemParameters.PrimaryScreenWidth;
-        Height = SystemParameters.PrimaryScreenHeight;
-
         var wasVisible = IsVisible;
+        if (_hiding)
+        {
+            // 正在淡出时又要求打开：取消这次收起，直接淡回全不透明
+            _hiding = false;
+            _suppressDeactivate = false;
+            wasVisible = true;
+        }
+
         if (!wasVisible)
         {
-            Opacity = 0;
+            // 没预热过就先补一次：Show 之后再布局会看到一帧空白
+            if (!IsPrewarmed)
+                Prewarm();
+
+            ApplyScreenBounds();
+            // 淡入做在根元素上而不是 Window.Opacity：分层窗口改自身透明度
+            // 会先按不透明画一帧再被拉回 0，看起来就是闪
+            Root.BeginAnimation(OpacityProperty, null);
+            Root.Opacity = 0;
             Show();
         }
 
-        Activate();
-        // 从全局 Win 键唤起时前台焦点还在别的程序，普通 Activate 可能被系统拒绝
-        if (!IsActive)
-            SigXor.Services.WindowPlacement.ForceForeground(this);
+        _shownAtUtc = DateTime.UtcNow;
+        BringToForeground();
         FocusSearch();
 
         if (wasVisible)
         {
             // 已经开着（例如拖放后再打开）就别再淡入一次，否则会闪一下
-            BeginAnimation(OpacityProperty, null);
-            Opacity = 1;
+            Root.BeginAnimation(OpacityProperty, null);
+            Root.Opacity = 1;
             return;
         }
 
-        BeginAnimation(OpacityProperty, new DoubleAnimation(0d, 1d, TimeSpan.FromMilliseconds(150))
+        Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0d, 1d, TimeSpan.FromMilliseconds(150))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
         });
     }
+
+    /// <summary>
+    /// 把窗口拉到前台，但只做一次：
+    /// WPF 的 Activate() 是异步的，刚调用完 IsActive 仍可能是 false，
+    /// 据此再补一次 ForceForeground 会让窗口被反复激活、重绘（表现为闪一下）。
+    /// 这里直接比较系统的前台窗口句柄，只有确实不是自己时才强制前置。
+    /// </summary>
+    private void BringToForeground()
+    {
+        Activate();
+        if (GetForegroundWindow() == new WindowInteropHelper(this).Handle)
+            return;
+        // 从全局 Win 键 / 托盘唤起时本进程没有前台权限，普通 Activate 会被系统拒绝
+        SigXor.Services.WindowPlacement.ForceForeground(this);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
 
     private static int NormalizePageId(string? pageId) => pageId?.Trim().ToLowerInvariant() switch
     {
@@ -88,28 +196,57 @@ public partial class ShortcutsWindow : Window
         _ => 0,
     };
 
+    /// <summary>正在淡出、尚未真正隐藏（此刻再按 Win / 点托盘应按「重新打开」处理）。</summary>
+    public bool IsHiding => _hiding;
+
     /// <summary>从外部收起（Win 键再次按下、托盘入口等）。</summary>
     public void Dismiss() => HideLauncher();
 
     /// <summary>因失去焦点而自动收起时触发；宿主据此判断紧接着的托盘点击是「关闭」。</summary>
     public event Action? AutoDismissed;
 
+    /// <summary>
+    /// 刚显示的一小段时间内忽略「失去焦点就收起」：
+    /// 从别的程序按下 Win 唤起时，激活要等系统把前台权限交过来，
+    /// 这段空窗里会先收到一次 Deactivated，照常处理就会显示后立刻收起（又是一次闪）。
+    /// </summary>
+    private static readonly TimeSpan FocusGrace = TimeSpan.FromMilliseconds(400);
+    private DateTime _shownAtUtc;
+
+    /// <summary>
+    /// 收起：先淡出到全透明，**在可见状态下**完成这一帧渲染，再真正 Hide。
+    ///
+    /// 直接 Hide 后再把内容设成全透明是没用的——窗口已经不可见，不会再渲染，
+    /// 分层窗口缓存里留着的仍是不透明画面，下次 Show 的头一帧就会把它贴出来。
+    /// 这就是「第一次打开正常、之后每次打开都闪一下」的原因。
+    /// </summary>
     private void HideLauncher()
     {
-        if (!IsVisible)
+        if (!IsVisible || _hiding)
             return;
 
         _suppressDeactivate = true;
-        try
-        {
-            Hide();
-        }
-        finally
-        {
-            _suppressDeactivate = false;
-        }
+        _hiding = true;
 
-        BeginAnimation(OpacityProperty, null);
+        var fade = new DoubleAnimation(0d, TimeSpan.FromMilliseconds(110))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
+        };
+        fade.Completed += (_, _) =>
+        {
+            Root.BeginAnimation(OpacityProperty, null);
+            Root.Opacity = 0;
+            try
+            {
+                Hide();
+            }
+            finally
+            {
+                _suppressDeactivate = false;
+                _hiding = false;
+            }
+        };
+        Root.BeginAnimation(OpacityProperty, fade);
     }
 
     private void FocusSearch()
@@ -284,16 +421,18 @@ public partial class ShortcutsWindow : Window
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
-        if (_suppressDeactivate || _menuOpen || !IsVisible)
+        if (_suppressDeactivate || _prewarming || _menuOpen || !IsVisible)
             return;
 
         Dispatcher.BeginInvoke(new Action(() =>
         {
-            if (IsVisible && !IsActive && !_suppressDeactivate && !_menuOpen)
-            {
-                HideLauncher();
-                AutoDismissed?.Invoke();
-            }
+            if (!IsVisible || !IsActive || _suppressDeactivate || _menuOpen)
+                return;
+            if (DateTime.UtcNow - _shownAtUtc < FocusGrace)
+                return;
+
+            HideLauncher();
+            AutoDismissed?.Invoke();
         }), DispatcherPriority.Input);
     }
 

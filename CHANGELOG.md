@@ -99,6 +99,9 @@
 
 ### Fixed
 
+- 全局启动器改为**启动时预热**：App 启动后在应用空闲时把窗口在屏幕外、透明、不抢焦点的状态下显示一次再隐藏，完成 HWND 创建、模板加载、布局与首帧渲染；之后 Win 键 / 托盘菜单唤起只是把已有窗口摆出来，不再临时创建，避免首次打开先闪空白再闪内容。`ShortcutWindowHost.Prewarm()` 失败时静默忽略，只是首帧慢一点
+- 修复全局启动器显示时先闪一下：新窗口的 `Left` / `Top` 初始为 `NaN`，而 `Math.Abs(NaN) > 0.5` 恒为 false，几何修正被跳过，`Show()` 时由 WPF 临时挑位置（屏幕中部），窗口先出现在错误位置再跳到全屏；现改为几何比较同时判 `NaN`，并在预热阶段就落在最终位置。另外分层窗口会缓存最后一次合成结果：原先收起时先 `Hide()` 再把内容设成全透明，窗口已不可见、不再渲染，缓存里留的仍是不透明画面，**下次 `Show` 的头一帧就是它**——这就是「第一次打开正常、之后每次打开都闪一下」的原因。现在收起改为**先淡出到全透明、窗口仍可见时完成这一帧渲染，再 `Hide()`**，缓存里存的是透明画面；淡出期间再次唤起会取消收起直接淡回
+- 修复全局启动器进入时闪两下：淡入从 `Window.Opacity` 改到根元素的 `Opacity`（分层窗口首次显示会先按不透明画一帧再被拉回 0），激活改为先比较系统前台窗口、只在确实不是自己时强制前置一次，并删掉宿主里重复的 `Show()` / `Activate()`；新增 400ms 激活宽限，避免前台权限交接期间收到 Deactivated 就自行收起
 - 修复托盘图标单击无反应：此前只绑定了 `DoubleClick`，单击图标什么也不会发生。现在单击托盘图标即显示 / 唤回主窗口（右键仍弹出菜单），并强制置前拿到焦点；托盘事件统一经 `Dispatcher` 回 UI 线程处理
 - 修复镜像配置的遗留状态：pip 切回官方源时清理旧的 `trusted-host`；Maven 只替换 Lava 托管的 mirror（旧版本按域名生成的条目一并清理），不再整份覆盖 `settings.xml`；NuGet 切换镜像时清掉上一轮的 `Lava-*` 源，恢复官方源改用 update / enable，避免先删后加失败
 - 修复下拉框选中项显示成对象类型名（如 `DevEnv.Core.Translator.Models.TranslateSiteInfo`）：自定义 `ComboBox` 模板的选中项 `ContentPresenter` 漏了 `ContentTemplateSelector`，而 `DisplayMemberPath` 在 WPF 里是通过 `ItemTemplateSelector` 生效的，`SelectionBoxItemTemplate` 此时为 `null`。补上该绑定后，默认翻译引擎、软件版本、镜像工具等下拉框恢复显示正常名称

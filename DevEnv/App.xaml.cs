@@ -227,6 +227,12 @@ public partial class App : System.Windows.Application
         _clipboardWatcher = new ClipboardWatcher();
         _clipboardWatcher.Captured += OnClipboardCaptured;
 
+        // 启动后在后台空闲时把全局启动器准备好（屏幕外完成布局与首帧渲染），
+        // 之后 Win 键 / 托盘菜单唤起时只是把窗口摆出来，不再临时创建、不会闪。
+        // 放到 ApplicationIdle 是为了不拖慢启动本身。
+        Dispatcher.BeginInvoke(new Action(ShortcutWindowHost.Prewarm),
+            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
         // Win 键拦截放在启动流程最后安装：前面的探针 / 提权子进程早已 return，
         // 不会把键盘钩子带进那些只跑一次就退出的进程。
         ApplyWinKeyLauncher(CoreServices.Settings.GetConfig().WinKeyLauncher);

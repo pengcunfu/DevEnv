@@ -55,6 +55,9 @@
 
 - 入口：主菜单「全局启动器」或单独按 Win 键 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站是三个**横向页签**（`ShortcutLauncherViewModel`）。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
 - 交互：单击图标启动（设置「双击启动快捷方式」打开时按双击判断）、`Esc` / 点击空白处关闭、`←` / `→` 切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。
+- **预热要落在最终几何、内容保持全透明**：`ApplyScreenBounds` 的差异比较必须同时处理 `NaN`（新窗口 `Left/Top/Width/Height` 是 `NaN`，`Math.Abs(NaN) > x` 恒 false，漏判会让窗口带着 `NaN` 显示、由 WPF 临时挑位置）；**收起必须先淡出、后 `Hide()`**：分层窗口缓存最后一次合成结果，先 `Hide()` 再设透明是无效的（不可见就不会再渲染），下一次 `Show` 会把不透明缓存当作第一帧贴出来——表现为「第一次打开正常、之后每次都闪」。现在的顺序是 `Root.Opacity` 动画到 0 → `Completed` 里 `Hide()`；`IsHiding` 期间再次唤起会取消收起。
+- **启动时预热，不要按需创建**：`App.OnStartup` 在 `DispatcherPriority.ApplicationIdle` 调 `ShortcutWindowHost.Prewarm()`，窗口在屏幕外（-20000）、`Opacity=0`、`ShowActivated=false` 下显示一次再隐藏，让 WPF 完成 HWND / 模板 / 布局 / 首帧；`ShowPage` 里另有保险，未预热就直接 `Show` 时会先补预热。按需创建会让“可见”发生在布局之前，表现为先闪空白再闪内容。
+- **显示/激活只做一次**：`ShortcutWindowHost.Open` 不再补 `Show()` / `Activate()`，统一由 `ShowPage` 负责；淡入动画做在根元素 `Root.Opacity` 上而不是 `Window.Opacity`（`AllowsTransparency` 的分层窗口首次显示会先画一帧不透明，再被窗口透明度拉回 0，看起来就是闪两下）；激活用 `GetForegroundWindow()` 判断，只在确实不在前台时调用一次 `WindowPlacement.ForceForeground`；`Deactivated` 有 400ms 宽限，前台权限交接期间的假 Deactivated 不会把窗口关掉。
 - 数据仍走 `ShortcutService`；原先的 `AppsView` / `FoldersView` / `WebsView` 与对应 ViewModel **已删除**，不要再恢复卡片页。
 - `DEVENV_START_PAGE=apps|folders|webs`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签；窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
 - 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 56px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。

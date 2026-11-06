@@ -19,26 +19,36 @@ public static class ShortcutWindowHost
     private static ShortcutsWindow? _window;
     private static DateTime _lastAutoDismissUtc = DateTime.MinValue;
 
+    /// <summary>
+    /// 启动后调用一次：在内存里建好窗口并完成布局与首帧渲染（屏幕外、不可见）。
+    /// 每次打开都临时创建窗口会让首次显示先闪空白，预热后 Show 只是把窗口摆出来。
+    /// </summary>
+    public static void Prewarm() => EnsureWindow().Prewarm();
+
+    private static ShortcutsWindow EnsureWindow()
+    {
+        if (_window is not null)
+            return _window;
+
+        var window = new ShortcutsWindow();
+        window.Closed += (_, _) => _window = null;
+        window.AutoDismissed += () => _lastAutoDismissUtc = DateTime.UtcNow;
+        _window = window;
+        return window;
+    }
+
     /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs。</summary>
     public static void Open(string? pageId = null)
     {
-        if (_window is null)
-        {
-            _window = new ShortcutsWindow();
-            _window.Closed += (_, _) => _window = null;
-            _window.AutoDismissed += () => _lastAutoDismissUtc = DateTime.UtcNow;
-        }
-
-        var window = _window;
+        var window = EnsureWindow();
         if (window.Owner is not null)
             window.Owner = null;
-
-        window.ShowPage(pageId);
-        if (!window.IsVisible)
-            window.Show();
         if (window.WindowState == WindowState.Minimized)
             window.WindowState = WindowState.Normal;
-        window.Activate();
+
+        // Show / 激活只在 ShowPage 里做一次：这里再补 Show / Activate 会让窗口
+        // 被重复激活、重绘，表现为进入时闪一下。
+        window.ShowPage(pageId);
     }
 
     /// <summary>
@@ -48,9 +58,10 @@ public static class ShortcutWindowHost
     /// </summary>
     public static bool Toggle()
     {
-        if (_window is { IsVisible: true })
+        // 正在淡出时再按一次 = 想重新打开，交给 Open 取消这次收起
+        if (_window is { IsVisible: true } window && !window.IsHiding)
         {
-            _window.Dismiss();
+            window.Dismiss();
             return true;
         }
 

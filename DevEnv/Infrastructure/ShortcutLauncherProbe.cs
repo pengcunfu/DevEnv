@@ -45,24 +45,39 @@ public static class ShortcutLauncherProbe
         ShortcutsWindow? window = null;
         try
         {
-            // 放到屏幕外、不抢激活，避免探针时真的铺满桌面
             window = new ShortcutsWindow
             {
-                Left = -4000,
-                Top = -4000,
-                Width = 1100,
-                Height = 720,
-                Opacity = 0,
                 ShowInTaskbar = false,
                 ShowActivated = false,
             };
+
+            // 预热：以最终几何、全透明、不激活的状态显示一次再隐藏
+            window.Prewarm();
+            Pump();
+            Check("预热后保持隐藏（不打扰当前前台程序）", !window.IsVisible);
+            Check("预热已完成", window.IsPrewarmed);
+            // 预热必须落在最终几何上，否则 Show 时还要挪窗口，DWM 重新合成会闪
+            Check("预热使用最终几何（显示时不再移动窗口）",
+                Math.Abs(window.Left) < 0.5 && Math.Abs(window.Top) < 0.5,
+                $"Left={window.Left}, Top={window.Top}");
+            // 隐藏时内容必须留在全透明：分层窗口缓存的最后一帧会直接在下次 Show 时露出
+            Check("预热后内容保持全透明（缓存的表层不会闪）",
+                window.Root.Opacity < 0.001, $"Root.Opacity={window.Root.Opacity}");
+
+            // 后面的渲染检查放到屏幕外，避免真的盖住用户桌面
+            window.Left = -4000;
+            window.Top = -4000;
             window.Show();
+            window.Root.Opacity = 1;
             Pump();
             window.UpdateLayout();
 
             Check("启动器窗口可正常加载", window.IsVisible);
             // 全局启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
             Check("全局启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
+            // 淡入必须做在根元素上：分层窗口改自己的 Opacity 会先画一帧不透明再淡入，闪两下
+            Check("淡入作用在根元素上（窗口 Opacity 恒为 1）", Math.Abs(window.Opacity - 1) < 0.001,
+                $"Opacity={window.Opacity}");
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
@@ -100,6 +115,23 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("清空搜索后退出搜索模式", !vm.IsSearching);
 
+            // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：
+            // 收起必须先淡出到全透明再隐藏，否则分层窗口缓存的是不透明画面，下次 Show 会闪。
+            window.Dismiss();
+            // 关键顺序：先淡出、窗口仍然可见，淡完才 Hide。
+            // 若先 Hide 再把内容设成全透明，窗口已不可见、不会重新渲染，
+            // 分层窗口缓存里仍是不透明画面，下次 Show 会闪出旧画面。
+            Check("收起时先淡出、窗口仍可见（缓存才会更新为透明）",
+                window.IsHiding && window.IsVisible);
+            WaitUntil(() => !window.IsVisible);
+            Check("收起完成并隐藏", !window.IsVisible);
+            Check("收起后缓存为全透明（下次 Show 不会闪出旧画面）",
+                window.Root.Opacity < 0.001, $"Root.Opacity={window.Root.Opacity}");
+
+            window.ShowPage("apps");
+            Pump();
+            Check("再次打开仍正常显示", window.IsVisible && !window.IsHiding);
+
             Check("无数据绑定错误", bindingErrors.Count == 0,
                 bindingErrors.Count == 0 ? null : string.Join(" | ", bindingErrors.Take(5)));
         }
@@ -124,6 +156,17 @@ public static class ShortcutLauncherProbe
         }
 
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>反复跑消息循环直到条件成立（最多等 timeoutMs）。动画收尾依赖计时器，必须泵消息。</summary>
+    private static void WaitUntil(Func<bool> condition, int timeoutMs = 2000)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (!condition() && stopwatch.ElapsedMilliseconds < timeoutMs)
+        {
+            Pump();
+            Thread.Sleep(10);
+        }
     }
 
     /// <summary>跑一轮消息循环，让布局、绑定与 Loaded 事件落定。</summary>
