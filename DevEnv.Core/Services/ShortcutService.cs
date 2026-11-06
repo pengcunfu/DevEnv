@@ -13,6 +13,7 @@ public sealed class ShortcutService
     private const string NativeKey = "NativeAtomList";
     private const string FolderKey = "FolderAtomList";
     private const string WebKey = "WebAtomList";
+    private const string LauncherLayoutKey = "LauncherLayout";
 
     /// <summary>实用工具已迁到顶部菜单，系统工具页只保留 Windows 系统入口。</summary>
     private static readonly HashSet<string> MenuOnlyKeys = new(StringComparer.OrdinalIgnoreCase)
@@ -374,6 +375,18 @@ public sealed class ShortcutService
         WindowsToolRunner.TryRun(key, out var error)
             ? OperationResult.Success()
             : OperationResult.Fail(error ?? "启动失败");
+
+    #endregion
+
+    #region 启动器布局
+
+    /// <summary>读取全局启动器的卡片顺序与文件夹分组；未保存过时返回空布局，由调用方对账。</summary>
+    public LauncherLayout ReadLauncherLayout() =>
+        LauncherLayout.FromJson(_store.GetList(LauncherLayoutKey));
+
+    /// <summary>保存全局启动器的卡片顺序与文件夹分组。</summary>
+    public void SaveLauncherLayout(LauncherLayout layout) =>
+        _store.SaveList(LauncherLayoutKey, layout.ToJson());
 
     #endregion
 

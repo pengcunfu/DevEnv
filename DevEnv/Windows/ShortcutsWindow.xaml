@@ -16,7 +16,8 @@
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
     <!-- 全屏启动器（Launchpad 样式）：铺满屏幕的半透明深色背景上，
-         顶部搜索、中部大图标网格、底部横向页签；单击图标即启动，Esc / 点击空白处关闭。 -->
+         顶部搜索、中部大图标网格、底部横向页签（本地应用 / 文件夹 / 网站 / 系统工具）；
+         单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
     <Window.DataContext>
         <vm:ShortcutLauncherViewModel />
     </Window.DataContext>
@@ -39,7 +40,7 @@
                                           VerticalAlignment="Center"
                                           Focusable="False" />
                             <TextBlock x:Name="Placeholder"
-                                       Text="搜索应用、文件夹或网站"
+                                       Text="搜索应用、文件夹、网站或系统工具"
                                        FontSize="15"
                                        Foreground="#80FFFFFF"
                                        VerticalAlignment="Center"
@@ -82,6 +83,11 @@
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter TargetName="Tile" Property="BorderBrush" Value="#8C5B9BFF" />
                             </Trigger>
+                            <!-- 框选 / Ctrl+单击的选中态 -->
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="Tile" Property="Background" Value="#335B9BFF" />
+                                <Setter TargetName="Tile" Property="BorderBrush" Value="#FF5B9BFF" />
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -112,6 +118,35 @@
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Pill" Property="Background" Value="#33FFFFFF" />
                                 <Setter Property="Foreground" Value="#FFFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 文件夹内视图的返回按钮 -->
+        <Style x:Key="LaunchpadTextButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#E6FFFFFF" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="12"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#26FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#3DFFFFFF" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -151,7 +186,10 @@
     </Window.Resources>
 
     <Grid x:Name="Root"
-          PreviewMouseLeftButtonDown="OnRootPreviewMouseLeftButtonDown">
+          PreviewMouseLeftButtonDown="OnRootPreviewMouseLeftButtonDown"
+          PreviewMouseMove="OnRootPreviewMouseMove"
+          PreviewMouseLeftButtonUp="OnRootPreviewMouseLeftButtonUp"
+          PreviewMouseWheel="OnPreviewMouseWheel">
         <Grid.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Offset="0" Color="#E6141820" />
@@ -166,12 +204,16 @@
                 <MenuItem Header="添加文件夹…" Click="OnAddFolderMenu" />
                 <MenuItem Header="添加网站…" Click="OnAddWebMenu" />
                 <Separator />
+                <MenuItem x:Name="MergeSelectionMenu" Header="合并为文件夹…" Click="OnMergeSelectionMenu"
+                          Visibility="Collapsed" />
+                <Separator />
                 <MenuItem Header="刷新" Click="OnReloadMenu" />
                 <MenuItem Header="关闭启动器" Click="OnCloseMenu" />
             </ContextMenu>
         </Grid.ContextMenu>
 
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
@@ -183,11 +225,12 @@
                    HorizontalAlignment="Left"
                    Text="拖入 .exe 或文件夹即可添加"
                    FontSize="11"
-                   Foreground="#73FFFFFF" />
+                   Foreground="#73FFFFFF"
+                   Visibility="{Binding CanAddOnCurrentPage, Converter={StaticResource TrueToVisibility}}" />
         <TextBlock Grid.Row="0"
                    Margin="0,24,28,0"
                    HorizontalAlignment="Right"
-                   Text="Esc 关闭"
+                   Text="拖动空白框选 · Esc 关闭"
                    FontSize="11"
                    Foreground="#73FFFFFF" />
 
@@ -221,8 +264,32 @@
             </Grid>
         </Border>
 
+        <!-- 文件夹内视图：返回 + 文件夹名 -->
+        <Border x:Name="FolderHeader"
+                Grid.Row="1"
+                Margin="0,8,0,0"
+                HorizontalAlignment="Center"
+                Padding="4,2"
+                Background="#1FFFFFFF"
+                CornerRadius="16"
+                Visibility="{Binding IsInsideGroup, Converter={StaticResource TrueToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <Button Style="{StaticResource LaunchpadTextButton}" Click="OnFolderBack"
+                        Content="‹ 返回" FontSize="12.5" />
+                <TextBlock Margin="10,0,12,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding CurrentGroup.Name}"
+                           FontSize="13"
+                           Foreground="#F2FFFFFF" />
+                <TextBlock VerticalAlignment="Center"
+                           Text="{Binding Summary}"
+                           FontSize="11.5"
+                           Foreground="#80FFFFFF" />
+            </StackPanel>
+        </Border>
+
         <!-- 中部：图标网格 -->
-        <Grid Grid.Row="1" Margin="0,16,0,0">
+        <Grid Grid.Row="2" Margin="0,16,0,0">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Padding="24,0,24,0"
@@ -240,6 +307,8 @@
                             <Button Style="{StaticResource LaunchpadTile}"
                                     ToolTip="{Binding TargetPath}"
                                     MouseLeftButtonUp="OnEntryMouseUp"
+                                    PreviewMouseLeftButtonDown="OnEntryPreviewMouseLeftButtonDown"
+                                    PreviewMouseMove="OnEntryPreviewMouseMove"
                                     ContextMenuOpening="OnEntryContextMenuOpening">
                                 <StackPanel Width="116">
                                     <Grid Height="76">
@@ -248,21 +317,52 @@
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
                                                 Background="#1FFFFFFF"
-                                                CornerRadius="17">
+                                                CornerRadius="17"
+                                                Tag="IconDropZone">
                                             <Grid>
-                                                <Image Width="56"
-                                                       Height="56"
-                                                       Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
-                                                       Stretch="Uniform"
-                                                       RenderOptions.BitmapScalingMode="HighQuality"
-                                                       Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
-                                                <TextBlock Text="{Binding KindGlyph}"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"
-                                                           FontFamily="Segoe MDL2 Assets"
-                                                           FontSize="30"
-                                                           Foreground="#E6FFFFFF"
-                                                           Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                                <!-- 普通卡片：单图标 -->
+                                                <Grid Visibility="{Binding IsGroup, Converter={StaticResource FalseToVisibility}}">
+                                                    <Image Width="56"
+                                                           Height="56"
+                                                           Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
+                                                           Stretch="Uniform"
+                                                           RenderOptions.BitmapScalingMode="HighQuality"
+                                                           Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
+                                                    <TextBlock Text="{Binding KindGlyph}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               FontFamily="Segoe MDL2 Assets"
+                                                               FontSize="30"
+                                                               Foreground="#E6FFFFFF"
+                                                               Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                                </Grid>
+                                                <!-- 启动器文件夹：前四项 2×2 预览 -->
+                                                <ItemsControl Margin="7"
+                                                              ItemsSource="{Binding GroupPreview}"
+                                                              Visibility="{Binding IsGroup, Converter={StaticResource TrueToVisibility}}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <UniformGrid Rows="2" Columns="2" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Width="27" Height="27">
+                                                                <Image Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
+                                                                       Stretch="Uniform"
+                                                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                                                       Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
+                                                                <TextBlock Text="{Binding KindGlyph}"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           FontFamily="Segoe MDL2 Assets"
+                                                                           FontSize="14"
+                                                                           Foreground="#E6FFFFFF"
+                                                                           Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </Grid>
                                         </Border>
                                     </Grid>
@@ -286,6 +386,14 @@
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding DataContext.IsSearching, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                  Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                    <!-- 系统工具的卡片始终显示分类 -->
+                                                    <DataTrigger Binding="{Binding IsToolCard}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                    <!-- 文件夹磁贴始终显示条目数 -->
+                                                    <DataTrigger Binding="{Binding IsGroup}" Value="True">
                                                         <Setter Property="Visibility" Value="Visible" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -359,14 +467,14 @@
                            Foreground="#59FFFFFF" />
                 <TextBlock Margin="0,12,0,0"
                            HorizontalAlignment="Center"
-                           Text="没有找到匹配的快捷方式"
+                           Text="没有找到匹配项"
                            FontSize="15"
                            Foreground="#B3FFFFFF" />
             </StackPanel>
         </Grid>
 
         <!-- 底部：提示 + 横向页签 -->
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
                     Margin="0,4,0,34"
                     HorizontalAlignment="Center">
             <TextBlock Margin="0,0,0,10"
@@ -405,6 +513,9 @@
                             <DataTrigger Binding="{Binding IsSearching}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding IsInsideGroup}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </ListBox.Style>
@@ -428,17 +539,43 @@
         </StackPanel>
 
         <!-- 右下角添加 -->
-        <Button Grid.Row="2"
+        <Button Grid.Row="3"
                 Margin="0,0,40,36"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Style="{StaticResource LaunchpadCircleButton}"
                 ToolTip="添加当前页的快捷方式"
+                Visibility="{Binding CanAddOnCurrentPage, Converter={StaticResource TrueToVisibility}}"
                 Click="OnAddClick">
             <TextBlock Text="&#xE710;"
                        FontFamily="Segoe MDL2 Assets"
                        FontSize="16"
                        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
         </Button>
+
+        <!-- 框选矩形与拖拽落点提示；不参与命中测试，避免挡住卡片和右键菜单 -->
+        <Canvas x:Name="SelectionLayer"
+                Grid.RowSpan="4"
+                IsHitTestVisible="False"
+                ClipToBounds="True">
+            <Rectangle x:Name="SelectionRect"
+                       Visibility="Collapsed"
+                       Fill="#265B9BFF"
+                       Stroke="#FF5B9BFF"
+                       StrokeThickness="1.5" />
+            <Border x:Name="DropHighlight"
+                    Visibility="Collapsed"
+                    Background="#265B9BFF"
+                    BorderBrush="#FF5B9BFF"
+                    BorderThickness="2"
+                    CornerRadius="16" />
+            <Rectangle x:Name="InsertionBar"
+                       Width="3"
+                       Height="110"
+                       RadiusX="1.5"
+                       RadiusY="1.5"
+                       Fill="#FF5B9BFF"
+                       Visibility="Collapsed" />
+        </Canvas>
     </Grid>
 </Window>

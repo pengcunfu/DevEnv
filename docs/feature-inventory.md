@@ -42,8 +42,8 @@
 | 分组 | 接口数 | 现在的实现 | 界面入口 | 状态 |
 |------|-------:|-----------|---------|------|
 | 主壳 / 配置 / 对话框 | 12 | `SettingsService` + `HostCallbacks` | 设置页 / 各页按钮 / 菜单 | ✅ |
-| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` | 启动器（Launchpad）三个横向页签 | ✅ |
-| 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 系统工具页 | ✅ |
+| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` | 启动器（Launchpad）本地应用 / 文件夹 / 网站三页 | ✅ |
+| 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 启动器（Launchpad）「系统工具」页签 | ✅ |
 | 进程监控 | 3 | `ProcessService` | 进程监控页 | ✅ |
 | 网络监控 | 8 | `NetworkService` | 网络监控页（流量/端口/测速） | ✅ |
 | 熔岩 - 进程与目录 | 9 | `LavaService` | 熔岩环境页 | ✅ |
@@ -59,13 +59,13 @@
 
 **逐项去向**（接口 → 服务方法 → 界面）：
 
-- `GET/PUT /api/config` → `SettingsService.GetConfig / Save`（保存时派发开机自启、托盘、热键副作用）→ 设置页
+- `GET/PUT /api/config` → `SettingsService.GetConfig / SaveGeneral`（常规设置，派发开机自启、托盘副作用）；快捷键由 `SaveHotkeys` 单独写入并派发 `OnGlobalHotkeysChanged`（「设置 → 快捷键」页）
 - `GET /api/health` → 程序集版本 → 状态栏 + 关于窗（不再需要 HTTP 回环）
 - `/api/session` → **取消**（已无 HTTP，token 无意义）
 - `/api/nav` → `ViewFactory.NavItems`（前端原本就硬编码，等价迁移）
 - `POST /api/shell/*`（7 个）→ `HostCallbacks` 委托 → WPF 对话框 / 独立窗 / 页面跳转
 - `native-apps / folders / webs`（16 个）→ `ShortcutService` 同名方法 → 三个卡片页
-- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 系统工具页（18 个磁贴）
+- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 全局启动器「系统工具」页签（19 个磁贴）
 - `/api/processes` 三件套 → `ProcessService.GetSnapshot / Kill / OpenFolder` → 进程监控页
 - `/api/network/*` 八个 → `NetworkService`（含测速状态机原样搬运）→ 网络监控页三页签
 - `/api/lava/*` 二十一个 → `LavaService` → 熔岩环境页七页签
@@ -91,7 +91,7 @@
 | `LavaPage`（7 个 Tab） | `LavaView`（7 个页签） | `lava` | ✅ |
 | `NetworkPage`（3 个 Tab） | `NetworkView`（3 个页签） | `network` | ✅ |
 | `ProcessesPage` | `ProcessesView` | `processes` | ✅ |
-| `ToolsPage` | `ToolsView` | `tools` | ✅ |
+| 系统工具（启动器页签） | `ShortcutsWindow`（系统工具页签） | `tools` | ✅ |
 | `JsonToolPage` | `JsonToolView` | `tools/json` | ✅ |
 | `HostsToolPage` | `HostsToolView` | `tools/hosts` | ✅ |
 | `HashToolPage` | `HashToolView` | `tools/hash` | ✅ |
@@ -112,7 +112,6 @@
 | LavaView | 28 | 0 | 27 | 4 |
 | NetworkView | 7 | 0 | 17 | 2 |
 | ProcessesView | 5 | 0 | 6 | 2 |
-| ToolsView | 1 | 0 | 0 | 1 |
 | JsonToolView | 2 | 0 | 0 | 1 |
 | HostsToolView | 3 | 0 | 0 | 1 |
 | HashToolView | 2 | 0 | 0 | 3 |
@@ -164,6 +163,7 @@
 |---|------|
 | 托盘双击唤醒 / 退出 / 关闭主窗进托盘 | 点关闭只隐藏，不退进程 |
 | 快捷应用顶部翻译 / 剪贴板 / 开发环境入口 | 翻译窗填充剪贴板文本 / 剪贴板窗前置 / 显示主窗口 |
+| 全局启动器框选 / 拖拽排序 / 启动器文件夹 | 点击空白不关窗；多选高亮；重启后顺序与分组保留；文件夹可展开、重命名、解散、移出条目 |
 | 拖放 .exe 与文件夹进主窗 | 落到「快捷方式」窗口的对应页签并刷新 |
 | 熔岩：启停服务、开始下载、活动/历史刷新、镜像测速与切换、环境扫描 | 与迁移前一致 |
 | 网络/进程：结束进程、结束进程树、端口结束、测速进度 | 与迁移前一致 |

@@ -87,7 +87,7 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        // 本地应用 / 文件夹 / 网站已移到独立的启动器窗口，
+        // 本地应用 / 文件夹 / 网站 / 系统工具已移到独立的启动器窗口，
         // 拖放、DEVENV_START_PAGE 等入口统一改为打开该窗口的对应页签。
         // 延后到空闲时打开：启动阶段（DEVENV_START_PAGE）主窗还没 Show，
         // 立刻弹出的全屏启动器会被主窗自己的激活操作挤掉。
@@ -177,10 +177,6 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSigXorBrowser() => HostCallbacks.OnOpenSigXorBrowser?.Invoke();
 
-    /// <summary>SigXor 模块：关于窗口。</summary>
-    [RelayCommand]
-    private void OpenSigXorAbout() => HostCallbacks.OnOpenSigXorAbout?.Invoke();
-
     /// <summary>工具菜单项：启动对应 Windows 工具或跳到内置工具页。</summary>
     [RelayCommand]
     private void RunSystemTool(string? key)
@@ -196,7 +192,8 @@ public sealed partial class MainViewModel : ObservableObject
     private static bool IsShortcutPage(string id) =>
         id.Equals("apps", StringComparison.OrdinalIgnoreCase)
         || id.Equals("folders", StringComparison.OrdinalIgnoreCase)
-        || id.Equals("webs", StringComparison.OrdinalIgnoreCase);
+        || id.Equals("webs", StringComparison.OrdinalIgnoreCase)
+        || id.Equals("tools", StringComparison.OrdinalIgnoreCase);
 
     private static string CurrentVersion()
     {

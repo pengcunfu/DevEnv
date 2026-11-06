@@ -11,7 +11,7 @@ namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
 /// 全局启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
-/// 这里加载启动器、遍历三个页签、跑一次搜索，并收集数据绑定错误。
+/// 这里加载启动器、遍历四个页签、跑一次搜索，并收集数据绑定错误。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
 public static class ShortcutLauncherProbe
@@ -81,7 +81,7 @@ public static class ShortcutLauncherProbe
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
-            Check("页签为横向三个", vm.Pages.Count == 3, string.Join(" / ", vm.Pages.Select(p => p.Title)));
+            Check("页签为横向四个", vm.Pages.Count == 4, string.Join(" / ", vm.Pages.Select(p => p.Title)));
             Check("默认显示本地应用", vm.SelectedPage == 0);
             Check("底部页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
             Check("图标网格已生成卡片容器",
@@ -94,6 +94,67 @@ public static class ShortcutLauncherProbe
                 Pump();
                 Check($"页签「{page.Title}」可切换（{vm.VisibleEntries.Count} 项）",
                     vm.SelectedPage == page.Index && window.PageTabs.SelectedIndex == page.Index);
+            }
+
+            // 系统工具页签应载入完整的 Windows 工具目录，并且全部是 Tool 类型
+            var toolsPage = vm.Pages.First(p => p.Title == "系统工具");
+            vm.SelectedPage = toolsPage.Index;
+            Pump();
+            Check("系统工具页签加载工具目录",
+                vm.VisibleEntries.Count > 0 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.Tool),
+                $"共 {vm.VisibleEntries.Count} 项");
+            Check("系统工具页签隐藏「添加」按钮", !vm.CanAddOnCurrentPage);
+            Check("系统工具页签禁止框选与拖动", !vm.IsEditableView);
+
+            vm.SelectedPage = 0;
+            vm.Query = string.Empty;
+            Pump();
+            Check("本地应用页允许框选与拖动", vm.IsEditableView && vm.CanCreateGroup);
+            Check("每个页签的卡片标识不重复",
+                vm.Pages.Where(p => p.Index != toolsPage.Index).All(p =>
+                {
+                    vm.SelectedPage = p.Index;
+                    Pump();
+                    var keys = vm.VisibleEntries.Select(e => e.Key).ToList();
+                    return keys.Count == keys.Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                }));
+
+            vm.SelectedPage = 0;
+            Pump();
+            if (vm.VisibleEntries.FirstOrDefault() is { } selectable)
+            {
+                vm.SetSelection([selectable]);
+                Check("选中卡片后记录选择", vm.HasSelection && vm.SelectedEntries.Count == 1);
+                vm.ClearSelection();
+                Check("清空选择", !vm.HasSelection);
+            }
+
+            vm.SelectedPage = 0;
+            Pump();
+            if (vm.AddDiagnosticGroup())
+            {
+                window.UpdateLayout();
+                Pump();
+                var group = vm.VisibleEntries.FirstOrDefault(entry => entry.IsGroup);
+                Check("启动器文件夹磁贴可渲染（含 2×2 预览）", group is not null);
+                if (group is not null)
+                {
+                    vm.OpenGroup(group);
+                    Pump();
+                    Check("打开启动器文件夹后显示组内条目",
+                        vm.IsInsideGroup && vm.VisibleEntries.Count == group.GroupItems.Count);
+                    Check("文件夹内禁止再建文件夹", !vm.CanCreateGroup);
+                    vm.CloseGroup();
+                    Pump();
+                    Check("返回后回到页签视图", !vm.IsInsideGroup);
+                }
+
+                vm.RemoveDiagnosticGroup();
+                Pump();
+            }
+            else
+            {
+                report.AppendLine("SKIP  本地应用不足 2 项，跳过启动器文件夹检查");
             }
 
             vm.SelectedPage = 0;
@@ -110,6 +171,7 @@ public static class ShortcutLauncherProbe
             vm.Query = "__launcher_probe_no_match__";
             Pump();
             Check("搜索无匹配时显示空状态", vm.IsSearching && vm.IsEmpty);
+            Check("搜索态禁止框选与拖动", !vm.IsEditableView);
 
             vm.Query = string.Empty;
             Pump();

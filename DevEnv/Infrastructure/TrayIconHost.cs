@@ -57,7 +57,7 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add("启动语音服务", null, (_, _) => Raise(StartVoiceRequested));
         _menu.Items.Add("停止语音服务", null, (_, _) => Raise(StopVoiceRequested));
         _menu.Items.Add("语音与截屏设置…", null, (_, _) => Raise(SigXorSettingsRequested));
-        _menu.Items.Add("关于文件预览模块…", null, (_, _) => Raise(SigXorAboutRequested));
+        _menu.Items.Add("关于…", null, (_, _) => Raise(SigXorAboutRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;

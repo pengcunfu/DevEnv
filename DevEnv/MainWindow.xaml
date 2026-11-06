@@ -37,8 +37,6 @@
                 <MenuItem Header="文件浏览器(_B)..." Command="{Binding OpenSigXorBrowserCommand}" />
                 <MenuItem Header="区域截图(_S)" Command="{Binding OpenScreenshotCommand}" />
                 <MenuItem Header="语音与截屏设置(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
-                <Separator />
-                <MenuItem Header="关于文件预览模块(_A)..." Command="{Binding OpenSigXorAboutCommand}" />
                 </MenuItem>
             <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)">
                 <MenuItem Header="常规(_G)" Command="{Binding OpenSettingsCommand}" />
