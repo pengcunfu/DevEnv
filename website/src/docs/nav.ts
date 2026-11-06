@@ -148,6 +148,17 @@ export const sidebarGroups: SidebarGroup[] = [
     ],
   },
   {
+    text: '服务监控',
+    items: [
+      {
+        text: '快速开始',
+        path: '/guide/servicewatch/getting-started',
+        description:
+          '服务监控内嵌于 DevEnv，替代 Windows 服务面板，查看服务状态、启动类型与依赖关系，并支持启停、重启与暂停。',
+      },
+    ],
+  },
+  {
     text: '熔岩剪贴板',
     items: [
       {

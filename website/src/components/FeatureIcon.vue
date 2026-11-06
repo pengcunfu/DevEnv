@@ -41,6 +41,11 @@ withDefaults(defineProps<{ name: string; size?: number }>(), {
       <rect x="10" y="10" width="4" height="4" rx="0.8" />
       <path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4" />
     </g>
+    <g v-else-if="name === 'service'">
+      <rect x="4" y="4" width="16" height="6" rx="1.5" />
+      <rect x="4" y="14" width="16" height="6" rx="1.5" />
+      <path d="M7.5 7h.01M7.5 17h.01M12 7h4M12 17h4" />
+    </g>
     <g v-else-if="name === 'clipboard'">
       <path d="M9 4.5h6v3H9z" />
       <path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2" />

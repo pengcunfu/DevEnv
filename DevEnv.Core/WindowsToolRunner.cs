@@ -12,7 +12,7 @@ public static class WindowsToolRunner
         ("image_converter", "图像格式转换器", "实用工具", "批量转换图片格式"),
         ("hash_calculator", "文件哈希计算器", "实用工具", "计算文件或文本哈希"),
         ("computer", "计算机管理", "系统管理", "综合系统管理工具"),
-        ("server", "服务", "系统管理", "管理 Windows 系统服务"),
+        ("server", "服务", "系统管理", "在内置服务监控页管理 Windows 系统服务"),
         ("config", "系统配置", "系统管理", "配置系统启动和服务"),
         ("startup", "启动项管理", "系统管理", "管理开机启动项、服务与计划任务"),
         ("regedit", "注册表", "系统管理", "编辑 Windows 注册表"),
@@ -57,7 +57,9 @@ public static class WindowsToolRunner
                 case "info": Execute("msinfo32"); break;
                 case "event": Execute("eventvwr.msc"); break;
                 case "firewall": Execute("wf.msc"); break;
-                case "server": Execute("services.msc"); break;
+                case "server":
+                    HostCallbacks.OnActivateTab?.Invoke("services");
+                    break;
                 case "computer": Execute("compmgmt.msc"); break;
                 case "security": Execute("secpol.msc"); break;
                 case "control": Execute("control"); break;

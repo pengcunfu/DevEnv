@@ -1,6 +1,7 @@
 using DevEnv.Core.FileTools.Services;
 using DevEnv.Core.LavaEnv;
 using DevEnv.Core.LavaEnv.Services;
+using DevEnv.Core.ServiceWatch.Services;
 
 namespace DevEnv.Core.Services;
 
@@ -20,6 +21,7 @@ public static class CoreServices
     public static LavaService Lava { get; } = new();
     public static DevEnvService DevEnvServices { get; } = new(new DevServiceStore(Data));
     public static ProcessService Processes { get; } = new();
+    public static ServiceManagerService WindowsServices { get; } = new();
     public static NetworkService Network { get; } = new();
     public static ClipboardService Clipboard { get; } = new();
     public static UtilityService Utility { get; } = new();

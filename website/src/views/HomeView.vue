@@ -9,7 +9,7 @@ import { useSeo } from '@/seo/useSeo'
 const version = __APP_VERSION__
 
 const description =
-  '燧岚开发盒子（DevEnv，FireNeb）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控与剪贴板历史。基于 .NET 10 + WPF，Apache 2.0 开源。'
+  '燧岚开发盒子（DevEnv，FireNeb）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控、服务监控与剪贴板历史。基于 .NET 10 + WPF，Apache 2.0 开源。'
 
 useSeo({
   title: 'DevEnv · 燧岚开发盒子 — Windows 开发环境管理工具',
@@ -56,6 +56,13 @@ const features = [
     title: '进程监控',
     description: '实时查看进程 CPU / 内存，支持搜索排序与结束进程。',
     link: '/guide/processwatch/getting-started',
+    external: false,
+  },
+  {
+    icon: 'service',
+    title: '服务监控',
+    description: '内置 Windows 服务面板，查看状态、依赖并启停与修改启动类型。',
+    link: '/guide/servicewatch/getting-started',
     external: false,
   },
   {
