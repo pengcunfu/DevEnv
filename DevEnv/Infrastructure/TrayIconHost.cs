@@ -11,7 +11,10 @@ internal sealed class TrayIconHost : IDisposable
     private readonly Forms.NotifyIcon _notifyIcon;
     private readonly Forms.ContextMenuStrip _menu = new();
 
-    public event Action? ShowWindowRequested;
+    /// <summary>右键菜单「显示主窗口」：主窗口只从菜单进入，单击托盘图标不再唤出它。</summary>
+    public event Action? MainWindowRequested;
+    /// <summary>右键菜单「快捷方式启动台…」（单击托盘图标打开的是 SigXor 全局启动器）。</summary>
+    public event Action? ShortcutsRequested;
     public event Action? TranslatorRequested;
     public event Action? ClipboardRequested;
     public event Action? ExitRequested;
@@ -42,7 +45,8 @@ internal sealed class TrayIconHost : IDisposable
             Visible = true,
         };
 
-        _menu.Items.Add("显示主窗口", null, (_, _) => Raise(ShowWindowRequested));
+        _menu.Items.Add("显示主窗口", null, (_, _) => Raise(MainWindowRequested));
+        _menu.Items.Add("快捷方式启动台…", null, (_, _) => Raise(ShortcutsRequested));
         _menu.Items.Add("熔岩翻译", null, (_, _) => Raise(TranslatorRequested));
         _menu.Items.Add("熔岩剪贴板", null, (_, _) => Raise(ClipboardRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
@@ -58,7 +62,8 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;
 
-        // 单击即唤回主窗口：托盘是最常用的入口，等双击体验很差。
+        // 单击托盘图标打开 SigXor 全局启动器（搜索并启动应用 / 文件 / 命令）；
+        // 快捷方式启动台与主窗口都从右键菜单进入。
         // 右键仍然弹出菜单（NotifyIcon 挂上 ContextMenuStrip 后的默认行为）。
         _notifyIcon.MouseClick += OnMouseClick;
     }
@@ -67,7 +72,7 @@ internal sealed class TrayIconHost : IDisposable
     {
         if (e.Button != Forms.MouseButtons.Left)
             return;
-        Raise(ShowWindowRequested);
+        Raise(SigXorLauncherRequested);
     }
 
     /// <summary>语音服务运行时，把「启动语音服务」置灰，只留「停止」。</summary>

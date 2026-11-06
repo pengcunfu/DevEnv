@@ -13,7 +13,11 @@ namespace DevEnv.Host.Infrastructure;
 /// </summary>
 public static class ShortcutWindowHost
 {
+    /// <summary>失去焦点自动收起后的短时间窗口：在此期间再点托盘 / 按 Win 视为「关闭」而不是重新打开。</summary>
+    private static readonly TimeSpan AutoDismissGrace = TimeSpan.FromMilliseconds(500);
+
     private static ShortcutsWindow? _window;
+    private static DateTime _lastAutoDismissUtc = DateTime.MinValue;
 
     /// <summary>打开（或前置）快捷方式窗口，并切到指定页签：apps / folders / webs。</summary>
     public static void Open(string? pageId = null)
@@ -22,6 +26,7 @@ public static class ShortcutWindowHost
         {
             _window = new ShortcutsWindow();
             _window.Closed += (_, _) => _window = null;
+            _window.AutoDismissed += () => _lastAutoDismissUtc = DateTime.UtcNow;
         }
 
         var window = _window;
@@ -37,11 +42,11 @@ public static class ShortcutWindowHost
     }
 
     /// <summary>
-    /// 单独按 Win 键的入口：启动台已打开就收起，否则打开。
+    /// 开关启动台（Win 键与托盘单击共用）：已打开就收起，否则打开。
     /// 返回 false 表示此刻不该由启动台接手（模态设置框正开着），
-    /// 此时不吞 Win 键，让系统开始菜单照常弹出。
+    /// Win 键此时不吞键，让系统开始菜单照常弹出。
     /// </summary>
-    public static bool TryToggleFromWinKey()
+    public static bool Toggle()
     {
         if (_window is { IsVisible: true })
         {
@@ -49,15 +54,20 @@ public static class ShortcutWindowHost
             return true;
         }
 
-        if (!CanHandleWinKey())
+        // 点托盘 / 按 Win 时启动台会先因失去焦点自动收起，紧接着的这次调用应视为「关闭」，
+        // 否则会收起后立刻又弹出来，看起来像点了没反应。
+        if (DateTime.UtcNow - _lastAutoDismissUtc < AutoDismissGrace)
+            return true;
+
+        if (!CanOpen())
             return false;
 
         Open();
         return true;
     }
 
-    /// <summary>Win 键手势是否可由启动台接手：模态对话框会禁用其它窗口，这时让给系统。</summary>
-    public static bool CanHandleWinKey()
+    /// <summary>此刻能否打开启动台：模态对话框会禁用其它窗口，这时让给系统开始菜单。</summary>
+    public static bool CanOpen()
     {
         if (SettingsDialogHost.IsOpen)
             return false;

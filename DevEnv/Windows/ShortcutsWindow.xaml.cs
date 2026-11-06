@@ -91,6 +91,9 @@ public partial class ShortcutsWindow : Window
     /// <summary>从外部收起（Win 键再次按下、托盘入口等）。</summary>
     public void Dismiss() => HideLauncher();
 
+    /// <summary>因失去焦点而自动收起时触发；宿主据此判断紧接着的托盘点击是「关闭」。</summary>
+    public event Action? AutoDismissed;
+
     private void HideLauncher()
     {
         if (!IsVisible)
@@ -287,7 +290,10 @@ public partial class ShortcutsWindow : Window
         Dispatcher.BeginInvoke(new Action(() =>
         {
             if (IsVisible && !IsActive && !_suppressDeactivate && !_menuOpen)
+            {
                 HideLauncher();
+                AutoDismissed?.Invoke();
+            }
         }), DispatcherPriority.Input);
     }
 

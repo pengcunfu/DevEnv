@@ -177,17 +177,21 @@ public partial class App : System.Windows.Application
         ThemeManager.ApplyFromSettings();
         WireHostCallbacks();
 
-        _mainWindow = new MainWindow();
+        // 启动时不显示任何窗口：主窗建好但保持隐藏，只驻留托盘。
+        // 主窗从托盘右键菜单「显示主窗口」或 Ctrl+Alt+D 唤出；
+        // 全局热键只需要窗口句柄，EnsureHotkeys 内部会 EnsureHandle，无需先 Show。
+        _mainWindow = new MainWindow { ShowInTaskbar = false };
         MainWindow = _mainWindow;
-        _mainWindow.SourceInitialized += (_, _) => EnsureHotkeys(_mainWindow);
-        _mainWindow.Show();
+        EnsureHotkeys(_mainWindow);
 
         SingleInstance.StartActivateListener(Dispatcher, ShowMainWindow);
         SingleInstance.StartFileListener(Dispatcher, paths => _sigXor?.ShowPreviewForPaths(paths));
 
         _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
         // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
-        _tray.ShowWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
+        // 单击托盘图标 = 全局启动器；快捷方式启动台与主窗口都从右键菜单进入
+        _tray.ShortcutsRequested += () => Dispatcher.InvokeAsync(() => ShortcutWindowHost.Toggle());
+        _tray.MainWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
         _tray.TranslatorRequested += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest { Visible = true }));
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
         _tray.ExitRequested += ExitApp;
@@ -245,9 +249,9 @@ public partial class App : System.Windows.Application
             _winKeyHook = new WinKeyLauncherHook(Dispatcher)
             {
                 // 模态对话框开着时不抢 Win 键，让系统开始菜单照常弹出
-                CanTrigger = ShortcutWindowHost.CanHandleWinKey,
+                CanTrigger = ShortcutWindowHost.CanOpen,
             };
-            _winKeyHook.LauncherRequested += () => ShortcutWindowHost.TryToggleFromWinKey();
+            _winKeyHook.LauncherRequested += () => ShortcutWindowHost.Toggle();
         }
 
         if (!_winKeyHook.Install())
@@ -346,6 +350,7 @@ public partial class App : System.Windows.Application
         if (_mainWindow is null)
             return;
         ToolWindowHost.RefreshAll();
+        AttachAuxiliaryWindows();
         // ShowInTaskbar 要在 Show() 之前设，否则隐藏到托盘后再改会闪一下任务栏按钮
         _mainWindow.ShowInTaskbar = true;
         if (!_mainWindow.IsVisible)
@@ -362,6 +367,20 @@ public partial class App : System.Windows.Application
                 _mainWindow.Topmost = false;
         }), System.Windows.Threading.DispatcherPriority.Background);
         _mainWindow.Focus();
+    }
+
+    /// <summary>
+    /// 主窗显示后，把启动时主窗隐藏期间创建、因而没挂 Owner 的翻译 / 剪贴板窗
+    /// 补挂到主窗名下（owner 隐藏时 owned 窗口不会显示，所以当时只能不挂）。
+    /// </summary>
+    private void AttachAuxiliaryWindows()
+    {
+        if (_mainWindow is null)
+            return;
+        if (_translatorWindow is { Owner: null } translator)
+            translator.Owner = _mainWindow;
+        if (_clipboardWindow is { Owner: null } clipboard)
+            clipboard.Owner = _mainWindow;
     }
 
     /// <summary>关闭主窗 → 进托盘而不是退出；返回 true 表示已隐藏（调用方应取消关闭）。</summary>
@@ -517,7 +536,8 @@ public partial class App : System.Windows.Application
     private TranslatorWindow CreateTranslatorWindow()
     {
         var window = new TranslatorWindow();
-        if (_mainWindow is not null)
+        // 只有主窗可见时才挂 Owner：owner 隐藏时 owned 窗口也不会显示
+        if (_mainWindow is { IsVisible: true })
             window.Owner = _mainWindow;
         if (Dispatcher.CheckAccess() || _tray is null)
             return window;
@@ -534,7 +554,7 @@ public partial class App : System.Windows.Application
     private ClipboardWindow CreateClipboardWindow()
     {
         var window = new ClipboardWindow();
-        if (_mainWindow is not null)
+        if (_mainWindow is { IsVisible: true })
             window.Owner = _mainWindow;
         return window;
     }

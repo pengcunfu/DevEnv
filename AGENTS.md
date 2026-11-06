@@ -67,8 +67,10 @@
 - **只吞 Win 键抬起，不吞按下**：开始菜单是抬起时弹出的，吞抬起即可挡住它；吞按下会让 Win+组合键全部失效，所以按下阶段必须放行。按住 Win 的自动重复、左右 Win 同时按都已单独处理。
 - **吞掉物理抬起后必须补发「假按键 + Win 抬起」**（`ReleaseWinKey`）：系统看到 Win 按下却收不到抬起，会一直认为 Win 修饰键按着，之后任何按键都变成 Win+组合键——这正是「Win 接管后按键异常」的根因。补发未分配虚拟键 `0xE8` 是为了打断开始菜单的「单击 Win」判定，再补发同侧 Win 抬起让按键状态复位。改动这段务必跑 `--winkey-check`，其中「Win 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
 - 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的 Win 键不会弹启动台；只有自检探针通过 `AllowInjectedInput` 打开它。
-- 模态对话框打开期间（`ShortcutWindowHost.CanHandleWinKey()` 为 false）不吞 Win 键，让系统开始菜单照常弹出。
+- 模态对话框打开期间（`ShortcutWindowHost.CanOpen()` 为 false）不吞 Win 键，让系统开始菜单照常弹出。
 - 启动台**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；Win 键唤出时只允许出现启动台本身。
+- 启动行为：`App.OnStartup` **不显示主窗**（`new MainWindow { ShowInTaskbar = false }` + `EnsureHotkeys`，句柄由 `EnsureHandle` 提前创建），程序只驻留托盘；主窗由托盘菜单 / `Ctrl+Alt+D` / 二次启动唤出。给窗口挂 Owner 前必须确认主窗 `IsVisible`——owner 隐藏时 owned 窗口不会显示（翻译窗、剪贴板窗已按此处理，主窗显示时由 `AttachAuxiliaryWindows` 补挂）。
+- 托盘入口：**单击托盘图标 = SigXor 全局启动器**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令）；快捷方式启动台从右键菜单「快捷方式启动台…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或 Win 键进入；主窗口只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**全局启动器**是 SigXor 的搜索框式启动器，**快捷方式启动台**是本仓库的 Launchpad 式全屏窗口。`ShortcutWindowHost.Toggle` 带 500ms 宽限：启动台因失焦收起后紧接着的这次调用按「关闭」处理。
 - 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，否则进程退出后开始菜单仍会被吞。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --winkey-check %TEMP%\winkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 卸载后失效」。
 
