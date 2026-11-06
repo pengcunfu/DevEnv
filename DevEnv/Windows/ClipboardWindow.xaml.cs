@@ -8,7 +8,7 @@ using DevEnv.Host.ViewModels;
 
 namespace DevEnv.Host.Windows;
 
-/// <summary>熔岩剪贴板独立窗（纯 WPF）：Ctrl+Space 唤起，关闭只隐藏。</summary>
+/// <summary>熔岩剪贴板独立窗（纯 WPF）：从快捷应用顶部入口打开，关闭只隐藏。</summary>
 public partial class ClipboardWindow : Window
 {
     private bool _allowClose;

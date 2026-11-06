@@ -105,13 +105,6 @@ public sealed class ShellPreviewService : IDisposable
             return true;
         }
 
-        // 任务栏焦点时：显示快捷应用
-        if (InputFocusClassifier.IsTaskbar(className))
-        {
-            _dispatcher.BeginInvoke(ShowLauncher);
-            return true;
-        }
-
         return false;
     }
 
@@ -187,7 +180,7 @@ public sealed class ShellPreviewService : IDisposable
         _launcherWindow ??= new LauncherWindow(_launcher, _openSettings);
     }
 
-    /// <summary>显示快捷应用（非资源管理器场景按空格，或托盘左键点击）。</summary>
+    /// <summary>显示快捷应用（Alt+Space 全局热键，或托盘左键点击）。</summary>
     public void ShowLauncher()
     {
         if (_disposed) return;

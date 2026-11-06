@@ -41,7 +41,7 @@ public static class WindowPlacement
     }
 
     /// <summary>
-    /// 强制把窗口拉到前台。任务栏空格等场景下，托盘进程直接 Activate 常被
+    /// 强制把窗口拉到前台。从托盘 / 全局热键唤起时，后台进程直接 Activate 常被
     /// Windows 焦点规则拒绝，随后 Deactivated 会把启动器立刻关掉。
     /// </summary>
     public static void ForceForeground(Window window)

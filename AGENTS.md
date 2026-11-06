@@ -35,7 +35,7 @@
 - **不要再引入第二套基础设施**。托盘、单实例、自启动、更新、异常日志一律用 DevEnv 现有的（`TrayIconHost`、`SingleInstance`、`AutostartHelper`、Velopack `UpdateService`）。SigXor 自带的 `TrayIconService` / `SingleInstanceService` / `Updater` / `App` / `Program` 是未接线的遗留代码，**已删除**，不要接回去。
 - 模块要暴露能力给宿主，走 `DevEnv.Core.HostCallbacks`（`OnOpenFilePreview` / `OnOpenScreenshot` / `OnOpenSigXorSettings` / `OnOpenSigXorLauncher` / `OnOpenSigXorBrowser` / `OnOpenSigXorAbout`），不要在 Core 里直接碰 UI。
 - SigXor 的数据目录仍是 `文档\FNSoftware\SigXor`（与 DevEnv 的 `文档\FNSoftware\DevEnv` 并存），旧版 SigXor 配置与模型在首次启动时自动迁移。
-- 全局键盘钩子：SigXor 用自己的 `GlobalHotkeyService`（`WH_KEYBOARD_LL`，处理空格 / Esc / 语音键 / 反引号），与 DevEnv 的 `RegisterHotKey` 体系**并存但不冲突**（前者管预览与语音，后者管显示窗口 / 翻译 / 剪贴板）。多个 SigXor 功能共用一个钩子时靠 `GlobalHotkeyRouter` 的**优先级**排序：截图 300 > 语音 200 > 预览 100。
+- 全局键盘钩子：SigXor 用自己的 `GlobalHotkeyService`（`WH_KEYBOARD_LL`，处理空格 / Esc / 语音键 / 反引号），与 DevEnv 的 `RegisterHotKey` 体系**并存但不冲突**（前者管预览与语音，后者管显示窗口与快捷应用）。多个 SigXor 功能共用一个钩子时靠 `GlobalHotkeyRouter` 的**优先级**排序：截图 300 > 语音 200 > 预览 100。
 - **开机自启只有一个开关**：DevEnv 主界面「设置」里的 `SelfStarting`（data.json）是唯一事实来源，落盘到注册表 `HKCU\...\Run`。SigXor 的设置页里**不再有**同名勾选框（已并入宿主设置对话框），需要改自启就去宿主的「常规」页签。
 - **设置统一在宿主设置对话框里**：SigXor 原独立设置窗口（`DevEnv/SigXor/SettingsWindow.*`）**已删除**，内容拆成三个视图（`DevEnv/SigXor/Views/SigXorGeneralView.xaml` / `SigXorVoiceView.xaml` / `SigXorServiceView.xaml`），并入燧岚开发盒子设置对话框的**平铺三页签**（**不要二级页签**）：「常规」= 主程序设置 + 文件预览的常规选项，「语音与截屏」，「服务与模型」。页签内容由 `SettingsDialogHost.Sections`（`ISettingsSections`）在运行时注入（`SigXorHost.CreateSettingsSections`），不要再造第二个模态设置框。
 - **自检探针**：SigXor 有 34 个 XAML（11 个窗口 + 15 个预览视图 + 7 个 WebView2 宿主），而 WPF 的 XAML 异常是静默的（AGENTS.md 第 12 条），靠肉眼点菜单不可靠。改动模块后跑：
@@ -73,7 +73,7 @@
 - 模态对话框打开期间（`ShortcutWindowHost.CanOpen()` 为 false）不吞 Win 键，让系统开始菜单照常弹出。
 - 全局启动器**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；Win 键唤出时只允许出现启动器本身。
 - 启动行为：`App.OnStartup` **不显示主窗**（`new MainWindow { ShowInTaskbar = false }` + `EnsureHotkeys`，句柄由 `EnsureHandle` 提前创建），程序只驻留托盘；主窗由托盘菜单 / `Ctrl+Alt+D` / 二次启动唤出。给窗口挂 Owner 前必须确认主窗 `IsVisible`——owner 隐藏时 owned 窗口不会显示（翻译窗、剪贴板窗已按此处理，主窗显示时由 `AttachAuxiliaryWindows` 补挂）。
-- 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令）；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或 Win 键进入；**主窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
+- 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令），全局快捷键为 `Alt+Space`（`GlobalHotkeys.IdLauncher`）；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或 Win 键进入；**主窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
 - 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，否则进程退出后开始菜单仍会被吞。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --winkey-check %TEMP%\winkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 卸载后失效」。
 

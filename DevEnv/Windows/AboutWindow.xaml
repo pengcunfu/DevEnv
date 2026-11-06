@@ -21,8 +21,8 @@
                        Text="专为程序员设计的多语言开发环境管理工具，支持 Java、Node.js、Python、C++ 等多种开发环境。" />
             <Border Margin="0,14,0,0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" />
             <StackPanel Margin="0,12,0,0">
-                <TextBlock Text="熔岩翻译 · Alt+Space" Style="{DynamicResource MutedTextStyle}" />
-                <TextBlock Margin="0,4,0,0" Text="熔岩剪贴板 · Ctrl+Space" Style="{DynamicResource MutedTextStyle}" />
+                <TextBlock Text="熔岩翻译 · 快捷应用顶部入口" Style="{DynamicResource MutedTextStyle}" />
+                <TextBlock Margin="0,4,0,0" Text="熔岩剪贴板 · 快捷应用顶部入口" Style="{DynamicResource MutedTextStyle}" />
                 <TextBlock Margin="0,4,0,0" Text="显示窗口 · 可在设置中配置" Style="{DynamicResource MutedTextStyle}" />
             </StackPanel>
             <TextBlock Margin="0,12,0,0" Text="© FireNeb · DevEnv" Style="{DynamicResource MutedTextStyle}" />

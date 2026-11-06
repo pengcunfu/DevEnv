@@ -3,15 +3,15 @@ using System.Runtime.InteropServices;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局热键：显示窗口 / Alt+Space 翻译 / Ctrl+Space 剪贴板。
+/// 全局热键：显示窗口 / Alt+Space 快捷应用。
+/// 翻译与剪贴板不再占用全局快捷键，入口放在快捷应用窗口顶部。
 /// 纯 P/Invoke，与 UI 框架无关；WPF 下由 <c>HwndSource.AddHook</c> 接管 <c>WM_HOTKEY</c>。
 /// </summary>
 internal sealed class GlobalHotkeys : IDisposable
 {
     private const int WmHotkey = 0x0312;
     private const int IdShowWindow = 0xD0B0;
-    private const int IdTranslator = 0x4C41;
-    private const int IdClipboard = 0x4342;
+    private const int IdLauncher = 0x4C41;
     private const uint ModAlt = 0x0001;
     private const uint ModControl = 0x0002;
     private const uint ModShift = 0x0004;
@@ -26,20 +26,16 @@ internal sealed class GlobalHotkeys : IDisposable
 
     private IntPtr _hwnd;
     private string _showHotkey = "";
-    private bool _translatorOk;
-    private bool _clipboardOk;
     private bool _showOk;
 
     public event Action? ShowWindowPressed;
-    public event Action? TranslatorPressed;
-    public event Action? ClipboardPressed;
+    public event Action? LauncherPressed;
 
     public GlobalHotkeys(IntPtr hwnd) => _hwnd = hwnd;
 
     public string ShowHotkey => _showHotkey;
-    public bool TranslatorRegistered => _translatorOk;
-    public bool ClipboardRegistered => _clipboardOk;
     public bool ShowWindowRegistered => _showOk;
+    public bool LauncherRegistered { get; private set; }
 
     /// <summary>窗口句柄重建后调用，把热键绑到新 hwnd。</summary>
     public void Rebind(IntPtr hwnd)
@@ -66,24 +62,15 @@ internal sealed class GlobalHotkeys : IDisposable
         return _showOk;
     }
 
-    public bool RegisterTranslatorAltSpace()
+    /// <summary>Alt+Space 唤起快捷应用。注册失败说明组合键已被其它程序占用。</summary>
+    public bool RegisterLauncherAltSpace()
     {
-        Unregister(IdTranslator);
-        _translatorOk = false;
+        Unregister(IdLauncher);
+        LauncherRegistered = false;
         if (_hwnd == IntPtr.Zero)
             return false;
-        _translatorOk = RegisterHotKey(_hwnd, IdTranslator, ModAlt, VkSpace);
-        return _translatorOk;
-    }
-
-    public bool RegisterClipboardCtrlSpace()
-    {
-        Unregister(IdClipboard);
-        _clipboardOk = false;
-        if (_hwnd == IntPtr.Zero)
-            return false;
-        _clipboardOk = RegisterHotKey(_hwnd, IdClipboard, ModControl, VkSpace);
-        return _clipboardOk;
+        LauncherRegistered = RegisterHotKey(_hwnd, IdLauncher, ModAlt, VkSpace);
+        return LauncherRegistered;
     }
 
     /// <summary>挂到 <c>HwndSource.AddHook</c>；处理掉 WM_HOTKEY 并返回 true。</summary>
@@ -97,14 +84,9 @@ internal sealed class GlobalHotkeys : IDisposable
             ShowWindowPressed?.Invoke();
             return true;
         }
-        if (id == IdTranslator)
+        if (id == IdLauncher)
         {
-            TranslatorPressed?.Invoke();
-            return true;
-        }
-        if (id == IdClipboard)
-        {
-            ClipboardPressed?.Invoke();
+            LauncherPressed?.Invoke();
             return true;
         }
         return false;
@@ -115,11 +97,9 @@ internal sealed class GlobalHotkeys : IDisposable
     private void UnregisterAll()
     {
         Unregister(IdShowWindow);
-        Unregister(IdTranslator);
-        Unregister(IdClipboard);
+        Unregister(IdLauncher);
         _showOk = false;
-        _translatorOk = false;
-        _clipboardOk = false;
+        LauncherRegistered = false;
     }
 
     private void Unregister(int id)

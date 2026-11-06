@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using DevEnv.Core;
 using DevEnv.Host.SigXor.Services;
 
 namespace DevEnv.Host.SigXor.Views;
@@ -51,7 +52,7 @@ public partial class LauncherWindow : Window
         UpdateSearchIcon();
         ShowPopularApps();
         _shownAtUtc = DateTime.UtcNow;
-        // 任务栏空格场景下普通 Activate 常失败，窗口会立刻 Deactivated 并被关掉。
+        // 从托盘或全局热键唤起时普通 Activate 常失败，窗口会立刻 Deactivated 并被关掉。
         WindowPlacement.ForceForeground(this);
         _focusWatch.Start();
         SearchBox.Focus();
@@ -157,6 +158,28 @@ public partial class LauncherWindow : Window
         {
             CategoryLabel.Text = "";
         }
+    }
+
+    #endregion
+
+    #region 常用工具入口
+
+    /// <summary>剪贴板入口：先收起快捷应用，再打开剪贴板窗口。</summary>
+    private void OnOpenClipboardEntry(object sender, RoutedEventArgs e)
+    {
+        CloseLauncher();
+        HostCallbacks.OnShowClipboard?.Invoke(true);
+    }
+
+    /// <summary>翻译入口：沿用原翻译热键的行为，打开翻译窗并填充剪贴板文本。</summary>
+    private void OnOpenTranslatorEntry(object sender, RoutedEventArgs e)
+    {
+        CloseLauncher();
+        HostCallbacks.OnShowTranslator?.Invoke(new TranslatorRequest
+        {
+            Visible = true,
+            FillClipboard = true,
+        });
     }
 
     #endregion

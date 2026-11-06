@@ -465,12 +465,7 @@ public partial class App : System.Windows.Application
         {
             _hotkeys = new GlobalHotkeys(hwnd);
             _hotkeys.ShowWindowPressed += ShowMainWindow;
-            _hotkeys.TranslatorPressed += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest
-            {
-                Visible = true,
-                FillClipboard = true,
-            }));
-            _hotkeys.ClipboardPressed += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
+            _hotkeys.LauncherPressed += () => _sigXor?.ShowLauncher();
         }
         else
         {
@@ -496,18 +491,13 @@ public partial class App : System.Windows.Application
             _hotkeys.ApplyShowWindowHotkey("Ctrl+Alt+D");
         }
 
-        var altOk = _hotkeys.RegisterTranslatorAltSpace();
-        var ctrlOk = _hotkeys.RegisterClipboardCtrlSpace();
-        if (altOk && ctrlOk)
-            return;
-
-        var failed = new List<string>();
-        if (!altOk) failed.Add("Alt+Space（熔岩翻译）");
-        if (!ctrlOk) failed.Add("Ctrl+Space（熔岩剪贴板）");
-        // 常见原因：旧版程序或输入法已占用
-        Dispatcher.BeginInvoke(new Action(() =>
-            _tray?.ShowBalloon($"快捷键注册失败：{string.Join("、", failed)}。请关闭其它占用程序后重启。",
-                Forms.ToolTipIcon.Warning)));
+        if (!_hotkeys.RegisterLauncherAltSpace())
+        {
+            // Alt+Space 可能被 PowerToys Run 等程序占用；托盘单击与菜单入口仍然可用
+            Dispatcher.BeginInvoke(new Action(() =>
+                _tray?.ShowBalloon("Alt+Space 已被其它程序占用，快捷应用快捷键注册失败。",
+                    Forms.ToolTipIcon.Warning)));
+        }
     }
 
     /// <summary>唤起 / 隐藏翻译窗（WPF 外壳 + WebView2）。</summary>

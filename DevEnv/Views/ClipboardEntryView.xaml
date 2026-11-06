@@ -8,7 +8,7 @@
     <DockPanel Margin="14">
         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
             <TextBlock Text="熔岩剪贴板" Style="{DynamicResource PageTitleStyle}" />
-            <TextBlock Text="剪贴板历史在独立窗口中运行 · Ctrl+Space 唤起 · 双击记录可还原"
+            <TextBlock Text="剪贴板历史在独立窗口中运行 · 从快捷应用窗口顶部的剪贴板入口打开 · 双击记录可还原"
                        Style="{DynamicResource PageHintStyle}" />
         </StackPanel>
 
