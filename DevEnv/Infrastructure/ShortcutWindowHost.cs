@@ -5,10 +5,10 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器宿主：本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具五页共用一个全屏窗口。
+/// 全局启动器宿主：本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具五页共用一个居中悬浮窗口。
 /// 单实例，重复打开是「切到对应页签并前置已有窗口」，不再开一堆。
 ///
-/// 全局启动器**不设 Owner**：它铺满全屏且置顶，本来就不跟主窗最小化 / 隐藏联动；
+/// 全局启动器**不设 Owner**：它居中悬浮且置顶，本来就不跟主窗最小化 / 隐藏联动；
 /// 一旦挂到主窗名下，从托盘（主窗隐藏）唤起时会把主窗一起拉出来，
 /// 所以这里刻意不走 ToolWindowHost 那套 owner 绑定。
 /// </summary>
@@ -46,7 +46,7 @@ public static class ShortcutWindowHost
     public static void Open(string? pageId = null)
     {
         // 开始菜单和启动器都是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，
-        // 否则开始菜单会一直压在全屏启动器上面，看起来像 Alt 没生效。
+        // 否则开始菜单会一直压在启动器上面，看起来像 Alt 没生效。
         if (ShellStartMenu.DismissIfOpen())
         {
             ScheduleOpen(pageId);

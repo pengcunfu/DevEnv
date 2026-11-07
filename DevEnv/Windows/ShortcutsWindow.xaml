@@ -15,7 +15,7 @@
         TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
-    <!-- 全屏启动器（Launchpad 样式）：铺满屏幕的半透明深色背景上，
+    <!-- 悬浮启动器（Launchpad 样式）：居中占工作区 78% 的半透明深色面板上，
          顶部搜索、中部大图标网格、底部横向页签（本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具）；
          单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
     <Window.DataContext>

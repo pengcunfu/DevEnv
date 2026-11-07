@@ -72,7 +72,7 @@ public partial class ShortcutsWindow : Window
     /// <summary>是否已经预热过：预热后视觉树已构建，首次打开不再临时创建。</summary>
     public bool IsPrewarmed { get; private set; }
 
-    /// <summary>启动器可见期间监听 Win 键：用户要打开开始菜单时先把全屏窗口收起。</summary>
+    /// <summary>启动器可见期间监听 Win 键：用户要打开开始菜单时先把悬浮窗口收起。</summary>
     private readonly WinKeyDismissHook _winKeyHook;
 
     /// <summary>换页时网格的横向位移；只做渲染变换，不影响布局与框选坐标。</summary>
@@ -172,13 +172,18 @@ public partial class ShortcutsWindow : Window
     }
 
     /// <summary>
-    /// 只在尺寸/位置确实不同时才改。显示过程中改窗口几何会让 DWM 重新合成，
-    /// 肉眼就是闪一下；预热已经是最终几何后，这里通常一次都不改。
+    /// 居中铺到工作区的 78%：整屏分层窗口每次合成都要处理整个屏幕，缩到约六成面积后
+    /// 打开与动画明显更轻快，同时也不会盖住任务栏。只在尺寸/位置确实不同时才改，
+    /// 显示过程中改窗口几何会让 DWM 重新合成，肉眼就是闪一下；预热后这里通常一次都不改。
     /// </summary>
     private void ApplyScreenBounds()
     {
-        var width = SystemParameters.PrimaryScreenWidth;
-        var height = SystemParameters.PrimaryScreenHeight;
+        const double ratio = 0.78;
+        var area = SystemParameters.WorkArea;
+        var width = Math.Round(area.Width * ratio);
+        var height = Math.Round(area.Height * ratio);
+        var left = Math.Round(area.Left + (area.Width - width) / 2);
+        var top = Math.Round(area.Top + (area.Height - height) / 2);
 
         if (WindowState != WindowState.Normal)
             WindowState = WindowState.Normal;
@@ -186,17 +191,17 @@ public partial class ShortcutsWindow : Window
         // 注意 NaN：新窗口没设过位置时 Left/Top 是 NaN，而 "Math.Abs(NaN) > 0.5" 恒为 false，
         // 漏掉这个判断会让窗口带着 NaN 显示，由 WPF 临时挑一个位置（屏幕中间偏一点），
         // 表现出来就是显示时窗口先出现在错误位置再跳过来。
-        if (double.IsNaN(Left) || Math.Abs(Left) > 0.5)
-            Left = 0;
-        if (double.IsNaN(Top) || Math.Abs(Top) > 0.5)
-            Top = 0;
+        if (double.IsNaN(Left) || Math.Abs(Left - left) > 0.5)
+            Left = left;
+        if (double.IsNaN(Top) || Math.Abs(Top - top) > 0.5)
+            Top = top;
         if (double.IsNaN(Width) || Math.Abs(Width - width) > 0.5)
             Width = width;
         if (double.IsNaN(Height) || Math.Abs(Height - height) > 0.5)
             Height = height;
     }
 
-    /// <summary>铺满主屏并切到指定页签（apps / folders / webs / tools），每次打开都重新读取数据。</summary>
+    /// <summary>居中铺到工作区 78% 并切到指定页签（apps / folders / webs / tools），每次打开都重新读取数据。</summary>
     public void ShowPage(string? pageId)
     {
         CancelMarquee();
@@ -1076,7 +1081,7 @@ public partial class ShortcutsWindow : Window
 
     /// <summary>
     /// 弹窗期间压制「失去焦点即收起」，并临时取消置顶：
-    /// 启动器铺满全屏且置顶时，没有 owner 的系统文件对话框会被它挡住。
+    /// 启动器居中悬浮且置顶时，没有 owner 的系统文件对话框会被它挡住。
     /// </summary>
     private async Task RunDialogAsync(Func<Task> action)
     {
