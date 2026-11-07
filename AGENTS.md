@@ -55,16 +55,24 @@
 
 ### 全局启动器（Launchpad）
 
-- 入口：单独按左 Alt 键或托盘右键菜单「全局启动器…」 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具是五个**横向页签**（`ShortcutLauncherViewModel`）。系统工具页复用 `ShortcutService.GetSystemTools / RunSystemTool`；内置工具页是宿主原有的 JSON / Hosts / 图像 / 哈希 / 文件解锁 / 启动项 / 右键菜单工具加一个「燧岚开发盒子」（主窗口，key 为 `main-window`，走 `HostCallbacks.OnShowMainWindow`），工具直接调用 `ToolWindowHost.Open`，**主窗口顶部不再有「工具」菜单**。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
-- 交互：单击图标启动、`Esc` 关闭、`←` / `→` 或 `Ctrl` + 鼠标滚轮切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。**点击空白处不再关闭窗口**，而是开始框选；拖动空白绘制选框多选（`Ctrl` + 单击切换选中），拖动卡片调整顺序，把卡片拖到另一个卡片的图标中心合并成启动器文件夹；点击文件夹磁贴会在居中的浮层卡片里展开组内条目（不占满启动器，底层页签仍然可见），浮层没有返回按钮，点击卡片外空白或按 `Esc` 收起。滚轮监听在根 Grid 的 `PreviewMouseWheel`（滚动内容会被 `ScrollViewer` 标记已处理，冒泡阶段收不到），搜索期间与左右键一样不切页。
+- 入口：单独按左 Alt 键或托盘右键菜单「全局启动器…」 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具是五个**横向页签**（`ShortcutLauncherViewModel`）。系统工具页复用 `ShortcutService.GetSystemTools / RunSystemTool`；内置工具页是宿主原有的 JSON / Hosts / 图像 / 哈希 / 文件解锁 / 启动项 / 右键菜单工具，外加两个主窗口入口「燧岚开发盒子」（开发环境 / 熔岩环境，key 为 `dev-window`，走 `HostCallbacks.OnShowDevelopmentWindow`）与「燧岚监控中心」（网络 / 进程 / 服务监控，key 为 `monitor-window`，走 `HostCallbacks.OnShowMonitorWindow`），工具直接调用 `ToolWindowHost.Open`，**主窗口顶部不再有「工具」菜单**。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
+- 交互：单击图标启动、`Esc` 关闭、`←` / `→` 或 `Ctrl` + 鼠标滚轮切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。**点击空白处不再关闭窗口**，而是开始框选；拖动空白绘制选框多选（`Ctrl` + 单击切换选中），拖动卡片调整顺序，把卡片拖到另一个卡片的图标中心合并成启动器文件夹；点击文件夹磁贴会在居中的浮层卡片里展开组内条目（不占满启动器，底层页签仍然可见），浮层没有返回按钮，点击卡片外空白或按 `Esc` 收起。滚轮监听在根 Grid 的 `PreviewMouseWheel`（滚动内容会被 `ScrollViewer` 标记已处理，冒泡阶段收不到），搜索期间与左右键一样不切页；换页时 `OnPageSwitched` 先把网格滚回顶部，再按切换方向播放 24 DIP 滑入 + 淡入动画（190ms / 150ms，EaseOut），底行固定 `MinHeight="82"`，避免「＋」按钮在只读页隐藏时页签上下跳。
 - **布局与文件夹**：顺序和分组保存在 `data.json` 的顶层数组 `LauncherLayout`（每页 `Tiles`，普通条目用自然键 `app|路径` / `folder|路径` / `web|url`，文件夹用 `{Id,Name,Items[]}`），快捷方式本身仍以 `NativeAtomList` / `FolderAtomList` / `WebAtomList` 为唯一事实来源。打开时由 `LauncherLayout.Normalize` 对账：缺失条目剪掉、新增条目追加、空文件夹清理、单条目文件夹降级。系统工具页、内置工具页与搜索态只读，不参与排序与分组；分组只在同一页内创建，不支持嵌套。`--shortcuts-check` 需继续通过，并覆盖可编辑判定、选择 API、文件夹展开/收起，以及浮层打开时底层页签卡片仍保留（`PageEntries`）。
 - **预热要落在最终几何、内容保持全透明**：`ApplyScreenBounds` 的差异比较必须同时处理 `NaN`（新窗口 `Left/Top/Width/Height` 是 `NaN`，`Math.Abs(NaN) > x` 恒 false，漏判会让窗口带着 `NaN` 显示、由 WPF 临时挑位置）；**收起必须先淡出、后 `Hide()`**：分层窗口缓存最后一次合成结果，先 `Hide()` 再设透明是无效的（不可见就不会再渲染），下一次 `Show` 会把不透明缓存当作第一帧贴出来——表现为「第一次打开正常、之后每次都闪」。现在的顺序是 `Root.Opacity` 动画到 0 → `Completed` 里 `Hide()`；`IsHiding` 期间再次唤起会取消收起。
 - **启动时预热，不要按需创建**：`App.OnStartup` 在 `DispatcherPriority.ApplicationIdle` 调 `ShortcutWindowHost.Prewarm()`，窗口在屏幕外（-20000）、`Opacity=0`、`ShowActivated=false` 下显示一次再隐藏，让 WPF 完成 HWND / 模板 / 布局 / 首帧；`ShowPage` 里另有保险，未预热就直接 `Show` 时会先补预热。按需创建会让“可见”发生在布局之前，表现为先闪空白再闪内容。
 - **显示/激活只做一次**：`ShortcutWindowHost.Open` 不再补 `Show()` / `Activate()`，统一由 `ShowPage` 负责；淡入动画做在根元素 `Root.Opacity` 上而不是 `Window.Opacity`（`AllowsTransparency` 的分层窗口首次显示会先画一帧不透明，再被窗口透明度拉回 0，看起来就是闪两下）；激活用 `GetForegroundWindow()` 判断，只在确实不在前台时调用一次 `WindowPlacement.ForceForeground`；`Deactivated` 有 400ms 宽限，前台权限交接期间的假 Deactivated 不会把窗口关掉。
 - 数据仍走 `ShortcutService`；原先的 `AppsView` / `FoldersView` / `WebsView` 与对应 ViewModel **已删除**，不要再恢复卡片页。
-- `DEVENV_START_PAGE=apps|folders|webs|tools|builtin`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签；窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
+- `DEVENV_START_PAGE=apps|folders|webs|tools|builtin`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签；`DEVENV_START_PAGE=devenv|lava|network|processes|services` 由 `App.NavigateToMainPage` 路由到开发 / 监控窗口。窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
 - 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 56px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、五个页签切换、系统工具与内置工具目录加载、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
+
+### 主窗口（开发 / 监控两个）
+
+- 原来一个主窗里的五个页面拆成两个窗口：**开发窗口**（开发环境 / 熔岩环境）与**监控窗口**（网络监控 / 进程监控 / 服务监控）。两者共用 `DevEnv/MainWindow.xaml(.cs)`，构造函数接收标题与 `IReadOnlyList<NavItem>`，`MainViewModel` 不再自带导航项。
+- `ViewFactory.DevelopmentNavItems` / `MonitorNavItems` 是两套导航的唯一来源；新增主窗页面时按归属加进对应列表，`ViewFactory.IsMonitorPage` 决定 `HostCallbacks.OnActivateTab` 与 `DEVENV_START_PAGE` 路由到哪个窗口。
+- 开发窗口在 `App.OnStartup` 创建并保持隐藏（`ShowInTaskbar = false`），监控窗口由 `EnsureMonitorWindow()` 按需创建：没人打开时不启动网络 / 进程监控页的定时器。托盘「显示主窗口」、`Ctrl+Alt+D`、二次启动只唤回开发窗口；监控窗口从全局启动器的「内置工具」页进入（也由 `HostCallbacks.OnShowMonitorWindow` 唤起）。
+- 两个窗口关闭都只是隐藏到托盘；退出时 `ExitApp` 依次关闭两个窗口，全局热键钩子挂在开发窗口句柄上。翻译窗 / 剪贴板窗的 owner 取当前可见的宿主窗口（`VisibleMainWindow`），两个都隐藏时不挂。
+- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --windows-check %TEMP%\windows.txt`，验证两个窗口各自加载、导航项与默认页正确、切页互不影响。
 
 ### 左 Alt 拦截
 
@@ -76,8 +84,8 @@
 - 模态对话框打开期间（`ShortcutWindowHost.CanOpen()` 为 false）不触发，让前台程序照常收到 Alt。
 - **与开始菜单互斥**：开始菜单和启动器同为置顶窗口。老版本 Windows 由 `StartMenuExperienceHost` 承载，**新版 Windows 11（实测 build 26200）改由 `SearchHost` 承载**，窗口类仍是 `Windows.UI.Core.CoreWindow`、标题「搜索」；`ShellStartMenu` 两种宿主都要认，只认前者会在新系统上永远检测不到。打开启动器前 `ShortcutWindowHost.Open` 经 `ShellStartMenu.DismissIfOpen()` 给开始菜单发 Esc（开始菜单在前台时直接发，否则先 `SetForegroundWindow`），并延迟约 120ms 再显示；启动器可见期间 `WinKeyDismissHook` 监听真实 Win 键按下（只监听不拦截，开始菜单照常弹出），先把自己的全屏窗口淡出收起，避免开始菜单被压在启动器下面。Win 钩子只在可见期间安装，隐藏后卸载。
 - 全局启动器**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；左 Alt 唤出时只允许出现启动器本身。
-- 启动行为：`App.OnStartup` **不显示主窗**（`new MainWindow { ShowInTaskbar = false }` + `EnsureHotkeys`，句柄由 `EnsureHandle` 提前创建），程序只驻留托盘；主窗由托盘菜单 / `Ctrl+Alt+D` / 二次启动唤出。给窗口挂 Owner 前必须确认主窗 `IsVisible`——owner 隐藏时 owned 窗口不会显示（翻译窗、剪贴板窗已按此处理，主窗显示时由 `AttachAuxiliaryWindows` 补挂）。
-- 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令），全局快捷键默认 `Alt+Space`（`GlobalHotkeys.IdLauncher`，可在「设置 → 快捷键」修改）；**设置**从右键菜单「设置…」（`SettingsRequested` → `SettingsDialogHost.Open()`）进入，关于与检查更新在设置的「关于与帮助」页；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或左 Alt 键进入；**主窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
+- 启动行为：`App.OnStartup` **不显示窗口**（开发窗口以 `ShowInTaskbar = false` 创建 + `EnsureHotkeys`，句柄由 `EnsureHandle` 提前创建；监控窗口更晚，按需创建），程序只驻留托盘；开发窗口由托盘菜单 / `Ctrl+Alt+D` / 二次启动唤出，监控窗口从启动器内置工具页进入。给窗口挂 Owner 前必须确认宿主窗口 `IsVisible`——owner 隐藏时 owned 窗口不会显示（翻译窗、剪贴板窗已按此处理，窗口显示时由 `AttachAuxiliaryWindows` 补挂）。
+- 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令），全局快捷键默认 `Alt+Space`（`GlobalHotkeys.IdLauncher`，可在「设置 → 快捷键」修改）；**设置**从右键菜单「设置…」（`SettingsRequested` → `SettingsDialogHost.Open()`）进入，关于与检查更新在设置的「关于与帮助」页；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或左 Alt 键进入；**开发窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 也唤回开发窗口；**监控窗口**从全局启动器「内置工具」页的「燧岚监控中心」进入。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
 - 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，避免钩子残留到进程退出之后。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --altkey-check %TEMP%\altkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 右 Alt 不触发 / 卸载后失效」以及启动器 Win 键监听钩子的安装与卸载（不发送注入 Win 键，避免探针弹出开始菜单），其中「左 Alt 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
 
@@ -94,7 +102,7 @@ make docs                         # 文档站本地预览（vite dev server）
 make deploy-docs                  # 文档站构建并部署到 Cloudflare Pages（仅本机执行，不走 CI）
 ```
 
-调试主程序时可用环境变量直接启动到指定页：`DEVENV_START_PAGE=lava make run`（导航 id 见 `Views/ViewFactory.cs`）。
+调试主程序时可用环境变量直接启动到指定页：`DEVENV_START_PAGE=lava make run`（导航 id 见 `Views/ViewFactory.cs`；`devenv` / `lava` 走开发窗口，`network` / `processes` / `services` 走监控窗口，`apps` / `tools` 等走全局启动器）。
 
 **编译检查与测试统一用 `make build` / `make test`，不要用 `make run` 代替**：`make build` 固定写入 Release 输出，`make run` 固定以 Debug 运行；正在运行的 `make run` 实例只会锁住 `bin/Debug`，不会让下一次 `make build` 因为 `bin/Release/DevEnv.Core.dll` 被占用而失败。只有确实要启动界面时才用 `make run`。
 

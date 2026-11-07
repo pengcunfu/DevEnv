@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -74,6 +75,12 @@ public partial class ShortcutsWindow : Window
     /// <summary>启动器可见期间监听 Win 键：用户要打开开始菜单时先把全屏窗口收起。</summary>
     private readonly WinKeyDismissHook _winKeyHook;
 
+    /// <summary>换页时网格的横向位移；只做渲染变换，不影响布局与框选坐标。</summary>
+    private readonly TranslateTransform _pageSlide = new();
+
+    /// <summary>上一页的索引，用来判断换页方向（循环时 4 → 0 算下一页）。</summary>
+    private int _lastPageIndex;
+
     public ShortcutsWindow()
     {
         InitializeComponent();
@@ -82,6 +89,10 @@ public partial class ShortcutsWindow : Window
         DragOver += OnDragOver;
         DragLeave += OnDragLeave;
         Drop += OnDrop;
+
+        EntryGrid.RenderTransform = _pageSlide;
+        _lastPageIndex = ViewModel.SelectedPage;
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         _winKeyHook = new WinKeyDismissHook(Dispatcher);
         _winKeyHook.WindowsKeyPressed += OnWindowsKeyPressed;
@@ -686,6 +697,68 @@ public partial class ShortcutsWindow : Window
     {
         var pageCount = ViewModel.Pages.Count;
         ViewModel.SelectedPage = ((ViewModel.SelectedPage + delta) % pageCount + pageCount) % pageCount;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(ShortcutLauncherViewModel.SelectedPage):
+                OnPageSwitched();
+                break;
+            case nameof(ShortcutLauncherViewModel.IsSearching):
+                // 搜索结果是跨页签的另一份列表，保留上一页的滚动位置会出现在半截
+                ResetScrollPosition();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 换页后把网格滚回顶部，并让新页内容从切换方向滑入淡入。
+    /// 不重置滚动位置时，在长页（本地应用）滚到底再切到短页（内置工具）会停在旧偏移上，
+    /// 工具页的卡片就显示在中部而不是顶部。
+    /// </summary>
+    private void OnPageSwitched()
+    {
+        var pageCount = Math.Max(1, ViewModel.Pages.Count);
+        var previous = _lastPageIndex;
+        var current = ViewModel.SelectedPage;
+        _lastPageIndex = current;
+
+        ResetScrollPosition();
+
+        // 预热 / 收起过程中换页不播放动画，否则首次显示会带着一半透明
+        if (!IsVisible || _hiding || _prewarming || ViewModel.IsSearching)
+            return;
+
+        // 循环页签按更短的一侧判断方向：4 → 0 是下一页，0 → 4 是上一页
+        var forward = ((current - previous) % pageCount + pageCount) % pageCount;
+        var backward = ((previous - current) % pageCount + pageCount) % pageCount;
+        PlayPageTransition(forward <= backward ? 1 : -1);
+    }
+
+    private void ResetScrollPosition()
+    {
+        if (EntryScroller.VerticalOffset > 0)
+            EntryScroller.ScrollToTop();
+    }
+
+    /// <summary>新页内容从切换方向的一侧（24 DIP）滑入并淡入；只动渲染层，不触发重新布局。</summary>
+    private void PlayPageTransition(int direction)
+    {
+        _pageSlide.BeginAnimation(TranslateTransform.XProperty, null);
+        EntryGrid.BeginAnimation(OpacityProperty, null);
+
+        _pageSlide.X = direction * 24;
+        EntryGrid.Opacity = 0;
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        _pageSlide.BeginAnimation(
+            TranslateTransform.XProperty,
+            new DoubleAnimation(0d, new Duration(TimeSpan.FromMilliseconds(190))) { EasingFunction = ease });
+        EntryGrid.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(1d, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = ease });
     }
 
     /// <summary>

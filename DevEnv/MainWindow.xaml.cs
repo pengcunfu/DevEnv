@@ -11,9 +11,17 @@ namespace DevEnv.Host;
 
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    /// <summary>
+    /// 宿主主窗不再只有一个：开发窗口（开发环境 / 熔岩环境）与监控窗口
+    /// （网络 / 进程 / 服务监控）共用这套界面，只替换标题与左侧导航项。
+    /// </summary>
+    public MainWindow(string title, IReadOnlyList<NavItem> navItems)
     {
         InitializeComponent();
+
+        Title = title;
+        DataContext = new MainViewModel(navItems);
+
         Closing += OnClosing;
         TryLoadIcon();
 
@@ -107,6 +115,6 @@ public partial class MainWindow : Window
     private void OnClosing(object? sender, CancelEventArgs e)
     {
         if (System.Windows.Application.Current is App app)
-            e.Cancel = app.TryHideToTray();
+            e.Cancel = app.TryHideToTray(this);
     }
 }

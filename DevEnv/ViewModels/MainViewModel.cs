@@ -15,17 +15,12 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>程序化同步导航高亮时置位，避免 OnCurrentNavChanged 再导航一次、把同一页面创建两份。</summary>
     private bool _syncingNav;
 
-    public MainViewModel()
+    public MainViewModel(IReadOnlyList<NavItem> navItems)
     {
-        NavItems = new ObservableCollection<NavItem>(ViewFactory.NavItems);
+        NavItems = new ObservableCollection<NavItem>(navItems);
         StatusText = "就绪";
         VersionText = $"版本 {CurrentVersion()}";
         CurrentNav = NavItems.FirstOrDefault();
-
-        // 调试用：DEVENV_START_PAGE=lava 直接启动到指定页，便于自动化截图与手工排查
-        var startPage = Environment.GetEnvironmentVariable("DEVENV_START_PAGE");
-        if (!string.IsNullOrWhiteSpace(startPage))
-            Navigate(startPage);
     }
 
     public ObservableCollection<NavItem> NavItems { get; }

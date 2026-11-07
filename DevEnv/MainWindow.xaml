@@ -15,10 +15,6 @@
         Background="{DynamicResource AppBackgroundBrush}"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display">
-    <Window.DataContext>
-        <vm:MainViewModel />
-    </Window.DataContext>
-
     <DockPanel>
         <!-- 底部状态栏 -->
         <Border DockPanel.Dock="Bottom"

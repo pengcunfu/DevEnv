@@ -289,7 +289,9 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <!-- 固定底行高度：右下角「＋」只在可编辑页显示，若由它撑高，切换系统工具 /
+                 内置工具页时底行会矮一截，页签跟着上下跳 -->
+            <RowDefinition Height="Auto" MinHeight="82" />
         </Grid.RowDefinitions>
 
         <!-- 顶部：提示 + 搜索框 -->
@@ -339,7 +341,8 @@
 
         <!-- 中部：图标网格 -->
         <Grid Grid.Row="2" Margin="0,16,0,0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
+            <ScrollViewer x:Name="EntryScroller"
+                          VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Padding="24,0,24,0"
                           Background="Transparent">

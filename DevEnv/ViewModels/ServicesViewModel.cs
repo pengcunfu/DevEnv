@@ -342,7 +342,7 @@ public sealed partial class ServicesViewModel : ObservableObject, IDisposable
         var target = ServiceText.DescribeStartupMode(option.Mode);
         if (string.Equals(current, target, StringComparison.Ordinal))
         {
-            HostServices.SetStatus($"「{service.DisplayName}」的启动类型已经是{target}");
+            HostServices.SetStatus($"「{service.DisplayName}」的启动类型已经是{target}", "services");
             return Task.CompletedTask;
         }
 
@@ -394,18 +394,18 @@ public sealed partial class ServicesViewModel : ObservableObject, IDisposable
             var result = await Task.Run(action);
             if (result.Ok)
             {
-                HostServices.SetStatus(result.DisplayMessage);
+                HostServices.SetStatus(result.DisplayMessage, "services");
             }
             else
             {
                 Message = result.DisplayMessage;
-                HostServices.SetStatus(result.DisplayMessage);
+                HostServices.SetStatus(result.DisplayMessage, "services");
             }
         }
         catch (Exception ex)
         {
             Message = ex.Message;
-            HostServices.SetStatus(ex.Message);
+            HostServices.SetStatus(ex.Message, "services");
         }
         finally
         {

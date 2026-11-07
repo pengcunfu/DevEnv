@@ -110,13 +110,15 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private static readonly string[] ToolCategoryOrder =
         ["系统管理", "硬件与设备", "网络与安全", "性能与监控"];
 
-    /// <summary>内置工具页里代表宿主主窗口的条目 key。</summary>
-    private const string MainWindowToolKey = "main-window";
+    /// <summary>内置工具页里代表宿主两个主窗口的条目 key。</summary>
+    private const string DevelopmentWindowKey = "dev-window";
+    private const string MonitorWindowKey = "monitor-window";
 
-    /// <summary>宿主内置工具：tool id、显示名与说明，顺序与主窗口原来的「工具」菜单一致。</summary>
+    /// <summary>宿主内置工具：tool id、显示名与说明，两个主窗口排在最前。</summary>
     private static readonly (string Key, string Name, string Description)[] BuiltinToolDefinitions =
     [
-        (MainWindowToolKey, "燧岚开发盒子", "开发环境主窗口"),
+        (DevelopmentWindowKey, "燧岚开发盒子", "开发环境与熔岩环境"),
+        (MonitorWindowKey, "燧岚监控中心", "网络、进程与服务监控"),
         ("json", "JSON 格式化器", "格式化与校验 JSON"),
         ("hosts", "Hosts 文件编辑器", "编辑系统 hosts 解析记录"),
         ("image", "图像格式转换器", "图像格式转换与压缩"),
@@ -716,9 +718,12 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             ShortcutKind.Folder => CoreServices.Shortcuts.OpenFolder(entry.Index),
             ShortcutKind.Web => CoreServices.Shortcuts.OpenWeb(entry.Index),
             ShortcutKind.Tool => CoreServices.Shortcuts.RunSystemTool(entry.Key),
-            ShortcutKind.InternalTool => entry.Key == MainWindowToolKey
-                ? ShowMainWindow()
-                : ToolWindowHost.Open(entry.Key),
+            ShortcutKind.InternalTool => entry.Key switch
+            {
+                DevelopmentWindowKey => ShowHostWindow(HostCallbacks.OnShowDevelopmentWindow, "开发窗口"),
+                MonitorWindowKey => ShowHostWindow(HostCallbacks.OnShowMonitorWindow, "监控窗口"),
+                _ => ToolWindowHost.Open(entry.Key),
+            },
             _ => CoreServices.Shortcuts.RunApp(entry.Index),
         });
     }
@@ -928,12 +933,11 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     private void Report(OperationResult result) => Message = result.Ok ? string.Empty : result.DisplayMessage;
 
-    /// <summary>显示宿主主窗口（开发环境），与托盘「显示主窗口」走同一条回调。</summary>
-    private static OperationResult ShowMainWindow()
+    /// <summary>显示宿主某个主窗口；回调由 App 在启动时接线。</summary>
+    private static OperationResult ShowHostWindow(Action? show, string name)
     {
-        var show = HostCallbacks.OnShowMainWindow;
         if (show is null)
-            return OperationResult.Fail("主窗口暂不可用");
+            return OperationResult.Fail($"{name}暂不可用");
 
         show();
         return OperationResult.Success();

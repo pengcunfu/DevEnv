@@ -50,7 +50,7 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
         var config = CoreServices.DevEnvServices.GetConfig(item.Id);
         if (config is null)
         {
-            HostServices.SetStatus("配置不存在，可能已被移除");
+            HostServices.SetStatus("配置不存在，可能已被移除", "devenv");
             Reload();
             return;
         }
@@ -78,13 +78,13 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
             if (!stop.Ok)
             {
                 // 停不下来就先别移除，免得配置没了进程还留在后台。
-                HostServices.SetStatus(stop.DisplayMessage);
+                HostServices.SetStatus(stop.DisplayMessage, "devenv");
                 Reload();
                 return;
             }
         }
 
-        HostServices.SetStatus(CoreServices.DevEnvServices.Remove(item.Id).DisplayMessage);
+        HostServices.SetStatus(CoreServices.DevEnvServices.Remove(item.Id).DisplayMessage, "devenv");
         Reload();
     }
 
@@ -96,7 +96,7 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
             return;
 
         var result = await Task.Run(() => CoreServices.DevEnvServices.Start(item.Id));
-        HostServices.SetStatus(result.DisplayMessage);
+        HostServices.SetStatus(result.DisplayMessage, "devenv");
         Reload();
     }
 
@@ -107,7 +107,7 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
             return;
 
         var result = await Task.Run(() => CoreServices.DevEnvServices.Stop(item.Id));
-        HostServices.SetStatus(result.DisplayMessage);
+        HostServices.SetStatus(result.DisplayMessage, "devenv");
         Reload();
     }
 
@@ -119,7 +119,7 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
 
         var result = CoreServices.DevEnvServices.OpenWorkingDirectory(item.Id);
         if (!result.Ok)
-            HostServices.SetStatus(result.DisplayMessage);
+            HostServices.SetStatus(result.DisplayMessage, "devenv");
     }
 
     [RelayCommand]
@@ -136,12 +136,12 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
     {
         var result = CoreServices.DevEnvServices.OpenLogsDirectory();
         if (!result.Ok)
-            HostServices.SetStatus(result.DisplayMessage);
+            HostServices.SetStatus(result.DisplayMessage, "devenv");
     }
 
     private void Save(DevServiceConfig config)
     {
-        HostServices.SetStatus(CoreServices.DevEnvServices.Save(config).DisplayMessage);
+        HostServices.SetStatus(CoreServices.DevEnvServices.Save(config).DisplayMessage, "devenv");
         Reload();
     }
 

@@ -111,11 +111,12 @@ public static class ShortcutLauncherProbe
             vm.SelectedPage = builtinPage.Index;
             Pump();
             Check("内置工具页签加载宿主工具目录",
-                vm.VisibleEntries.Count == 8
+                vm.VisibleEntries.Count == 9
                 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.InternalTool),
                 $"共 {vm.VisibleEntries.Count} 项");
-            Check("内置工具页签含主窗口入口",
-                vm.VisibleEntries.Any(e => e.Key == "main-window"));
+            Check("内置工具页签含两个主窗口入口",
+                vm.VisibleEntries.Any(e => e.Key == "dev-window")
+                && vm.VisibleEntries.Any(e => e.Key == "monitor-window"));
             Check("内置工具页签隐藏「添加」按钮", !vm.CanAddOnCurrentPage);
             Check("内置工具页签禁止框选与拖动", !vm.IsEditableView);
 

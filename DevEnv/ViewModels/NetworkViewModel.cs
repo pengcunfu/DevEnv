@@ -134,7 +134,7 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
         var summary = $"连接 {TotalConnections} · 下载 {TotalDownload} · 上传 {TotalUpload}";
         if (!string.IsNullOrWhiteSpace(StatusHint))
             summary += $" · {StatusHint}";
-        HostServices.SetPageStatus(summary);
+        HostServices.SetPageStatus(summary, "network");
     }
 
     private void ApplyFilter()
@@ -283,6 +283,6 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
         _portTimer.Stop();
         _speedTimer.Stop();
         // 离开网络监控页时清掉状态栏摘要，别把旧数据带到其他页面。
-        HostServices.SetPageStatus(string.Empty);
+        HostServices.SetPageStatus(string.Empty, "network");
     }
 }
