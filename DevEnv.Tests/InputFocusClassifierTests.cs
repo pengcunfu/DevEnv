@@ -14,6 +14,24 @@ public sealed class InputFocusClassifierTests
     }
 
     [Theory]
+    [InlineData("Progman")]
+    [InlineData("WorkerW")]
+    [InlineData("SHELLDLL_DefView")]
+    public void Desktop_Window_Classes_Are_Recognized(string className)
+    {
+        Assert.True(InputFocusClassifier.IsDesktopClass(className));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("CabinetWClass")]
+    [InlineData("Notepad")]
+    public void Non_Desktop_Classes_Are_Not_Recognized(string? className)
+    {
+        Assert.False(InputFocusClassifier.IsDesktopClass(className));
+    }
+
+    [Theory]
     [InlineData("Shell_TrayWnd")]
     [InlineData("Shell_SecondaryTrayWnd")]
     public void Taskbar_Window_Classes_Are_Recognized(string className)

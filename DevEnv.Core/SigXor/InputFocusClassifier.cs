@@ -9,6 +9,10 @@ public static class InputFocusClassifier
     public static bool IsExplorerClass(string? className) =>
         className is "CabinetWClass" or "ExploreWClass";
 
+    /// <summary>是否为桌面（桌面图标列表由 Progman 或 WorkerW 承载）。</summary>
+    public static bool IsDesktopClass(string? className) =>
+        className is "Progman" or "WorkerW" or "SHELLDLL_DefView";
+
     /// <summary>是否为 Windows 任务栏（主屏 / 副屏）。</summary>
     public static bool IsTaskbar(string? className) =>
         className is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd";

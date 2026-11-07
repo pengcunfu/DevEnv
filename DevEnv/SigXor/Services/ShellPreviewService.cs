@@ -22,6 +22,7 @@ public sealed class ShellPreviewService : IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly IDisposable _hotkeyRegistration;
     private readonly ExplorerSelectionService _selection = new();
+    private readonly DesktopSelectionService _desktopSelection = new();
     // 快捷应用同时搜索全局启动器里的本地应用 / 文件夹 / 网站
     private readonly LauncherService _launcher = new(CoreServices.Shortcuts);
     private readonly Action _openSettings;
@@ -63,7 +64,14 @@ public sealed class ShellPreviewService : IDisposable
             return true;
         }
 
-        if (!InputFocusClassifier.IsExplorerClass(GetWindowClassName(foreground))) return false;
+        // 资源管理器文件列表或桌面：空格 / Esc 由预览接管
+        string? className = GetWindowClassName(foreground);
+        if (!InputFocusClassifier.IsExplorerClass(className)
+            && !InputFocusClassifier.IsDesktopClass(className))
+        {
+            return false;
+        }
+
         // 焦点在资源管理器搜索框等输入控件里时，空格/Esc 属于输入，不拦截
         return !IsInputFocusOnTextBox(foreground);
     }
@@ -116,8 +124,9 @@ public sealed class ShellPreviewService : IDisposable
         if (foreground == IntPtr.Zero) return false;
         string? className = GetWindowClassName(foreground);
 
-        // 资源管理器中：空格预览文件
-        if (InputFocusClassifier.IsExplorerClass(className))
+        // 资源管理器或桌面：空格预览选中的文件
+        if (InputFocusClassifier.IsExplorerClass(className)
+            || InputFocusClassifier.IsDesktopClass(className))
         {
             if (IsInputFocusOnTextBox(foreground)) return false;
             IntPtr captured = foreground;
@@ -134,7 +143,10 @@ public sealed class ShellPreviewService : IDisposable
     {
         if (_disposed) return;
 
-        var paths = _selection.GetSelectedFiles(foreground);
+        bool onDesktop = InputFocusClassifier.IsDesktopClass(GetWindowClassName(foreground));
+        var paths = onDesktop
+            ? _desktopSelection.GetSelectedFiles()
+            : _selection.GetSelectedFiles(foreground);
         if (paths.Count == 0)
         {
             if (toggleIfUnchanged && IsPreviewVisible) ClosePreview();
