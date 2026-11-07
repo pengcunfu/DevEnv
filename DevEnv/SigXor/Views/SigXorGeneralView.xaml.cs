@@ -86,6 +86,8 @@ public partial class SigXorGeneralView : UserControl
         s.HexFontSize = fontSize;
         s.BytesPerRow = bytesPerRow;
         _settings.Save();
+        // 保存了新的默认字号后，不再沿用 Ctrl + 滚轮产生的会话级缩放
+        Services.PreviewTextZoom.Reset();
         return true;
     }
 

@@ -61,7 +61,7 @@ public sealed partial class WebContentViewModel : ObservableObject, IDisposable
         }
         Source = new TextContentViewModel(FilePath, text, encoding, _backup, allowEdit: false);
         Source.FontFamily = _settings.Current.TextFontFamily;
-        Source.FontSize = _settings.Current.TextFontSize;
+        Source.FontSize = PreviewTextZoom.Resolve(_settings.Current.TextFontSize);
         return Source;
     }
 

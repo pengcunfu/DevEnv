@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Highlighting;
+using DevEnv.Host.SigXor.Services;
 using DevEnv.Host.SigXor.ViewModels;
 using DevEnv.Host.Themes;
 
@@ -18,8 +20,19 @@ public partial class TextView : UserControl
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+        PreviewMouseWheel += OnPreviewMouseWheel;
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+    }
+
+    /// <summary>Ctrl + 鼠标滚轮缩放字号；不按 Ctrl 时保持编辑器的正常滚动。</summary>
+    private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0 || _vm is null) return;
+
+        double step = e.Delta > 0 ? 1 : -1;
+        _vm.FontSize = PreviewTextZoom.Set(_vm.FontSize + step);
+        e.Handled = true;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

@@ -272,7 +272,7 @@ public partial class PreviewViewModel : ObservableObject
         {
             var vm = new TextContentViewModel(file.FullPath, loaded.Value.text, loaded.Value.encoding, _backup);
             vm.FontFamily = _settings.Current.TextFontFamily;
-            vm.FontSize = _settings.Current.TextFontSize;
+            vm.FontSize = PreviewTextZoom.Resolve(_settings.Current.TextFontSize);
             Content = vm;
         }
     }
@@ -446,7 +446,7 @@ public partial class PreviewViewModel : ObservableObject
 
         var source = new TextContentViewModel(file.FullPath, loaded.Value.text, loaded.Value.encoding, _backup);
         source.FontFamily = _settings.Current.TextFontFamily;
-        source.FontSize = _settings.Current.TextFontSize;
+        source.FontSize = PreviewTextZoom.Resolve(_settings.Current.TextFontSize);
         var vm = new MarkdownContentViewModel(file.FullPath, source, Views.WebViewHostBase.IsRuntimeAvailable());
         // 先挂上视图，Markdig 与 WebView 附着并行，缩短可感知等待
         Content = vm;
