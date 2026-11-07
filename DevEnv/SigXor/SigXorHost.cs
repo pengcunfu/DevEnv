@@ -43,7 +43,6 @@ public sealed class SigXorHost : IDisposable
     private SigXorVoiceView? _voiceView;
     private SigXorServiceView? _serviceView;
     private ISettingsSections? _sections;
-    private AboutWindow? _aboutWindow;
     private UpdateWindow? _updateWindow;
     private MainWindow? _browserWindow;
     private bool _disposed;
@@ -228,37 +227,6 @@ public sealed class SigXorHost : IDisposable
         _serviceView?.SetShortcutHint(_hotkeysView?.ShortcutHint ?? _voiceView?.ShortcutHint);
     }
 
-    /// <summary>打开关于窗口（单实例复用，关闭后重建）。</summary>
-    public void OpenAbout()
-    {
-        if (!_dispatcher.CheckAccess())
-        {
-            _dispatcher.Invoke(OpenAbout);
-            return;
-        }
-
-        if (_aboutWindow is not null)
-        {
-            try
-            {
-                _aboutWindow.Show();
-                _aboutWindow.Activate();
-                _aboutWindow.WindowState = WindowState.Normal;
-                return;
-            }
-            catch (ArgumentException)
-            {
-                try { _aboutWindow.Close(); } catch { }
-                _aboutWindow = null;
-            }
-        }
-
-        _aboutWindow = new AboutWindow(OpenUpdateWindow);
-        _aboutWindow.Closed += (_, _) => _aboutWindow = null;
-        _aboutWindow.Show();
-        _aboutWindow.Activate();
-    }
-
     /// <summary>打开更新窗口（单实例复用，关闭后重建）。</summary>
     public void OpenUpdateWindow()
     {
@@ -319,7 +287,6 @@ public sealed class SigXorHost : IDisposable
         _disposed = true;
 
         try { _generalView = null; _voiceView = null; _serviceView = null; _sections = null; } catch { }
-        try { _aboutWindow?.Close(); } catch { }
         try { _updateWindow?.Close(); } catch { }
         try { _browserWindow?.Close(); } catch { }
         try { _voiceService?.Dispose(); } catch { }

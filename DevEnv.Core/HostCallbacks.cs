@@ -32,8 +32,6 @@ public static class HostCallbacks
     public static Action? OnOpenSigXorLauncher { get; set; }
     /// <summary>打开文件浏览器窗口（目录导航 + 内嵌预览）。</summary>
     public static Action? OnOpenSigXorBrowser { get; set; }
-    /// <summary>打开模块关于窗口。</summary>
-    public static Action? OnOpenSigXorAbout { get; set; }
     /// <summary>打开模块更新窗口。</summary>
     public static Action? OnOpenSigXorUpdate { get; set; }
 }

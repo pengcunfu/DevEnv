@@ -75,9 +75,8 @@ public static class SigXorSmokeProbe
             new Views.SigXorVoiceView(new Services.SettingsService()));
         Probe("Views.SigXorServiceView", () => new Views.SigXorServiceView());
         Probe("UpdateWindow", () => new UpdateWindow(new ViewModels.UpdateViewModel(new Services.UpdateService())));
-        Probe("AboutWindow", () => new AboutWindow(() => { }));
 
-        // ---- 宿主设置对话框（平铺四页签）----
+        // ---- 宿主设置对话框（平铺五页签）----
         Probe("Windows.SettingsWindow", () =>
         {
             var settings = new Services.SettingsService();

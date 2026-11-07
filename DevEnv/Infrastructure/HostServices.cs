@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using DevEnv.Host.ViewModels;
-using DevEnv.Host.Windows;
 
 namespace DevEnv.Host.Infrastructure;
 
@@ -31,15 +30,6 @@ public static class HostServices
     {
         if (Application.Current?.MainWindow is MainWindow window)
             window.ViewModel.SetPageStatus(message);
-    }
-
-    public static void ShowAbout()
-    {
-        var window = new AboutWindow
-        {
-            Owner = Application.Current?.MainWindow is Window w && w.IsVisible ? w : null,
-        };
-        window.ShowDialog();
     }
 
     /// <summary>打开资源管理器并定位到指定文件（不存在时只打开所在目录）。</summary>

@@ -1,0 +1,112 @@
+<UserControl x:Class="DevEnv.Host.Views.AboutHelpView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:AboutViewModel}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:AboutViewModel />
+    </UserControl.DataContext>
+
+    <!-- 只提供内容，不自带 ScrollViewer：设置对话框的页签统一负责滚动。
+         关于信息、检查更新与帮助文档从原来的「帮助」菜单和模块关于窗迁移过来。 -->
+    <StackPanel MaxWidth="680" HorizontalAlignment="Left">
+        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="燧岚开发盒子" Style="{DynamicResource PageTitleStyle}" />
+                <TextBlock Text="{Binding VersionText, Mode=OneWay}" Style="{DynamicResource PageHintStyle}" Margin="0,4,0,0" />
+                <TextBlock Margin="0,12,0,0"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Text="专为程序员设计的多语言开发环境管理工具，内置开发环境管理、熔岩翻译、熔岩剪贴板、文件快速预览、语音输入、区域截图、快捷应用与全局启动器。" />
+                <TextBlock Margin="0,10,0,0"
+                           TextWrapping="Wrap"
+                           Style="{DynamicResource MutedTextStyle}"
+                           Text="熔岩翻译 / 熔岩剪贴板：快捷应用顶部入口；显示窗口：设置 → 快捷键" />
+                <TextBlock Margin="0,12,0,0" Text="© 2026 FireNeb · DevEnv" Style="{DynamicResource MutedTextStyle}" />
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="检查更新" Style="{DynamicResource SectionTitleStyle}" />
+                <TextBlock Style="{DynamicResource PageHintStyle}">
+                    <Run Text="当前版本 " /><Run Text="{Binding Update.CurrentVersion, Mode=OneWay}" />
+                </TextBlock>
+
+                <WrapPanel Margin="0,10,0,0">
+                    <Button Content="检查更新" Margin="0,0,8,0" Command="{Binding CheckUpdateCommand}" />
+                    <Button Content="下载更新" Margin="0,0,8,0"
+                            Visibility="{Binding Update.PendingVersion, Converter={StaticResource NonEmptyString}}"
+                            IsEnabled="{Binding Update.Downloading, Converter={StaticResource FalseToVisibility}}"
+                            Command="{Binding DownloadUpdateCommand}" />
+                    <Button Content="重启并应用" Style="{StaticResource AccentButtonStyle}"
+                            Visibility="{Binding Update.Downloading, Converter={StaticResource FalseToVisibility}}"
+                            Command="{Binding ApplyUpdateCommand}" />
+                </WrapPanel>
+
+                <StackPanel Margin="0,12,0,0"
+                            Visibility="{Binding Update.Downloading, Converter={StaticResource TrueToVisibility}}">
+                    <ProgressBar Value="{Binding Update.DownloadProgress, Mode=OneWay}" Maximum="100" />
+                    <TextBlock Text="{Binding Update.DownloadProgress, StringFormat={}{0}%}"
+                               Style="{DynamicResource MutedTextStyle}" Margin="0,4,0,0" />
+                </StackPanel>
+
+                <TextBlock Margin="0,10,0,0"
+                           Text="{Binding UpdateMessage}"
+                           Style="{DynamicResource PageHintStyle}"
+                           Visibility="{Binding UpdateMessage, Converter={StaticResource NonEmptyString}}" />
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <TextBlock Text="帮助文档" Style="{DynamicResource SectionTitleStyle}" />
+                <TextBlock Style="{DynamicResource PageHintStyle}" Margin="0,4,0,0"
+                           Text="完整使用说明、功能列表与版本发布记录都在官网文档站。" />
+                <WrapPanel Margin="0,10,0,0">
+                    <TextBlock Margin="0,0,18,0" TextWrapping="Wrap">
+                        <Hyperlink NavigateUri="https://devenv.cn/guide/getting-started"
+                                   RequestNavigate="OnLinkClick">
+                            快速开始
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock Margin="0,0,18,0" TextWrapping="Wrap">
+                        <Hyperlink NavigateUri="https://devenv.cn/guide/features"
+                                   RequestNavigate="OnLinkClick">
+                            功能说明
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock Margin="0,0,18,0" TextWrapping="Wrap">
+                        <Hyperlink NavigateUri="https://devenv.cn/guide/releases"
+                                   RequestNavigate="OnLinkClick">
+                            版本发布
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap">
+                        <Hyperlink NavigateUri="https://devenv.cn/downloads"
+                                   RequestNavigate="OnLinkClick">
+                            软件下载
+                        </Hyperlink>
+                    </TextBlock>
+                </WrapPanel>
+                <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" Style="{DynamicResource PageHintStyle}">
+                    <Run Text="官方网站：" />
+                    <Hyperlink NavigateUri="https://devenv.cn/" RequestNavigate="OnLinkClick">https://devenv.cn/</Hyperlink>
+                </TextBlock>
+                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Style="{DynamicResource PageHintStyle}">
+                    <Run Text="开源地址：" />
+                    <Hyperlink NavigateUri="https://github.com/pengcunfu/DevBox.Net" RequestNavigate="OnLinkClick">https://github.com/pengcunfu/DevBox.Net</Hyperlink>
+                </TextBlock>
+
+                <TextBlock Text="飞书交流群" Margin="0,16,0,8" />
+                <Image Source="/Assets/feishu.png" Width="140" Height="140"
+                       Stretch="Uniform" HorizontalAlignment="Left" Margin="0,0,0,6"
+                       SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality" />
+                <TextBlock Text="扫码加入飞书群" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

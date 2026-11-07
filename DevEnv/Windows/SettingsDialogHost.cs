@@ -4,22 +4,24 @@ using DevEnv.Core;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 设置对话框宿主：全局只保留一个设置窗口实例，多入口（主菜单 / 托盘 / SigXor 入口）共用。
+/// 设置对话框宿主：全局只保留一个设置窗口实例，多入口（托盘 / SigXor 入口）共用。
 ///
-/// 设置窗口是平铺的四页签，不做二级页签：
-/// - 「常规」：主程序设置（托盘、自启、主题、默认翻译引擎、检查更新）+ 模块的常规选项；
+/// 设置窗口是平铺的五页签，不做二级页签：
+/// - 「常规」：主程序设置（托盘、自启、主题、默认翻译引擎）+ 模块的常规选项；
 /// - 「快捷键」：所有程序绑定的快捷键；
 /// - 「语音与截屏」：语音输入与区域截屏；
-/// - 「服务与模型」：语音 / OCR 模型与后台服务。
-/// 后三页签由模块通过 <see cref="ISettingsSections"/> 提供内容。
+/// - 「服务与模型」：语音 / OCR 模型与后台服务；
+/// - 「关于与帮助」：产品信息、检查更新与帮助文档入口。
+/// 中间三页签由模块通过 <see cref="ISettingsSections"/> 提供内容，其余由主程序提供。
 /// </summary>
 public static class SettingsDialogHost
 {
-    /// <summary>页签索引：0 常规 / 1 快捷键 / 2 语音与截屏 / 3 服务与模型。</summary>
+    /// <summary>页签索引：0 常规 / 1 快捷键 / 2 语音与截屏 / 3 服务与模型 / 4 关于与帮助。</summary>
     public const int GeneralTabIndex = 0;
     public const int HotkeysTabIndex = 1;
     public const int VoiceTabIndex = 2;
     public const int ServiceTabIndex = 3;
+    public const int AboutTabIndex = 4;
 
     private static SettingsWindow? _window;
 

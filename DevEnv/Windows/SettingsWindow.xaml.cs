@@ -6,10 +6,11 @@ using DevEnv.Host.Views;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 设置对话框：平铺的四页签（常规 / 快捷键 / 语音与截屏 / 服务与模型），不做二级页签。
+/// 设置对话框：平铺的五页签（常规 / 快捷键 / 语音与截屏 / 服务与模型 / 关于与帮助），不做二级页签。
 ///
 /// 「常规」页由主程序设置（<c>SettingsView</c>）与模块注入的常规选项组成；
-/// 「快捷键」「语音与截屏」「服务与模型」三页的内容由 SigXor 模块在运行时注入。
+/// 「快捷键」「语音与截屏」「服务与模型」三页的内容由 SigXor 模块在运行时注入；
+/// 「关于与帮助」由主程序提供，包含产品信息、检查更新与帮助文档入口。
 /// </summary>
 public partial class SettingsWindow : Window
 {
@@ -20,7 +21,7 @@ public partial class SettingsWindow : Window
         Closed += OnClosed;
     }
 
-    /// <summary>切换到指定页签（0 常规 / 1 快捷键 / 2 语音与截屏 / 3 服务与模型）。</summary>
+    /// <summary>切换到指定页签（0 常规 / 1 快捷键 / 2 语音与截屏 / 3 服务与模型 / 4 关于与帮助）。</summary>
     public void SelectTab(int index)
     {
         Tabs.SelectedIndex = index >= 0 && index < Tabs.Items.Count ? index : 0;
@@ -43,9 +44,8 @@ public partial class SettingsWindow : Window
         // 关闭时结束可能仍在进行的快捷键录制，恢复全局热键
         CancelHotkeyCapture();
 
-        // 常规页的下载进度轮询随窗口一起释放，不在 Unloaded 时停（切页签会触发 Unloaded）
-        if (GeneralHostView is not null)
-            GeneralHostView.Release();
+        // 「关于与帮助」页的下载进度轮询随窗口一起释放，不在 Unloaded 时停（切页签会触发 Unloaded）
+        AboutHelpHost?.Release();
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)

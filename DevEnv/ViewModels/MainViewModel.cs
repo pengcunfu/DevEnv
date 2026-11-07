@@ -83,7 +83,7 @@ public sealed partial class MainViewModel : ObservableObject
         // 「设置」不再是内容页，任何入口都统一弹设置对话框。
         if (normalized.Equals("settings", StringComparison.OrdinalIgnoreCase))
         {
-            OpenSettings();
+            SettingsDialogHost.Open();
             return;
         }
 
@@ -121,14 +121,6 @@ public sealed partial class MainViewModel : ObservableObject
         CurrentView = ViewFactory.Create(normalized);
     }
 
-    /// <summary>设置以模态对话框打开；已打开时仅激活，避免重复弹窗。</summary>
-    [RelayCommand]
-    private void OpenSettings() => SettingsDialogHost.Open();
-
-    /// <summary>直接打开设置里的「快捷键」页。</summary>
-    [RelayCommand]
-    private void OpenHotkeysSettings() => SettingsDialogHost.Open(SettingsDialogHost.HotkeysTabIndex);
-
     /// <summary>工具一律开独立非模态窗口，不再嵌入主窗内容区。</summary>
     [RelayCommand]
     private void OpenTool(string? id)
@@ -144,12 +136,6 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void HideTranslator() => TranslatorService.HideTranslator();
-
-    [RelayCommand]
-    private void About() => HostServices.ShowAbout();
-
-    [RelayCommand]
-    private void OpenDocs() => HostServices.OpenUrl("https://devenv.cn/");
 
     // SigXor 模块：文件快速预览 / 区域截图 / 语音与截屏 / 快捷应用 / 文件浏览器
 

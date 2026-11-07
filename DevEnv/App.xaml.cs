@@ -193,6 +193,7 @@ public partial class App : System.Windows.Application
         // 单击托盘图标 = 快捷应用；全局启动器与主窗口都从右键菜单进入
         _tray.ShortcutsRequested += () => Dispatcher.InvokeAsync(() => ShortcutWindowHost.Toggle());
         _tray.MainWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
+        _tray.SettingsRequested += () => Dispatcher.InvokeAsync(() => SettingsDialogHost.Open());
         _tray.TranslatorRequested += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest { Visible = true }));
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
         _tray.ExitRequested += ExitApp;
@@ -215,7 +216,6 @@ public partial class App : System.Windows.Application
         _tray.SigXorSettingsRequested += () => Dispatcher.InvokeAsync(() => OpenSigXorSettingsTab(SettingsSection.Voice));
         _tray.SigXorLauncherRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowLauncher());
         _tray.SigXorBrowserRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowBrowser());
-        _tray.SigXorAboutRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.OpenAbout());
         _tray.SetVoiceServiceState(_sigXor?.IsVoiceServiceRunning ?? false);
 
         // 首次启动就带了文件路径：直接弹预览浮窗
@@ -693,7 +693,6 @@ public partial class App : System.Windows.Application
         HostCallbacks.OnOpenSigXorSettings += section => Dispatcher.BeginInvoke(new Action(() => OpenSigXorSettingsTab(section)));
         HostCallbacks.OnOpenSigXorLauncher += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowLauncher()));
         HostCallbacks.OnOpenSigXorBrowser += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowBrowser()));
-        HostCallbacks.OnOpenSigXorAbout += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenAbout()));
         HostCallbacks.OnOpenSigXorUpdate += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenUpdateWindow()));
     }
 

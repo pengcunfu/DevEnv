@@ -38,16 +38,6 @@
                 <MenuItem Header="区域截图(_S)" Command="{Binding OpenScreenshotCommand}" />
                 <MenuItem Header="语音与截屏设置(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
                 </MenuItem>
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_设置(S)">
-                <MenuItem Header="常规(_G)" Command="{Binding OpenSettingsCommand}" />
-                <MenuItem Header="快捷键(_K)..." Command="{Binding OpenHotkeysSettingsCommand}" />
-                <MenuItem Header="语音与截屏(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
-                <MenuItem Header="服务与模型(_M)..." Command="{Binding OpenSigXorServiceSettingsCommand}" />
-            </MenuItem>
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_帮助(H)">
-                <MenuItem Header="官方文档(_D)" Command="{Binding OpenDocsCommand}" />
-                <MenuItem Header="关于燧岚开发盒子(_A)..." Command="{Binding AboutCommand}" />
-            </MenuItem>
         </Menu>
 
         <!-- 底部状态栏 -->

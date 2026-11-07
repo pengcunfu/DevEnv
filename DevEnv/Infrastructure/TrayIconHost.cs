@@ -13,6 +13,8 @@ internal sealed class TrayIconHost : IDisposable
 
     /// <summary>右键菜单「显示主窗口」：主窗口只从菜单进入，单击托盘图标不再唤出它。</summary>
     public event Action? MainWindowRequested;
+    /// <summary>右键菜单「设置…」：打开合并后的设置对话框（含关于与帮助）。</summary>
+    public event Action? SettingsRequested;
     /// <summary>右键菜单「全局启动器…」（单击托盘图标打开的是 SigXor 快捷应用）。</summary>
     public event Action? ShortcutsRequested;
     public event Action? TranslatorRequested;
@@ -33,8 +35,6 @@ internal sealed class TrayIconHost : IDisposable
     public event Action? SigXorLauncherRequested;
     /// <summary>SigXor 模块：打开文件浏览器窗口。</summary>
     public event Action? SigXorBrowserRequested;
-    /// <summary>SigXor 模块：打开模块关于窗口。</summary>
-    public event Action? SigXorAboutRequested;
 
     public TrayIconHost(string text, System.Drawing.Icon? icon)
     {
@@ -46,6 +46,7 @@ internal sealed class TrayIconHost : IDisposable
         };
 
         _menu.Items.Add("显示主窗口", null, (_, _) => Raise(MainWindowRequested));
+        _menu.Items.Add("设置…", null, (_, _) => Raise(SettingsRequested));
         _menu.Items.Add("全局启动器…", null, (_, _) => Raise(ShortcutsRequested));
         _menu.Items.Add("熔岩翻译", null, (_, _) => Raise(TranslatorRequested));
         _menu.Items.Add("熔岩剪贴板", null, (_, _) => Raise(ClipboardRequested));
@@ -57,7 +58,6 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add("启动语音服务", null, (_, _) => Raise(StartVoiceRequested));
         _menu.Items.Add("停止语音服务", null, (_, _) => Raise(StopVoiceRequested));
         _menu.Items.Add("语音与截屏设置…", null, (_, _) => Raise(SigXorSettingsRequested));
-        _menu.Items.Add("关于…", null, (_, _) => Raise(SigXorAboutRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;
