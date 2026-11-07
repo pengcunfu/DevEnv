@@ -28,6 +28,8 @@ public sealed class ShellPreviewService : IDisposable
     private ShellPreviewViewModel? _viewModel;
     private ShellPreviewWindow? _window;
     private LauncherWindow? _launcherWindow;
+    /// <summary>最近一次预览的资源管理器选中项，用于区分「再按空格关闭」和「换了文件继续预览」。</summary>
+    private string _lastSelectionKey = "";
     private bool _disposed;
 
     public ShellPreviewService(
@@ -86,7 +88,7 @@ public sealed class ShellPreviewService : IDisposable
         // 启动器已打开：不拦截预览键，让搜索框正常输入
         if (_launcherWindow is { IsVisible: true }) return false;
 
-        // 浮窗已打开：预览窗持有前台或在资源管理器里时，再按预览键关闭（吞掉按键，避免传给 Explorer）。
+        // 浮窗已打开：预览窗持有前台或在资源管理器里时，再按预览键处理（吞掉按键，避免传给 Explorer）。
         // 失焦到其他应用后不拦截，预览键交给当前应用，避免在别处打字时预览被误关。
         // 编辑模式下同样放行，保证能输入预览键。
         if (IsPreviewVisible)
@@ -94,7 +96,18 @@ public sealed class ShellPreviewService : IDisposable
             if (_window?.IsInEditMode() == true) return false;
             if (ShouldHandlePreviewCloseKey())
             {
-                _dispatcher.BeginInvoke(ClosePreview);
+                IntPtr current = GetForegroundWindow();
+                if (_window is { } window && current == new WindowInteropHelper(window).Handle)
+                {
+                    // 预览窗自己在前台：空格就是关闭
+                    _dispatcher.BeginInvoke(ClosePreview);
+                    return true;
+                }
+
+                // 焦点回到资源管理器：重新读取选中项。选中项没变才关闭，
+                // 换了文件则把新文件加入历史并直接预览，不需要先关窗再按一次空格。
+                IntPtr captured = current;
+                _dispatcher.BeginInvoke(() => ShowPreviewFromExplorer(captured, toggleIfUnchanged: true));
                 return true;
             }
         }
@@ -117,19 +130,76 @@ public sealed class ShellPreviewService : IDisposable
 
     private bool OnKeyReleased(int vkCode) => false;
 
-    private void ShowPreviewFromExplorer(IntPtr foreground)
+    private void ShowPreviewFromExplorer(IntPtr foreground, bool toggleIfUnchanged = false)
     {
         if (_disposed) return;
 
         var paths = _selection.GetSelectedFiles(foreground);
+        if (paths.Count == 0)
+        {
+            if (toggleIfUnchanged && IsPreviewVisible) ClosePreview();
+            return;
+        }
+
+        if (toggleIfUnchanged && IsPreviewVisible && IsSelectionUnchanged(paths))
+        {
+            ClosePreview();
+            return;
+        }
+
         ShowPreviewForPaths(paths);
     }
+
+    /// <summary>资源管理器里的选中项是否仍是上一次预览的那一批（用于空格切换关闭）。</summary>
+    private bool IsSelectionUnchanged(IReadOnlyList<string> paths)
+    {
+        if (paths.Count == 1 && _viewModel?.Preview.CurrentFile is { } current
+            && string.Equals(paths[0], current.FullPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return string.Equals(SelectionKey(paths), _lastSelectionKey, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string SelectionKey(IEnumerable<string> paths) =>
+        string.Join('\n', paths.OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
 
     /// <summary>按路径列表打开预览浮窗（托盘「打开文件」、命令行参数、单例转发）。</summary>
     public void ShowPreviewForPaths(IEnumerable<string> paths)
     {
         if (_disposed) return;
 
+        var files = BuildEntries(paths);
+        if (files.Count == 0) return;
+
+        bool wasVisible = _window is { IsVisible: true };
+        _viewModel ??= new ShellPreviewViewModel(_settings, _backup);
+        _window ??= new ShellPreviewWindow { DataContext = _viewModel };
+
+        // 窗口没关时把新文件追加到历史，之前预览过的文件仍可用 ← 返回；
+        // 首次打开则重置历史。
+        if (wasVisible)
+            _viewModel.AppendFiles(files);
+        else
+            _viewModel.ResetFiles(files);
+
+        _lastSelectionKey = SelectionKey(files.Select(f => f.FullPath));
+
+        if (!wasVisible)
+        {
+            _window.Show();
+            _window.Activate();
+        }
+        else
+        {
+            // 已经打开时只刷新内容，不抢焦点，方便继续在资源管理器里选下一个文件
+            _window.Show();
+        }
+    }
+
+    private static List<FileEntry> BuildEntries(IEnumerable<string> paths)
+    {
         var files = new List<FileEntry>();
         foreach (string path in paths)
         {
@@ -159,14 +229,7 @@ public sealed class ShellPreviewService : IDisposable
                 Kind = FileTypeDetector.Detect(fi.FullName),
             });
         }
-        if (files.Count == 0) return;
-
-        _viewModel ??= new ShellPreviewViewModel(_settings, _backup);
-        _window ??= new ShellPreviewWindow { DataContext = _viewModel };
-
-        _viewModel.LoadFiles(files);
-        _window.Show();
-        _window.Activate();
+        return files;
     }
 
     public void ClosePreview()
@@ -174,6 +237,7 @@ public sealed class ShellPreviewService : IDisposable
         if (_window is null) return;
         _window.Hide();
         _viewModel?.DisposeContent();
+        _lastSelectionKey = "";
     }
 
     /// <summary>

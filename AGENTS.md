@@ -47,6 +47,7 @@
 
  三组探针：窗口 / 视图能否加载、预览内容能否渲染、深浅主题切换是否生效。单个探针也有独立开关：`--sigxor-smoke` / `--sigxor-preview-smoke` / `--sigxor-theme-smoke`。合并设置对话框后另有 `--settings-check`：验证设置窗口平铺的「常规」「快捷键」「语音与截屏」「服务与模型」「关于与帮助」五个页签都能加载并切换。
 - **预览内容类型共 13 种**（`ContentKind`）：Text / Code / Image / Svg / Archive / Csv / Font / Document / Markdown / WebPage / Audio / Video / Pdf / Binary。新增类型要同时改 `DevEnv.Core/SigXor/FileTypeDetector.cs` 与 `DevEnv/SigXor/ViewModels/PreviewViewModel.cs` 的分发，并补一条预览探针用例。
+- **空格预览带浏览历史**：`DevEnv.Core/SigXor/PreviewHistory.cs` 在窗口打开期间去重保留预览过的文件，`ShellPreviewViewModel` 用它的 `MovePrevious` / `MoveNext` 提供 `Previous` / `Next`，标题栏左右箭头、`←` / `→` 与原来的 `↑` / `↓` 共用；窗口已打开时在资源管理器换选文件再按空格会追加预览并保留原队列，选中项没变才按「再按一次空格关闭」处理（`ShellPreviewService._lastSelectionKey`）。
 - **webassets 是嵌入 exe 的资源**（`EmbeddedResource` + `LogicalName="webassets/..."`），运行时由 `DevEnv/SigXor/WebAssets.cs` 按内容指纹解压到 `%LOCALAPPDATA%\SigXor\WebAssets\{指纹}`。**不要**改成复制到输出目录——WebView2 的虚拟主机映射只接受真实目录。
 - **语法高亮配色跟随主题**（`SyntaxHighlightingService`）：深色主题用 VS Code Dark，浅色主题用 VS Code Light，`ThemeManager.ThemeChanged` 触发后重新注册定义，已打开的 `TextView` 重新取一次定义并刷新。`TextView` 的编辑器底色 / 前景 / 行号颜色必须走 `DynamicResource`（`SurfaceBrush` / `TextPrimaryBrush` / `TextMutedBrush`），**不要写死深色**，否则浅色主题下会是一块黑底。其余界面颜色同样一律走 `DynamicResource`，截图 / 取色 / 选区 / 语音浮窗的功能性黑白配色除外（见上一条）。
 - **截图 / 取色 / 选区 / 语音浮窗里的黑白配色是功能性颜色**，必须保持不透明与高对比，不随主题变化（`scripts/theme-sigxor-xaml.ps1` 已把它们列为例外）。

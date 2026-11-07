@@ -71,8 +71,14 @@
                         <TextBlock Text="{Binding Preview.Subtitle}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="12" Padding="8,2"
+                                Margin="0,0,4,0" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanGoPrevious}"
+                                ToolTip="上一个预览（←）" Cursor="Hand"/>
+                        <Button Content="&#xE72A;" FontFamily="Segoe MDL2 Assets" FontSize="12" Padding="8,2"
+                                Margin="0,0,10,0" Command="{Binding NextCommand}" IsEnabled="{Binding CanGoNext}"
+                                ToolTip="下一个预览（→）" Cursor="Hand"/>
                         <TextBlock Text="{Binding PositionText}" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <TextBlock Text="Esc 关闭" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Esc 关闭 · ←/→ 切换" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <Button x:Name="PinButton" Content="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12" Padding="8,2"
                                 Margin="0,0,8,0" Click="OnTogglePin" ToolTip="切换置顶" Cursor="Hand"/>
                         <Button Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="12" Padding="8,2" Click="OnCloseClick" ToolTip="关闭预览"

@@ -27,8 +27,9 @@ public partial class ShellPreviewWindow : Window
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // 编辑模式下不拦截按键，让编辑器处理
-        if (IsInEditMode())
+        // 编辑模式或输入框里不拦截按键，让编辑器 / 输入控件处理方向键
+        if (IsInEditMode()
+            || Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase)
         {
             return;
         }
@@ -40,10 +41,12 @@ public partial class ShellPreviewWindow : Window
                 ClosePreview();
                 break;
             case Key.Down:
+            case Key.Right:
                 e.Handled = true;
                 Vm?.NextCommand.Execute(null);
                 break;
             case Key.Up:
+            case Key.Left:
                 e.Handled = true;
                 Vm?.PreviousCommand.Execute(null);
                 break;
