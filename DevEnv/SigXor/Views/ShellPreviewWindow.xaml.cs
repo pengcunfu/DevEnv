@@ -6,6 +6,18 @@ namespace DevEnv.Host.SigXor.Views;
 
 public partial class ShellPreviewWindow : Window
 {
+    private const double MiniWidth = 420;
+    private const double MiniHeight = 300;
+    private const double MiniMargin = 12;
+
+    private bool _isMini;
+    private double _normalWidth;
+    private double _normalHeight;
+    private double _normalLeft;
+    private double _normalTop;
+    private WindowState _normalState;
+    private bool _topmostBeforeMini;
+
     public ShellPreviewWindow()
     {
         InitializeComponent();
@@ -67,6 +79,69 @@ public partial class ShellPreviewWindow : Window
     {
         Topmost = !Topmost;
         UpdatePinButton();
+    }
+
+    /// <summary>小窗模式：固定到屏幕右上角并缩小窗口，再点一次恢复原来的大小与位置。</summary>
+    private void OnToggleMini(object sender, RoutedEventArgs e)
+    {
+        if (_isMini)
+        {
+            ExitMini();
+        }
+        else
+        {
+            EnterMini();
+        }
+    }
+
+    private void EnterMini()
+    {
+        if (_isMini) return;
+
+        _normalWidth = Width;
+        _normalHeight = Height;
+        _normalLeft = Left;
+        _normalTop = Top;
+        _normalState = WindowState;
+        _topmostBeforeMini = Topmost;
+
+        _isMini = true;
+        WindowState = WindowState.Normal;
+        Width = MiniWidth;
+        Height = MiniHeight;
+        Topmost = true;
+        UpdatePinButton();
+
+        // WorkArea 是屏幕工作区（不含任务栏），坐标单位为 DIP
+        Rect workArea = SystemParameters.WorkArea;
+        Left = workArea.Right - Width - MiniMargin;
+        Top = workArea.Top + MiniMargin;
+
+        // 小窗空间有限：收起键盘提示和置顶按钮，只留左右切换与关闭
+        KeyHintText.Visibility = Visibility.Collapsed;
+        PinButton.Visibility = Visibility.Collapsed;
+        MiniButton.Content = "还原";
+        MiniButton.ToolTip = "退出小窗模式，恢复原来的大小与位置";
+    }
+
+    private void ExitMini()
+    {
+        if (!_isMini) return;
+
+        _isMini = false;
+        WindowState = WindowState.Normal;
+        Width = _normalWidth;
+        Height = _normalHeight;
+        WindowState = _normalState;
+        Left = _normalLeft;
+        Top = _normalTop;
+        Topmost = _topmostBeforeMini;
+        UpdatePinButton();
+
+        KeyHintText.Visibility = Visibility.Visible;
+        PinButton.Visibility = Visibility.Visible;
+        MiniButton.Content = "小窗";
+        MiniButton.ToolTip = "小窗模式：固定到右上角并缩小窗口";
     }
 
     private void UpdatePinButton()

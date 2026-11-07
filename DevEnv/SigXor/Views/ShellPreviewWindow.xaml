@@ -78,7 +78,9 @@
                                 Margin="0,0,10,0" Command="{Binding NextCommand}" IsEnabled="{Binding CanGoNext}"
                                 ToolTip="下一个预览（→）" Cursor="Hand"/>
                         <TextBlock Text="{Binding PositionText}" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <TextBlock Text="Esc 关闭 · ←/→ 切换" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="KeyHintText" Text="Esc 关闭 · ←/→ 切换" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Button x:Name="MiniButton" Content="小窗" FontSize="11" Padding="8,2"
+                                Margin="0,0,8,0" Click="OnToggleMini" ToolTip="小窗模式：固定到右上角并缩小窗口" Cursor="Hand"/>
                         <Button x:Name="PinButton" Content="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12" Padding="8,2"
                                 Margin="0,0,8,0" Click="OnTogglePin" ToolTip="切换置顶" Cursor="Hand"/>
                         <Button Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="12" Padding="8,2" Click="OnCloseClick" ToolTip="关闭预览"
