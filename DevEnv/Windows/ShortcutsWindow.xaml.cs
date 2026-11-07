@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DevEnv.Core.Services;
+using DevEnv.Host.Infrastructure;
 using DevEnv.Host.ViewModels;
 
 namespace DevEnv.Host.Windows;
@@ -70,6 +71,9 @@ public partial class ShortcutsWindow : Window
     /// <summary>是否已经预热过：预热后视觉树已构建，首次打开不再临时创建。</summary>
     public bool IsPrewarmed { get; private set; }
 
+    /// <summary>启动器可见期间监听 Win 键：用户要打开开始菜单时先把全屏窗口收起。</summary>
+    private readonly WinKeyDismissHook _winKeyHook;
+
     public ShortcutsWindow()
     {
         InitializeComponent();
@@ -78,6 +82,10 @@ public partial class ShortcutsWindow : Window
         DragOver += OnDragOver;
         DragLeave += OnDragLeave;
         Drop += OnDrop;
+
+        _winKeyHook = new WinKeyDismissHook(Dispatcher);
+        _winKeyHook.WindowsKeyPressed += OnWindowsKeyPressed;
+        Closed += (_, _) => _winKeyHook.Dispose();
 
         // 空白处的右键菜单也属于「弹窗」：菜单打开期间不许因失去焦点收起
         if (Root.ContextMenu is { } rootMenu)
@@ -199,6 +207,9 @@ public partial class ShortcutsWindow : Window
             Show();
         }
 
+        // 启动器可见期间才监听 Win 键，隐藏后卸载，不常驻在系统里
+        _winKeyHook.Install();
+
         _shownAtUtc = DateTime.UtcNow;
         BringToForeground();
         FocusSearch();
@@ -287,6 +298,7 @@ public partial class ShortcutsWindow : Window
             try
             {
                 Hide();
+                _winKeyHook.Uninstall();
             }
             finally
             {
@@ -295,6 +307,19 @@ public partial class ShortcutsWindow : Window
             }
         };
         Root.BeginAnimation(OpacityProperty, fade);
+    }
+
+    /// <summary>
+    /// 启动器显示期间按了 Win 键：先收起自己的全屏置顶窗口，
+    /// 让系统开始菜单露出来，而不是被压在启动器下面。
+    /// </summary>
+    private void OnWindowsKeyPressed()
+    {
+        // 打开文件 / 重命名对话框期间不动窗口，避免把模态对话框的宿主一起藏掉
+        if (!IsVisible || _hiding || _suppressDeactivate)
+            return;
+
+        HideLauncher();
     }
 
     private void FocusSearch()

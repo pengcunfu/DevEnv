@@ -74,11 +74,12 @@
 - **只认左 Alt**（`VK_LMENU`）：右 Alt（AltGr、语音键）永不触发；按住 Alt 期间按下其它键即视为组合键，本次手势不再触发；按住时的自动重复不算组合键。抬起可能报左 / 右 / 通用 Alt 三种码（`IsAltKey`），都用来结束手势，否则手势状态会残留、下一次单按左 Alt 不再触发。
 - 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的按键不会弹全局启动器；只有自检探针通过 `AllowInjectedInput` 打开它。
 - 模态对话框打开期间（`ShortcutWindowHost.CanOpen()` 为 false）不触发，让前台程序照常收到 Alt。
+- **与开始菜单互斥**：开始菜单和启动器同为置顶窗口。老版本 Windows 由 `StartMenuExperienceHost` 承载，**新版 Windows 11（实测 build 26200）改由 `SearchHost` 承载**，窗口类仍是 `Windows.UI.Core.CoreWindow`、标题「搜索」；`ShellStartMenu` 两种宿主都要认，只认前者会在新系统上永远检测不到。打开启动器前 `ShortcutWindowHost.Open` 经 `ShellStartMenu.DismissIfOpen()` 给开始菜单发 Esc（开始菜单在前台时直接发，否则先 `SetForegroundWindow`），并延迟约 120ms 再显示；启动器可见期间 `WinKeyDismissHook` 监听真实 Win 键按下（只监听不拦截，开始菜单照常弹出），先把自己的全屏窗口淡出收起，避免开始菜单被压在启动器下面。Win 钩子只在可见期间安装，隐藏后卸载。
 - 全局启动器**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；左 Alt 唤出时只允许出现启动器本身。
 - 启动行为：`App.OnStartup` **不显示主窗**（`new MainWindow { ShowInTaskbar = false }` + `EnsureHotkeys`，句柄由 `EnsureHandle` 提前创建），程序只驻留托盘；主窗由托盘菜单 / `Ctrl+Alt+D` / 二次启动唤出。给窗口挂 Owner 前必须确认主窗 `IsVisible`——owner 隐藏时 owned 窗口不会显示（翻译窗、剪贴板窗已按此处理，主窗显示时由 `AttachAuxiliaryWindows` 补挂）。
 - 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令），全局快捷键默认 `Alt+Space`（`GlobalHotkeys.IdLauncher`，可在「设置 → 快捷键」修改）；**设置**从右键菜单「设置…」（`SettingsRequested` → `SettingsDialogHost.Open()`）进入，关于与检查更新在设置的「关于与帮助」页；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或左 Alt 键进入；**主窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
 - 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，避免钩子残留到进程退出之后。
-- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --altkey-check %TEMP%\altkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 右 Alt 不触发 / 卸载后失效」，其中「左 Alt 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
+- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --altkey-check %TEMP%\altkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 右 Alt 不触发 / 卸载后失效」以及启动器 Win 键监听钩子的安装与卸载（不发送注入 Win 键，避免探针弹出开始菜单），其中「左 Alt 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
 
 ## 常用命令
 

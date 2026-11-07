@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Threading;
 using DevEnv.Host.Windows;
 
 namespace DevEnv.Host.Infrastructure;
@@ -13,11 +14,15 @@ namespace DevEnv.Host.Infrastructure;
 /// </summary>
 public static class ShortcutWindowHost
 {
-    /// <summary>失去焦点自动收起后的短时间窗口：在此期间再点托盘 / 按 Win 视为「关闭」而不是重新打开。</summary>
+    /// <summary>失去焦点自动收起后的短时间窗口：在此期间再点托盘菜单视为「关闭」而不是重新打开。</summary>
     private static readonly TimeSpan AutoDismissGrace = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>收起开始菜单后留一两帧再显示启动器，避免两个置顶窗口叠在一起。</summary>
+    private static readonly TimeSpan StartMenuDismissDelay = TimeSpan.FromMilliseconds(120);
 
     private static ShortcutsWindow? _window;
     private static DateTime _lastAutoDismissUtc = DateTime.MinValue;
+    private static DispatcherTimer? _pendingOpenTimer;
 
     /// <summary>
     /// 启动后调用一次：在内存里建好窗口并完成布局与首帧渲染（屏幕外、不可见）。
@@ -40,6 +45,66 @@ public static class ShortcutWindowHost
     /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs / tools / builtin。</summary>
     public static void Open(string? pageId = null)
     {
+        // 开始菜单和启动器都是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，
+        // 否则开始菜单会一直压在全屏启动器上面，看起来像 Alt 没生效。
+        if (ShellStartMenu.DismissIfOpen())
+        {
+            ScheduleOpen(pageId);
+            return;
+        }
+
+        OpenCore(pageId);
+    }
+
+    /// <summary>开始菜单最多收几次 Esc：搜索框里有内容时，第一次 Esc 只清空搜索。</summary>
+    private const int MaxStartMenuDismissAttempts = 3;
+
+    /// <summary>
+    /// 开始菜单收到 Esc 后需要一两帧完成收起。这段延迟期间再次请求打开时，
+    /// 取消上一个计时器，用最后一次的页签参数重新计时，避免连续按 Alt 时重复显示。
+    /// </summary>
+    private static void ScheduleOpen(string? pageId, int attempt = 0)
+    {
+        CancelPendingOpen();
+
+        // 固定用应用主线程的 Dispatcher 计时，避免从非 UI 线程调用 Open 时计时器永远不跑
+        var dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+        var timer = new DispatcherTimer(DispatcherPriority.Normal, dispatcher)
+        {
+            Interval = StartMenuDismissDelay,
+        };
+        _pendingOpenTimer = timer;
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (!ReferenceEquals(_pendingOpenTimer, timer))
+                return;
+            _pendingOpenTimer = null;
+
+            // 搜索框里有内容时，一次 Esc 只会清空搜索，开始菜单仍然开着；
+            // 再补一两次 Esc，确认它已经收起后才显示启动器。
+            if (attempt + 1 < MaxStartMenuDismissAttempts && ShellStartMenu.DismissIfOpen())
+            {
+                ScheduleOpen(pageId, attempt + 1);
+                return;
+            }
+
+            OpenCore(pageId);
+        };
+        timer.Start();
+    }
+
+    private static void CancelPendingOpen()
+    {
+        _pendingOpenTimer?.Stop();
+        _pendingOpenTimer = null;
+    }
+
+    private static void OpenCore(string? pageId)
+    {
+        // 直接打开时取消还在等待的延迟任务，避免稍后重复 ShowPage
+        CancelPendingOpen();
+
         var window = EnsureWindow();
         if (window.Owner is not null)
             window.Owner = null;
@@ -52,15 +117,16 @@ public static class ShortcutWindowHost
     }
 
     /// <summary>
-    /// 开关全局启动器（Win 键与托盘菜单共用）：已打开就收起，否则打开。
+    /// 开关全局启动器（左 Alt 键与托盘菜单共用）：已打开就收起，否则打开。
     /// 返回 false 表示此刻不该由全局启动器接手（模态设置框正开着），
-    /// Win 键此时不吞键，让系统开始菜单照常弹出。
+    /// 让左 Alt 照常交给前台程序。
     /// </summary>
     public static bool Toggle()
     {
         // 正在淡出时再按一次 = 想重新打开，交给 Open 取消这次收起
         if (_window is { IsVisible: true } window && !window.IsHiding)
         {
+            CancelPendingOpen();
             window.Dismiss();
             return true;
         }
@@ -94,6 +160,8 @@ public static class ShortcutWindowHost
     /// <summary>主窗真正退出前调用，避免退出流程被未关闭的窗口阻塞。</summary>
     public static void Close()
     {
+        CancelPendingOpen();
+
         var window = _window;
         _window = null;
         if (window is null)

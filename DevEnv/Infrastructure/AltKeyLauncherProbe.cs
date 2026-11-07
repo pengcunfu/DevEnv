@@ -24,8 +24,6 @@ public static class AltKeyLauncherProbe
     private const int VkLeftAlt = AltKeyGestureTracker.VkLeftAlt;
     private const int VkRightAlt = AltKeyGestureTracker.VkRightAlt;
     private const int VkF24 = 0x87;
-    private const uint InputKeyboard = 1;
-    private const uint KeyEventKeyUp = 0x0002;
 
     public static int Run(string[] args)
     {
@@ -96,6 +94,15 @@ public static class AltKeyLauncherProbe
             TapKey(VkLeftAlt);
             Settle();
             Check("卸载后不再触发", triggers == 0, $"触发 {triggers} 次");
+
+            // 6) 启动器可见期间使用的 Win 键监听钩子：只验证安装 / 卸载链路，
+            //    不发送注入的 Win 键，避免探针把系统开始菜单真的弹出来
+            using (var winHook = new WinKeyDismissHook(Dispatcher.CurrentDispatcher))
+            {
+                Check("Win 键监听钩子可安装", winHook.Install() && winHook.IsInstalled);
+                winHook.Uninstall();
+                Check("Win 键监听钩子可卸载", !winHook.IsInstalled);
+            }
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("错误码 5"))
         {
@@ -156,70 +163,8 @@ public static class AltKeyLauncherProbe
 
     private static void Key(int virtualKey, bool up)
     {
-        var input = new INPUT
-        {
-            type = InputKeyboard,
-            U = new InputUnion
-            {
-                ki = new KEYBDINPUT
-                {
-                    wVk = (ushort)virtualKey,
-                    dwFlags = up ? KeyEventKeyUp : 0,
-                },
-            },
-        };
-        // INPUT 的实际大小由联合体中最大的 MOUSEINPUT 决定（x64 下 40 字节）。
-        // cbSize 传错时 SendInput 会直接返回 0，按键根本发不出去。
-        var sent = SendInput(1, [input], Marshal.SizeOf<INPUT>());
-        if (sent != 1)
+        if (!KeyboardInputSender.SendKey(virtualKey, up))
             throw new InvalidOperationException(
                 $"SendInput 失败（错误码 {Marshal.GetLastWin32Error()}）");
     }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct INPUT
-    {
-        public uint type;
-        public InputUnion U;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct InputUnion
-    {
-        [FieldOffset(0)] public MOUSEINPUT mi;
-        [FieldOffset(0)] public KEYBDINPUT ki;
-        [FieldOffset(0)] public HARDWAREINPUT hi;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MOUSEINPUT
-    {
-        public int dx;
-        public int dy;
-        public uint mouseData;
-        public uint dwFlags;
-        public uint time;
-        public IntPtr dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct KEYBDINPUT
-    {
-        public ushort wVk;
-        public ushort wScan;
-        public uint dwFlags;
-        public uint time;
-        public IntPtr dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct HARDWAREINPUT
-    {
-        public uint uMsg;
-        public ushort wParamL;
-        public ushort wParamH;
-    }
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 }
