@@ -23,11 +23,11 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <!-- 搜索框：启动器背景恒为深色，文字与占位提示固定用白色系，不跟随主题 -->
+        <!-- 搜索框：启动器是浅色磨砂玻璃，文字与占位提示固定用深色，不跟随主题 -->
         <Style x:Key="LaunchpadSearchBox" TargetType="TextBox">
-            <Setter Property="Foreground" Value="#FFFFFFFF" />
-            <Setter Property="CaretBrush" Value="#FFFFFFFF" />
-            <Setter Property="SelectionBrush" Value="#CC5B9BFF" />
+            <Setter Property="Foreground" Value="#FF1C1C1E" />
+            <Setter Property="CaretBrush" Value="#FF007AFF" />
+            <Setter Property="SelectionBrush" Value="#4D007AFF" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FontSize" Value="15" />
@@ -42,7 +42,7 @@
                             <TextBlock x:Name="Placeholder"
                                        Text="搜索应用、文件夹、网站或工具"
                                        FontSize="15"
-                                       Foreground="#80FFFFFF"
+                                       Foreground="#663C3C43"
                                        VerticalAlignment="Center"
                                        IsHitTestVisible="False"
                                        Visibility="Collapsed" />
@@ -111,18 +111,18 @@
                                 </BeginStoryboard>
                             </EventTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Tile" Property="Background" Value="#1FFFFFFF" />
+                                <Setter TargetName="Tile" Property="Background" Value="#14000000" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Tile" Property="Background" Value="#2EFFFFFF" />
+                                <Setter TargetName="Tile" Property="Background" Value="#1F000000" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Tile" Property="BorderBrush" Value="#8C5B9BFF" />
+                                <Setter TargetName="Tile" Property="BorderBrush" Value="#CC007AFF" />
                             </Trigger>
                             <!-- 框选 / Ctrl+单击的选中态 -->
                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter TargetName="Tile" Property="Background" Value="#335B9BFF" />
-                                <Setter TargetName="Tile" Property="BorderBrush" Value="#FF5B9BFF" />
+                                <Setter TargetName="Tile" Property="Background" Value="#33007AFF" />
+                                <Setter TargetName="Tile" Property="BorderBrush" Value="#FF007AFF" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -140,12 +140,12 @@
         <Style x:Key="LaunchpadTabItem" TargetType="ListBoxItem">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="4,0" />
-            <Setter Property="Foreground" Value="#8CFFFFFF" />
+            <Setter Property="Foreground" Value="#8C3C3C43" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Pill"
-                                Background="#14FFFFFF"
+                                Background="Transparent"
                                 BorderBrush="Transparent"
                                 BorderThickness="1"
                                 CornerRadius="14"
@@ -158,12 +158,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Pill" Property="Background" Value="#26FFFFFF" />
-                                <Setter Property="Foreground" Value="#E6FFFFFF" />
+                                <Setter TargetName="Pill" Property="Background" Value="#14000000" />
+                                <Setter Property="Foreground" Value="#CC1C1C1E" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Pill" Property="Background" Value="#33FFFFFF" />
-                                <Setter Property="Foreground" Value="#FFFFFFFF" />
+                                <Setter TargetName="Pill" Property="Background" Value="#F5FFFFFF" />
+                                <Setter Property="Foreground" Value="#FF000000" />
                                 <!-- 选中时轻弹一下，给滚轮 / 左右键换页一个落点反馈 -->
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
@@ -214,7 +214,7 @@
                                 Height="72"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Background="#1FFFFFFF"
+                                Background="#59FFFFFF"
                                 CornerRadius="17"
                                 Tag="IconDropZone">
                             <Grid>
@@ -231,7 +231,7 @@
                                                VerticalAlignment="Center"
                                                FontFamily="Segoe MDL2 Assets"
                                                FontSize="30"
-                                               Foreground="#E6FFFFFF"
+                                               Foreground="#E61C1C1E"
                                                Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
                                 </Grid>
                                 <!-- 启动器文件夹：前四项 2×2 预览 -->
@@ -255,7 +255,7 @@
                                                            VerticalAlignment="Center"
                                                            FontFamily="Segoe MDL2 Assets"
                                                            FontSize="14"
-                                                           Foreground="#E6FFFFFF"
+                                                           Foreground="#E61C1C1E"
                                                            Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
                                             </Grid>
                                         </DataTemplate>
@@ -272,12 +272,12 @@
                                TextWrapping="Wrap"
                                TextTrimming="CharacterEllipsis"
                                FontSize="12.5"
-                               Foreground="#F2FFFFFF" />
+                               Foreground="#F21C1C1E" />
                     <TextBlock Margin="0,2,0,0"
                                Text="{Binding KindText}"
                                TextAlignment="Center"
                                FontSize="10.5"
-                               Foreground="#80FFFFFF">
+                               Foreground="#733C3C43">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -307,24 +307,24 @@
             <Setter Property="Width" Value="46" />
             <Setter Property="Height" Value="46" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="#E6FFFFFF" />
+            <Setter Property="Foreground" Value="#E61C1C1E" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd"
-                                Background="#26FFFFFF"
-                                BorderBrush="#33FFFFFF"
+                                Background="#B3FFFFFF"
+                                BorderBrush="#26000000"
                                 BorderThickness="1"
                                 CornerRadius="23">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#40FFFFFF" />
+                                <Setter TargetName="Bd" Property="Background" Value="#D9FFFFFF" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#59FFFFFF" />
+                                <Setter TargetName="Bd" Property="Background" Value="#F2FFFFFF" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -338,14 +338,6 @@
           PreviewMouseMove="OnRootPreviewMouseMove"
           PreviewMouseLeftButtonUp="OnRootPreviewMouseLeftButtonUp"
           PreviewMouseWheel="OnPreviewMouseWheel">
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Offset="0" Color="#E6141820" />
-                <GradientStop Offset="0.55" Color="#E60A0C10" />
-                <GradientStop Offset="1" Color="#E6171A22" />
-            </LinearGradientBrush>
-        </Grid.Background>
-
         <Grid.ContextMenu>
             <ContextMenu>
                 <MenuItem Header="添加本地应用…" Click="OnAddAppMenu" />
@@ -369,20 +361,44 @@
             <RowDefinition Height="Auto" MinHeight="82" />
         </Grid.RowDefinitions>
 
+        <!-- 磨砂玻璃：先铺一层打开时截取的桌面缩略图（拉伸后自然虚化），
+             再叠白色半透明玻璃色与顶部高光；截不到图时只剩玻璃色，仍然可用。 -->
+        <Image x:Name="GlassBackdrop"
+               Grid.RowSpan="4"
+               Stretch="Fill"
+               RenderOptions.BitmapScalingMode="HighQuality" />
+        <Border Grid.RowSpan="4">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Offset="0" Color="#B8FFFFFF" />
+                    <GradientStop Offset="0.55" Color="#A6F2F6FA" />
+                    <GradientStop Offset="1" Color="#B3E8EDF4" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border Grid.RowSpan="4" IsHitTestVisible="False">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Offset="0" Color="#4DFFFFFF" />
+                    <GradientStop Offset="0.35" Color="#00FFFFFF" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
         <!-- 顶部：提示 + 搜索框 -->
         <TextBlock Grid.Row="0"
                    Margin="28,24,0,0"
                    HorizontalAlignment="Left"
                    Text="拖入 .exe 或文件夹即可添加"
                    FontSize="11"
-                   Foreground="#73FFFFFF"
+                   Foreground="#663C3C43"
                    Visibility="{Binding CanAddOnCurrentPage, Converter={StaticResource TrueToVisibility}}" />
         <TextBlock Grid.Row="0"
                    Margin="0,24,28,0"
                    HorizontalAlignment="Right"
                    Text="拖动空白框选 · Esc 关闭"
                    FontSize="11"
-                   Foreground="#73FFFFFF" />
+                   Foreground="#663C3C43" />
 
         <Border x:Name="SearchShell"
                 Grid.Row="0"
@@ -390,8 +406,8 @@
                 Height="46"
                 Margin="0,54,0,0"
                 HorizontalAlignment="Center"
-                Background="#22FFFFFF"
-                BorderBrush="#33FFFFFF"
+                Background="#59FFFFFF"
+                BorderBrush="#26000000"
                 BorderThickness="1"
                 CornerRadius="12">
             <Grid>
@@ -405,7 +421,7 @@
                            Text="&#xE721;"
                            FontFamily="Segoe MDL2 Assets"
                            FontSize="16"
-                           Foreground="#99FFFFFF" />
+                           Foreground="#993C3C43" />
                 <TextBox x:Name="SearchBox"
                          Grid.Column="1"
                          Margin="0,0,12,0"
@@ -460,17 +476,17 @@
                            HorizontalAlignment="Center"
                            FontFamily="Segoe MDL2 Assets"
                            FontSize="40"
-                           Foreground="#59FFFFFF" />
+                           Foreground="#403C3C43" />
                 <TextBlock Margin="0,12,0,0"
                            HorizontalAlignment="Center"
                            Text="这里还没有快捷方式"
                            FontSize="15"
-                           Foreground="#B3FFFFFF" />
+                           Foreground="#993C3C43" />
                 <TextBlock Margin="0,6,0,0"
                            HorizontalAlignment="Center"
                            Text="把 .exe 或文件夹拖进来，或点右下角 ＋ 添加"
                            FontSize="12"
-                           Foreground="#73FFFFFF" />
+                           Foreground="#663C3C43" />
             </StackPanel>
 
             <!-- 空状态（搜索没有命中） -->
@@ -495,12 +511,12 @@
                            HorizontalAlignment="Center"
                            FontFamily="Segoe MDL2 Assets"
                            FontSize="36"
-                           Foreground="#59FFFFFF" />
+                           Foreground="#403C3C43" />
                 <TextBlock Margin="0,12,0,0"
                            HorizontalAlignment="Center"
                            Text="没有找到匹配项"
                            FontSize="15"
-                           Foreground="#B3FFFFFF" />
+                           Foreground="#993C3C43" />
             </StackPanel>
         </Grid>
 
@@ -512,13 +528,13 @@
                        HorizontalAlignment="Center"
                        Text="{Binding Summary}"
                        FontSize="12"
-                       Foreground="#8CFFFFFF"
+                       Foreground="#733C3C43"
                        Visibility="{Binding Summary, Converter={StaticResource NonEmptyString}}" />
             <TextBlock Margin="0,0,0,8"
                        HorizontalAlignment="Center"
                        Text="{Binding Message}"
                        FontSize="12"
-                       Foreground="#FFFF9A9A"
+                       Foreground="#FFD70015"
                        TextWrapping="Wrap"
                        MaxWidth="640"
                        Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
@@ -599,15 +615,15 @@
                     Margin="24"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="#F5161A22"
-                    BorderBrush="#33FFFFFF"
+                    Background="#F2FFFFFF"
+                    BorderBrush="#26000000"
                     BorderThickness="1"
                     CornerRadius="22"
                     Padding="18,16,18,12">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="32"
                                       ShadowDepth="0"
-                                      Opacity="0.55"
+                                      Opacity="0.28"
                                       Color="#000000" />
                 </Border.Effect>
                 <Grid>
@@ -627,18 +643,18 @@
                         <TextBlock VerticalAlignment="Center"
                                    Text="{Binding CurrentGroup.Name}"
                                    FontSize="15"
-                                   Foreground="#F2FFFFFF" />
+                                   Foreground="#F21C1C1E" />
                         <TextBlock Grid.Column="1"
                                    Margin="10,0,0,0"
                                    VerticalAlignment="Center"
                                    Text="{Binding Summary}"
                                    FontSize="11.5"
-                                   Foreground="#80FFFFFF" />
+                                   Foreground="#733C3C43" />
                         <TextBlock Grid.Column="3"
                                    VerticalAlignment="Center"
                                    Text="点击空白处或按 Esc 关闭"
                                    FontSize="11"
-                                   Foreground="#73FFFFFF" />
+                                   Foreground="#663C3C43" />
                     </Grid>
 
                     <ScrollViewer Grid.Row="1"
@@ -668,13 +684,13 @@
                 ClipToBounds="True">
             <Rectangle x:Name="SelectionRect"
                        Visibility="Collapsed"
-                       Fill="#265B9BFF"
-                       Stroke="#FF5B9BFF"
+                       Fill="#26007AFF"
+                       Stroke="#FF007AFF"
                        StrokeThickness="1.5" />
             <Border x:Name="DropHighlight"
                     Visibility="Collapsed"
-                    Background="#265B9BFF"
-                    BorderBrush="#FF5B9BFF"
+                    Background="#26007AFF"
+                    BorderBrush="#FF007AFF"
                     BorderThickness="2"
                     CornerRadius="16" />
             <Rectangle x:Name="InsertionBar"
@@ -682,8 +698,16 @@
                        Height="110"
                        RadiusX="1.5"
                        RadiusY="1.5"
-                       Fill="#FF5B9BFF"
+                       Fill="#FF007AFF"
                        Visibility="Collapsed" />
         </Canvas>
+
+        <!-- 玻璃边缘高光：与根元素圆角裁剪一致，只做视觉不参与命中测试 -->
+        <Border x:Name="GlassEdge"
+                Grid.RowSpan="4"
+                CornerRadius="22"
+                BorderBrush="#99FFFFFF"
+                BorderThickness="1"
+                IsHitTestVisible="False" />
     </Grid>
 </Window>

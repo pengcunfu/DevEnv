@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using DevEnv.Core.Services;
 using DevEnv.Host.Infrastructure;
@@ -75,6 +76,9 @@ public partial class ShortcutsWindow : Window
     /// <summary>启动器可见期间监听 Win 键：用户要打开开始菜单时先把悬浮窗口收起。</summary>
     private readonly WinKeyDismissHook _winKeyHook;
 
+    /// <summary>玻璃面板圆角；根元素裁剪与边缘高光共用同一个值。</summary>
+    private const double GlassCornerRadius = 22;
+
     /// <summary>换页时网格的横向位移；只做渲染变换，不影响布局与框选坐标。</summary>
     private readonly TranslateTransform _pageSlide = new();
 
@@ -102,6 +106,7 @@ public partial class ShortcutsWindow : Window
         EntryGrid.RenderTransform = _pageSlide;
         Root.RenderTransform = _rootScale;
         Root.RenderTransformOrigin = new Point(0.5, 0.5);
+        Root.SizeChanged += (_, e) => UpdateRootClip(e.NewSize);
         FolderCard.RenderTransform = _folderScale;
         FolderCard.RenderTransformOrigin = new Point(0.5, 0.5);
 
@@ -201,6 +206,68 @@ public partial class ShortcutsWindow : Window
             Height = height;
     }
 
+    /// <summary>根元素按玻璃圆角裁剪；尺寸变化时重建裁剪区域。</summary>
+    private void UpdateRootClip(Size size)
+    {
+        if (size.Width <= 0 || size.Height <= 0)
+            return;
+
+        Root.Clip = new RectangleGeometry(new Rect(size), GlassCornerRadius, GlassCornerRadius);
+    }
+
+    /// <summary>
+    /// 抓取启动器背后的桌面并缩到 1/10，铺满窗口后自然虚化，就是一层廉价的磨砂玻璃。
+    /// 必须在窗口显示前调用，否则会把自己截进去；锁屏 / 远程会话断开等场景截不到图时
+    /// 退化为纯玻璃色，界面仍然可用。
+    /// </summary>
+    private void CaptureBackdrop()
+    {
+        GlassBackdrop.Source = null;
+
+        try
+        {
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var left = (int)Math.Round(Left * dpi.DpiScaleX);
+            var top = (int)Math.Round(Top * dpi.DpiScaleY);
+            var width = Math.Max(1, (int)Math.Round(Width * dpi.DpiScaleX));
+            var height = Math.Max(1, (int)Math.Round(Height * dpi.DpiScaleY));
+
+            using var bitmap = new System.Drawing.Bitmap(
+                width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
+            {
+                graphics.CopyFromScreen(
+                    left, top, 0, 0, new System.Drawing.Size(width, height),
+                    System.Drawing.CopyPixelOperation.SourceCopy);
+            }
+
+            var handle = bitmap.GetHbitmap();
+            try
+            {
+                var source = Imaging.CreateBitmapSourceFromHBitmap(
+                    handle, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                source.Freeze();
+
+                // 缩小 1/10 再拉伸回来，双线性插值本身就是一次很便宜的高斯近似
+                var small = new TransformedBitmap(source, new ScaleTransform(0.1, 0.1));
+                small.Freeze();
+                GlassBackdrop.Source = small;
+            }
+            finally
+            {
+                DeleteObject(handle);
+            }
+        }
+        catch
+        {
+            // 锁屏 / 远程会话断开 / 前台是受保护窗口时截不到图，纯玻璃色也能用
+        }
+    }
+
+    [DllImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeleteObject(IntPtr hObject);
+
     /// <summary>居中铺到工作区 78% 并切到指定页签（apps / folders / webs / tools），每次打开都重新读取数据。</summary>
     public void ShowPage(string? pageId)
     {
@@ -235,6 +302,8 @@ public partial class ShortcutsWindow : Window
             Root.BeginAnimation(OpacityProperty, null);
             Root.Opacity = 0;
             ResetRootScale(1.015);
+            // 窗口还没显示时截取它背后的桌面，作为磨砂玻璃的底图
+            CaptureBackdrop();
             Show();
         }
 
