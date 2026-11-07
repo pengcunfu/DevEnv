@@ -93,11 +93,19 @@ public static class FileTypeDetector
 
         string ext = Path.GetExtension(path);
         var byExt = ByExtension(ext);
-        if (byExt != ContentKind.Unknown) return byExt;
 
-        if (!readContent) return ContentKind.Unknown;
+        // 扩展名已经能确定是文本 / 富格式 / 压缩包时直接返回
+        if (byExt is not (ContentKind.Unknown or ContentKind.Binary)) return byExt;
 
+        if (!readContent) return byExt;
+
+        // 扩展名无法确定或标为二进制时，以文件内容为准：
+        // 文本文件即使扩展名陌生（没有扩展名的 YAML、.config、模板文件等）也按文本预览，
+        // 反之，真实二进制（.bin/.dat/.msi 等）不会因为扩展名看起来像文本就被当成文本。
         var head = ReadHead(path, 4096);
+        if (byExt == ContentKind.Binary)
+            return LooksLikeText(head) ? ContentKind.Text : ContentKind.Binary;
+
         var byMagic = ByMagic(head);
         if (byMagic != ContentKind.Unknown) return byMagic;
 
@@ -205,18 +213,106 @@ public static class FileTypeDetector
         }
     }
 
+    /// <summary>
+    /// 按内容判断一段字节是否像文本：支持 UTF-8、带 BOM 的 UTF-16 与中文 Windows 常见的 GBK / GB18030，
+    /// 并用控制字符比例排除压缩数据、可执行文件等二进制内容。
+    /// </summary>
     public static bool LooksLikeText(ReadOnlySpan<byte> head)
     {
-        if (head.Length == 0) return true;
-        foreach (byte b in head)
+        if (head.IsEmpty) return true;
+
+        // 有 BOM 时按声明的编码解码，再检查控制字符比例
+        if (head.Length >= 3 && head[0] == 0xEF && head[1] == 0xBB && head[2] == 0xBF)
+            return IsPlausibleText(head[3..], EncodingService.GetStrict("utf-8"));
+        if (head.Length >= 2 && head[0] == 0xFF && head[1] == 0xFE)
+            return IsPlausibleText(head[2..], EncodingService.GetStrict("utf-16"));
+        if (head.Length >= 2 && head[0] == 0xFE && head[1] == 0xFF)
+            return IsPlausibleText(head[2..], EncodingService.GetStrict("utf-16BE"));
+
+        // 含零字节：只有无 BOM 的 UTF-16 文本才会这样，按零字节分布判断字节序
+        if (head.IndexOf((byte)0) >= 0)
+            return LooksLikeUtf16WithoutBom(head);
+
+        // 原始控制字节过多的一律按二进制处理（压缩包、图片、可执行文件等）
+        if (!HasFewControlBytes(head)) return false;
+
+        if (EncodingService.IsValidUtf8(head)) return true;
+
+        // 中文环境常见的 GBK / GB18030 文本
+        return CanDecodeAsText(head, EncodingService.GetStrict("GB18030"))
+            || CanDecodeAsText(head, EncodingService.GetStrict("GBK"));
+    }
+
+    /// <summary>无 BOM 的 UTF-16：零字节应集中在同一半（LE 在高字节、BE 在低字节）。</summary>
+    private static bool LooksLikeUtf16WithoutBom(ReadOnlySpan<byte> head)
+    {
+        int pairs = head.Length / 2;
+        if (pairs < 4) return false;
+
+        int evenZero = 0;
+        int oddZero = 0;
+        for (int i = 0; i < pairs * 2; i += 2)
         {
-            if (b == 0) return false;
+            if (head[i] == 0) evenZero++;
+            if (head[i + 1] == 0) oddZero++;
         }
+
+        double evenRatio = (double)evenZero / pairs;
+        double oddRatio = (double)oddZero / pairs;
+
+        // UTF-16 LE 的 ASCII 字符高字节为 0（奇数字节），BE 则低字节为 0（偶数字节）
+        bool littleEndian = oddRatio >= 0.3 && evenRatio <= 0.1;
+        bool bigEndian = evenRatio >= 0.3 && oddRatio <= 0.1;
+        if (!littleEndian && !bigEndian) return false;
+
+        var encoding = EncodingService.GetStrict(littleEndian ? "utf-16" : "utf-16BE");
+        return IsPlausibleText(head[..(pairs * 2)], encoding);
+    }
+
+    /// <summary>控制字节（制表、换行、回车等排版字符除外）占比不超过约 2% 才可能是文本。</summary>
+    private static bool HasFewControlBytes(ReadOnlySpan<byte> data)
+    {
+        int control = 0;
+        foreach (byte b in data)
+        {
+            if (b < 0x20 && b is not ((byte)'\t') and not ((byte)'\n') and not ((byte)'\r')
+                and not ((byte)'\f') and not ((byte)'\b') and not 0x1B)
+            {
+                control++;
+            }
+        }
+        return control <= Math.Max(2, data.Length / 50);
+    }
+
+    private static bool CanDecodeAsText(ReadOnlySpan<byte> data, Encoding encoding)
+    {
         try
         {
-            var utf8 = new UTF8Encoding(false, true);
-            utf8.GetCharCount(head);
+            _ = encoding.GetString(data);
             return true;
+        }
+        catch (DecoderFallbackException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>严格解码后不允许出现替换字符，控制字符占比不超过约 1%。</summary>
+    private static bool IsPlausibleText(ReadOnlySpan<byte> data, Encoding encoding)
+    {
+        try
+        {
+            string text = encoding.GetString(data);
+            if (text.Length == 0) return true;
+
+            int bad = 0;
+            foreach (char c in text)
+            {
+                if (c is '�' or '￾' or '￿') return false;
+                if (char.IsControl(c) && c is not '\t' and not '\r' and not '\n' and not '\f' and not '\b')
+                    bad++;
+            }
+            return bad <= Math.Max(1, text.Length / 100);
         }
         catch (DecoderFallbackException)
         {

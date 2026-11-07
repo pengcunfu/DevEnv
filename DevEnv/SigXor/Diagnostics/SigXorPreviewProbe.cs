@@ -59,6 +59,8 @@ public static class SigXorPreviewProbe
                 ("CSV", "sample.csv", "name,age\nAlice,30\nBob,25\n"),
                 ("SVG", "sample.svg", "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><rect width=\"10\" height=\"10\"/></svg>"),
                 ("JSON", "sample.json", "{ \"a\": 1 }"),
+                ("YAML", "sample.yaml", "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: 测试配置\n"),
+                ("无扩展名 YAML", "manifest", "---\napiVersion: v1\nkind: Pod\n"),
             };
 
             foreach (var (name, fileName, content) in samples)

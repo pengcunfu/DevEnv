@@ -1,8 +1,10 @@
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Highlighting;
 using DevEnv.Host.SigXor.ViewModels;
+using DevEnv.Host.Themes;
 
 namespace DevEnv.Host.SigXor.Views;
 
@@ -10,20 +12,48 @@ public partial class TextView : UserControl
 {
     private TextContentViewModel? _vm;
     private bool _loading;
+    private bool _themeHooked;
 
     public TextView()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
     }
 
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (!_themeHooked)
+        {
+            ThemeManager.ThemeChanged += OnThemeChanged;
+            _themeHooked = true;
+        }
+        ApplyTheme();
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (!_themeHooked) return;
+        ThemeManager.ThemeChanged -= OnThemeChanged;
+        _themeHooked = false;
+    }
+
+    private void OnThemeChanged(bool dark) => ApplyTheme();
+
     /// <summary>
-    /// 语法高亮用的是 VS Code Dark 配色（固定深色方案，见 SyntaxHighlightingService），
-    /// 因此编辑器底色必须恒为深色，否则浅色主题下深色语法色会看不清。
-    /// 这里显式写死前景 / 背景，不跟主题走——语法配色本身也不跟主题走，两者必须配套。
+    /// 编辑器底色与前景跟随应用主题；语法高亮定义也按主题取对应配色（VS Code Dark / Light），
+    /// 主题切换后重新取一次定义，避免深色配色落在浅色底上。
     /// </summary>
-    private static readonly Brush EditorBackground = new SolidColorBrush(Color.FromRgb(0x1E, 0x1E, 0x1E));
-    private static readonly Brush EditorForeground = new SolidColorBrush(Color.FromRgb(0xD4, 0xD4, 0xD4));
+    private void ApplyTheme()
+    {
+        if (TryFindResource("SurfaceBrush") is Brush background) Editor.Background = background;
+        if (TryFindResource("TextPrimaryBrush") is Brush foreground) Editor.Foreground = foreground;
+        if (TryFindResource("TextMutedBrush") is Brush lineNumbers) Editor.LineNumbersForeground = lineNumbers;
+
+        if (_vm is not null)
+            Editor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(_vm.Highlighting);
+    }
 
     private void OnDataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
     {
@@ -40,14 +70,11 @@ public partial class TextView : UserControl
         Editor.TextChanged += OnEditorTextChanged;
         EditControls.Visibility = _vm.AllowEdit ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
-        // 配色在编辑器实例上设置，随控件生命周期走
-        Editor.Background = EditorBackground;
-        Editor.Foreground = EditorForeground;
+        ApplyTheme();
 
         _loading = true;
         try
         {
-            Editor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(_vm.Highlighting);
             Editor.Text = _vm.Text;
             Editor.WordWrap = _vm.WordWrap;
             Editor.ScrollToHome();

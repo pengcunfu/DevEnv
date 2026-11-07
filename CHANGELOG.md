@@ -121,6 +121,8 @@
 
 ### Fixed
 
+- 修复文本预览在浅色主题下仍是深色背景：`TextView` 的编辑器底色、前景与行号颜色改为跟随主题资源（`SurfaceBrush` / `TextPrimaryBrush` / `TextMutedBrush`），不再写死深色。语法高亮配色同步改为按主题切换，深色用 VS Code Dark、浅色用 VS Code Light，`SyntaxHighlightingService` 订阅 `ThemeManager.ThemeChanged` 重新注册定义，已打开的编辑器在主题切换后立即刷新。`sigxor-theme-smoke` 探针新增编辑器底色随主题切换的断言
+- 修复文件快速预览把 YAML 等文本文件当成二进制：扩展名无法确定或被标为二进制时，改为读取文件头按内容判断文本 / 二进制。文本嗅探支持 UTF-8、带 BOM 的 UTF-16、无 BOM 的 UTF-16 以及中文环境常见的 GBK / GB18030，并用控制字符比例排除压缩包、图片、可执行文件等真实二进制；无扩展名的 YAML / 模板文件、扩展名写成 `.dat` / `.bin` 的文本都会进入文本预览，真实二进制仍然使用十六进制视图。`.yaml` / `.yml` 继续按代码类型预览
 - 修复文件浏览器点标题栏关闭按钮后关不掉、界面像卡住：`OnClosing` 先取消本次关闭再排队异步收尾，收尾完成调用 `Close()` 前又把 `_hideRequested` 置回 `false`，第二次 `Closing` 仍按「首次关闭」处理，再次取消并重新排队，形成无限循环，窗口永远关不上。现在收尾完成后置 `_exitRequested = true` 再 `Close()`，放行真正的关闭
 - 修复机器缺少 VC++ 运行库时程序启动后无声退出：语音服务开机自启会构造 `OfflineRecognizer`，其原生库 `sherpa-onnx-c-api.dll` 依赖的 `onnxruntime.dll` 需要 `MSVCP140` / `VCRUNTIME140`，未安装「Microsoft Visual C++ 2015-2022 运行库（x64）」时加载失败；而 sherpa-onnx 的托管封装在构造函数抛异常后对象仍可被终结，finalizer 线程上的 `DllNotFoundException` 会直接终止进程（退出码 `0xE0434352`，`crash.log` 里只有一条 `OfflineRecognizer.Finalize` 记录）。现在构造前先用 `NativeLibrary.TryLoad` 探测原生库，加载失败只给出明确提示并跳过构造，语音识别不可用但程序照常运行
 - 全局启动器改为**启动时预热**：App 启动后在应用空闲时把窗口在屏幕外、透明、不抢焦点的状态下显示一次再隐藏，完成 HWND 创建、模板加载、布局与首帧渲染；之后 Win 键 / 托盘菜单唤起只是把已有窗口摆出来，不再临时创建，避免首次打开先闪空白再闪内容。`ShortcutWindowHost.Prewarm()` 失败时静默忽略，只是首帧慢一点

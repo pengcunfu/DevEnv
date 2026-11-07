@@ -1,3 +1,4 @@
+using System.Text;
 using DevEnv.Core.SigXor;
 
 namespace DevEnv.Tests.SigXor;
@@ -109,6 +110,68 @@ public sealed class FileTypeDetectorTests : IDisposable
         string binPath = Path.Combine(_dir, "sample2.unknownext");
         File.WriteAllBytes(binPath, [0x00, 0x01, 0x02, 0xFF, 0x00]);
         Assert.Equal(ContentKind.Binary, FileTypeDetector.Detect(binPath));
+    }
+
+    [Fact]
+    public void Detect_Yaml_Is_Text_Not_Binary()
+    {
+        string utf8Path = Path.Combine(_dir, "values.yaml");
+        File.WriteAllText(utf8Path, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: 测试配置\n");
+        Assert.Equal(ContentKind.Code, FileTypeDetector.Detect(utf8Path));
+
+        string gbkPath = Path.Combine(_dir, "values-gbk.yml");
+        File.WriteAllBytes(gbkPath, EncodingService.GetStrict("GB18030").GetBytes("name: 测试\nkey: 值\n"));
+        Assert.Equal(ContentKind.Code, FileTypeDetector.Detect(gbkPath));
+
+        string utf16Path = Path.Combine(_dir, "values-utf16.yaml");
+        File.WriteAllBytes(utf16Path,
+            Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes("name: 测试\n")).ToArray());
+        Assert.Equal(ContentKind.Code, FileTypeDetector.Detect(utf16Path));
+    }
+
+    [Fact]
+    public void Detect_Unknown_Extension_Sniffs_Text_Content()
+    {
+        // 无扩展名的 YAML / 模板文件：按内容判断为文本，不能落到十六进制视图
+        string utf8Path = Path.Combine(_dir, "manifest");
+        File.WriteAllText(utf8Path, "---\napiVersion: v1\nkind: Pod\n");
+        Assert.Equal(ContentKind.Text, FileTypeDetector.Detect(utf8Path));
+
+        string gbkPath = Path.Combine(_dir, "manifest-gbk");
+        File.WriteAllBytes(gbkPath, EncodingService.GetStrict("GB18030").GetBytes("name: 测试\nkey: 值\n"));
+        Assert.Equal(ContentKind.Text, FileTypeDetector.Detect(gbkPath));
+
+        string utf16Path = Path.Combine(_dir, "manifest-utf16");
+        File.WriteAllBytes(utf16Path,
+            Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes("name: 测试\n")).ToArray());
+        Assert.Equal(ContentKind.Text, FileTypeDetector.Detect(utf16Path));
+
+        // 无 BOM 的 UTF-16 LE 文本
+        string utf16NoBomPath = Path.Combine(_dir, "manifest-utf16-nobom");
+        File.WriteAllBytes(utf16NoBomPath, Encoding.Unicode.GetBytes("name: test\nkey: value\n"));
+        Assert.Equal(ContentKind.Text, FileTypeDetector.Detect(utf16NoBomPath));
+    }
+
+    [Fact]
+    public void Detect_Binary_Extension_Sniffs_Text_Content()
+    {
+        // 扩展名是 .dat / .bin，但内容确实是文本时按文本预览
+        string textDatPath = Path.Combine(_dir, "readme.dat");
+        File.WriteAllText(textDatPath, "name: 测试\nkey: 值\n");
+        Assert.Equal(ContentKind.Text, FileTypeDetector.Detect(textDatPath));
+
+        string textBinPath = Path.Combine(_dir, "notes.bin");
+        File.WriteAllText(textBinPath, "plain text content\nline2\n");
+        Assert.Equal(ContentKind.Text, FileTypeDetector.Detect(textBinPath));
+
+        // 真实二进制仍然走十六进制
+        string exePath = Path.Combine(_dir, "fake.exe");
+        File.WriteAllBytes(exePath, [0x4D, 0x5A, 0x00, 0x00, 0x01, 0x02, 0xFF, 0x00]);
+        Assert.Equal(ContentKind.Binary, FileTypeDetector.Detect(exePath));
+
+        string randomPath = Path.Combine(_dir, "random.dat");
+        File.WriteAllBytes(randomPath, [0x00, 0x01, 0x02, 0xFF, 0x00, 0x10, 0x1B, 0x7F]);
+        Assert.Equal(ContentKind.Binary, FileTypeDetector.Detect(randomPath));
     }
 
     [Fact]

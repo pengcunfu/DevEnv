@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using DevEnv.Host.Themes;
+using ICSharpCode.AvalonEdit.Highlighting;
 
 namespace DevEnv.Host.SigXor.Diagnostics;
 
@@ -37,6 +38,9 @@ public static class SigXorThemeProbe
             ProbeOutput.Line(report.ToString());
             return 1;
         }
+
+        // 让自定义语法高亮先按当前主题注册一次，后面切换主题时才能验证重新注册
+        Services.SyntaxHighlightingService.Initialize();
 
         var dicts = app.Resources.MergedDictionaries;
         report.AppendLine($"字典数量: {dicts.Count}");
@@ -76,6 +80,53 @@ public static class SigXorThemeProbe
         object? toggle = app.TryFindResource("EngineToggle");
         Check("EngineToggle 样式可解析", toggle is not null, $"类型 = {toggle?.GetType().Name ?? "(null)"}");
 
+        // 文本预览的编辑器底色必须跟随主题，浅色主题下不能还是深底
+        var textView = new Views.TextView
+        {
+            DataContext = new ViewModels.TextContentViewModel(
+                "probe.txt", "hello", DevEnv.Core.SigXor.EncodingService.Utf8,
+                new Services.BackupService(new Services.SettingsService())),
+        };
+        var textHost = new Window
+        {
+            Content = textView,
+            Width = 400,
+            Height = 300,
+            ShowInTaskbar = false,
+            WindowStyle = WindowStyle.None,
+            Opacity = 0.01,
+        };
+        textHost.Show();
+        textHost.UpdateLayout();
+
+        ThemeManager.Apply(false);
+        Brush lightEditor = textView.Editor.Background;
+        ThemeManager.Apply(true);
+        Brush darkEditor = textView.Editor.Background;
+        textHost.Close();
+
+        Check("浅色主题下文本编辑器为浅底",
+            lightEditor is SolidColorBrush lightBrush && lightBrush.Color.R > 0xB0,
+            $"浅色编辑器 = {Hex(lightEditor)}");
+        Check("深色主题下文本编辑器为深底",
+            darkEditor is SolidColorBrush darkBrush && darkBrush.Color.R < 0x40,
+            $"深色编辑器 = {Hex(darkEditor)}");
+        Check("编辑器底色随主题切换",
+            Hex(lightEditor) != Hex(darkEditor),
+            $"浅={Hex(lightEditor)} 深={Hex(darkEditor)}");
+
+        // 自定义语法高亮（JSON / TOML / YAML / Log）配色也要随主题重新注册
+        ThemeManager.Apply(false);
+        string lightYaml = FirstSpanColor(".yaml");
+        ThemeManager.Apply(true);
+        string darkYaml = FirstSpanColor(".yaml");
+        Check("语法高亮配色随主题切换",
+            lightYaml.Length > 0 && lightYaml != darkYaml,
+            $"浅={lightYaml} 深={darkYaml}");
+
+        // 探针结束后恢复浅色主题
+        ThemeManager.Apply(false);
+
         string text = report.ToString();
         ProbeOutput.Line(text);
         ProbeOutput.Line($"失败 {failures} 项");
@@ -91,4 +142,14 @@ public static class SigXorThemeProbe
     private static Brush TryGetBrush(Application app, string key) =>
         app.TryFindResource(key) as Brush
         ?? throw new InvalidOperationException($"资源 {key} 不存在");
+
+    /// <summary>取自定义高亮定义里第一个 Span 的前景色，用于验证配色随主题变化。</summary>
+    private static string FirstSpanColor(string extension)
+    {
+        var definition = HighlightingManager.Instance.GetDefinitionByExtension(extension);
+        var span = definition?.MainRuleSet.Spans.FirstOrDefault();
+        if (span?.SpanColor?.Foreground is SimpleHighlightingBrush simple)
+            return simple.GetBrush(null!).ToString();
+        return "";
+    }
 }

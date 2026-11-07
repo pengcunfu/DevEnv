@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
+using DevEnv.Host.Themes;
 using ICSharpCode.AvalonEdit.Highlighting;
 
 namespace DevEnv.Host.SigXor.Services;
@@ -8,16 +9,32 @@ namespace DevEnv.Host.SigXor.Services;
 /// <summary>
 /// 注册自定义语法高亮定义（JSON、TOML、YAML、Log）。
 /// 使用纯代码创建高亮定义，不依赖 XSHD 文件解析。
+/// 高亮配色跟随应用主题：深色用 VS Code Dark，浅色用 VS Code Light，
+/// 主题切换时重新注册定义，已打开的文本编辑器会重新取一次定义。
 /// </summary>
 public static class SyntaxHighlightingService
 {
     private static bool _initialized;
+    private static bool _dark;
 
     public static void Initialize()
     {
         if (_initialized) return;
         _initialized = true;
+        _dark = ThemeManager.IsDark;
+        ThemeManager.ThemeChanged += OnThemeChanged;
+        RegisterAll();
+    }
 
+    private static void OnThemeChanged(bool dark)
+    {
+        if (!_initialized || dark == _dark) return;
+        _dark = dark;
+        RegisterAll();
+    }
+
+    private static void RegisterAll()
+    {
         try
         {
             RegisterJson();
@@ -34,6 +51,9 @@ public static class SyntaxHighlightingService
     #region 辅助方法
 
     private static Color Hex(string hex) => (Color)ColorConverter.ConvertFromString(hex);
+
+    /// <summary>按当前主题取配色：深色 / 浅色分别为 VS Code Dark / Light。</summary>
+    private static Color C(string darkHex, string lightHex) => Hex(_dark ? darkHex : lightHex);
 
     private static HighlightingColor Color(string name, Color fg, bool bold = false, bool italic = false)
     {
@@ -87,16 +107,16 @@ public static class SyntaxHighlightingService
         var rs = new HighlightingRuleSet();
 
         // 字符串
-        rs.Spans.Add(StringSpan("\"", "\"", Hex("#CE9178")));
+        rs.Spans.Add(StringSpan("\"", "\"", C("#CE9178", "#A31515")));
 
         // 数字
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?"));
         // 布尔值
-        rs.Rules.Add(Rule("Boolean", Hex("#569CD6"), @"\b(?:true|false)\b"));
+        rs.Rules.Add(Rule("Boolean", C("#569CD6", "#0000FF"), @"\b(?:true|false)\b"));
         // null
-        rs.Rules.Add(Rule("Null", Hex("#569CD6"), @"\bnull\b"));
+        rs.Rules.Add(Rule("Null", C("#569CD6", "#0000FF"), @"\bnull\b"));
         // 标点
-        rs.Rules.Add(Rule("Punctuation", Hex("#D4D4D4"), @"[{}\[\],;:]"));
+        rs.Rules.Add(Rule("Punctuation", C("#D4D4D4", "#333333"), @"[{}\[\],;:]"));
 
         RegisterDef("JSON", [".json"], rs);
     }
@@ -110,35 +130,35 @@ public static class SyntaxHighlightingService
         var rs = new HighlightingRuleSet();
 
         // 字符串（Span 优先匹配，# 在字符串内不会被当作注释）
-        rs.Spans.Add(StringSpan("\"\"\"", "\"\"\"", Hex("#CE9178"), multiline: true));
-        rs.Spans.Add(StringSpan("'''", "'''", Hex("#CE9178"), multiline: true));
-        rs.Spans.Add(StringSpan("\"", "\"", Hex("#CE9178")));
-        rs.Spans.Add(StringSpan("'", "'", Hex("#CE9178")));
+        rs.Spans.Add(StringSpan("\"\"\"", "\"\"\"", C("#CE9178", "#A31515"), multiline: true));
+        rs.Spans.Add(StringSpan("'''", "'''", C("#CE9178", "#A31515"), multiline: true));
+        rs.Spans.Add(StringSpan("\"", "\"", C("#CE9178", "#A31515")));
+        rs.Spans.Add(StringSpan("'", "'", C("#CE9178", "#A31515")));
 
         // 表名
-        rs.Rules.Add(Rule("TableName", Hex("#4EC9B0"), @"^\s*\[\[[\w\.\-]+\]\]", multiline: true, bold: true));
-        rs.Rules.Add(Rule("TableName", Hex("#4EC9B0"), @"^\s*\[[\w\.\-]+\]", multiline: true, bold: true));
+        rs.Rules.Add(Rule("TableName", C("#4EC9B0", "#267F99"), @"^\s*\[\[[\w\.\-]+\]\]", multiline: true, bold: true));
+        rs.Rules.Add(Rule("TableName", C("#4EC9B0", "#267F99"), @"^\s*\[[\w\.\-]+\]", multiline: true, bold: true));
 
         // 日期时间
-        rs.Rules.Add(Rule("DateTime", Hex("#4EC9B0"),
+        rs.Rules.Add(Rule("DateTime", C("#4EC9B0", "#267F99"),
             @"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?"));
 
         // 数字
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"0x[0-9a-fA-F_]+"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"0o[0-7_]+"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"0b[01_]+"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"[+-]?(?:inf|nan)"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"),
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"0x[0-9a-fA-F_]+"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"0o[0-7_]+"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"0b[01_]+"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"[+-]?(?:inf|nan)"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"),
             @"[+-]?\d[0-9_]*(?:\.\d[0-9_]*)?(?:[eE][+-]?\d[0-9_]*)?"));
 
         // 布尔值
-        rs.Rules.Add(Rule("Boolean", Hex("#569CD6"), @"\b(?:true|false)\b"));
+        rs.Rules.Add(Rule("Boolean", C("#569CD6", "#0000FF"), @"\b(?:true|false)\b"));
 
         // 键
-        rs.Rules.Add(Rule("Key", Hex("#9CDCFE"), @"[a-zA-Z_][\w\-\.]*(?=\s*=)"));
+        rs.Rules.Add(Rule("Key", C("#9CDCFE", "#0451A5"), @"[a-zA-Z_][\w\-\.]*(?=\s*=)"));
 
         // 注释（放在最后，Span 优先级高于 Rule，字符串内的 # 已被 Span 消费）
-        rs.Rules.Add(Rule("Comment", Hex("#6A9955"), @"#[^\n]*", italic: true));
+        rs.Rules.Add(Rule("Comment", C("#6A9955", "#008000"), @"#[^\n]*", italic: true));
 
         RegisterDef("TOML", [".toml"], rs);
     }
@@ -152,46 +172,46 @@ public static class SyntaxHighlightingService
         var rs = new HighlightingRuleSet();
 
         // 字符串
-        rs.Spans.Add(StringSpan("\"\"\"", "\"\"\"", Hex("#CE9178"), multiline: true));
-        rs.Spans.Add(StringSpan("'''", "'''", Hex("#CE9178"), multiline: true));
-        rs.Spans.Add(StringSpan("\"", "\"", Hex("#CE9178")));
-        rs.Spans.Add(StringSpan("'", "'", Hex("#CE9178")));
+        rs.Spans.Add(StringSpan("\"\"\"", "\"\"\"", C("#CE9178", "#A31515"), multiline: true));
+        rs.Spans.Add(StringSpan("'''", "'''", C("#CE9178", "#A31515"), multiline: true));
+        rs.Spans.Add(StringSpan("\"", "\"", C("#CE9178", "#A31515")));
+        rs.Spans.Add(StringSpan("'", "'", C("#CE9178", "#A31515")));
 
         // 文档分隔符
-        rs.Rules.Add(Rule("DocumentSeparator", Hex("#808080"), @"^---\s*$", multiline: true, bold: true));
-        rs.Rules.Add(Rule("DocumentSeparator", Hex("#808080"), @"^\.\.\.\s*$", multiline: true, bold: true));
+        rs.Rules.Add(Rule("DocumentSeparator", C("#808080", "#7A7A7A"), @"^---\s*$", multiline: true, bold: true));
+        rs.Rules.Add(Rule("DocumentSeparator", C("#808080", "#7A7A7A"), @"^\.\.\.\s*$", multiline: true, bold: true));
 
         // 标签
-        rs.Rules.Add(Rule("Tag", Hex("#C586C0"), @"![\w]+(?:\.[\w]+)*"));
+        rs.Rules.Add(Rule("Tag", C("#C586C0", "#800000"), @"![\w]+(?:\.[\w]+)*"));
         // 锚点 & 别名
-        rs.Rules.Add(Rule("Anchor", Hex("#DCDCAA"), @"&[\w\-]+"));
-        rs.Rules.Add(Rule("Alias", Hex("#DCDCAA"), @"\*[\w\-]+"));
+        rs.Rules.Add(Rule("Anchor", C("#DCDCAA", "#795E26"), @"&[\w\-]+"));
+        rs.Rules.Add(Rule("Alias", C("#DCDCAA", "#795E26"), @"\*[\w\-]+"));
 
         // 日期时间
-        rs.Rules.Add(Rule("Date", Hex("#4EC9B0"),
+        rs.Rules.Add(Rule("Date", C("#4EC9B0", "#267F99"),
             @"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?"));
-        rs.Rules.Add(Rule("Date", Hex("#4EC9B0"), @"\d{4}-\d{2}-\d{2}"));
+        rs.Rules.Add(Rule("Date", C("#4EC9B0", "#267F99"), @"\d{4}-\d{2}-\d{2}"));
 
         // 数字
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"0x[0-9a-fA-F_]+"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"0o[0-7_]+"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"0b[01_]+"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"[+-]?\.(?:inf|Inf|INF)"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"), @"[+-]?\.(?:nan|NaN|NAN)"));
-        rs.Rules.Add(Rule("Number", Hex("#B5CEA8"),
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"0x[0-9a-fA-F_]+"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"0o[0-7_]+"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"0b[01_]+"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"[+-]?\.(?:inf|Inf|INF)"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"), @"[+-]?\.(?:nan|NaN|NAN)"));
+        rs.Rules.Add(Rule("Number", C("#B5CEA8", "#098658"),
             @"[+-]?\d[0-9_]*(?:\.\d[0-9_]*)?(?:[eE][+-]?\d[0-9_]*)?"));
 
         // 布尔值
-        rs.Rules.Add(Rule("Boolean", Hex("#569CD6"),
+        rs.Rules.Add(Rule("Boolean", C("#569CD6", "#0000FF"),
             @"\b(?:true|false|True|False|TRUE|FALSE|yes|no|Yes|No|YES|NO|on|off|On|Off|ON|OFF)\b"));
         // Null
-        rs.Rules.Add(Rule("Null", Hex("#569CD6"), @"\b(?:null|Null|NULL)\b"));
+        rs.Rules.Add(Rule("Null", C("#569CD6", "#0000FF"), @"\b(?:null|Null|NULL)\b"));
 
         // 键
-        rs.Rules.Add(Rule("Key", Hex("#9CDCFE"), @"^\s*[\w][\w\-\.]*(?=\s*:)", multiline: true));
+        rs.Rules.Add(Rule("Key", C("#9CDCFE", "#0451A5"), @"^\s*[\w][\w\-\.]*(?=\s*:)", multiline: true));
 
         // 注释（最后，Span 优先级高于 Rule）
-        rs.Rules.Add(Rule("Comment", Hex("#6A9955"), @"#[^\n]*", italic: true));
+        rs.Rules.Add(Rule("Comment", C("#6A9955", "#008000"), @"#[^\n]*", italic: true));
 
         RegisterDef("YAML", [".yaml", ".yml"], rs);
     }
@@ -205,23 +225,23 @@ public static class SyntaxHighlightingService
         var rs = new HighlightingRuleSet();
 
         // 时间戳
-        rs.Rules.Add(Rule("Timestamp", Hex("#90CAF9"),
+        rs.Rules.Add(Rule("Timestamp", C("#90CAF9", "#0451A5"),
             @"\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?\b"));
-        rs.Rules.Add(Rule("Timestamp", Hex("#90CAF9"),
+        rs.Rules.Add(Rule("Timestamp", C("#90CAF9", "#0451A5"),
             @"\b\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?\b"));
 
         // 日志级别
-        rs.Rules.Add(Rule("Error", Hex("#EF9A9A"), @"\b(?:ERROR|FATAL|CRITICAL)\b", bold: true));
-        rs.Rules.Add(Rule("Warning", Hex("#FFE082"), @"\bWARN(?:ING)?\b"));
-        rs.Rules.Add(Rule("Info", Hex("#A5D6A7"), @"\bINFO\b"));
-        rs.Rules.Add(Rule("Debug", Hex("#B0BEC5"), @"\bDEBUG\b"));
-        rs.Rules.Add(Rule("Trace", Hex("#B0BEC5"), @"\b(?:TRACE|VERBOSE)\b", italic: true));
+        rs.Rules.Add(Rule("Error", C("#EF9A9A", "#CD3131"), @"\b(?:ERROR|FATAL|CRITICAL)\b", bold: true));
+        rs.Rules.Add(Rule("Warning", C("#FFE082", "#B58900"), @"\bWARN(?:ING)?\b"));
+        rs.Rules.Add(Rule("Info", C("#A5D6A7", "#22863A"), @"\bINFO\b"));
+        rs.Rules.Add(Rule("Debug", C("#B0BEC5", "#6A737D"), @"\bDEBUG\b"));
+        rs.Rules.Add(Rule("Trace", C("#B0BEC5", "#6A737D"), @"\b(?:TRACE|VERBOSE)\b", italic: true));
 
         // 异常
-        rs.Rules.Add(Rule("Exception", Hex("#EF9A9A"), @"\b\w+Exception\b", italic: true));
+        rs.Rules.Add(Rule("Exception", C("#EF9A9A", "#CD3131"), @"\b\w+Exception\b", italic: true));
 
         // 堆栈
-        rs.Rules.Add(Rule("StackTrace", Hex("#B0BEC5"), @"^\s+at\s+.*$", multiline: true));
+        rs.Rules.Add(Rule("StackTrace", C("#B0BEC5", "#6A737D"), @"^\s+at\s+.*$", multiline: true));
 
         RegisterDef("Log", [".log"], rs);
     }
