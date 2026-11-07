@@ -125,6 +125,7 @@
 
 ### Fixed
 
+- 修复资源管理器与桌面里 `Alt` + 空格呼不出快捷应用：空格预览的低级键盘钩子只按虚拟键匹配预览键，没有排除修饰键，`Alt` / `Ctrl` / `Win` 组合会被 `WH_KEYBOARD_LL` 吞掉，`RegisterHotKey` 收不到 `Alt` + 空格。现在预览与关闭键在检测到 `Alt` / `Ctrl` / `Win` 按下时直接放行，组合键交还给系统与全局热键（`Alt` + `Esc` 切换窗口等也一并恢复）
 - 修复文本预览在浅色主题下仍是深色背景：`TextView` 的编辑器底色、前景与行号颜色改为跟随主题资源（`SurfaceBrush` / `TextPrimaryBrush` / `TextMutedBrush`），不再写死深色。语法高亮配色同步改为按主题切换，深色用 VS Code Dark、浅色用 VS Code Light，`SyntaxHighlightingService` 订阅 `ThemeManager.ThemeChanged` 重新注册定义，已打开的编辑器在主题切换后立即刷新。`sigxor-theme-smoke` 探针新增编辑器底色随主题切换的断言
 - 修复文件快速预览把 YAML 等文本文件当成二进制：扩展名无法确定或被标为二进制时，改为读取文件头按内容判断文本 / 二进制。文本嗅探支持 UTF-8、带 BOM 的 UTF-16、无 BOM 的 UTF-16 以及中文环境常见的 GBK / GB18030，并用控制字符比例排除压缩包、图片、可执行文件等真实二进制；无扩展名的 YAML / 模板文件、扩展名写成 `.dat` / `.bin` 的文本都会进入文本预览，真实二进制仍然使用十六进制视图。`.yaml` / `.yml` 继续按代码类型预览
 - 修复文件浏览器点标题栏关闭按钮后关不掉、界面像卡住：`OnClosing` 先取消本次关闭再排队异步收尾，收尾完成调用 `Close()` 前又把 `_hideRequested` 置回 `false`，第二次 `Closing` 仍按「首次关闭」处理，再次取消并重新排队，形成无限循环，窗口永远关不上。现在收尾完成后置 `_exitRequested = true` 再 `Close()`，放行真正的关闭

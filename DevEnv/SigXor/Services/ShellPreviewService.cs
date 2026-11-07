@@ -78,6 +78,11 @@ public sealed class ShellPreviewService : IDisposable
 
     private bool OnKeyPressed(int vkCode)
     {
+        // 预览 / 关闭快捷键都是单键：带 Alt / Ctrl / Win 时放行给系统与 RegisterHotKey。
+        // 否则低级键盘钩子会把 Alt + 空格（快捷应用）、Alt + Esc（切换窗口）这类组合键吞掉，
+        // 表现为资源管理器 / 桌面里 Alt + 空格呼不出快捷应用。
+        if (HasSystemModifier()) return false;
+
         PreviewSettings preview = _settings.Current.Preview;
         int closeKey = ShortcutDefinition.ToPreviewVirtualKey(
             preview.CloseShortcut, GlobalHotkeyService.VK_ESCAPE);
@@ -300,6 +305,18 @@ public sealed class ShellPreviewService : IDisposable
         return len == 0 ? null : sb.ToString();
     }
 
+    /// <summary>Alt / Ctrl / Win 是否正被按住（预览键都要求单键，组合键交给系统与全局热键）。</summary>
+    private static bool HasSystemModifier() =>
+        IsKeyDown(VkMenu) || IsKeyDown(VkControl)
+        || IsKeyDown(VkLWin) || IsKeyDown(VkRWin);
+
+    private static bool IsKeyDown(int virtualKey) => (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
+
+    private const int VkControl = 0x11;
+    private const int VkMenu = 0x12;
+    private const int VkLWin = 0x5B;
+    private const int VkRWin = 0x5C;
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -312,6 +329,9 @@ public sealed class ShellPreviewService : IDisposable
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int virtualKey);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
