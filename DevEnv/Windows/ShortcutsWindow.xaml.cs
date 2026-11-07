@@ -556,12 +556,6 @@ public partial class ShortcutsWindow : Window
         MergeSelectionMenu.Header = $"合并选中的 {selected.Count} 项为文件夹…";
     }
 
-    private void OnFolderBack(object sender, RoutedEventArgs e)
-    {
-        ViewModel.CloseGroup();
-        FocusSearch();
-    }
-
     private static MenuItem MenuItemFor(string header, Action action)
     {
         var item = new MenuItem { Header = header };
@@ -684,6 +678,15 @@ public partial class ShortcutsWindow : Window
             || IsInside(source, SearchShell))
             return;
 
+        // 文件夹浮层没有返回按钮：点卡片外的空白处直接收起，回到原来的页签
+        if (ViewModel.IsInsideGroup && !IsInside(source, FolderCard))
+        {
+            ViewModel.CloseGroup();
+            FocusSearch();
+            e.Handled = true;
+            return;
+        }
+
         _entryPress = null;
         if (!ViewModel.IsEditableView)
             return;
@@ -793,8 +796,11 @@ public partial class ShortcutsWindow : Window
         ViewModel.SetSelection(selection);
     }
 
+    /// <summary>当前可交互的网格：文件夹浮层打开时对浮层里的卡片做框选 / 拖拽，否则对页签网格。</summary>
+    private ItemsControl ActiveGrid => ViewModel.IsInsideGroup ? GroupGrid : EntryGrid;
+
     private FrameworkElement? EntryContainer(int index) =>
-        EntryGrid.ItemContainerGenerator.ContainerFromIndex(index) as FrameworkElement;
+        ActiveGrid.ItemContainerGenerator.ContainerFromIndex(index) as FrameworkElement;
 
     /// <summary>把卡片容器换算到覆盖层坐标；滚动位置由 TranslatePoint 自动计入。</summary>
     private Rect GetBounds(FrameworkElement container)

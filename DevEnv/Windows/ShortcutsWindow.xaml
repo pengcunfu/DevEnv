@@ -125,34 +125,107 @@
             </Setter>
         </Style>
 
-        <!-- 文件夹内视图的返回按钮 -->
-        <Style x:Key="LaunchpadTextButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#E6FFFFFF" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Padding" Value="10,4" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="12"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <!-- 图标卡片：页签网格与文件夹浮层共用 -->
+        <DataTemplate x:Key="LauncherEntryTemplate">
+            <Button Style="{StaticResource LaunchpadTile}"
+                    ToolTip="{Binding TargetPath}"
+                    Click="OnEntryClick"
+                    PreviewMouseLeftButtonDown="OnEntryPreviewMouseLeftButtonDown"
+                    PreviewMouseMove="OnEntryPreviewMouseMove"
+                    ContextMenuOpening="OnEntryContextMenuOpening">
+                <StackPanel Width="116">
+                    <Grid Height="76">
+                        <Border Width="72"
+                                Height="72"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#1FFFFFFF"
+                                CornerRadius="17"
+                                Tag="IconDropZone">
+                            <Grid>
+                                <!-- 普通卡片：单图标 -->
+                                <Grid Visibility="{Binding IsGroup, Converter={StaticResource FalseToVisibility}}">
+                                    <Image Width="56"
+                                           Height="56"
+                                           Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
+                                           Stretch="Uniform"
+                                           RenderOptions.BitmapScalingMode="HighQuality"
+                                           Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
+                                    <TextBlock Text="{Binding KindGlyph}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="30"
+                                               Foreground="#E6FFFFFF"
+                                               Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                </Grid>
+                                <!-- 启动器文件夹：前四项 2×2 预览 -->
+                                <ItemsControl Margin="7"
+                                              ItemsSource="{Binding GroupPreview}"
+                                              Visibility="{Binding IsGroup, Converter={StaticResource TrueToVisibility}}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Rows="2" Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Width="27" Height="27">
+                                                <Image Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
+                                                       Stretch="Uniform"
+                                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                                       Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
+                                                <TextBlock Text="{Binding KindGlyph}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="14"
+                                                           Foreground="#E6FFFFFF"
+                                                           Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
                         </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#26FFFFFF" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#3DFFFFFF" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+                    </Grid>
+                    <TextBlock Margin="0,8,0,0"
+                               MaxWidth="116"
+                               MaxHeight="34"
+                               Text="{Binding Name}"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               TextTrimming="CharacterEllipsis"
+                               FontSize="12.5"
+                               Foreground="#F2FFFFFF" />
+                    <TextBlock Margin="0,2,0,0"
+                               Text="{Binding KindText}"
+                               TextAlignment="Center"
+                               FontSize="10.5"
+                               Foreground="#80FFFFFF">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.IsSearching, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <!-- 系统工具的卡片始终显示分类 -->
+                                    <DataTrigger Binding="{Binding IsToolCard}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <!-- 文件夹磁贴始终显示条目数 -->
+                                    <DataTrigger Binding="{Binding IsGroup}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Button>
+        </DataTemplate>
 
         <!-- 右下角圆形「＋」 -->
         <Style x:Key="LaunchpadCircleButton" TargetType="Button">
@@ -264,30 +337,6 @@
             </Grid>
         </Border>
 
-        <!-- 文件夹内视图：返回 + 文件夹名 -->
-        <Border x:Name="FolderHeader"
-                Grid.Row="1"
-                Margin="0,8,0,0"
-                HorizontalAlignment="Center"
-                Padding="4,2"
-                Background="#1FFFFFFF"
-                CornerRadius="16"
-                Visibility="{Binding IsInsideGroup, Converter={StaticResource TrueToVisibility}}">
-            <StackPanel Orientation="Horizontal">
-                <Button Style="{StaticResource LaunchpadTextButton}" Click="OnFolderBack"
-                        Content="‹ 返回" FontSize="12.5" />
-                <TextBlock Margin="10,0,12,0"
-                           VerticalAlignment="Center"
-                           Text="{Binding CurrentGroup.Name}"
-                           FontSize="13"
-                           Foreground="#F2FFFFFF" />
-                <TextBlock VerticalAlignment="Center"
-                           Text="{Binding Summary}"
-                           FontSize="11.5"
-                           Foreground="#80FFFFFF" />
-            </StackPanel>
-        </Border>
-
         <!-- 中部：图标网格 -->
         <Grid Grid.Row="2" Margin="0,16,0,0">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -295,115 +344,14 @@
                           Padding="24,0,24,0"
                           Background="Transparent">
                 <ItemsControl x:Name="EntryGrid"
-                              ItemsSource="{Binding VisibleEntries}"
+                              ItemsSource="{Binding PageEntries}"
+                              ItemTemplate="{StaticResource LauncherEntryTemplate}"
                               HorizontalAlignment="Stretch">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <controls:CenteredWrapPanel ItemWidth="132" ItemHeight="150" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Style="{StaticResource LaunchpadTile}"
-                                    ToolTip="{Binding TargetPath}"
-                                    Click="OnEntryClick"
-                                    PreviewMouseLeftButtonDown="OnEntryPreviewMouseLeftButtonDown"
-                                    PreviewMouseMove="OnEntryPreviewMouseMove"
-                                    ContextMenuOpening="OnEntryContextMenuOpening">
-                                <StackPanel Width="116">
-                                    <Grid Height="76">
-                                        <Border Width="72"
-                                                Height="72"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Background="#1FFFFFFF"
-                                                CornerRadius="17"
-                                                Tag="IconDropZone">
-                                            <Grid>
-                                                <!-- 普通卡片：单图标 -->
-                                                <Grid Visibility="{Binding IsGroup, Converter={StaticResource FalseToVisibility}}">
-                                                    <Image Width="56"
-                                                           Height="56"
-                                                           Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
-                                                           Stretch="Uniform"
-                                                           RenderOptions.BitmapScalingMode="HighQuality"
-                                                           Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
-                                                    <TextBlock Text="{Binding KindGlyph}"
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center"
-                                                               FontFamily="Segoe MDL2 Assets"
-                                                               FontSize="30"
-                                                               Foreground="#E6FFFFFF"
-                                                               Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
-                                                </Grid>
-                                                <!-- 启动器文件夹：前四项 2×2 预览 -->
-                                                <ItemsControl Margin="7"
-                                                              ItemsSource="{Binding GroupPreview}"
-                                                              Visibility="{Binding IsGroup, Converter={StaticResource TrueToVisibility}}">
-                                                    <ItemsControl.ItemsPanel>
-                                                        <ItemsPanelTemplate>
-                                                            <UniformGrid Rows="2" Columns="2" />
-                                                        </ItemsPanelTemplate>
-                                                    </ItemsControl.ItemsPanel>
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Grid Width="27" Height="27">
-                                                                <Image Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
-                                                                       Stretch="Uniform"
-                                                                       RenderOptions.BitmapScalingMode="HighQuality"
-                                                                       Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
-                                                                <TextBlock Text="{Binding KindGlyph}"
-                                                                           HorizontalAlignment="Center"
-                                                                           VerticalAlignment="Center"
-                                                                           FontFamily="Segoe MDL2 Assets"
-                                                                           FontSize="14"
-                                                                           Foreground="#E6FFFFFF"
-                                                                           Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </Grid>
-                                        </Border>
-                                    </Grid>
-                                    <TextBlock Margin="0,8,0,0"
-                                               MaxWidth="116"
-                                               MaxHeight="34"
-                                               Text="{Binding Name}"
-                                               TextAlignment="Center"
-                                               TextWrapping="Wrap"
-                                               TextTrimming="CharacterEllipsis"
-                                               FontSize="12.5"
-                                               Foreground="#F2FFFFFF" />
-                                    <TextBlock Margin="0,2,0,0"
-                                               Text="{Binding KindText}"
-                                               TextAlignment="Center"
-                                               FontSize="10.5"
-                                               Foreground="#80FFFFFF">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding DataContext.IsSearching, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                 Value="True">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                    <!-- 系统工具的卡片始终显示分类 -->
-                                                    <DataTrigger Binding="{Binding IsToolCard}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                    <!-- 文件夹磁贴始终显示条目数 -->
-                                                    <DataTrigger Binding="{Binding IsGroup}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
 
@@ -552,6 +500,83 @@
                        FontSize="16"
                        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
         </Button>
+
+        <!-- 启动器文件夹：居中浮层卡片（类似平板文件夹），不占满启动器；
+             不用单独的返回按钮，点击卡片外的空白处或按 Esc 收起。
+             底层网格仍显示当前页签，浮层只负责组内条目。 -->
+        <Grid x:Name="GroupLayer"
+              Grid.Row="1"
+              Grid.RowSpan="3"
+              Visibility="{Binding IsInsideGroup, Converter={StaticResource TrueToVisibility}}">
+            <Border Background="#73000000" />
+            <Border x:Name="FolderCard"
+                    MinWidth="360"
+                    MaxWidth="840"
+                    MaxHeight="560"
+                    Margin="24"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#F5161A22"
+                    BorderBrush="#33FFFFFF"
+                    BorderThickness="1"
+                    CornerRadius="22"
+                    Padding="18,16,18,12">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="32"
+                                      ShadowDepth="0"
+                                      Opacity="0.55"
+                                      Color="#000000" />
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 文件夹名 + 条目数 + 关闭提示（不放返回按钮） -->
+                    <Grid Grid.Row="0" Margin="4,0,4,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{Binding CurrentGroup.Name}"
+                                   FontSize="15"
+                                   Foreground="#F2FFFFFF" />
+                        <TextBlock Grid.Column="1"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Summary}"
+                                   FontSize="11.5"
+                                   Foreground="#80FFFFFF" />
+                        <TextBlock Grid.Column="3"
+                                   VerticalAlignment="Center"
+                                   Text="点击空白处或按 Esc 关闭"
+                                   FontSize="11"
+                                   Foreground="#73FFFFFF" />
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1"
+                                  MaxHeight="440"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Background="Transparent">
+                        <ItemsControl x:Name="GroupGrid"
+                                      ItemsSource="{Binding VisibleEntries}"
+                                      ItemTemplate="{StaticResource LauncherEntryTemplate}"
+                                      HorizontalAlignment="Stretch">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <controls:CenteredWrapPanel ItemWidth="132" ItemHeight="150" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
 
         <!-- 框选矩形与拖拽落点提示；不参与命中测试，避免挡住卡片和右键菜单 -->
         <Canvas x:Name="SelectionLayer"

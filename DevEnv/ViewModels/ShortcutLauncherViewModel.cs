@@ -154,6 +154,12 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public ObservableCollection<LauncherEntry> VisibleEntries { get; } = [];
 
+    /// <summary>
+    /// 当前页签（或搜索结果）的顶层卡片。文件夹以浮层卡片展开时，底层网格仍绑定这一份，
+    /// 保证浮层后面还是原来的页签，而不是一片空白。
+    /// </summary>
+    public ObservableCollection<LauncherEntry> PageEntries { get; } = [];
+
     /// <summary>当前页签：0 本地应用 / 1 文件夹 / 2 网站 / 3 系统工具 / 4 内置工具。</summary>
     [ObservableProperty]
     private int _selectedPage;
@@ -395,18 +401,23 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         var query = Query.Trim();
         IsSearching = query.Length > 0;
 
-        IEnumerable<LauncherEntry> source;
+        IEnumerable<LauncherEntry> pageSource;
         if (IsSearching)
-            source = _allItems.Where(entry => entry.Matches(query));
-        else if (CurrentGroup is not null)
-            source = CurrentGroup.GroupItems;
+            pageSource = _allItems.Where(entry => entry.Matches(query));
         else if (SelectedPage == ToolsPage)
-            source = _tools;
+            pageSource = _tools;
         else if (SelectedPage == BuiltinToolsPage)
-            source = _builtinTools;
+            pageSource = _builtinTools;
         else
-            source = _pageTiles[SelectedPage];
+            pageSource = _pageTiles[SelectedPage];
 
+        var pageEntries = pageSource.ToList();
+        PageEntries.Clear();
+        foreach (var entry in pageEntries)
+            PageEntries.Add(entry);
+
+        // 文件夹展开时，可见条目换成组内条目；底层页签仍保留在 PageEntries 里
+        IEnumerable<LauncherEntry> source = CurrentGroup is not null ? CurrentGroup.GroupItems : pageEntries;
         VisibleEntries.Clear();
         foreach (var entry in source)
             VisibleEntries.Add(entry);

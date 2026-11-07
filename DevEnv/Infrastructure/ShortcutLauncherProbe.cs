@@ -156,6 +156,8 @@ public static class ShortcutLauncherProbe
                     Pump();
                     Check("打开启动器文件夹后显示组内条目",
                         vm.IsInsideGroup && vm.VisibleEntries.Count == group.GroupItems.Count);
+                    Check("文件夹浮层打开时底层页签卡片保留",
+                        vm.PageEntries.Count > 0 && vm.PageEntries.Any(entry => entry.IsGroup));
                     Check("文件夹内禁止再建文件夹", !vm.CanCreateGroup);
                     vm.CloseGroup();
                     Pump();
