@@ -30,7 +30,7 @@ public partial class App : System.Windows.Application
     private GlobalHotkeys? _hotkeys;
     private HwndSourceHook? _hotkeyHook;
     private ClipboardWatcher? _clipboardWatcher;
-    private WinKeyLauncherHook? _winKeyHook;
+    private AltKeyLauncherHook? _altKeyHook;
     private TranslatorWindow? _translatorWindow;
     private ClipboardWindow? _clipboardWindow;
     private SigXorHost? _sigXor;
@@ -104,17 +104,17 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // Win 键拦截自检：真实安装钩子 + SendInput 模拟按键，验证触发与放行
-        int winKeyIndex = Array.FindIndex(e.Args, a =>
-            string.Equals(a, WinKeyLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
-        if (winKeyIndex >= 0)
+        // 左 Alt 拦截自检：真实安装钩子 + SendInput 模拟按键，验证触发与放行
+        int altKeyIndex = Array.FindIndex(e.Args, a =>
+            string.Equals(a, AltKeyLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
+        if (altKeyIndex >= 0)
         {
-            string report = winKeyIndex + 1 < e.Args.Length ? e.Args[winKeyIndex + 1] : "";
-            Shutdown(WinKeyLauncherProbe.Run(string.IsNullOrWhiteSpace(report) ? [] : [report]));
+            string report = altKeyIndex + 1 < e.Args.Length ? e.Args[altKeyIndex + 1] : "";
+            Shutdown(AltKeyLauncherProbe.Run(string.IsNullOrWhiteSpace(report) ? [] : [report]));
             return;
         }
 
-        // 全局启动器自检：四个页签能加载、搜索可用、没有数据绑定错误
+        // 全局启动器自检：五个页签能加载、搜索可用、没有数据绑定错误
         int shortcutsIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ShortcutLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
         if (shortcutsIndex >= 0)
@@ -229,43 +229,43 @@ public partial class App : System.Windows.Application
         _clipboardWatcher.Captured += OnClipboardCaptured;
 
         // 启动后在后台空闲时把全局启动器准备好（屏幕外完成布局与首帧渲染），
-        // 之后 Win 键 / 托盘菜单唤起时只是把窗口摆出来，不再临时创建、不会闪。
+        // 之后左 Alt / 托盘菜单唤起时只是把窗口摆出来，不再临时创建、不会闪。
         // 放到 ApplicationIdle 是为了不拖慢启动本身。
         Dispatcher.BeginInvoke(new Action(ShortcutWindowHost.Prewarm),
             System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
-        // Win 键拦截放在启动流程最后安装：前面的探针 / 提权子进程早已 return，
+        // 左 Alt 拦截放在启动流程最后安装：前面的探针 / 提权子进程早已 return，
         // 不会把键盘钩子带进那些只跑一次就退出的进程。
-        ApplyWinKeyLauncher(CoreServices.Settings.GetConfig().WinKeyLauncher);
+        ApplyAltKeyLauncher(CoreServices.Settings.GetConfig().AltKeyLauncher);
     }
 
     /// <summary>
-    /// 按设置安装 / 卸载 Win 键拦截钩子。
-    /// 开启时单独按 Win 键唤起全局启动器，Win+组合键原样放行。
+    /// 按设置安装 / 卸载左 Alt 拦截钩子。
+    /// 开启时单独按左 Alt 键唤起全局启动器，Alt+组合键原样放行。
     /// </summary>
-    private void ApplyWinKeyLauncher(bool enabled)
+    private void ApplyAltKeyLauncher(bool enabled)
     {
-        _winKeyHook?.Resume();
+        _altKeyHook?.Resume();
 
         if (!enabled)
         {
-            _winKeyHook?.Uninstall();
+            _altKeyHook?.Uninstall();
             return;
         }
 
-        if (_winKeyHook is null)
+        if (_altKeyHook is null)
         {
-            _winKeyHook = new WinKeyLauncherHook(Dispatcher)
+            _altKeyHook = new AltKeyLauncherHook(Dispatcher)
             {
-                // 模态对话框开着时不抢 Win 键，让系统开始菜单照常弹出
+                // 模态对话框开着时不抢左 Alt，让前台程序照常收到 Alt
                 CanTrigger = ShortcutWindowHost.CanOpen,
             };
-            _winKeyHook.LauncherRequested += () => ShortcutWindowHost.Toggle();
+            _altKeyHook.LauncherRequested += () => ShortcutWindowHost.Toggle();
         }
 
-        if (!_winKeyHook.Install())
+        if (!_altKeyHook.Install())
         {
-            _tray?.ShowBalloon("Win 键拦截失败：无法安装键盘钩子，Win 键仍打开系统开始菜单。",
+            _tray?.ShowBalloon("左 Alt 拦截失败：无法安装键盘钩子，左 Alt 不会唤起全局启动器。",
                 Forms.ToolTipIcon.Warning);
         }
     }
@@ -429,8 +429,8 @@ public partial class App : System.Windows.Application
         _hotkeys = null;
 
         // 先摘键盘钩子：退出路径上继续拦截 Win 键会把开始菜单吞掉
-        _winKeyHook?.Dispose();
-        _winKeyHook = null;
+        _altKeyHook?.Dispose();
+        _altKeyHook = null;
 
         ToolWindowHost.CloseAll();
         ShortcutWindowHost.Close();
@@ -484,17 +484,17 @@ public partial class App : System.Windows.Application
         if (HwndSource.FromHwnd(hwnd) is { } source)
             source.AddHook(_hotkeyHook);
 
-        ApplyGlobalHotkeys(includeWinKey: false);
+        ApplyGlobalHotkeys(includeAltKey: false);
     }
 
     /// <summary>
     /// 读取 data.json 并注册全局热键。录制快捷键结束后也走这里恢复注册。
     /// </summary>
-    private void ApplyGlobalHotkeys(bool notify = true, bool includeWinKey = true)
+    private void ApplyGlobalHotkeys(bool notify = true, bool includeAltKey = true)
     {
         string show = "Ctrl+Alt+D";
         string quick = "Alt+Space";
-        bool winKeyLauncher = true;
+        bool altKeyLauncher = true;
         try
         {
             var cfg = CoreServices.Settings.GetConfig();
@@ -502,7 +502,7 @@ public partial class App : System.Windows.Application
                 show = cfg.ShowWindowHotkey;
             if (!string.IsNullOrWhiteSpace(cfg.QuickAppHotkey))
                 quick = cfg.QuickAppHotkey;
-            winKeyLauncher = cfg.WinKeyLauncher;
+            altKeyLauncher = cfg.AltKeyLauncher;
         }
         catch
         {
@@ -517,8 +517,8 @@ public partial class App : System.Windows.Application
                 ShowHotkeyFailure(quick, "快捷应用");
         }
 
-        if (includeWinKey)
-            ApplyWinKeyLauncher(winKeyLauncher);
+        if (includeAltKey)
+            ApplyAltKeyLauncher(altKeyLauncher);
     }
 
     private void ShowHotkeyFailure(string hotkey, string action)
@@ -536,7 +536,7 @@ public partial class App : System.Windows.Application
             if (capturing)
             {
                 _hotkeys?.Suspend();
-                _winKeyHook?.Suspend();
+                _altKeyHook?.Suspend();
                 return;
             }
 

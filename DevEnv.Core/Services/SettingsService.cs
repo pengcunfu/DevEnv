@@ -22,8 +22,8 @@ public sealed class SettingsService
             DarkMode = json.Value<bool?>("DarkMode") == true,
             ShowWindowHotkey = json.Value<string>("ShowWindowHotkey") ?? "Ctrl+Alt+D",
             QuickAppHotkey = json.Value<string>("QuickAppHotkey") ?? "Alt+Space",
-            // 缺省开启：新用户装上就能用 Win 键唤出全局启动器
-            WinKeyLauncher = json.Value<bool?>("WinKeyLauncher") != false,
+            // 缺省开启：新用户装上就能用左 Alt 键唤出全局启动器
+            AltKeyLauncher = json.Value<bool?>("AltKeyLauncher") != false,
         };
     }
 
@@ -55,7 +55,7 @@ public sealed class SettingsService
     public OperationResult SaveHotkeys(
         string showWindowHotkey,
         string quickAppHotkey,
-        bool winKeyLauncher)
+        bool altKeyLauncher)
     {
         var errors = HotkeyValidator.ValidateBindings(
         [
@@ -72,7 +72,7 @@ public sealed class SettingsService
         {
             ["ShowWindowHotkey"] = HotkeyParser.FormatCanonical(show),
             ["QuickAppHotkey"] = HotkeyParser.FormatCanonical(quick),
-            ["WinKeyLauncher"] = winKeyLauncher,
+            ["AltKeyLauncher"] = altKeyLauncher,
         };
 
         _store.SaveConfig(patch);

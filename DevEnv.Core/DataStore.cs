@@ -40,7 +40,7 @@ public sealed class DataStore
                     ["DarkMode"] = false,
                     ["ShowWindowHotkey"] = "Ctrl+Alt+D",
                     ["QuickAppHotkey"] = "Alt+Space",
-                    ["WinKeyLauncher"] = true,
+                    ["AltKeyLauncher"] = true,
                 },
                 ["NativeAtomList"] = new JArray(),
                 ["FolderAtomList"] = new JArray(),

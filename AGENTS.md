@@ -38,7 +38,7 @@
 - 全局键盘钩子：SigXor 用自己的 `GlobalHotkeyService`（`WH_KEYBOARD_LL`，处理预览键 / 关闭键 / 语音键 / 反引号），与 DevEnv 的 `RegisterHotKey` 体系**并存但不冲突**（前者管预览与语音，后者管显示窗口与快捷应用）。多个 SigXor 功能共用一个钩子时靠 `GlobalHotkeyRouter` 的**优先级**排序：截图 300 > 语音 200 > 预览 100。快捷键录制期间 `HotkeyCaptureState.IsCapturing` 为 true，路由直接放行按键，避免录制时触发截图 / 语音 / 预览。
 - **开机自启只有一个开关**：DevEnv「设置 → 常规」里的 `SelfStarting`（data.json）是唯一事实来源，落盘到注册表 `HKCU\...\Run`。SigXor 的设置页里**不再有**同名勾选框（已并入宿主设置对话框），需要改自启就去宿主的「常规」页签。
 - **设置统一在宿主设置对话框里**：SigXor 原独立设置窗口（`DevEnv/SigXor/SettingsWindow.*`）**已删除**，内容拆成四个视图（`DevEnv/SigXor/Views/SigXorGeneralView.xaml` / `SigXorVoiceView.xaml` / `SigXorServiceView.xaml` 与宿主 `DevEnv/Views/HotkeysSettingsView.xaml`），并入燧岚开发盒子设置对话框的**平铺五页签**（**不要二级页签**）：「常规」= 主程序设置 + 文件预览的常规选项，「快捷键」= 所有程序绑定的快捷键，「语音与截屏」，「服务与模型」，「关于与帮助」= 产品信息 + 检查更新 + 帮助文档。中间三页签的内容由 `SettingsDialogHost.Sections`（`ISettingsSections`）在运行时注入（`SigXorHost.CreateSettingsSections`），「关于与帮助」由宿主 `DevEnv/Views/AboutHelpView.xaml` 提供；不要再造第二个模态设置框。主窗口顶部**不再有任何菜单**：设置从托盘右键菜单「设置…」（`TrayIconHost.SettingsRequested` → `SettingsDialogHost.Open()`）进入，内置工具从全局启动器的「内置工具」页签进入。
-- **快捷键统一在「设置 → 快捷键」**：显示主窗口 / 快捷应用由 `GlobalHotkeys` 通过 `RegisterHotKey` 注册（`data.json` 的 `Config.ShowWindowHotkey` / `Config.QuickAppHotkey`）；Win 键启动器、语音键、截屏组合、文件预览打开 / 关闭键也都在该页修改。全局组合键用 `HotkeyRecorderBox` 录制，录制期间 `HotkeyCaptureState` 会挂起 `GlobalHotkeys` 与 `WinKeyLauncherHook`；常规页保存走 `SettingsService.SaveGeneral`，快捷键页走 `SaveHotkeys`，两者不得互相覆盖。
+- **快捷键统一在「设置 → 快捷键」**：显示主窗口 / 快捷应用由 `GlobalHotkeys` 通过 `RegisterHotKey` 注册（`data.json` 的 `Config.ShowWindowHotkey` / `Config.QuickAppHotkey`）；左 Alt 启动器、语音键、截屏组合、文件预览打开 / 关闭键也都在该页修改。全局组合键用 `HotkeyRecorderBox` 录制，录制期间 `HotkeyCaptureState` 会挂起 `GlobalHotkeys` 与 `AltKeyLauncherHook`；常规页保存走 `SettingsService.SaveGeneral`，快捷键页走 `SaveHotkeys`，两者不得互相覆盖。
 - **自检探针**：SigXor 有 34 个 XAML（11 个窗口 + 15 个预览视图 + 7 个 WebView2 宿主），而 WPF 的 XAML 异常是静默的（AGENTS.md 第 12 条），靠肉眼点菜单不可靠。改动模块后跑：
 
  ```bash
@@ -55,7 +55,7 @@
 
 ### 全局启动器（Launchpad）
 
-- 入口：单独按 Win 键或托盘右键菜单「全局启动器…」 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具是五个**横向页签**（`ShortcutLauncherViewModel`）。系统工具页复用 `ShortcutService.GetSystemTools / RunSystemTool`；内置工具页是宿主原有的 JSON / Hosts / 图像 / 哈希 / 文件解锁 / 启动项 / 右键菜单工具加一个「燧岚开发盒子」（主窗口，key 为 `main-window`，走 `HostCallbacks.OnShowMainWindow`），工具直接调用 `ToolWindowHost.Open`，**主窗口顶部不再有「工具」菜单**。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
+- 入口：单独按左 Alt 键或托盘右键菜单「全局启动器…」 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具是五个**横向页签**（`ShortcutLauncherViewModel`）。系统工具页复用 `ShortcutService.GetSystemTools / RunSystemTool`；内置工具页是宿主原有的 JSON / Hosts / 图像 / 哈希 / 文件解锁 / 启动项 / 右键菜单工具加一个「燧岚开发盒子」（主窗口，key 为 `main-window`，走 `HostCallbacks.OnShowMainWindow`），工具直接调用 `ToolWindowHost.Open`，**主窗口顶部不再有「工具」菜单**。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
 - 交互：单击图标启动、`Esc` 关闭、`←` / `→` 或 `Ctrl` + 鼠标滚轮切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。**点击空白处不再关闭窗口**，而是开始框选；拖动空白绘制选框多选（`Ctrl` + 单击切换选中），拖动卡片调整顺序，把卡片拖到另一个卡片的图标中心合并成启动器文件夹，点击文件夹磁贴展开。滚轮监听在根 Grid 的 `PreviewMouseWheel`（滚动内容会被 `ScrollViewer` 标记已处理，冒泡阶段收不到），搜索期间与左右键一样不切页。
 - **布局与文件夹**：顺序和分组保存在 `data.json` 的顶层数组 `LauncherLayout`（每页 `Tiles`，普通条目用自然键 `app|路径` / `folder|路径` / `web|url`，文件夹用 `{Id,Name,Items[]}`），快捷方式本身仍以 `NativeAtomList` / `FolderAtomList` / `WebAtomList` 为唯一事实来源。打开时由 `LauncherLayout.Normalize` 对账：缺失条目剪掉、新增条目追加、空文件夹清理、单条目文件夹降级。系统工具页、内置工具页与搜索态只读，不参与排序与分组；分组只在同一页内创建，不支持嵌套。`--shortcuts-check` 需继续通过，并覆盖可编辑判定、选择 API 与文件夹展开/返回。
 - **预热要落在最终几何、内容保持全透明**：`ApplyScreenBounds` 的差异比较必须同时处理 `NaN`（新窗口 `Left/Top/Width/Height` 是 `NaN`，`Math.Abs(NaN) > x` 恒 false，漏判会让窗口带着 `NaN` 显示、由 WPF 临时挑位置）；**收起必须先淡出、后 `Hide()`**：分层窗口缓存最后一次合成结果，先 `Hide()` 再设透明是无效的（不可见就不会再渲染），下一次 `Show` 会把不透明缓存当作第一帧贴出来——表现为「第一次打开正常、之后每次都闪」。现在的顺序是 `Root.Opacity` 动画到 0 → `Completed` 里 `Hide()`；`IsHiding` 期间再次唤起会取消收起。
@@ -66,19 +66,19 @@
 - 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 56px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、五个页签切换、系统工具与内置工具目录加载、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
 
-### Win 键拦截
+### 左 Alt 拦截
 
-- 单独按一下 Win 键打开全局启动器，再按一次收起；`Win+E` / `Win+R` / `Win+D` 等组合键原样放行。开关是 `data.json` 的 `Config.WinKeyLauncher`（默认 `true`），在「设置 → 常规」里可关。
-- 判定逻辑在 `DevEnv.Core/Input/WinKeyGestureTracker.cs`（纯逻辑，单测覆盖）；钩子 `DevEnv/Infrastructure/WinKeyLauncherHook.cs` 只做 `WH_KEYBOARD_LL` 转发。
-- **只吞 Win 键抬起，不吞按下**：开始菜单是抬起时弹出的，吞抬起即可挡住它；吞按下会让 Win+组合键全部失效，所以按下阶段必须放行。按住 Win 的自动重复、左右 Win 同时按都已单独处理。
-- **吞掉物理抬起后必须补发「假按键 + Win 抬起」**（`ReleaseWinKey`）：系统看到 Win 按下却收不到抬起，会一直认为 Win 修饰键按着，之后任何按键都变成 Win+组合键——这正是「Win 接管后按键异常」的根因。补发未分配虚拟键 `0xE8` 是为了打断开始菜单的「单击 Win」判定，再补发同侧 Win 抬起让按键状态复位。改动这段务必跑 `--winkey-check`，其中「Win 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
-- 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的 Win 键不会弹全局启动器；只有自检探针通过 `AllowInjectedInput` 打开它。
-- 模态对话框打开期间（`ShortcutWindowHost.CanOpen()` 为 false）不吞 Win 键，让系统开始菜单照常弹出。
-- 全局启动器**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；Win 键唤出时只允许出现启动器本身。
+- 单独按一下左 Alt 键打开全局启动器，再按一次收起；`Alt+Tab` / `Alt+F4` / `Alt+空格` 等组合键原样放行。开关是 `data.json` 的 `Config.AltKeyLauncher`（默认 `true`），在「设置 → 快捷键」里可关。
+- 判定逻辑在 `DevEnv.Core/Input/AltKeyGestureTracker.cs`（纯逻辑，单测覆盖）；钩子 `DevEnv/Infrastructure/AltKeyLauncherHook.cs` 只做 `WH_KEYBOARD_LL` 转发。
+- **不吞任何按键**：左 Alt 的按下与抬起都原样交给系统，前台程序不会因为缺少抬起而把 Alt 误判成一直按着（这正是旧版 Win 拦截「按键异常」的根因）。代价是前台窗口的菜单栏会被点亮一下，属于系统原本的行为。
+- **只认左 Alt**（`VK_LMENU`）：右 Alt（AltGr、语音键）永不触发；按住 Alt 期间按下其它键即视为组合键，本次手势不再触发；按住时的自动重复不算组合键。抬起可能报左 / 右 / 通用 Alt 三种码（`IsAltKey`），都用来结束手势，否则手势状态会残留、下一次单按左 Alt 不再触发。
+- 钩子忽略注入按键（`LLKHF_INJECTED`），宏键盘 / 自动化工具模拟的按键不会弹全局启动器；只有自检探针通过 `AllowInjectedInput` 打开它。
+- 模态对话框打开期间（`ShortcutWindowHost.CanOpen()` 为 false）不触发，让前台程序照常收到 Alt。
+- 全局启动器**不设 Owner**：挂到主窗名下时，从托盘（主窗隐藏）唤起会把主窗一起拉出来；左 Alt 唤出时只允许出现启动器本身。
 - 启动行为：`App.OnStartup` **不显示主窗**（`new MainWindow { ShowInTaskbar = false }` + `EnsureHotkeys`，句柄由 `EnsureHandle` 提前创建），程序只驻留托盘；主窗由托盘菜单 / `Ctrl+Alt+D` / 二次启动唤出。给窗口挂 Owner 前必须确认主窗 `IsVisible`——owner 隐藏时 owned 窗口不会显示（翻译窗、剪贴板窗已按此处理，主窗显示时由 `AttachAuxiliaryWindows` 补挂）。
-- 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令），全局快捷键默认 `Alt+Space`（`GlobalHotkeys.IdLauncher`，可在「设置 → 快捷键」修改）；**设置**从右键菜单「设置…」（`SettingsRequested` → `SettingsDialogHost.Open()`）进入，关于与检查更新在设置的「关于与帮助」页；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或 Win 键进入；**主窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
-- 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，否则进程退出后开始菜单仍会被吞。
-- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --winkey-check %TEMP%\winkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 卸载后失效」。
+- 托盘入口：**单击托盘图标 = 快捷应用**（`TrayIconHost.MouseClick` → `SigXorLauncherRequested`，搜索并启动应用 / 文件 / 命令），全局快捷键默认 `Alt+Space`（`GlobalHotkeys.IdLauncher`，可在「设置 → 快捷键」修改）；**设置**从右键菜单「设置…」（`SettingsRequested` → `SettingsDialogHost.Open()`）进入，关于与检查更新在设置的「关于与帮助」页；**全局启动器**从右键菜单「全局启动器…」（`ShortcutsRequested` → `ShortcutWindowHost.Toggle()`）或左 Alt 键进入；**主窗口**只从右键菜单「显示主窗口」（`MainWindowRequested`）进入，单实例二次启动与 `Ctrl+Alt+D` 仍直接唤回主窗口。注意区分两个启动器：**快捷应用**是 SigXor 的搜索框式启动器（`LauncherWindow`，代码里仍叫 launcher），**全局启动器**是本仓库的 Launchpad 式全屏窗口（`ShortcutsWindow`）。`ShortcutWindowHost.Toggle` 带 500ms 宽限：全局启动器因失焦收起后紧接着的这次调用按「关闭」处理。
+- 与 SigXor 的 `GlobalHotkeyService` 是两个独立钩子，互不影响；退出路径必须先 `Dispose` 本钩子，避免钩子残留到进程退出之后。
+- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --altkey-check %TEMP%\altkey.txt`，真实安装钩子并用 `SendInput` 模拟按键，验证「单按触发 / 组合键放行 / 右 Alt 不触发 / 卸载后失效」，其中「左 Alt 键状态已复位」一项用 `GetAsyncKeyState` 直接断言。
 
 ## 常用命令
 

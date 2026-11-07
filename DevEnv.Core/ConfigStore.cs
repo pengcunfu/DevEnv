@@ -69,6 +69,6 @@ public sealed class ConfigStore
         ["DarkMode"] = false,
         ["ShowWindowHotkey"] = "Ctrl+Alt+D",
         ["QuickAppHotkey"] = "Alt+Space",
-        ["WinKeyLauncher"] = true,
+        ["AltKeyLauncher"] = true,
     };
 }

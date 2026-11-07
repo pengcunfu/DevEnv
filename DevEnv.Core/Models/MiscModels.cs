@@ -14,7 +14,7 @@ public sealed class AppConfig
     public string QuickAppHotkey { get; set; } = "Alt+Space";
 
     /// <summary>单独按 Win 键打开全局启动器（默认开启）；关闭后 Win 键回到系统开始菜单。</summary>
-    public bool WinKeyLauncher { get; set; } = true;
+    public bool AltKeyLauncher { get; set; } = true;
 }
 
 /// <summary>
