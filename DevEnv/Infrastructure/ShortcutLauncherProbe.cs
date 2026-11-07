@@ -11,7 +11,7 @@ namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
 /// 全局启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
-/// 这里加载启动器、遍历四个页签、跑一次搜索，并收集数据绑定错误。
+/// 这里加载启动器、遍历五个页签、跑一次搜索，并收集数据绑定错误。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
 public static class ShortcutLauncherProbe
@@ -81,7 +81,7 @@ public static class ShortcutLauncherProbe
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
-            Check("页签为横向四个", vm.Pages.Count == 4, string.Join(" / ", vm.Pages.Select(p => p.Title)));
+            Check("页签为横向五个", vm.Pages.Count == 5, string.Join(" / ", vm.Pages.Select(p => p.Title)));
             Check("默认显示本地应用", vm.SelectedPage == 0);
             Check("底部页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
             Check("图标网格已生成卡片容器",
@@ -105,6 +105,17 @@ public static class ShortcutLauncherProbe
                 $"共 {vm.VisibleEntries.Count} 项");
             Check("系统工具页签隐藏「添加」按钮", !vm.CanAddOnCurrentPage);
             Check("系统工具页签禁止框选与拖动", !vm.IsEditableView);
+
+            // 内置工具页签应载入主窗口原来的工具菜单项，并且全部是 InternalTool 类型
+            var builtinPage = vm.Pages.First(p => p.Title == "内置工具");
+            vm.SelectedPage = builtinPage.Index;
+            Pump();
+            Check("内置工具页签加载宿主工具目录",
+                vm.VisibleEntries.Count == 7
+                && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.InternalTool),
+                $"共 {vm.VisibleEntries.Count} 项");
+            Check("内置工具页签隐藏「添加」按钮", !vm.CanAddOnCurrentPage);
+            Check("内置工具页签禁止框选与拖动", !vm.IsEditableView);
 
             vm.SelectedPage = 0;
             vm.Query = string.Empty;
@@ -167,6 +178,12 @@ public static class ShortcutLauncherProbe
                 Pump();
                 Check($"搜索「{needle}」能命中", vm.IsSearching && vm.VisibleEntries.Any(e => e.Name == sample.Name));
             }
+
+            vm.Query = "JSON";
+            Pump();
+            Check("搜索能命中内置工具", vm.IsSearching && vm.VisibleEntries.Any(e => e.Key == "json"));
+            vm.Query = string.Empty;
+            Pump();
 
             vm.Query = "__launcher_probe_no_match__";
             Pump();

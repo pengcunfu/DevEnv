@@ -16,7 +16,7 @@
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
     <!-- 全屏启动器（Launchpad 样式）：铺满屏幕的半透明深色背景上，
-         顶部搜索、中部大图标网格、底部横向页签（本地应用 / 文件夹 / 网站 / 系统工具）；
+         顶部搜索、中部大图标网格、底部横向页签（本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具）；
          单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
     <Window.DataContext>
         <vm:ShortcutLauncherViewModel />
@@ -40,7 +40,7 @@
                                           VerticalAlignment="Center"
                                           Focusable="False" />
                             <TextBlock x:Name="Placeholder"
-                                       Text="搜索应用、文件夹、网站或系统工具"
+                                       Text="搜索应用、文件夹、网站或工具"
                                        FontSize="15"
                                        Foreground="#80FFFFFF"
                                        VerticalAlignment="Center"

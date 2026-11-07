@@ -20,26 +20,6 @@
     </Window.DataContext>
 
     <DockPanel>
-        <!-- 顶部菜单 -->
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Style="{StaticResource TopLevelMenuItemStyle}" Header="_工具(T)">
-                <MenuItem Header="JSON 格式化器" Command="{Binding OpenToolCommand}" CommandParameter="json" />
-                <MenuItem Header="Hosts 文件编辑器" Command="{Binding OpenToolCommand}" CommandParameter="hosts" />
-                <MenuItem Header="图像格式转换器" Command="{Binding OpenToolCommand}" CommandParameter="image" />
-                <MenuItem Header="文件哈希计算器" Command="{Binding OpenToolCommand}" CommandParameter="hash" />
-                <MenuItem Header="文件解锁与粉碎" Command="{Binding OpenToolCommand}" CommandParameter="file-tools" />
-                <Separator />
-                <MenuItem Header="启动项管理" Command="{Binding OpenToolCommand}" CommandParameter="startup" />
-                <MenuItem Header="右键菜单管理" Command="{Binding OpenToolCommand}" CommandParameter="context-menu" />
-                <Separator />
-                <MenuItem Header="文件快速预览(_Q)" Command="{Binding OpenFilePreviewCommand}" />
-                <MenuItem Header="快捷应用(_L)..." Command="{Binding OpenSigXorLauncherCommand}" />
-                <MenuItem Header="文件浏览器(_B)..." Command="{Binding OpenSigXorBrowserCommand}" />
-                <MenuItem Header="区域截图(_S)" Command="{Binding OpenScreenshotCommand}" />
-                <MenuItem Header="语音与截屏设置(_V)..." Command="{Binding OpenSigXorSettingsCommand}" />
-                </MenuItem>
-        </Menu>
-
         <!-- 底部状态栏 -->
         <Border DockPanel.Dock="Bottom"
                 Background="{DynamicResource SurfaceBrush}"

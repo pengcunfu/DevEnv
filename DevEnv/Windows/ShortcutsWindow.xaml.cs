@@ -240,6 +240,7 @@ public partial class ShortcutsWindow : Window
         "folders" => 1,
         "webs" => 2,
         "tools" => 3,
+        "builtin" => 4,
         _ => 0,
     };
 
@@ -445,8 +446,8 @@ public partial class ShortcutsWindow : Window
 
         var menu = new ContextMenu();
 
-        // 系统工具是固定目录，只提供「运行」，不参与改名 / 移除 / 刷新图标
-        if (entry.Kind == ShortcutKind.Tool)
+        // 系统工具与内置工具是固定目录，只提供「运行」，不参与改名 / 移除 / 刷新图标
+        if (entry.Kind is ShortcutKind.Tool or ShortcutKind.InternalTool)
         {
             menu.Items.Add(MenuItemFor("运行", () => LaunchEntry(entry)));
             ShowMenu(menu, target);
@@ -1018,7 +1019,7 @@ public partial class ShortcutsWindow : Window
         // 卡片 132×150，图标热区约 x∈[30,102]、y∈[12,84]；拖到图标中心才是合并 / 加入组
         var iconZone = new Rect(30, 12, 72, 72);
         var canMerge = !ViewModel.IsInsideGroup
-            && target.Kind != ShortcutKind.Tool
+            && target.Kind is not (ShortcutKind.Tool or ShortcutKind.InternalTool)
             && entries.All(entry => !entry.IsGroup)
             && !entries.Contains(target)
             && (target.IsGroup || ViewModel.CanCreateGroup)

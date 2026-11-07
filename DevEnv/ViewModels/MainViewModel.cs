@@ -3,9 +3,6 @@ using System.Reflection;
 using System.Windows.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DevEnv.Core;
-using DevEnv.Core.Models;
-using DevEnv.Core.Services;
 using DevEnv.Host.Infrastructure;
 using DevEnv.Host.Views;
 using DevEnv.Host.Windows;
@@ -121,65 +118,13 @@ public sealed partial class MainViewModel : ObservableObject
         CurrentView = ViewFactory.Create(normalized);
     }
 
-    /// <summary>工具一律开独立非模态窗口，不再嵌入主窗内容区。</summary>
-    [RelayCommand]
-    private void OpenTool(string? id)
-    {
-        if (string.IsNullOrWhiteSpace(id))
-            return;
-        var window = System.Windows.Application.Current?.MainWindow as MainWindow;
-        window?.Show();
-        var result = ToolWindowHost.Open(id);
-        if (!result.Ok)
-            StatusText = result.DisplayMessage;
-    }
-
-    [RelayCommand]
-    private void HideTranslator() => TranslatorService.HideTranslator();
-
-    // SigXor 模块：文件快速预览 / 区域截图 / 语音与截屏 / 快捷应用 / 文件浏览器
-
-    /// <summary>SigXor 模块：文件快速预览（选择文件后弹预览浮窗）。</summary>
-    [RelayCommand]
-    private void OpenFilePreview() => HostCallbacks.OnOpenFilePreview?.Invoke();
-
-    /// <summary>SigXor 模块：区域截图 / OCR / 取色。</summary>
-    [RelayCommand]
-    private void OpenScreenshot() => HostCallbacks.OnOpenScreenshot?.Invoke();
-
-    /// <summary>SigXor 模块：语音与截屏设置。</summary>
-    [RelayCommand]
-    private void OpenSigXorSettings() => HostCallbacks.OnOpenSigXorSettings?.Invoke(SettingsSection.Voice);
-
-    /// <summary>SigXor 模块：服务与模型设置。</summary>
-    [RelayCommand]
-    private void OpenSigXorServiceSettings() => HostCallbacks.OnOpenSigXorSettings?.Invoke(SettingsSection.Service);
-
-    /// <summary>SigXor 模块：快捷应用（搜索并启动应用 / 文件 / 命令）。</summary>
-    [RelayCommand]
-    private void OpenSigXorLauncher() => HostCallbacks.OnOpenSigXorLauncher?.Invoke();
-
-    /// <summary>SigXor 模块：文件浏览器（目录导航 + 内嵌预览）。</summary>
-    [RelayCommand]
-    private void OpenSigXorBrowser() => HostCallbacks.OnOpenSigXorBrowser?.Invoke();
-
-    /// <summary>工具菜单项：启动对应 Windows 工具或跳到内置工具页。</summary>
-    [RelayCommand]
-    private void RunSystemTool(string? key)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-            return;
-        var result = CoreServices.Shortcuts.RunSystemTool(key);
-        if (!result.Ok)
-            StatusText = result.DisplayMessage;
-    }
-
     /// <summary>是否为全局启动器的页签 id（apps / folders / webs）。</summary>
     private static bool IsShortcutPage(string id) =>
         id.Equals("apps", StringComparison.OrdinalIgnoreCase)
         || id.Equals("folders", StringComparison.OrdinalIgnoreCase)
         || id.Equals("webs", StringComparison.OrdinalIgnoreCase)
-        || id.Equals("tools", StringComparison.OrdinalIgnoreCase);
+        || id.Equals("tools", StringComparison.OrdinalIgnoreCase)
+        || id.Equals("builtin", StringComparison.OrdinalIgnoreCase);
 
     private static string CurrentVersion()
     {

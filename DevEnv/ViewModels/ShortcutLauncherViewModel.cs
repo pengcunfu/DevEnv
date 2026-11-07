@@ -18,11 +18,13 @@ public enum ShortcutKind
     Folder,
     Web,
     Tool,
+    /// <summary>宿主内置工具（JSON / Hosts / 哈希等小工具）。</summary>
+    InternalTool,
     /// <summary>启动器文件夹（多个图标的合并磁贴），不是磁盘文件夹快捷方式。</summary>
     Group,
 }
 
-/// <summary>启动器的一页（本地应用 / 文件夹 / 网站 / 系统工具）。</summary>
+/// <summary>启动器的一页（本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具）。</summary>
 public sealed record LauncherPage(int Index, string Title, string Glyph);
 
 /// <summary>启动器里的一张图标卡片。</summary>
@@ -64,6 +66,7 @@ public sealed partial class LauncherEntry : ObservableObject
         ShortcutKind.Folder => "",
         ShortcutKind.Web => "",
         ShortcutKind.Tool => "",
+        ShortcutKind.InternalTool => "",
         ShortcutKind.Group => "",
         _ => "",
     };
@@ -73,12 +76,13 @@ public sealed partial class LauncherEntry : ObservableObject
         ShortcutKind.Folder => "文件夹",
         ShortcutKind.Web => "网站",
         ShortcutKind.Tool => string.IsNullOrEmpty(Category) ? "系统工具" : Category,
+        ShortcutKind.InternalTool => "内置工具",
         ShortcutKind.Group => $"{GroupItems.Count} 项",
         _ => "应用",
     };
 
-    /// <summary>系统工具卡片始终显示分类；快捷方式只在搜索时显示类型。</summary>
-    public bool IsToolCard => Kind == ShortcutKind.Tool;
+    /// <summary>系统工具与内置工具卡片始终显示分类；快捷方式只在搜索时显示类型。</summary>
+    public bool IsToolCard => Kind is ShortcutKind.Tool or ShortcutKind.InternalTool;
 
     /// <summary>图标文件存在时才显示图片，否则回退到 KindGlyph；文件夹磁贴用 2×2 预览。</summary>
     public bool HasIcon => !IsGroup && !string.IsNullOrWhiteSpace(IconPath) && File.Exists(IconPath);
@@ -91,7 +95,7 @@ public sealed partial class LauncherEntry : ObservableObject
 }
 
 /// <summary>
-/// 全局启动器（Launchpad 样式）的视图模型：汇总本地应用 / 文件夹 / 网站 / 系统工具，
+/// 全局启动器（Launchpad 样式）的视图模型：汇总本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具，
 /// 支持搜索、页签切换、添加、改名、刷新图标、移除、自定义排序、多选与启动器文件夹。
 /// </summary>
 public sealed partial class ShortcutLauncherViewModel : ObservableObject
@@ -100,10 +104,23 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private const int FoldersPage = 1;
     private const int WebsPage = 2;
     private const int ToolsPage = 3;
+    private const int BuiltinToolsPage = 4;
 
     /// <summary>系统工具的分类排序；目录里新增分类时排在已知分类之后。</summary>
     private static readonly string[] ToolCategoryOrder =
         ["系统管理", "硬件与设备", "网络与安全", "性能与监控"];
+
+    /// <summary>宿主内置工具：tool id 与显示名，顺序与主窗口原来的「工具」菜单一致。</summary>
+    private static readonly (string Key, string Name)[] BuiltinToolDefinitions =
+    [
+        ("json", "JSON 格式化器"),
+        ("hosts", "Hosts 文件编辑器"),
+        ("image", "图像格式转换器"),
+        ("hash", "文件哈希计算器"),
+        ("file-tools", "文件解锁与粉碎"),
+        ("startup", "启动项管理"),
+        ("context-menu", "右键菜单管理"),
+    ];
 
     private readonly Dictionary<string, LauncherEntry> _itemsByKey =
         new(StringComparer.OrdinalIgnoreCase);
@@ -112,6 +129,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private List<LauncherEntry> _folders = [];
     private List<LauncherEntry> _webs = [];
     private List<LauncherEntry> _tools = [];
+    private List<LauncherEntry> _builtinTools = [];
     private List<LauncherEntry> _allItems = [];
     private List<LauncherEntry>[] _pageTiles = [[], [], []];
     private LauncherLayout _layout = new();
@@ -127,11 +145,12 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         new(FoldersPage, "文件夹", ""),
         new(WebsPage, "网站", ""),
         new(ToolsPage, "系统工具", ""),
+        new(BuiltinToolsPage, "内置工具", ""),
     ];
 
     public ObservableCollection<LauncherEntry> VisibleEntries { get; } = [];
 
-    /// <summary>当前页签：0 本地应用 / 1 文件夹 / 2 网站 / 3 系统工具。</summary>
+    /// <summary>当前页签：0 本地应用 / 1 文件夹 / 2 网站 / 3 系统工具 / 4 内置工具。</summary>
     [ObservableProperty]
     private int _selectedPage;
 
@@ -159,14 +178,17 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public bool IsInsideGroup => CurrentGroup is not null;
 
+    /// <summary>系统工具页与内置工具页是固定目录，只读：不能框选、拖动、分组或添加。</summary>
+    private static bool IsReadOnlyPage(int page) => page is ToolsPage or BuiltinToolsPage;
+
     /// <summary>当前视图是否允许框选、拖动、排序与分组。</summary>
-    public bool IsEditableView => !IsSearching && (IsInsideGroup || SelectedPage != ToolsPage);
+    public bool IsEditableView => !IsSearching && (IsInsideGroup || !IsReadOnlyPage(SelectedPage));
 
-    /// <summary>只有普通页签能创建新文件夹，系统工具页与文件夹内不行。</summary>
-    public bool CanCreateGroup => !IsSearching && !IsInsideGroup && SelectedPage != ToolsPage;
+    /// <summary>只有普通页签能创建新文件夹，固定工具页与文件夹内不行。</summary>
+    public bool CanCreateGroup => !IsSearching && !IsInsideGroup && !IsReadOnlyPage(SelectedPage);
 
-    /// <summary>系统工具页与文件夹内不需要「添加」，右下角按钮随之隐藏。</summary>
-    public bool CanAddOnCurrentPage => !IsInsideGroup && SelectedPage != ToolsPage;
+    /// <summary>固定工具页与文件夹内不需要「添加」，右下角按钮随之隐藏。</summary>
+    public bool CanAddOnCurrentPage => !IsInsideGroup && !IsReadOnlyPage(SelectedPage);
 
     public IReadOnlyList<LauncherEntry> SelectedEntries =>
         VisibleEntries.Where(entry => entry.IsSelected).ToList();
@@ -218,7 +240,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         OnPropertyChanged(nameof(CanAddOnCurrentPage));
     }
 
-    /// <summary>重新读取本地应用 / 文件夹 / 网站 / 系统工具；启动器每次打开都调用，保证其他入口的改动可见。</summary>
+    /// <summary>重新读取本地应用 / 文件夹 / 网站 / 系统工具与内置工具；启动器每次打开都调用，保证其他入口的改动可见。</summary>
     public void Reload()
     {
         _suspendRefresh = true;
@@ -280,7 +302,18 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             })
             .ToList();
 
-        _allItems = _apps.Concat(_folders).Concat(_webs).Concat(_tools).ToList();
+        _builtinTools = BuiltinToolDefinitions
+            .Select((item, index) => new LauncherEntry
+            {
+                Kind = ShortcutKind.InternalTool,
+                Index = index,
+                Key = item.Key,
+                Name = item.Name,
+                TargetPath = "内置工具",
+            })
+            .ToList();
+
+        _allItems = _apps.Concat(_folders).Concat(_webs).Concat(_tools).Concat(_builtinTools).ToList();
         foreach (var entry in _allItems)
             _itemsByKey[entry.Key] = entry;
 
@@ -365,6 +398,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             source = CurrentGroup.GroupItems;
         else if (SelectedPage == ToolsPage)
             source = _tools;
+        else if (SelectedPage == BuiltinToolsPage)
+            source = _builtinTools;
         else
             source = _pageTiles[SelectedPage];
 
@@ -406,7 +441,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>把若干卡片拖到目标卡片上：目标不是文件夹时新建文件夹，目标是文件夹时加入其中。</summary>
     public void MergeIntoFolder(IReadOnlyList<LauncherEntry> sources, LauncherEntry target, string name = "文件夹")
     {
-        if (IsSearching || IsInsideGroup || SelectedPage == ToolsPage)
+        if (IsSearching || IsInsideGroup || IsReadOnlyPage(SelectedPage))
             return;
 
         if (target.IsGroup)
@@ -417,7 +452,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         var all = sources
             .Append(target)
-            .Where(entry => !entry.IsGroup && entry.Kind != ShortcutKind.Tool)
+            .Where(entry => !entry.IsGroup
+                && entry.Kind is not (ShortcutKind.Tool or ShortcutKind.InternalTool))
             .GroupBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .ToList();
@@ -438,7 +474,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             return;
 
         var keys = sources
-            .Where(entry => !entry.IsGroup && entry.Kind != ShortcutKind.Tool)
+            .Where(entry => !entry.IsGroup
+                && entry.Kind is not (ShortcutKind.Tool or ShortcutKind.InternalTool))
             .Select(entry => entry.Key)
             .Where(key => !group.GroupItems.Any(child =>
                 string.Equals(child.Key, key, StringComparison.OrdinalIgnoreCase)))
@@ -457,7 +494,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             return;
 
         var keys = entries
-            .Where(entry => !entry.IsGroup && entry.Kind != ShortcutKind.Tool)
+            .Where(entry => !entry.IsGroup
+                && entry.Kind is not (ShortcutKind.Tool or ShortcutKind.InternalTool))
             .Select(entry => entry.Key)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -512,7 +550,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             return;
         }
 
-        if (SelectedPage == ToolsPage)
+        if (IsReadOnlyPage(SelectedPage))
             return;
 
         var ids = entries
@@ -663,6 +701,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             ShortcutKind.Folder => CoreServices.Shortcuts.OpenFolder(entry.Index),
             ShortcutKind.Web => CoreServices.Shortcuts.OpenWeb(entry.Index),
             ShortcutKind.Tool => CoreServices.Shortcuts.RunSystemTool(entry.Key),
+            ShortcutKind.InternalTool => ToolWindowHost.Open(entry.Key),
             _ => CoreServices.Shortcuts.RunApp(entry.Index),
         });
     }
@@ -674,7 +713,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             Report(CoreServices.Shortcuts.OpenAppFolder(entry.Index));
         else if (entry.Kind == ShortcutKind.Folder)
             HostServices.OpenFolder(entry.TargetPath);
-        // 系统工具与启动器文件夹没有可定位的本地路径
+        // 系统工具、内置工具与启动器文件夹没有可定位的本地路径
     }
 
     public void AddApp()
@@ -733,6 +772,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                 await AddWebAsync(owner);
                 break;
             case ToolsPage:
+            case BuiltinToolsPage:
                 break;
             default:
                 AddApp();

@@ -4,7 +4,7 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器宿主：本地应用 / 文件夹 / 网站三页共用一个全屏窗口。
+/// 全局启动器宿主：本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具五页共用一个全屏窗口。
 /// 单实例，重复打开是「切到对应页签并前置已有窗口」，不再开一堆。
 ///
 /// 全局启动器**不设 Owner**：它铺满全屏且置顶，本来就不跟主窗最小化 / 隐藏联动；
@@ -37,7 +37,7 @@ public static class ShortcutWindowHost
         return window;
     }
 
-    /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs。</summary>
+    /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs / tools / builtin。</summary>
     public static void Open(string? pageId = null)
     {
         var window = EnsureWindow();

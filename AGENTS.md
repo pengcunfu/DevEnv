@@ -37,7 +37,7 @@
 - SigXor 的数据目录仍是 `文档\FNSoftware\SigXor`（与 DevEnv 的 `文档\FNSoftware\DevEnv` 并存），旧版 SigXor 配置与模型在首次启动时自动迁移。
 - 全局键盘钩子：SigXor 用自己的 `GlobalHotkeyService`（`WH_KEYBOARD_LL`，处理预览键 / 关闭键 / 语音键 / 反引号），与 DevEnv 的 `RegisterHotKey` 体系**并存但不冲突**（前者管预览与语音，后者管显示窗口与快捷应用）。多个 SigXor 功能共用一个钩子时靠 `GlobalHotkeyRouter` 的**优先级**排序：截图 300 > 语音 200 > 预览 100。快捷键录制期间 `HotkeyCaptureState.IsCapturing` 为 true，路由直接放行按键，避免录制时触发截图 / 语音 / 预览。
 - **开机自启只有一个开关**：DevEnv「设置 → 常规」里的 `SelfStarting`（data.json）是唯一事实来源，落盘到注册表 `HKCU\...\Run`。SigXor 的设置页里**不再有**同名勾选框（已并入宿主设置对话框），需要改自启就去宿主的「常规」页签。
-- **设置统一在宿主设置对话框里**：SigXor 原独立设置窗口（`DevEnv/SigXor/SettingsWindow.*`）**已删除**，内容拆成四个视图（`DevEnv/SigXor/Views/SigXorGeneralView.xaml` / `SigXorVoiceView.xaml` / `SigXorServiceView.xaml` 与宿主 `DevEnv/Views/HotkeysSettingsView.xaml`），并入燧岚开发盒子设置对话框的**平铺五页签**（**不要二级页签**）：「常规」= 主程序设置 + 文件预览的常规选项，「快捷键」= 所有程序绑定的快捷键，「语音与截屏」，「服务与模型」，「关于与帮助」= 产品信息 + 检查更新 + 帮助文档。中间三页签的内容由 `SettingsDialogHost.Sections`（`ISettingsSections`）在运行时注入（`SigXorHost.CreateSettingsSections`），「关于与帮助」由宿主 `DevEnv/Views/AboutHelpView.xaml` 提供；不要再造第二个模态设置框。主窗口顶部**不再有「设置」「帮助」菜单**，设置统一从托盘右键菜单「设置…」（`TrayIconHost.SettingsRequested` → `SettingsDialogHost.Open()`）进入。
+- **设置统一在宿主设置对话框里**：SigXor 原独立设置窗口（`DevEnv/SigXor/SettingsWindow.*`）**已删除**，内容拆成四个视图（`DevEnv/SigXor/Views/SigXorGeneralView.xaml` / `SigXorVoiceView.xaml` / `SigXorServiceView.xaml` 与宿主 `DevEnv/Views/HotkeysSettingsView.xaml`），并入燧岚开发盒子设置对话框的**平铺五页签**（**不要二级页签**）：「常规」= 主程序设置 + 文件预览的常规选项，「快捷键」= 所有程序绑定的快捷键，「语音与截屏」，「服务与模型」，「关于与帮助」= 产品信息 + 检查更新 + 帮助文档。中间三页签的内容由 `SettingsDialogHost.Sections`（`ISettingsSections`）在运行时注入（`SigXorHost.CreateSettingsSections`），「关于与帮助」由宿主 `DevEnv/Views/AboutHelpView.xaml` 提供；不要再造第二个模态设置框。主窗口顶部**不再有任何菜单**：设置从托盘右键菜单「设置…」（`TrayIconHost.SettingsRequested` → `SettingsDialogHost.Open()`）进入，内置工具从全局启动器的「内置工具」页签进入。
 - **快捷键统一在「设置 → 快捷键」**：显示主窗口 / 快捷应用由 `GlobalHotkeys` 通过 `RegisterHotKey` 注册（`data.json` 的 `Config.ShowWindowHotkey` / `Config.QuickAppHotkey`）；Win 键启动器、语音键、截屏组合、文件预览打开 / 关闭键也都在该页修改。全局组合键用 `HotkeyRecorderBox` 录制，录制期间 `HotkeyCaptureState` 会挂起 `GlobalHotkeys` 与 `WinKeyLauncherHook`；常规页保存走 `SettingsService.SaveGeneral`，快捷键页走 `SaveHotkeys`，两者不得互相覆盖。
 - **自检探针**：SigXor 有 34 个 XAML（11 个窗口 + 15 个预览视图 + 7 个 WebView2 宿主），而 WPF 的 XAML 异常是静默的（AGENTS.md 第 12 条），靠肉眼点菜单不可靠。改动模块后跑：
 
@@ -55,16 +55,16 @@
 
 ### 全局启动器（Launchpad）
 
-- 入口：单独按 Win 键或托盘右键菜单「全局启动器…」 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站 / 系统工具是四个**横向页签**（`ShortcutLauncherViewModel`）。系统工具页复用 `ShortcutService.GetSystemTools / RunSystemTool`，主窗不再保留「系统工具」导航页。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
+- 入口：单独按 Win 键或托盘右键菜单「全局启动器…」 → `ShortcutWindowHost.Open()` → `DevEnv/Windows/ShortcutsWindow.xaml(.cs)`，铺满主屏的深色启动器，本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具是五个**横向页签**（`ShortcutLauncherViewModel`）。系统工具页复用 `ShortcutService.GetSystemTools / RunSystemTool`；内置工具页是宿主原有的 JSON / Hosts / 图像 / 哈希 / 文件解锁 / 启动项 / 右键菜单工具，直接调用 `ToolWindowHost.Open`，**主窗口顶部不再有「工具」菜单**。代码里的 `ShortcutsWindow` / `ShortcutWindowHost` 是历史类名，界面与文档一律称「全局启动器」。
 - 交互：单击图标启动、`Esc` 关闭、`←` / `→` 或 `Ctrl` + 鼠标滚轮切页、`F5` 刷新、拖入 `.exe` / 文件夹添加；右键图标可运行、定位、改名、刷新图标、移除。**点击空白处不再关闭窗口**，而是开始框选；拖动空白绘制选框多选（`Ctrl` + 单击切换选中），拖动卡片调整顺序，把卡片拖到另一个卡片的图标中心合并成启动器文件夹，点击文件夹磁贴展开。滚轮监听在根 Grid 的 `PreviewMouseWheel`（滚动内容会被 `ScrollViewer` 标记已处理，冒泡阶段收不到），搜索期间与左右键一样不切页。
-- **布局与文件夹**：顺序和分组保存在 `data.json` 的顶层数组 `LauncherLayout`（每页 `Tiles`，普通条目用自然键 `app|路径` / `folder|路径` / `web|url`，文件夹用 `{Id,Name,Items[]}`），快捷方式本身仍以 `NativeAtomList` / `FolderAtomList` / `WebAtomList` 为唯一事实来源。打开时由 `LauncherLayout.Normalize` 对账：缺失条目剪掉、新增条目追加、空文件夹清理、单条目文件夹降级。系统工具页与搜索态只读，不参与排序与分组；分组只在同一页内创建，不支持嵌套。`--shortcuts-check` 需继续通过，并覆盖可编辑判定、选择 API 与文件夹展开/返回。
+- **布局与文件夹**：顺序和分组保存在 `data.json` 的顶层数组 `LauncherLayout`（每页 `Tiles`，普通条目用自然键 `app|路径` / `folder|路径` / `web|url`，文件夹用 `{Id,Name,Items[]}`），快捷方式本身仍以 `NativeAtomList` / `FolderAtomList` / `WebAtomList` 为唯一事实来源。打开时由 `LauncherLayout.Normalize` 对账：缺失条目剪掉、新增条目追加、空文件夹清理、单条目文件夹降级。系统工具页、内置工具页与搜索态只读，不参与排序与分组；分组只在同一页内创建，不支持嵌套。`--shortcuts-check` 需继续通过，并覆盖可编辑判定、选择 API 与文件夹展开/返回。
 - **预热要落在最终几何、内容保持全透明**：`ApplyScreenBounds` 的差异比较必须同时处理 `NaN`（新窗口 `Left/Top/Width/Height` 是 `NaN`，`Math.Abs(NaN) > x` 恒 false，漏判会让窗口带着 `NaN` 显示、由 WPF 临时挑位置）；**收起必须先淡出、后 `Hide()`**：分层窗口缓存最后一次合成结果，先 `Hide()` 再设透明是无效的（不可见就不会再渲染），下一次 `Show` 会把不透明缓存当作第一帧贴出来——表现为「第一次打开正常、之后每次都闪」。现在的顺序是 `Root.Opacity` 动画到 0 → `Completed` 里 `Hide()`；`IsHiding` 期间再次唤起会取消收起。
 - **启动时预热，不要按需创建**：`App.OnStartup` 在 `DispatcherPriority.ApplicationIdle` 调 `ShortcutWindowHost.Prewarm()`，窗口在屏幕外（-20000）、`Opacity=0`、`ShowActivated=false` 下显示一次再隐藏，让 WPF 完成 HWND / 模板 / 布局 / 首帧；`ShowPage` 里另有保险，未预热就直接 `Show` 时会先补预热。按需创建会让“可见”发生在布局之前，表现为先闪空白再闪内容。
 - **显示/激活只做一次**：`ShortcutWindowHost.Open` 不再补 `Show()` / `Activate()`，统一由 `ShowPage` 负责；淡入动画做在根元素 `Root.Opacity` 上而不是 `Window.Opacity`（`AllowsTransparency` 的分层窗口首次显示会先画一帧不透明，再被窗口透明度拉回 0，看起来就是闪两下）；激活用 `GetForegroundWindow()` 判断，只在确实不在前台时调用一次 `WindowPlacement.ForceForeground`；`Deactivated` 有 400ms 宽限，前台权限交接期间的假 Deactivated 不会把窗口关掉。
 - 数据仍走 `ShortcutService`；原先的 `AppsView` / `FoldersView` / `WebsView` 与对应 ViewModel **已删除**，不要再恢复卡片页。
-- `DEVENV_START_PAGE=apps|folders|webs|tools`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签；窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
+- `DEVENV_START_PAGE=apps|folders|webs|tools|builtin`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签；窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
 - 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 56px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。
-- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、四个页签切换、系统工具目录加载、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
+- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、五个页签切换、系统工具与内置工具目录加载、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
 
 ### Win 键拦截
 
