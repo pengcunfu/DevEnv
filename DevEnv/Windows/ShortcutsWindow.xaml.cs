@@ -78,8 +78,17 @@ public partial class ShortcutsWindow : Window
     /// <summary>换页时网格的横向位移；只做渲染变换，不影响布局与框选坐标。</summary>
     private readonly TranslateTransform _pageSlide = new();
 
+    /// <summary>整窗缩放：打开时从 1.5% 放大收进，收起时反向，和淡入淡出叠在一起。</summary>
+    private readonly ScaleTransform _rootScale = new(1, 1);
+
+    /// <summary>文件夹浮层的弹出缩放。</summary>
+    private readonly ScaleTransform _folderScale = new(1, 1);
+
     /// <summary>上一页的索引，用来判断换页方向（循环时 4 → 0 算下一页）。</summary>
     private int _lastPageIndex;
+
+    /// <summary>最近一次换页的时间；卡片容器在这之后的一小段时间内加载才做错峰入场。</summary>
+    private DateTime _entranceAtUtc = DateTime.MinValue;
 
     public ShortcutsWindow()
     {
@@ -91,6 +100,11 @@ public partial class ShortcutsWindow : Window
         Drop += OnDrop;
 
         EntryGrid.RenderTransform = _pageSlide;
+        Root.RenderTransform = _rootScale;
+        Root.RenderTransformOrigin = new Point(0.5, 0.5);
+        FolderCard.RenderTransform = _folderScale;
+        FolderCard.RenderTransformOrigin = new Point(0.5, 0.5);
+
         _lastPageIndex = ViewModel.SelectedPage;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
 
@@ -215,6 +229,7 @@ public partial class ShortcutsWindow : Window
             // 会先按不透明画一帧再被拉回 0，看起来就是闪
             Root.BeginAnimation(OpacityProperty, null);
             Root.Opacity = 0;
+            ResetRootScale(1.015);
             Show();
         }
 
@@ -230,6 +245,7 @@ public partial class ShortcutsWindow : Window
             // 已经开着（例如拖放后再打开）就别再淡入一次，否则会闪一下
             Root.BeginAnimation(OpacityProperty, null);
             Root.Opacity = 1;
+            ResetRootScale(1);
             return;
         }
 
@@ -237,6 +253,28 @@ public partial class ShortcutsWindow : Window
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
         });
+        AnimateRootScale(1d, 190, EasingMode.EaseOut);
+    }
+
+    /// <summary>取消整窗缩放的残留动画并直接落到指定比例。</summary>
+    private void ResetRootScale(double scale)
+    {
+        _rootScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        _rootScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        _rootScale.ScaleX = scale;
+        _rootScale.ScaleY = scale;
+    }
+
+    private void AnimateRootScale(double target, int milliseconds, EasingMode easing)
+    {
+        var ease = new CubicEase { EasingMode = easing };
+        var duration = new Duration(TimeSpan.FromMilliseconds(milliseconds));
+        _rootScale.BeginAnimation(
+            ScaleTransform.ScaleXProperty,
+            new DoubleAnimation(target, duration) { EasingFunction = ease });
+        _rootScale.BeginAnimation(
+            ScaleTransform.ScaleYProperty,
+            new DoubleAnimation(target, duration) { EasingFunction = ease });
     }
 
     /// <summary>
@@ -302,6 +340,8 @@ public partial class ShortcutsWindow : Window
         {
             EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
         };
+        // 收起时轻微放大，读起来像整块界面淡出退场，而不是“啪”一下消失
+        AnimateRootScale(1.015d, 110, EasingMode.EaseIn);
         fade.Completed += (_, _) =>
         {
             Root.BeginAnimation(OpacityProperty, null);
@@ -710,6 +750,10 @@ public partial class ShortcutsWindow : Window
                 // 搜索结果是跨页签的另一份列表，保留上一页的滚动位置会出现在半截
                 ResetScrollPosition();
                 break;
+            case nameof(ShortcutLauncherViewModel.IsInsideGroup):
+                if (ViewModel.IsInsideGroup)
+                    PlayFolderOpenAnimation();
+                break;
         }
     }
 
@@ -734,6 +778,9 @@ public partial class ShortcutsWindow : Window
         // 循环页签按更短的一侧判断方向：4 → 0 是下一页，0 → 4 是上一页
         var forward = ((current - previous) % pageCount + pageCount) % pageCount;
         var backward = ((previous - current) % pageCount + pageCount) % pageCount;
+
+        // 换页时新生成的卡片容器在 Loaded 里做错峰入场；搜索重建容器时不参与
+        _entranceAtUtc = DateTime.UtcNow;
         PlayPageTransition(forward <= backward ? 1 : -1);
     }
 
@@ -759,6 +806,75 @@ public partial class ShortcutsWindow : Window
         EntryGrid.BeginAnimation(
             OpacityProperty,
             new DoubleAnimation(1d, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = ease });
+    }
+
+    /// <summary>
+    /// 换页时新生成的卡片容器错峰入场：按索引每张晚 9ms，从下方 10 DIP 淡入上浮。
+    /// 只在换页后的 500ms 内生效，搜索 / 拖拽等普通刷新重建的容器保持立即可见。
+    /// </summary>
+    private void OnEntryContainerLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ContentPresenter container || !IsVisible || _hiding || _prewarming)
+            return;
+
+        var elapsed = (DateTime.UtcNow - _entranceAtUtc).TotalMilliseconds;
+        if (elapsed < 0 || elapsed > 500)
+            return;
+
+        var index = EntryGrid.ItemContainerGenerator.IndexFromContainer(container);
+        if (index >= 0)
+            PlayTileEntrance(container, index);
+    }
+
+    private static void PlayTileEntrance(ContentPresenter container, int index)
+    {
+        var lift = new TranslateTransform(0, 10);
+        container.RenderTransform = lift;
+        container.Opacity = 0;
+
+        // 延迟按索引递增，最多 24 张参与错峰；大页末尾不会等太久
+        var delay = TimeSpan.FromMilliseconds(Math.Min(index, 24) * 9);
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        container.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(1d, new Duration(TimeSpan.FromMilliseconds(180)))
+            {
+                BeginTime = delay,
+                EasingFunction = ease,
+            });
+        lift.BeginAnimation(
+            TranslateTransform.YProperty,
+            new DoubleAnimation(0d, new Duration(TimeSpan.FromMilliseconds(200)))
+            {
+                BeginTime = delay,
+                EasingFunction = ease,
+            });
+    }
+
+    /// <summary>文件夹浮层弹出：暗底淡入，卡片从 90% 回弹到 100%。</summary>
+    private void PlayFolderOpenAnimation()
+    {
+        if (!IsVisible || _hiding || _prewarming)
+            return;
+
+        _folderScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        _folderScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        FolderCard.BeginAnimation(OpacityProperty, null);
+        GroupDim.BeginAnimation(OpacityProperty, null);
+
+        _folderScale.ScaleX = 0.9;
+        _folderScale.ScaleY = 0.9;
+        FolderCard.Opacity = 0;
+        GroupDim.Opacity = 0;
+
+        var back = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.35 };
+        DoubleAnimation ScaleTo(double target, int milliseconds, IEasingFunction? easing) =>
+            new(target, new Duration(TimeSpan.FromMilliseconds(milliseconds))) { EasingFunction = easing };
+
+        _folderScale.BeginAnimation(ScaleTransform.ScaleXProperty, ScaleTo(1d, 260, back));
+        _folderScale.BeginAnimation(ScaleTransform.ScaleYProperty, ScaleTo(1d, 260, back));
+        FolderCard.BeginAnimation(OpacityProperty, ScaleTo(1d, 150, null));
+        GroupDim.BeginAnimation(OpacityProperty, ScaleTo(1d, 160, null));
     }
 
     /// <summary>
