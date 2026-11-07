@@ -110,16 +110,20 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private static readonly string[] ToolCategoryOrder =
         ["系统管理", "硬件与设备", "网络与安全", "性能与监控"];
 
-    /// <summary>宿主内置工具：tool id 与显示名，顺序与主窗口原来的「工具」菜单一致。</summary>
-    private static readonly (string Key, string Name)[] BuiltinToolDefinitions =
+    /// <summary>内置工具页里代表宿主主窗口的条目 key。</summary>
+    private const string MainWindowToolKey = "main-window";
+
+    /// <summary>宿主内置工具：tool id、显示名与说明，顺序与主窗口原来的「工具」菜单一致。</summary>
+    private static readonly (string Key, string Name, string Description)[] BuiltinToolDefinitions =
     [
-        ("json", "JSON 格式化器"),
-        ("hosts", "Hosts 文件编辑器"),
-        ("image", "图像格式转换器"),
-        ("hash", "文件哈希计算器"),
-        ("file-tools", "文件解锁与粉碎"),
-        ("startup", "启动项管理"),
-        ("context-menu", "右键菜单管理"),
+        (MainWindowToolKey, "燧岚开发盒子", "开发环境主窗口"),
+        ("json", "JSON 格式化器", "格式化与校验 JSON"),
+        ("hosts", "Hosts 文件编辑器", "编辑系统 hosts 解析记录"),
+        ("image", "图像格式转换器", "图像格式转换与压缩"),
+        ("hash", "文件哈希计算器", "计算文件校验值"),
+        ("file-tools", "文件解锁与粉碎", "解除占用与安全粉碎"),
+        ("startup", "启动项管理", "查看与管理开机启动项"),
+        ("context-menu", "右键菜单管理", "自定义资源管理器右键菜单"),
     ];
 
     private readonly Dictionary<string, LauncherEntry> _itemsByKey =
@@ -309,7 +313,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                 Index = index,
                 Key = item.Key,
                 Name = item.Name,
-                TargetPath = "内置工具",
+                TargetPath = item.Description,
             })
             .ToList();
 
@@ -701,7 +705,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             ShortcutKind.Folder => CoreServices.Shortcuts.OpenFolder(entry.Index),
             ShortcutKind.Web => CoreServices.Shortcuts.OpenWeb(entry.Index),
             ShortcutKind.Tool => CoreServices.Shortcuts.RunSystemTool(entry.Key),
-            ShortcutKind.InternalTool => ToolWindowHost.Open(entry.Key),
+            ShortcutKind.InternalTool => entry.Key == MainWindowToolKey
+                ? ShowMainWindow()
+                : ToolWindowHost.Open(entry.Key),
             _ => CoreServices.Shortcuts.RunApp(entry.Index),
         });
     }
@@ -910,4 +916,15 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     }
 
     private void Report(OperationResult result) => Message = result.Ok ? string.Empty : result.DisplayMessage;
+
+    /// <summary>显示宿主主窗口（开发环境），与托盘「显示主窗口」走同一条回调。</summary>
+    private static OperationResult ShowMainWindow()
+    {
+        var show = HostCallbacks.OnShowMainWindow;
+        if (show is null)
+            return OperationResult.Fail("主窗口暂不可用");
+
+        show();
+        return OperationResult.Success();
+    }
 }
