@@ -1,6 +1,8 @@
 using System.IO;
 using System.Windows.Threading;
+using DevEnv.Core.Components;
 using DevEnv.Core.SigXor.Toolkit;
+using CoreServices = DevEnv.Core.Services.CoreServices;
 using DevEnv.Host.SigXor.Services;
 using DevEnv.Host.SigXor.Toolkit.Input;
 
@@ -60,6 +62,13 @@ public sealed class VoiceInputService : IDisposable
         if (_disposed) return false;
         if (_isRunning) return true;
 
+        if (!CoreServices.Components.IsInstalled(ComponentCatalog.Voice))
+        {
+            SetStatus(false, false, "引擎组件未安装");
+            if (notify) Notify("语音输入", "语音引擎组件未安装，请在「服务与模型」中下载（约 8 MB，含 onnxruntime）。");
+            return false;
+        }
+
         if (!SpeechModelManager.IsInstalled)
         {
             SetStatus(false, false, "模型未下载");
@@ -106,6 +115,11 @@ public sealed class VoiceInputService : IDisposable
     public async Task TryAutoStartAsync()
     {
         if (!_settings.Current.Voice.AutoStartService) return;
+        if (!CoreServices.Components.IsInstalled(ComponentCatalog.Voice))
+        {
+            SetStatus(false, false, "引擎组件未安装");
+            return;
+        }
         if (!SpeechModelManager.IsInstalled)
         {
             SetStatus(false, false, "模型未下载");
@@ -163,9 +177,11 @@ public sealed class VoiceInputService : IDisposable
             {
                 _missingModelNotified = true;
                 Notify("语音输入",
-                    SpeechModelManager.IsInstalled
-                        ? "语音服务未启动，请在「语音与截屏」中启动服务。"
-                        : "SenseVoice 模型未下载，请在「服务与模型」中下载。");
+                    !CoreServices.Components.IsInstalled(ComponentCatalog.Voice)
+                        ? "语音引擎组件未安装，请在「服务与模型」中下载（约 8 MB）。"
+                        : SpeechModelManager.IsInstalled
+                            ? "语音服务未启动，请在「语音与截屏」中启动服务。"
+                            : "SenseVoice 模型未下载，请在「服务与模型」中下载。");
             }
             return suppress;
         }

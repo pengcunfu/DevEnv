@@ -1,6 +1,10 @@
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using DevEnv.Core.Components;
 using DevEnv.Host.SigXor.Toolkit.Models;
+using CoreServices = DevEnv.Core.Services.CoreServices;
 using DevEnv.Host.SigXor.Toolkit.Ocr;
 using DevEnv.Host.SigXor.Toolkit.Voice;
 
@@ -14,6 +18,7 @@ public partial class SigXorServiceView : UserControl
     private bool _ocrModelDownloading;
     private bool _modelMigrating;
     private bool _voiceStatusSubscribed;
+    private readonly HashSet<string> _componentDownloads = new(StringComparer.OrdinalIgnoreCase);
 
     public SigXorServiceView(VoiceInputService? voiceService = null)
     {
@@ -71,20 +76,24 @@ public partial class SigXorServiceView : UserControl
         bool ocrReady = OcrModelManager.IsReady;
         bool ocrLegacy = OcrModelManager.IsUsingLegacy;
         long ocrSize = OcrModelManager.GetSizeOnDisk();
+        bool ocrEngineInstalled = CoreServices.Components.IsInstalled(ComponentCatalog.Ocr);
         if (!_ocrModelDownloading)
         {
-            OcrModelStatusText.Text = ocrReady
-                ? $"{OcrModelManager.StatusText} · {OcrModelManager.FormatSize(ocrSize)}"
-                : "未下载（约 30 MB / 回退 v5 约 16 MB）";
+            OcrModelStatusText.Text = !ocrEngineInstalled
+                ? "请先安装 OCR 引擎组件"
+                : ocrReady
+                    ? $"{OcrModelManager.StatusText} · {OcrModelManager.FormatSize(ocrSize)}"
+                    : "未下载（约 30 MB / 回退 v5 约 16 MB）";
         }
-        DownloadOcrModelButton.IsEnabled = !ocrReady && !_ocrModelDownloading;
+        DownloadOcrModelButton.IsEnabled = ocrEngineInstalled && !ocrReady && !_ocrModelDownloading;
         DeleteOcrModelButton.IsEnabled = ocrReady && !ocrLegacy && !_ocrModelDownloading;
         DeleteOcrModelButton.ToolTip = ocrLegacy ? "当前复用的是旧版 SigXor 目录中的模型，无法在此删除。" : null;
         OpenOcrModelFolderButton.IsEnabled = true;
 
         bool running = _voiceService?.IsRunning == true;
         bool processing = _voiceService?.IsProcessing == true;
-        StartVoiceServiceButton.IsEnabled = !running && !processing && !_modelDownloading && installed;
+        bool voiceEngineInstalled = CoreServices.Components.IsInstalled(ComponentCatalog.Voice);
+        StartVoiceServiceButton.IsEnabled = voiceEngineInstalled && !running && !processing && !_modelDownloading && installed;
         StopVoiceServiceButton.IsEnabled = running || processing;
         if (!_modelMigrating)
         {
@@ -97,6 +106,154 @@ public partial class SigXorServiceView : UserControl
         bool canMigrate = SpeechModelManager.IsUsingLegacy || OcrModelManager.IsUsingLegacy;
         MigrateLegacyModelsButton.IsEnabled = canMigrate
             && !_modelDownloading && !_ocrModelDownloading && !_modelMigrating;
+
+        RefreshComponentUi();
+    }
+
+    private void RefreshComponentUi()
+    {
+        RefreshComponentRow(ComponentCatalog.OfficePreview, OfficeComponentStatusText, OfficeComponentProgressBar);
+        RefreshComponentRow(ComponentCatalog.OcrEngine, OcrEngineComponentStatusText, OcrEngineComponentProgressBar);
+        RefreshComponentRow(ComponentCatalog.VoiceEngine, VoiceEngineComponentStatusText, VoiceEngineComponentProgressBar);
+    }
+
+    private void RefreshComponentRow(ComponentDefinition definition, TextBlock status, ProgressBar progressBar)
+    {
+        if (_componentDownloads.Contains(definition.Id))
+            return;
+
+        string? version = CoreServices.Components.GetInstalledVersion(definition.Id);
+        status.Text = version is not null
+            ? $"{definition.DisplayName}：已安装 v{version}"
+            : $"{definition.DisplayName}：未安装（约 {FormatBytes(definition.ApproximateBytes)}）";
+        progressBar.Visibility = Visibility.Collapsed;
+    }
+
+    private async void OnInstallComponentClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string id })
+            return;
+
+        ComponentDefinition? definition = ComponentCatalog.Find(id);
+        if (definition is null || !_componentDownloads.Add(id))
+            return;
+
+        TextBlock status = GetComponentStatusText(id);
+        ProgressBar progressBar = GetComponentProgressBar(id);
+        progressBar.Visibility = Visibility.Visible;
+        progressBar.Value = 0;
+
+        var progress = new Progress<ComponentProgress>(p =>
+        {
+            status.Text = $"{definition.DisplayName}：{p.Message}";
+            progressBar.IsIndeterminate = p.Percent < 0;
+            if (p.Percent >= 0)
+                progressBar.Value = p.Percent;
+        });
+
+        try
+        {
+            await CoreServices.ComponentsInstaller.InstallAsync(id, progress);
+            if (CoreServices.Components.GetDirectory(id) is { } directory)
+                ComponentLoader.Register(directory);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"安装 {definition.DisplayName} 失败：{ex.Message}", "燧岚开发盒子",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _componentDownloads.Remove(id);
+            progressBar.IsIndeterminate = false;
+            progressBar.Visibility = Visibility.Collapsed;
+            RefreshServiceUi();
+        }
+    }
+
+    private void OnDeleteComponentClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string id })
+            return;
+
+        ComponentDefinition? definition = ComponentCatalog.Find(id);
+        if (definition is null || _componentDownloads.Contains(id))
+            return;
+
+        MessageBoxResult result = MessageBox.Show(
+            $"删除 {definition.DisplayName} 组件？下次使用需要重新下载（约 {FormatBytes(definition.ApproximateBytes)}）。",
+            "燧岚开发盒子",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Question);
+        if (result != MessageBoxResult.OK)
+            return;
+
+        if (string.Equals(id, ComponentCatalog.Voice, StringComparison.OrdinalIgnoreCase))
+            _voiceService?.StopService();
+
+        try
+        {
+            if (!CoreServices.ComponentsInstaller.Remove(id, out string? error))
+            {
+                MessageBox.Show(error ?? "删除组件失败。", "燧岚开发盒子",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"删除组件失败：{ex.Message}", "燧岚开发盒子",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        RefreshServiceUi();
+    }
+
+    private void OnOpenComponentFolderClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string id })
+            return;
+
+        string directory = CoreServices.Components.GetDirectory(id)
+                           ?? CoreServices.Components.GetComponentRoot(id);
+        try
+        {
+            Directory.CreateDirectory(directory);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{directory}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"打开组件目录失败：{ex.Message}", "燧岚开发盒子",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private TextBlock GetComponentStatusText(string id) => id.ToLowerInvariant() switch
+    {
+        ComponentCatalog.Office => OfficeComponentStatusText,
+        ComponentCatalog.Ocr => OcrEngineComponentStatusText,
+        ComponentCatalog.Voice => VoiceEngineComponentStatusText,
+        _ => OfficeComponentStatusText,
+    };
+
+    private ProgressBar GetComponentProgressBar(string id) => id.ToLowerInvariant() switch
+    {
+        ComponentCatalog.Office => OfficeComponentProgressBar,
+        ComponentCatalog.Ocr => OcrEngineComponentProgressBar,
+        ComponentCatalog.Voice => VoiceEngineComponentProgressBar,
+        _ => OfficeComponentProgressBar,
+    };
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes <= 0) return "0 B";
+        string[] units = ["B", "KB", "MB", "GB"];
+        double size = bytes;
+        int unit = 0;
+        while (size >= 1024 && unit < units.Length - 1)
+        {
+            size /= 1024;
+            unit++;
+        }
+        return $"{size:0.#} {units[unit]}";
     }
 
     private void OnVoiceStatusChanged(object? sender, VoiceServiceStatus status)

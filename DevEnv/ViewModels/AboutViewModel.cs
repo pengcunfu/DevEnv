@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,7 +21,7 @@ public sealed partial class AboutViewModel : ObservableObject, IDisposable
             if (Update?.Downloading != true)
                 return;
             Update = CoreServices.Update.GetStatus();
-            if (Update.Downloading || Update.DownloadProgress < 100)
+            if (Update.Downloading)
                 return;
             _updateTimer.Stop();
         };
@@ -58,6 +59,30 @@ public sealed partial class AboutViewModel : ObservableObject, IDisposable
     {
         var result = CoreServices.Update.ApplyAndRestart();
         UpdateMessage = result.DisplayMessage;
+    }
+
+    [RelayCommand]
+    private void RollbackUpdate()
+    {
+        UpdateMessage = CoreServices.Update.RollbackAndRestart()
+            ? "正在回滚并重启…"
+            : "没有可用的上一版本备份。";
+    }
+
+    [RelayCommand]
+    private void OpenDownloadPage()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/pengcunfu/DevEnv/releases/latest")
+            {
+                UseShellExecute = true,
+            });
+        }
+        catch
+        {
+            // 浏览器启动失败时保持静默，页面上的链接仍可点击。
+        }
     }
 
     public void Dispose() => _updateTimer.Stop();

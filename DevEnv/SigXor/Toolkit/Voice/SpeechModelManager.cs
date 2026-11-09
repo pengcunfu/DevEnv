@@ -203,61 +203,77 @@ public static class SpeechModelManager
         Process.Start(new ProcessStartInfo { FileName = dir, UseShellExecute = true });
     }
 
+    /// <summary>官方地址 + 可选的镜像地址（DEVENV_SPEECH_MODEL_MIRROR 为平铺镜像 base）。</summary>
+    private static IReadOnlyList<string> ResolveUrls(string primary)
+    {
+        var urls = new List<string> { primary };
+        string? mirror = Environment.GetEnvironmentVariable("DEVENV_SPEECH_MODEL_MIRROR");
+        if (!string.IsNullOrWhiteSpace(mirror))
+            urls.Add(mirror.TrimEnd('/') + "/" + Path.GetFileName(primary));
+        return urls;
+    }
+
     private static async Task<bool> DownloadArchiveAsync(
         IProgress<ModelDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
         string temp = ArchivePath + ".download";
-        try
+        if (File.Exists(ArchivePath)) File.Delete(ArchivePath);
+        string? lastError = null;
+
+        foreach (string url in ResolveUrls(ModelDownloadUrl))
         {
-            if (File.Exists(temp)) File.Delete(temp);
-            if (File.Exists(ArchivePath)) File.Delete(ArchivePath);
-
-            using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(60) };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("SigXor/1.2");
-            using var response = await client.GetAsync(
-                ModelDownloadUrl,
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            long total = response.Content.Headers.ContentLength ?? 0;
-            await using Stream http = await response.Content.ReadAsStreamAsync(cancellationToken);
-            await using (var file = File.Create(temp))
+            try
             {
-                byte[] buffer = new byte[64 * 1024];
-                long downloaded = 0;
-                int read;
-                while ((read = await http.ReadAsync(buffer, cancellationToken)) > 0)
+                if (File.Exists(temp)) File.Delete(temp);
+
+                using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(60) };
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("SigXor/1.2");
+                using var response = await client.GetAsync(
+                    url,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                long total = response.Content.Headers.ContentLength ?? 0;
+                await using Stream http = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await using (var file = File.Create(temp))
                 {
-                    await file.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-                    downloaded += read;
-                    int percent = total > 0 ? (int)(downloaded * 100 / total) : -1;
-                    progress?.Report(new ModelDownloadProgress(percent, $"正在下载 SenseVoice 模型（{FormatSize(downloaded)}）"));
+                    byte[] buffer = new byte[64 * 1024];
+                    long downloaded = 0;
+                    int read;
+                    while ((read = await http.ReadAsync(buffer, cancellationToken)) > 0)
+                    {
+                        await file.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                        downloaded += read;
+                        int percent = total > 0 ? (int)(downloaded * 100 / total) : -1;
+                        progress?.Report(new ModelDownloadProgress(percent, $"正在下载 SenseVoice 模型（{FormatSize(downloaded)}）"));
+                    }
                 }
-            }
 
-            if (!IsArchiveValid(temp))
+                if (!IsArchiveValid(temp))
+                {
+                    lastError = "下载不完整";
+                    continue;
+                }
+
+                File.Move(temp, ArchivePath, overwrite: true);
+                return true;
+            }
+            catch (OperationCanceledException)
             {
-                progress?.Report(new ModelDownloadProgress(-1, "下载不完整，请检查网络后重试"));
                 TryDelete(temp);
-                return false;
+                throw;
             }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+                TryDelete(temp);
+            }
+        }
 
-            File.Move(temp, ArchivePath, overwrite: true);
-            return true;
-        }
-        catch (OperationCanceledException)
-        {
-            TryDelete(temp);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            TryDelete(temp);
-            progress?.Report(new ModelDownloadProgress(-1, $"下载失败：{ex.Message}"));
-            return false;
-        }
+        progress?.Report(new ModelDownloadProgress(-1, $"下载失败：{lastError ?? "没有可用地址"}"));
+        return false;
     }
 
     /// <summary>SenseVoice 包为 tar.bz2：用系统 tar.exe（-xjf），不依赖 SharpCompress。</summary>

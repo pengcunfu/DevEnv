@@ -182,7 +182,7 @@ export const sidebarGroups: SidebarGroup[] = [
         text: '版本发布',
         path: '/guide/releases',
         description:
-          'DevEnv 通过 GitHub Releases 以 Velopack 安装器与自更新分发 Windows 64 位版本；了解首次安装、自动更新与版本发布流程。',
+          'DevEnv 通过 GitHub Releases 以便携 zip 与自研自更新分发 Windows 64 位版本；了解首次安装、可选组件、自动更新与版本发布流程。',
       },
     ],
   },

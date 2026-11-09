@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- 语音 / OCR 模型管理与后台服务开关。 -->
-    <StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="14">
         <TextBlock Text="语音输入与截屏服务" Style="{DynamicResource SectionTitleStyle}" Margin="0,0,0,10"/>
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
             <Button x:Name="StartVoiceServiceButton" Content="开始服务" Padding="16,4"
@@ -11,6 +12,49 @@
                     Click="OnStopVoiceServiceClick" IsEnabled="False"/>
         </StackPanel>
         <TextBlock x:Name="ServiceStatusText" Text="未启动" TextWrapping="Wrap" Margin="0,0,0,12"/>
+        <GroupBox Header="可选组件（引擎，不含模型）" Padding="10" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="基础包只带 Magick.NET；Office 结构化预览、OCR 与语音引擎按需下载。"
+                           Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"
+                           Margin="0,0,0,8"/>
+
+                <TextBlock x:Name="OfficeComponentStatusText" Text="未安装" TextWrapping="Wrap"/>
+                <ProgressBar x:Name="OfficeComponentProgressBar" Height="6" Margin="0,6,0,0"
+                             Minimum="0" Maximum="100" Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,10">
+                    <Button Content="下载组件" Tag="office" Padding="12,3" Margin="0,0,8,0"
+                            Click="OnInstallComponentClick"/>
+                    <Button Content="删除组件" Tag="office" Padding="12,3" Margin="0,0,8,0"
+                            Click="OnDeleteComponentClick"/>
+                    <Button Content="打开组件目录" Tag="office" Padding="12,3"
+                            Click="OnOpenComponentFolderClick"/>
+                </StackPanel>
+
+                <TextBlock x:Name="OcrEngineComponentStatusText" Text="未安装" TextWrapping="Wrap"/>
+                <ProgressBar x:Name="OcrEngineComponentProgressBar" Height="6" Margin="0,6,0,0"
+                             Minimum="0" Maximum="100" Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,10">
+                    <Button Content="下载组件" Tag="ocr" Padding="12,3" Margin="0,0,8,0"
+                            Click="OnInstallComponentClick"/>
+                    <Button Content="删除组件" Tag="ocr" Padding="12,3" Margin="0,0,8,0"
+                            Click="OnDeleteComponentClick"/>
+                    <Button Content="打开组件目录" Tag="ocr" Padding="12,3"
+                            Click="OnOpenComponentFolderClick"/>
+                </StackPanel>
+
+                <TextBlock x:Name="VoiceEngineComponentStatusText" Text="未安装" TextWrapping="Wrap"/>
+                <ProgressBar x:Name="VoiceEngineComponentProgressBar" Height="6" Margin="0,6,0,0"
+                             Minimum="0" Maximum="100" Visibility="Collapsed"/>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                    <Button Content="下载组件" Tag="voice" Padding="12,3" Margin="0,0,8,0"
+                            Click="OnInstallComponentClick"/>
+                    <Button Content="删除组件" Tag="voice" Padding="12,3" Margin="0,0,8,0"
+                            Click="OnDeleteComponentClick"/>
+                    <Button Content="打开组件目录" Tag="voice" Padding="12,3"
+                            Click="OnOpenComponentFolderClick"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
         <GroupBox Header="语音模型" Padding="10" Margin="0,0,0,10">
             <StackPanel>
                 <TextBlock x:Name="SpeechModelStatusText" Text="未下载" TextWrapping="Wrap"/>
@@ -52,4 +96,5 @@
         <TextBlock x:Name="ServiceUsageHintText" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"
                    Text="使用说明：语音快捷键短按开始/再按结束，或按住说话、松手结束；截屏快捷键拖动选择区域。"/>
     </StackPanel>
+    </ScrollViewer>
 </UserControl>

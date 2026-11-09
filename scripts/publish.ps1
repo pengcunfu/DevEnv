@@ -54,7 +54,11 @@ $publishArgs = @(
     'publish', $project,
     '-c', $Configuration,
     '-r', $Runtime,
-    '--self-contained', 'false',
+    # Must be --no-self-contained, not --self-contained false: from .NET 8 on,
+    # PublishSingleFile=true makes the SDK infer SelfContained=true, and the
+    # space-separated "false" is treated as the default (flag not forwarded).
+    # The result was a 255 MB exe with the whole Desktop Runtime bundled.
+    '--no-self-contained',
     '-o', $OutputDir,
     "-p:Version=$semver",
     "-p:InformationalVersion=$semver"
@@ -83,6 +87,13 @@ if (-not (Test-Path $exe)) {
 
 # Strip PDBs to shrink the distribution package
 Get-ChildItem -Path $OutputDir -Filter '*.pdb' -Recurse -ErrorAction SilentlyContinue |
+    Remove-Item -Force
+
+# 可选组件运行时资源：models 是 RapidOcrNet 的 AfterPublish 目标直接拷进来的，
+# 基础包不需要（OCR 组件 zip 里才带分类器）；onnxruntime .lib 只是导入库。
+$modelsDir = Join-Path $OutputDir 'models'
+if (Test-Path $modelsDir) { Remove-Item -Path $modelsDir -Recurse -Force }
+Get-ChildItem -Path $OutputDir -Filter 'onnxruntime*.lib' -File -ErrorAction SilentlyContinue |
     Remove-Item -Force
 
 $sizeMb = [math]::Round((Get-Item $exe).Length / 1MB, 2)

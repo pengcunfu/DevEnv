@@ -25,6 +25,8 @@
     <RepositoryUrl>https://github.com/pengcunfu/DevEnv</RepositoryUrl>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- 自定义 Main：先分发 updater 助手模式，再启动 WPF App（见 Program.cs）。 -->
+    <StartupObject>DevEnv.Host.Program</StartupObject>
     <!-- WebView2 package also ships Wpf.dll which pulls WindowsBase 5.x; MSB3277 is the known version-merge warning. -->
     <NoWarn>$(NoWarn);MSB3277</NoWarn>
   </PropertyGroup>
@@ -33,7 +35,6 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <!-- 仅熔岩翻译窗使用（DOM 填充需要真实浏览器），主界面已无 WebView2 -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3537.50" />
-    <PackageReference Include="Velopack" Version="1.2.0" />
     <!-- SigXor 模块（文件快速预览 / 语音输入 / 截图 OCR 取色） -->
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="NAudio" Version="2.3.0" />
@@ -75,5 +76,36 @@
     <!-- 关于窗口用的联系二维码 -->
     <Resource Include="SigXor\Assets\feishu.png" Link="Assets\feishu.png" />
   </ItemGroup>
+
+  <!--
+    可选组件瘦身：Office 结构化预览、OCR、语音的运行时资产不在基础包里，
+    由 Release 的组件 zip 按需安装到 %LOCALAPPDATA%\DevEnv\Components。
+    源码仍保留 PackageReference 以便编译；这里在生成 deps.json 与单文件 bundle
+    之前把它们从发布列表移除。组件打包时用 -p:DevEnvIncludeOptionalComponents=true
+    关闭本 target，得到完整发布目录。
+  -->
+  <Target Name="RemoveOptionalComponentsFromPublish"
+          BeforeTargets="GeneratePublishDependencyFile;_ComputeFilesToBundle;_CopyResolvedFilesToPublishPreserveNewest"
+          Condition="'$(DevEnvIncludeOptionalComponents)' != 'true'">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+          Condition="'%(Filename)%(Extension)' == 'DocumentFormat.OpenXml.dll'
+                  or '%(Filename)%(Extension)' == 'DocumentFormat.OpenXml.Framework.dll'
+                  or '%(Filename)%(Extension)' == 'RapidOcrNet.dll'
+                  or '%(Filename)%(Extension)' == 'SkiaSharp.dll'
+                  or '%(Filename)%(Extension)' == 'libSkiaSharp.dll'
+                  or '%(Filename)%(Extension)' == 'Clipper2Lib.dll'
+                  or '%(Filename)%(Extension)' == 'System.Numerics.Tensors.dll'
+                  or '%(Filename)%(Extension)' == 'Microsoft.ML.OnnxRuntime.dll'
+                  or '%(Filename)%(Extension)' == 'onnxruntime.dll'
+                  or '%(Filename)%(Extension)' == 'onnxruntime_providers_shared.dll'
+                  or '%(Filename)%(Extension)' == 'onnxruntime.lib'
+                  or '%(Filename)%(Extension)' == 'onnxruntime_providers_shared.lib'
+                  or '%(Filename)%(Extension)' == 'sherpa-onnx.dll'
+                  or '%(Filename)%(Extension)' == 'sherpa-onnx-c-api.dll'" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+          Condition="$([System.String]::Copy('%(RelativePath)').StartsWith('models'))" />
+    </ItemGroup>
+  </Target>
 
 </Project>

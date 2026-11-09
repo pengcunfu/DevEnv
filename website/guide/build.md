@@ -41,7 +41,7 @@ make run
 dotnet publish DevEnv/DevEnv.csproj ^
   -c Release ^
   -r win-x64 ^
-  --self-contained false ^
+  --no-self-contained ^
   -p:PublishSingleFile=true ^
   -p:IncludeNativeLibrariesForSelfExtract=true ^
   -o ./publish/win-x64
@@ -49,19 +49,30 @@ dotnet publish DevEnv/DevEnv.csproj ^
 
 在 `publish/win-x64` 目录运行 `DevEnv.exe`。
 
-### 本地打包 Velopack 安装器（可选）
+### 本地打包便携发布（可选）
 
-发布由 GitHub Actions 全自动完成；本地联调时可安装 vpk 工具链手动打包：
+发布由 GitHub Actions 全自动完成；本地联调时可直接跑：
 
-```bash
-dotnet tool install -g vpk --version 1.2.0
-vpk pack -u DevEnv -v 1.2.0 -r win-x64 ^
-  -p ./publish/win-x64 -o ./publish/velopack ^
-  -e DevEnv.exe --packTitle DevEnv --packAuthors FireNeb ^
-  -i DevEnv/Resources/icon.ico --framework net10-x64-desktop
+```powershell
+make package
+# 或
+.\scripts\package-release.ps1 -OutputDir .\publish\release
 ```
 
-本地全流程联调更新时，可将 `DEVBOX_UPDATE_FEED` 环境变量指向本地目录或 HTTP 地址，替代 GitHub Releases 作为更新源。
+脚本会：
+
+1. 用 `--no-self-contained` 发布瘦身单文件 exe（基础包约 50 MB）
+2. 用 `-p:DevEnvIncludeOptionalComponents=true -p:PublishSingleFile=false` 再做一次完整发布，提取 Office / OCR / 语音组件文件
+3. 生成 3 个组件 zip、便携 app zip、`latest.json` 与 `components.json`
+
+本地联调更新时：
+
+- `DEVENV_UPDATE_MANIFEST=http://127.0.0.1:<port>/latest.json` 覆盖更新清单
+- `DEVENV_COMPONENTS_MANIFEST=http://127.0.0.1:<port>/components.json` 覆盖组件清单
+- `DEVENV_OCR_MODEL_MIRROR` / `DEVENV_SPEECH_MODEL_MIRROR` 追加模型下载镜像
+- 打包时设置 `COMPONENT_MIRROR_BASE` 可给 `components.json` 追加组件包镜像地址
+
+发布/更新流程不再使用 Velopack，也不需要 `vpk`。
 
 ## 修改版本号
 

@@ -272,8 +272,8 @@ public sealed class SigXorHost : IDisposable
             bool hasUpdate = await updater.CheckForUpdatesAsync();
             if (!hasUpdate) return; // 已是最新
 
-            NotificationRequested?.Invoke("文件预览模块有可用更新",
-                $"新版本 v{updater.CurrentVersion} 已发布，点击此提示可查看。");
+            NotificationRequested?.Invoke("燧岚开发盒子有可用更新",
+                $"新版本 v{updater.PendingVersion} 已发布（当前 v{updater.CurrentVersion}），点击此提示可查看。");
         }
         catch
         {

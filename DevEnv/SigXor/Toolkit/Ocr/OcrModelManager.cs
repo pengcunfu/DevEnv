@@ -1,6 +1,8 @@
 using System.IO;
 using System.Net.Http;
+using DevEnv.Core.Components;
 using DevEnv.Host.SigXor.Toolkit.Models;
+using CoreServices = DevEnv.Core.Services.CoreServices;
 
 namespace DevEnv.Host.SigXor.Toolkit.Ocr;
 
@@ -135,6 +137,12 @@ public static class OcrModelManager
             return true;
         }
 
+        if (!CoreServices.Components.IsInstalled(ComponentCatalog.Ocr))
+        {
+            status?.Invoke("OCR 引擎组件未安装，请先在 设置 → 服务与模型 中下载（约 12 MB）");
+            return false;
+        }
+
         try
         {
             Directory.CreateDirectory(V6Directory);
@@ -150,9 +158,9 @@ public static class OcrModelManager
 
             status?.Invoke("正在准备 PP-OCRv6 模型（约 30MB）...");
             bool v6Ok =
-                await EnsureFileAsync(V6DetPath, V6DetUrl, MinV6DetBytes, "检测模型", status, cancellationToken)
-                && await EnsureFileAsync(V6RecPath, V6RecUrl, MinV6RecBytes, "识别模型", status, cancellationToken)
-                && await EnsureFileAsync(V6DictPath, V6DictUrl, MinDictBytes, "字典", status, cancellationToken);
+                await EnsureFileAsync(V6DetPath, ResolveUrls(V6DetUrl), MinV6DetBytes, "检测模型", status, cancellationToken)
+                && await EnsureFileAsync(V6RecPath, ResolveUrls(V6RecUrl), MinV6RecBytes, "识别模型", status, cancellationToken)
+                && await EnsureFileAsync(V6DictPath, ResolveUrls(V6DictUrl), MinDictBytes, "字典", status, cancellationToken);
 
             if (v6Ok && GetActiveModelSet() is not null)
             {
@@ -162,9 +170,9 @@ public static class OcrModelManager
 
             status?.Invoke("PP-OCRv6 下载失败，回退 PP-OCRv5（约 16MB）...");
             bool v5Ok =
-                await EnsureFileAsync(V5DetPath, V5DetUrl, MinV5DetBytes, "检测模型", status, cancellationToken)
-                && await EnsureFileAsync(V5RecPath, V5RecUrl, MinV5RecBytes, "识别模型", status, cancellationToken)
-                && await EnsureFileAsync(V5DictPath, V5DictUrl, MinDictBytes, "字典", status, cancellationToken);
+                await EnsureFileAsync(V5DetPath, ResolveUrls(V5DetUrl), MinV5DetBytes, "检测模型", status, cancellationToken)
+                && await EnsureFileAsync(V5RecPath, ResolveUrls(V5RecUrl), MinV5RecBytes, "识别模型", status, cancellationToken)
+                && await EnsureFileAsync(V5DictPath, ResolveUrls(V5DictUrl), MinDictBytes, "字典", status, cancellationToken);
 
             if (v5Ok && GetActiveModelSet() is not null)
             {
@@ -338,8 +346,10 @@ public static class OcrModelManager
         if (File.Exists(ClsPath) && new FileInfo(ClsPath).Length >= MinClassifierBytes) return;
 
         string baseDir = AppContext.BaseDirectory;
+        string? componentDir = CoreServices.Components.GetDirectory(ComponentCatalog.Ocr);
         string[] candidates =
         [
+            Path.Combine(componentDir ?? baseDir, "models", "v5", ClsFileName),
             Path.Combine(baseDir, "models", "v5", ClsFileName),
             Path.Combine(baseDir, "models", "ocr", "v6", ClsFileName),
         ];
@@ -360,9 +370,19 @@ public static class OcrModelManager
         }
     }
 
+    /// <summary>官方地址 + 可选的镜像地址（DEVENV_OCR_MODEL_MIRROR 为平铺镜像 base）。</summary>
+    private static IReadOnlyList<string> ResolveUrls(string primary)
+    {
+        var urls = new List<string> { primary };
+        string? mirror = Environment.GetEnvironmentVariable("DEVENV_OCR_MODEL_MIRROR");
+        if (!string.IsNullOrWhiteSpace(mirror))
+            urls.Add(mirror.TrimEnd('/') + "/" + Path.GetFileName(primary));
+        return urls;
+    }
+
     private static async Task<bool> EnsureFileAsync(
         string path,
-        string url,
+        IReadOnlyList<string> urls,
         long minBytes,
         string displayName,
         Action<string>? status,
@@ -372,62 +392,69 @@ public static class OcrModelManager
             return true;
 
         string temp = path + ".download";
-        try
+        string? lastError = null;
+
+        foreach (string url in urls)
         {
-            if (File.Exists(temp)) File.Delete(temp);
-            status?.Invoke($"正在下载{displayName}...");
-
-            using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) SigXor/1.2");
-            client.DefaultRequestHeaders.Accept.ParseAdd("*/*");
-            using var response = await client.GetAsync(
-                url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                status?.Invoke($"{displayName}下载失败：HTTP {(int)response.StatusCode}");
-                return false;
-            }
+                if (File.Exists(temp)) File.Delete(temp);
+                status?.Invoke($"正在下载{displayName}...");
 
-            long total = response.Content.Headers.ContentLength ?? 0;
-            await using Stream http = await response.Content.ReadAsStreamAsync(cancellationToken);
-            await using (var file = File.Create(temp))
-            {
-                byte[] buffer = new byte[64 * 1024];
-                long downloaded = 0;
-                int read;
-                while ((read = await http.ReadAsync(buffer, cancellationToken)) > 0)
+                using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) SigXor/1.2");
+                client.DefaultRequestHeaders.Accept.ParseAdd("*/*");
+                using var response = await client.GetAsync(
+                    url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                if (!response.IsSuccessStatusCode)
                 {
-                    await file.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-                    downloaded += read;
-                    int percent = total > 0 ? (int)(downloaded * 100 / total) : -1;
-                    status?.Invoke(percent >= 0
-                        ? $"正在下载{displayName} {percent}%"
-                        : $"正在下载{displayName}（{FormatSize(downloaded)}）");
+                    lastError = $"HTTP {(int)response.StatusCode}";
+                    continue;
                 }
-            }
 
-            if (!File.Exists(temp) || new FileInfo(temp).Length < minBytes)
+                long total = response.Content.Headers.ContentLength ?? 0;
+                await using Stream http = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await using (var file = File.Create(temp))
+                {
+                    byte[] buffer = new byte[64 * 1024];
+                    long downloaded = 0;
+                    int read;
+                    while ((read = await http.ReadAsync(buffer, cancellationToken)) > 0)
+                    {
+                        await file.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                        downloaded += read;
+                        int percent = total > 0 ? (int)(downloaded * 100 / total) : -1;
+                        status?.Invoke(percent >= 0
+                            ? $"正在下载{displayName} {percent}%"
+                            : $"正在下载{displayName}（{FormatSize(downloaded)}）");
+                    }
+                }
+
+                if (!File.Exists(temp) || new FileInfo(temp).Length < minBytes)
+                {
+                    lastError = "文件不完整";
+                    continue;
+                }
+
+                if (File.Exists(path)) File.Delete(path);
+                File.Move(temp, path);
+                return true;
+            }
+            catch (OperationCanceledException)
             {
-                status?.Invoke($"{displayName}下载不完整，请检查网络后重试");
-                return false;
+                TryDelete(temp);
+                throw;
             }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+                TryDelete(temp);
+            }
+        }
 
-            if (File.Exists(path)) File.Delete(path);
-            File.Move(temp, path);
-            return true;
-        }
-        catch (OperationCanceledException)
-        {
-            TryDelete(temp);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            TryDelete(temp);
-            status?.Invoke($"{displayName}下载失败：{ex.Message}");
-            return false;
-        }
+        status?.Invoke($"{displayName}下载失败：{lastError ?? "没有可用地址"}");
+        return false;
     }
 
     private static void TryDelete(string path)

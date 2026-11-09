@@ -13,7 +13,7 @@ Windows 上的开发环境管理工具：应用与服务集中管理、熔岩绿
 
 ## 下载与更新
 
-从 [Releases](https://github.com/pengcunfu/DevEnv/releases/latest) 下载 `DevEnv-win-Setup.exe` 安装包并安装（若缺少 .NET 10 Desktop Runtime，安装器会自动安装）。安装后可打开「设置」对话框，在「检查更新」中自动升级，无需手动下载覆盖。
+从 [Releases](https://github.com/pengcunfu/DevEnv/releases/latest) 下载 `DevEnv-<ver>-win-x64.zip` 便携包，解压到任意可写目录后运行 `DevEnv.exe`；目标机需安装 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)。程序自带自研更新器，可在「设置 → 关于与帮助」检查更新并自动替换重启。Office 结构化预览、OCR 与语音引擎是可选组件，在第一次使用或「设置 → 服务与模型」中按需下载。
 
 ## 文档
 

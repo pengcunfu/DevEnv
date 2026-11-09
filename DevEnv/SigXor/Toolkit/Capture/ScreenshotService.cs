@@ -3,7 +3,9 @@ using System.Runtime.InteropServices;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
+using DevEnv.Core.Components;
 using DevEnv.Core.SigXor.Toolkit;
+using CoreServices = DevEnv.Core.Services.CoreServices;
 using DevEnv.Host.SigXor.Services;
 using DevEnv.Host.SigXor.Toolkit.Ocr;
 using DevEnv.Host.SigXor.Toolkit.Voice;
@@ -280,6 +282,12 @@ public sealed class ScreenshotService : IDisposable
     {
         if (_regionImage is null || _ocrBusy || _ocrWindow is not null) return;
 
+        if (!CoreServices.Components.IsInstalled(ComponentCatalog.Ocr))
+        {
+            Notify("OCR 引擎组件未安装", "请在 设置 → 服务与模型 中下载 OCR 引擎组件（约 12 MB，含 onnxruntime）。");
+            return;
+        }
+
         _ocrBusy = true;
         BitmapSource image = _regionImage;
         ShowOcrResultDialog();
@@ -305,8 +313,11 @@ public sealed class ScreenshotService : IDisposable
         }
         catch (Exception ex)
         {
-            _ocrWindow?.ShowFailure($"识别失败：{ex.Message}");
-            Notify("OCR 识别失败", ex.Message);
+            string message = ex is FileNotFoundException or DllNotFoundException or TypeLoadException
+                ? "OCR 引擎组件未安装或加载失败，请在 设置 → 服务与模型 中重新安装。"
+                : ex.Message;
+            _ocrWindow?.ShowFailure($"识别失败：{message}");
+            Notify("OCR 识别失败", message);
         }
         finally
         {

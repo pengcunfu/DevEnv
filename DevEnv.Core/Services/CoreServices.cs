@@ -1,3 +1,4 @@
+using DevEnv.Core.Components;
 using DevEnv.Core.FileTools.Services;
 using DevEnv.Core.LavaEnv;
 using DevEnv.Core.LavaEnv.Services;
@@ -31,6 +32,8 @@ public static class CoreServices
     public static TranslatorService Translator { get; } = new();
     public static SettingsService Settings { get; } = new(Config);
     public static UpdateService Update { get; } = new();
+    public static ComponentStore Components { get; } = new();
+    public static ComponentInstaller ComponentsInstaller { get; } = new(Components);
     public static ContextMenuService ContextMenu { get; } = new();
 
     /// <summary>
@@ -47,6 +50,7 @@ public static class CoreServices
         }
 
         DevEnvBootstrap.EnsureInitialized();
+        ComponentLoader.Initialize(Components);
         DevEnv.Core.LavaEnv.Services.AppServices.ProcessManager.StartMonitoring();
     }
 }

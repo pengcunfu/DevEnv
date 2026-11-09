@@ -17,9 +17,7 @@ public enum UpdateFlowState
 
 /// <summary>
 /// 更新对话框 ViewModel：检查 → 下载（进度）→ 重启应用更新。
-///
-/// 并入 DevEnv 后底层换成宿主的 Velopack 自更新（见 <see cref="UpdateService"/>），
-/// 本类只负责把流程状态呈现给用户。
+/// 底层是宿主的自研更新器（见 <see cref="UpdateService"/>），本类只负责呈现流程状态。
 /// </summary>
 public partial class UpdateViewModel : ObservableObject
 {
@@ -57,8 +55,8 @@ public partial class UpdateViewModel : ObservableObject
         if (!_updateService.IsUpdateCapable)
         {
             State = UpdateFlowState.Error;
-            Message = "当前无法自动更新（调试构建或非安装态）。\n"
-                + "请前往 GitHub Releases 下载最新完整包：\n" + ReleasesUrl;
+            Message = "当前目录不支持自动更新（开发构建、只读目录或旧版 Velopack 安装）。\n"
+                + "请前往 GitHub Releases 下载最新便携 zip：\n" + ReleasesUrl;
             return;
         }
 
@@ -69,13 +67,21 @@ public partial class UpdateViewModel : ObservableObject
             bool hasUpdate = await _updateService.CheckForUpdatesAsync();
             if (!hasUpdate)
             {
+                if (!string.IsNullOrWhiteSpace(_updateService.LastError))
+                {
+                    State = UpdateFlowState.Error;
+                    Message = $"检查更新失败：{_updateService.LastError}";
+                    return;
+                }
+
                 State = UpdateFlowState.UpToDate;
                 Message = $"当前已是最新版本 v{CurrentVersion}";
                 return;
             }
 
+            NewVersion = _updateService.PendingVersion;
             State = UpdateFlowState.UpdateAvailable;
-            Message = "发现新版本";
+            Message = $"发现新版本 v{NewVersion}（当前 v{CurrentVersion}）";
         }
         catch (Exception ex)
         {

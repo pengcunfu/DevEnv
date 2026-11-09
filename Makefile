@@ -36,15 +36,11 @@ endif
 #  CONFIG - keep in sync with .github/workflows/release.yml
 # ============================================================
 APP_ID      := DevEnv
-COMPANY     := FireNeb
 CSPROJ      := DevEnv/DevEnv.csproj
-ICON        := DevEnv/Resources/icon.ico
 RUNTIME     := win-x64
-FRAMEWORK   := net10-x64-desktop
-VPK_VER     := 1.2.0
 
 PUBLISH_DIR := publish/$(RUNTIME)
-VPACK_DIR   := publish/velopack
+RELEASE_DIR := publish/release
 
 # Version of record: the VERSION file at the repo root (csproj/CHANGELOG must
 # match it - see `make verify`). $(file ...) reads it without spawning a shell.
@@ -65,7 +61,7 @@ ARGS   ?=
 # ============================================================
 .DEFAULT_GOAL := help
 
-.PHONY: help build run test publish installer verify release docs deploy-docs clean
+.PHONY: help build run test publish package verify release docs deploy-docs clean
 
 help:
 	@echo "DevEnv - available commands"
@@ -75,7 +71,7 @@ help:
 	@echo "  make run          Build and run the WPF host (Debug)"
 	@echo "  make test         Run the xunit suite (DevEnv.Tests)"
 	@echo "  make publish      Single-file publish -> $(PUBLISH_DIR)/"
-	@echo "  make installer    publish + vpk pack -> Velopack Setup.exe in $(VPACK_DIR)/"
+	@echo "  make package      App zip + component zips + latest.json -> $(RELEASE_DIR)/"
 	@echo "  make verify       Check VERSION / DevEnv.csproj / CHANGELOG agree"
 	@echo "  make release      verify, then tag v<VER> and push (starts the CI release)"
 	@echo "  make docs         Vite dev server for website/ (npm install on first run)"
@@ -119,32 +115,11 @@ publish:
 	@$(PS) -NoProfile -ExecutionPolicy Bypass -File scripts/publish.ps1 $(ARGS)
 	@echo "[ok] published -> $(PUBLISH_DIR)"
 
-# publish -> vpk pack: the local Velopack round trip (CI does the real one).
-# The vpk flag set mirrors release.yml; keep the two in sync.
-installer: publish
-	@vpk=$$(command -v vpk 2>/dev/null); \
-	if [ -z "$$vpk" ]; then \
-		echo "[skip] vpk CLI not found - install it with:"; \
-		echo "         dotnet tool install -g vpk --version $(VPK_VER)"; \
-		echo "       then put %USERPROFILE%\.dotnet\tools on PATH"; \
-		exit 0; \
-	fi; \
-	[ -n "$(VER)" ] || { echo "[error] VERSION file missing or empty"; exit 1; }; \
-	[ -f RELEASE_NOTES.md ] || printf '## %s %s\n' "$(APP_ID)" "$(VER)" > RELEASE_NOTES.md; \
-	echo "vpk pack -u $(APP_ID) -v $(VER) -r $(RUNTIME) -p $(PUBLISH_DIR) -o $(VPACK_DIR)"; \
-	"$$vpk" pack \
-		-u "$(APP_ID)" \
-		-v "$(VER)" \
-		-r "$(RUNTIME)" \
-		-p "$(PUBLISH_DIR)" \
-		-o "$(VPACK_DIR)" \
-		-e "$(APP_ID).exe" \
-		--packTitle "$(APP_ID)" \
-		--packAuthors "$(COMPANY)" \
-		-i "$(ICON)" \
-		--framework "$(FRAMEWORK)" \
-		--releaseNotes RELEASE_NOTES.md || exit 1; \
-	echo "[ok] installer -> $(VPACK_DIR)/$(APP_ID)-win-Setup.exe"
+# Portable release: slim single-file app zip + optional component zips + latest.json.
+# The same script is called by .github/workflows/release.yml; keep the two in sync.
+package:
+	@$(PS) -NoProfile -ExecutionPolicy Bypass -File scripts/package-release.ps1 -OutputDir $(RELEASE_DIR)
+	@echo "[ok] release -> $(RELEASE_DIR)"
 
 # Three files must agree before a tag is cut; the CI workflow re-checks the
 # same thing and fails the release if they drift.
@@ -180,5 +155,5 @@ deploy-docs:
 # scripts write publish/_icon_check, which is not ours to delete.
 clean:
 	@rm -rf DevEnv/bin DevEnv/obj DevEnv.Core/bin DevEnv.Core/obj DevEnv.Tests/bin DevEnv.Tests/obj \
-		bin obj "$(PUBLISH_DIR)" "$(VPACK_DIR)" artifacts RELEASE_NOTES.md DevEnv-*.zip
+		bin obj "$(PUBLISH_DIR)" "$(RELEASE_DIR)" artifacts RELEASE_NOTES.md DevEnv-*.zip
 	@echo "[ok] cleaned build output"

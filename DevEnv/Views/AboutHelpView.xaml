@@ -40,11 +40,18 @@
                     <Button Content="检查更新" Margin="0,0,8,0" Command="{Binding CheckUpdateCommand}" />
                     <Button Content="下载更新" Margin="0,0,8,0"
                             Visibility="{Binding Update.PendingVersion, Converter={StaticResource NonEmptyString}}"
-                            IsEnabled="{Binding Update.Downloading, Converter={StaticResource FalseToVisibility}}"
+                            IsEnabled="{Binding Update.Downloading, Converter={StaticResource InverseBool}}"
                             Command="{Binding DownloadUpdateCommand}" />
-                    <Button Content="重启并应用" Style="{StaticResource AccentButtonStyle}"
-                            Visibility="{Binding Update.Downloading, Converter={StaticResource FalseToVisibility}}"
+                    <Button Content="重启并应用" Style="{StaticResource AccentButtonStyle}" Margin="0,0,8,0"
+                            Visibility="{Binding Update.PendingVersion, Converter={StaticResource NonEmptyString}}"
+                            IsEnabled="{Binding Update.ReadyToApply}"
                             Command="{Binding ApplyUpdateCommand}" />
+                    <Button Content="回滚到上一版本"
+                            Visibility="{Binding Update.HasBackup, Converter={StaticResource TrueToVisibility}}"
+                            Command="{Binding RollbackUpdateCommand}" />
+                    <Button Content="打开下载页"
+                            Visibility="{Binding Update.CanUpdate, Converter={StaticResource FalseToVisibility}}"
+                            Command="{Binding OpenDownloadPageCommand}" />
                 </WrapPanel>
 
                 <StackPanel Margin="0,12,0,0"

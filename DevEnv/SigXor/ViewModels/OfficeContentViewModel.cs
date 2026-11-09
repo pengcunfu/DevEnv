@@ -3,8 +3,10 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Web.WebView2.Core;
+using DevEnv.Core.Components;
 using DevEnv.Core.SigXor.Office;
 using DevEnv.Host.SigXor.Services;
+using CoreServices = DevEnv.Core.Services.CoreServices;
 
 namespace DevEnv.Host.SigXor.ViewModels;
 
@@ -48,9 +50,21 @@ public sealed partial class OfficeContentViewModel : ObservableObject, IDisposab
         IsWebOnly = _extension is ".xls"; // 旧版 Excel 仅 SheetJS 可读
         CanUseWeb = ComputeCanUseWeb(out var blockReason);
         WebBlockReason = blockReason;
-        // pptx/pptm 默认可走网页引擎：本机 PowerPoint COM 导 PNG 往往数秒起，体感远慢于 WebView。
-        // 结构化画面预览仍可在工具栏一键切换。xls 只能网页。
-        UseWeb = IsWebOnly || (CanUseWeb && _extension is ".pptx" or ".pptm");
+        IsStructuredAvailable = CoreServices.Components.IsInstalled(ComponentCatalog.Office);
+
+        // 缺 Office 组件时优先网页引擎；没有 WebView2 才退到安装提示。
+        if (!IsStructuredAvailable && CanUseWeb && OfficeDocumentReader.CanReadStructured(_extension))
+        {
+            UseWeb = true;
+            StructuredNotice = "未安装 Office 结构化预览组件，当前使用网页引擎。" +
+                               "可在 设置 → 服务与模型 中安装（约 2 MB）。";
+        }
+        else
+        {
+            // pptx/pptm 默认可走网页引擎：本机 PowerPoint COM 导 PNG 往往数秒起，体感远慢于 WebView。
+            // 结构化画面预览仍可在工具栏一键切换。xls 只能网页。
+            UseWeb = IsWebOnly || (CanUseWeb && _extension is ".pptx" or ".pptm");
+        }
 
         LoadCommand = new AsyncRelayCommand(LoadAsync);
     }
@@ -109,6 +123,9 @@ public sealed partial class OfficeContentViewModel : ObservableObject, IDisposab
     public bool IsWebOnly { get; }
     public bool CanUseWeb { get; }
     public string? WebBlockReason { get; }
+
+    /// <summary>Office 结构化预览组件（DocumentFormat.OpenXml）是否已安装。</summary>
+    public bool IsStructuredAvailable { get; }
 
     public IAsyncRelayCommand LoadCommand { get; }
 
@@ -169,7 +186,15 @@ public sealed partial class OfficeContentViewModel : ObservableObject, IDisposab
     public bool ShowSlides => ShowStructured && Structured is SlidesModel;
 
     [RelayCommand]
-    private void UseStructuredView() => UseWeb = false;
+    private void UseStructuredView()
+    {
+        if (!IsStructuredAvailable)
+        {
+            StructuredNotice = "未安装 Office 结构化预览组件。请到 设置 → 服务与模型 安装（约 2 MB）。";
+            return;
+        }
+        UseWeb = false;
+    }
 
     [RelayCommand]
     private void UseWebView()
@@ -197,8 +222,17 @@ public sealed partial class OfficeContentViewModel : ObservableObject, IDisposab
 
         State = LoadState.Loading;
         LoadingMessage = "正在解析文档…";
-        StructuredNotice = null;
+        StructuredNotice = IsStructuredAvailable
+            ? null
+            : "未安装 Office 结构化预览组件，当前使用网页引擎。可在 设置 → 服务与模型 中安装（约 2 MB）。";
         Error = null;
+
+        if (!IsStructuredAvailable && OfficeDocumentReader.CanReadStructured(_extension) && !CanUseWeb)
+        {
+            State = LoadState.Unsupported;
+            StructuredNotice = "未安装 Office 结构化预览组件。请到 设置 → 服务与模型 安装（约 2 MB）后重试。";
+            return;
+        }
 
         bool isPresentation = PresentationExtensions.Contains(_extension);
 

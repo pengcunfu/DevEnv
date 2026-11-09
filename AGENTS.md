@@ -9,14 +9,14 @@
 
 | 路径 | 角色 |
 |------|------|
-| `DevEnv/` | 主程序（`WinExe`，WPF）：全部界面、托盘、全局热键、剪贴板轮询、Velopack 安装与自更新；**程序集名 / 进程名为 `DevEnv`**（产出 `DevEnv.exe`） |
+| `DevEnv/` | 主程序（`WinExe`，WPF）：全部界面、托盘、全局热键、剪贴板轮询、可选组件入口与自研自更新；**程序集名 / 进程名为 `DevEnv`**（产出 `DevEnv.exe`） |
 | `DevEnv.Core/` | 应用服务层（普通类库）：数据持久化，以及熔岩 / 网络 / 进程 / 剪贴板 / 翻译 / 右键菜单 / 更新等业务编排，按功能分 `LavaEnv/`、`NetworkWatch/`、`ProcessWatch/`、`Clipboard/`、`Translator/` 子目录；界面**进程内直调**，没有 HTTP |
 | `DevEnv.Tests/` | 单元测试工程（xunit 2.9 + Microsoft.NET.Test.Sdk）：只引用 `DevEnv.Core`，覆盖纯逻辑、序列化与文件/路径处理；`make test` 执行，CI 发版前也会跑一遍 |
 | `website/` | Vue 3 + Vite 官网与文档站（首页 + `guide/**/*.md` 文档 + `/downloads` 软件下载站，正文由 markdown-it 渲染；下载站数据在 `src/data/software.json`）→ Cloudflare Pages，项目名 `devbox-docs`，站点 https://devenv.cn/ |
 | `docs/` | 子项目说明文档（纯 Markdown，**不是**文档站，别往里放构建配置） |
 | `scripts/` | 发布与版本校验的 PowerShell 脚本 |
 
-**功能模块是 `DevEnv.Core` / `DevEnv` 工程内的子目录，不再有独立工程**。新功能按 `DevEnv.Core/<模块>/{Models,Services}` + `DevEnv/{Views,ViewModels,Windows}` 放置，命名空间与目录一致（`DevEnv.Core.<模块>.*` / `DevEnv.Host.*`）。不要恢复独立 `Program.cs`、独立 `sln` 或独立入口。
+**功能模块是 `DevEnv.Core` / `DevEnv` 工程内的子目录，不再有独立工程**。新功能按 `DevEnv.Core/<模块>/{Models,Services}` + `DevEnv/{Views,ViewModels,Windows}` 放置，命名空间与目录一致（`DevEnv.Core.<模块>.*` / `DevEnv.Host.*`）。不要为功能模块恢复独立 `Program.cs`、独立 `sln` 或独立入口；宿主入口统一是 `DevEnv/Program.cs`（只负责分发 `--updater` 助手模式后启动 WPF `App`）。
 
 ### SigXor 模块（文件快速预览 / 语音输入 / 截图 OCR 取色）
 
@@ -32,7 +32,7 @@
 
 约定：
 
-- **不要再引入第二套基础设施**。托盘、单实例、自启动、更新、异常日志一律用 DevEnv 现有的（`TrayIconHost`、`SingleInstance`、`AutostartHelper`、Velopack `UpdateService`）。SigXor 自带的 `TrayIconService` / `SingleInstanceService` / `Updater` / `App` / `Program` 是未接线的遗留代码，**已删除**，不要接回去。
+- **不要再引入第二套基础设施**。托盘、单实例、自启动、更新、异常日志一律用 DevEnv 现有的（`TrayIconHost`、`SingleInstance`、`AutostartHelper`、`CoreServices.Update` + `DevEnv.Core/Updates`）。SigXor 自带的 `TrayIconService` / `SingleInstanceService` / `Updater` / `App` / `Program` 是未接线的遗留代码，**已删除**，不要接回去；模块的更新窗口只能包装 `CoreServices.Update`。
 - 模块要暴露能力给宿主，走 `DevEnv.Core.HostCallbacks`（`OnOpenFilePreview` / `OnOpenScreenshot` / `OnOpenSigXorSettings` / `OnOpenSigXorLauncher` / `OnOpenSigXorBrowser` / `OnOpenSigXorUpdate`），不要在 Core 里直接碰 UI。
 - SigXor 的数据目录仍是 `文档\FNSoftware\SigXor`（与 DevEnv 的 `文档\FNSoftware\DevEnv` 并存），旧版 SigXor 配置与模型在首次启动时自动迁移。
 - 全局键盘钩子：SigXor 用自己的 `GlobalHotkeyService`（`WH_KEYBOARD_LL`，处理预览键 / 关闭键 / 语音键 / 反引号），与 DevEnv 的 `RegisterHotKey` 体系**并存但不冲突**（前者管预览与语音，后者管显示窗口与快捷应用）。多个 SigXor 功能共用一个钩子时靠 `GlobalHotkeyRouter` 的**优先级**排序：截图 300 > 语音 200 > 预览 100。快捷键录制期间 `HotkeyCaptureState.IsCapturing` 为 true，路由直接放行按键，避免录制时触发截图 / 语音 / 预览。
@@ -52,6 +52,19 @@
 - **语法高亮配色跟随主题**（`SyntaxHighlightingService`）：深色主题用 VS Code Dark，浅色主题用 VS Code Light，`ThemeManager.ThemeChanged` 触发后重新注册定义，已打开的 `TextView` 重新取一次定义并刷新。`TextView` 的编辑器底色 / 前景 / 行号颜色必须走 `DynamicResource`（`SurfaceBrush` / `TextPrimaryBrush` / `TextMutedBrush`），**不要写死深色**，否则浅色主题下会是一块黑底。文本预览支持 `Ctrl` + 鼠标滚轮缩放字号（`PreviewTextZoom`，8 到 72），缩放值在会话内沿用，新建文本 / Markdown / 网页源码视图时用 `PreviewTextZoom.Resolve(设置字号)` 取实际字号；在设置里保存新的默认字号后调用 `PreviewTextZoom.Reset()`。其余界面颜色同样一律走 `DynamicResource`，截图 / 取色 / 选区 / 语音浮窗的功能性黑白配色除外（见上一条）。
 - **截图 / 取色 / 选区 / 语音浮窗里的黑白配色是功能性颜色**，必须保持不透明与高对比，不随主题变化（`scripts/theme-sigxor-xaml.ps1` 已把它们列为例外）。
 - **合并脚本**：`scripts/merge-sigxor.ps1`（搬运）+ `scripts/rewrite-sigxor-namespace.ps1`（改写命名空间）+ `scripts/verify-sigxor-merge.ps1`（逐字校验）。合并 SigXor 新版本后跑一次 verify，确认「除预期的宿主适配外与源仓库逐字一致」。
+
+### 可选组件与自更新
+
+- **基础包只带 Magick.NET 等核心依赖**。以下三类重依赖不在 `DevEnv.exe` 里，改为从 GitHub Release 的组件 zip 按需安装：
+  - `office`：`DocumentFormat.OpenXml`（Office 结构化预览，下载约 2 MB，安装后约 8.5 MB）
+  - `ocr`：`RapidOcrNet` + `SkiaSharp` + `Clipper2` + `System.Numerics.Tensors` + `onnxruntime`（下载约 12 MB，安装后约 30 MB）
+  - `voice`：`org.k2fsa.sherpa.onnx` + `onnxruntime`（下载约 8 MB，安装后约 21 MB）
+- 源码仍保留这些 `PackageReference`（直接引用类型，去掉会破坏编译）；`DevEnv/DevEnv.csproj` 的 `RemoveOptionalComponentsFromPublish` target 在生成 deps.json 与单文件 bundle 之前把运行时文件剔除。组件打包用 `-p:DevEnvIncludeOptionalComponents=true` 的完整发布；不要用 `ExcludeAssets` 改编译引用。
+- 组件清单 `components.json` 与组件 zip 放在 GitHub Release；App 通过 `https://github.com/pengcunfu/DevEnv/releases/latest/download/components.json` 读取，支持 `urls` 数组回退镜像，`DEVENV_COMPONENTS_MANIFEST` 可覆盖地址。安装目录是 `%LOCALAPPDATA%\DevEnv\Components\<id>\<version>`，状态在 `state.json`；下载校验 SHA256，解压做 zip-slip 校验。
+- 运行时由 `DevEnv.Core/Components/ComponentLoader` 的默认 `AssemblyLoadContext.Resolving` 从组件目录加载托管 DLL；**不要**调用 `SetDefaultDllDirectories` 改进程级 DLL 搜索路径。OCR / 语音各自目录内带完整 `onnxruntime` 闭包（同一版本），原生 DLL 与托管 DLL 放在同一个组件目录。
+- 缺组件时：Office 结构化预览自动降级到 WebView2 网页引擎并在提示面板给安装入口；截图 OCR / 语音输入给出“请到 设置 → 服务与模型 下载”的提示，不构造引擎；语音自动启动在组件缺失时直接跳过。
+- **不再使用 Velopack**。发布物是便携 `DevEnv-<ver>-win-x64.zip`（exe + `Resources/` + 许可证），解压即用；自研更新器在 `DevEnv.Core/Updates/`，流程是 `latest.json` → 下载 zip + SHA256 → 解压暂存 → 启动 `DevEnv.exe --updater apply --payload <staging> --pid <pid> --to <ver>` → 旧进程退出后备份 `DevEnv.exe` 与 `Resources/`、覆盖载荷、启动新版；新版启动成功写 `.update_ok`，30~45 秒看门狗未见标记或进程提前退出则恢复 `.bak` 并重启旧版。日志在 `%LOCALAPPDATA%\DevEnv\updater.log`。
+- `UpdateService.CanUpdate` 只在便携目录可写、不是 `DevEnv.dll` 开发构建、也不是旧 Velopack `current\` 布局时为 true；否则关于页提示手动下载。旧 Velopack 用户需要一次性下载便携 zip 迁移。
 
 ### 全局启动器（Launchpad）
 
@@ -97,8 +110,8 @@ make build                        # 构建全部（Release，= dotnet build DevE
 make run                          # 以 Debug 配置编译并运行主程序（产物在 bin/Debug，避免锁住 make build 的 Release 输出）
 make test                         # 跑单元测试（DevEnv.Tests，xunit，Release）
 make verify                       # 校验 VERSION / csproj / CHANGELOG 三处一致
-make publish                      # 单文件发布到 publish/win-x64/
-make installer                    # publish + vpk pack，产出 Velopack Setup.exe
+make publish                      # 框架依赖单文件发布到 publish/win-x64/（约 50 MB）
+make package                      # 便携 app zip + 3 个组件 zip + latest.json → publish/release/
 make docs                         # 文档站本地预览（vite dev server）
 make deploy-docs                  # 文档站构建并部署到 Cloudflare Pages（仅本机执行，不走 CI）
 ```
@@ -107,6 +120,8 @@ make deploy-docs                  # 文档站构建并部署到 Cloudflare Pages
 
 **编译检查与测试统一用 `make build` / `make test`，不要用 `make run` 代替**：`make build` 固定写入 Release 输出，`make run` 固定以 Debug 运行；正在运行的 `make run` 实例只会锁住 `bin/Debug`，不会让下一次 `make build` 因为 `bin/Release/DevEnv.Core.dll` 被占用而失败。只有确实要启动界面时才用 `make run`。
 
+**发布固定用 `--no-self-contained`**：`.NET 10` SDK 在 `PublishSingleFile=true` 时会推断 `SelfContained=true`，而 `--self-contained false` 的空格写法不会被转发为显式 `false`，会把整个 Desktop Runtime 打进 exe（约 255 MB）。脚本、CI 与本机发布统一写 `--no-self-contained`。
+
 ## 硬性约定
 
 1. **提交信息用中文**，格式为「`类型: 标题`」加详细正文（正文逐条写清改了什么、为什么、影响范围）。类型沿用仓库历史：`功能:` `修复:` `重构:` `性能:` `文档:` `样式:` `测试:` `杂项:`。
@@ -114,7 +129,7 @@ make deploy-docs                  # 文档站构建并部署到 Cloudflare Pages
 3. **`Makefile` 必须保持纯 ASCII**。GNU Make 在 Windows 上会转码 makefile 里的非 ASCII 文本，UTF-8 注释和字符串在 `make help` 里会变成乱码。自检：`LC_ALL=C grep -c '[^ -~\t]' Makefile` 结果必须是 `0`。中文说明写到脚本或文档里，不要写进 Makefile。
 4. **版本号有三处单一事实来源，必须同改**：`VERSION`、`DevEnv/DevEnv.csproj`（`Version` / `AssemblyVersion` / `FileVersion` / `InformationalVersion`，后两者形如 `X.Y.Z.0`）、`CHANGELOG.md` 里的 `## [x.y.z] - 日期`。改完跑 `make verify`；CI 会重复校验同一件事，不一致就构建失败。
 5. **构建产物保留在各项目目录**。使用 .NET SDK 默认的 `<项目目录>/bin/`、`<项目目录>/obj/`，不要通过 `Directory.Build.props` 或 csproj 重定向到仓库根目录；仓库不保留 `global.json`，使用本机安装且支持 .NET 10 的 SDK。
-6. **品牌、显示名与程序标识不是一回事**：品牌名为 **FireNeb**；界面文案 / `Product` / 托盘用「燧岚开发盒子」；英文名、程序集名、进程名、Velopack `APP_ID`、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录为 `DevEnv` / `DevEnv.Core`，命名空间为 `DevEnv.Host` / `DevEnv.Core`。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
+6. **品牌、显示名与程序标识不是一回事**：品牌名为 **FireNeb**；界面文案 / `Product` / 托盘用「燧岚开发盒子」；英文名、程序集名、进程名、Release 资产前缀、用户数据目录固定为 `DevEnv`（`文档\FNSoftware\DevEnv`，产出 `DevEnv.exe`）。项目目录为 `DevEnv` / `DevEnv.Core`，命名空间为 `DevEnv.Host` / `DevEnv.Core`。旧版用户数据在 `文档\FNSoftware\DevBox` 时，启动时会迁入 `data.json` / `icons`。
 7. **构建产物不入库**。`website/` 的 `.gitignore` 已忽略 `node_modules`、`dist` 等；`DevEnv.Core/LavaEnv/Resources/tools/7zr.exe` 是**故意入库**的例外（缺了它，CI 全新克隆构建出的安装包无法解压 7z / tar.gz）。
 8. **全局热键跟随宿主生命周期**：主窗句柄就绪后注册，窗口关闭时释放；句柄重建时需 `Rebind` 补注册。
 9. **改功能就同步文档**：模块级改动更新 `website/guide/` 下对应指南与 `CHANGELOG.md`；发版流程见 `website/guide/releases.md`。

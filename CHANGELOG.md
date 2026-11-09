@@ -57,6 +57,8 @@
 
 ### Changed
 
+- **基础包瘦身与可选组件按需下载**：`DevEnv.exe` 只保留 Magick.NET 等核心依赖，`DocumentFormat.OpenXml`（Office 结构化预览）、`RapidOcrNet` + SkiaSharp（截图 OCR）、`org.k2fsa.sherpa.onnx`（语音输入）与共用的 `onnxruntime` 改为 3 个可按需安装的组件（Office / OCR / 语音），安装到 `%LOCALAPPDATA%\DevEnv\Components`。基础单文件 exe 从约 89 MB 降到约 50 MB；组件从 GitHub Release 的 `components.json` 读取，下载后校验 SHA256。缺组件时 Office 预览自动降级到网页引擎，OCR / 语音给出明确安装提示。设置 →「服务与模型」新增组件下载、删除与打开目录
+- **分发改便携 zip + 自研更新**：发布物改为 `DevEnv-<ver>-win-x64.zip`（exe + Resources + 许可证），解压即用；应用通过 `latest.json` 检查更新，下载新版 zip、校验 SHA256，由内嵌 `--updater` 第二进程替换并看门狗回滚。移除 Velopack 安装器、Setup.exe、nupkg 与 delta 升级。旧 Velopack 安装用户需要一次性下载便携 zip 迁移
 - **主窗口拆分为开发窗口与监控窗口**：开发环境 / 熔岩环境留在 **开发窗口**，网络监控 / 进程监控 / 服务监控移入新的 **监控窗口**；两个窗口共用同一套界面，只替换标题与左侧导航（`ViewFactory.DevelopmentNavItems` / `MonitorNavItems`）。开发窗口启动时创建并隐藏驻留托盘，监控窗口第一次从启动器内置工具页进入时才创建；托盘「显示主窗口」、`Ctrl+Alt+D` 与二次启动仍唤回开发窗口
 - **全局启动器换页动态效果与位置修正**：`Ctrl` + 滚轮、`←` / `→` 或点页签换页时，新页内容按切换方向滑入并淡入（190ms / 150ms，EaseOut），同时把网格滚回顶部；底行固定高度，修复切换到系统工具 / 内置工具页时「＋」按钮隐藏导致底行变矮、页签上下跳的问题
 - **全局启动器动画强化**：换页后卡片按索引错峰入场（每张晚 9ms，最多 24 张，向上 10 DIP 淡入上浮）；磁贴悬停放大到 1.05 并提到上层、移出平滑复位；文件夹浮层以 90% 到 100% 的 `BackEase` 回弹弹出、暗底同时淡入；页签选中时轻弹一下；打开 / 收起时整窗在 1.015 与 1 之间轻微缩放，和透明度淡入淡出叠加
@@ -136,6 +138,7 @@
 
 ### Fixed
 
+- 修复发布出的单文件 `DevEnv.exe` 高达 255 MB：`.NET 8+` 的 SDK 在 `PublishSingleFile=true` 时会推断 `SelfContained=true`，而 `--self-contained false` 的空格写法不会被转发为显式 `false`，于是本该框架依赖的发布把整个 .NET 10 Desktop Runtime（约 160 MB，含 WPF / WinForms / BCL 与本地化资源）一起打进了 exe。`scripts/publish.ps1`、`release.yml` 与发布文档统一改用 `--no-self-contained`，体积降到约 89 MB；目标机需安装 .NET 10 Desktop Runtime（便携版不携带运行时）
 - 修复资源管理器与桌面里 `Alt` + 空格呼不出快捷应用：空格预览的低级键盘钩子只按虚拟键匹配预览键，没有排除修饰键，`Alt` / `Ctrl` / `Win` 组合会被 `WH_KEYBOARD_LL` 吞掉，`RegisterHotKey` 收不到 `Alt` + 空格。现在预览与关闭键在检测到 `Alt` / `Ctrl` / `Win` 按下时直接放行，组合键交还给系统与全局热键（`Alt` + `Esc` 切换窗口等也一并恢复）
 - 修复文本预览在浅色主题下仍是深色背景：`TextView` 的编辑器底色、前景与行号颜色改为跟随主题资源（`SurfaceBrush` / `TextPrimaryBrush` / `TextMutedBrush`），不再写死深色。语法高亮配色同步改为按主题切换，深色用 VS Code Dark、浅色用 VS Code Light，`SyntaxHighlightingService` 订阅 `ThemeManager.ThemeChanged` 重新注册定义，已打开的编辑器在主题切换后立即刷新。`sigxor-theme-smoke` 探针新增编辑器底色随主题切换的断言
 - 修复文件快速预览把 YAML 等文本文件当成二进制：扩展名无法确定或被标为二进制时，改为读取文件头按内容判断文本 / 二进制。文本嗅探支持 UTF-8、带 BOM 的 UTF-16、无 BOM 的 UTF-16 以及中文环境常见的 GBK / GB18030，并用控制字符比例排除压缩包、图片、可执行文件等真实二进制；无扩展名的 YAML / 模板文件、扩展名写成 `.dat` / `.bin` 的文本都会进入文本预览，真实二进制仍然使用十六进制视图。`.yaml` / `.yml` 继续按代码类型预览
@@ -157,6 +160,7 @@
 
 ### Removed
 
+- 移除 Velopack 依赖与相关基础设施：两个 csproj 的 `Velopack` 包、`VelopackApp` 启动钩子、`GithubSource` 更新源、vpk 打包 / 上传步骤与 `make installer` 目标；更新检查与回滚改由 `DevEnv.Core/Updates` 自研实现
 - 移除文档站部署工作流 `.github/workflows/docs.yml`：文档站不再由 GitHub Actions 发布，改由本机 `make deploy-docs`（或 `website/` 下 `npm run deploy`）构建并部署到 Cloudflare Pages
 - 移除本机 HTTP API：`:35174` 端口、会话 token 鉴权、`wwwroot` 静态资源托管（图片不再经 HTTP，直接绑本地文件）
 - 移除主壳 WebView2：界面不再嵌入 Chromium，只有熔岩翻译窗保留 WebView2（DOM 填充需要真实浏览器）

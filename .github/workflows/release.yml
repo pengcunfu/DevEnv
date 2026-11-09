@@ -19,9 +19,7 @@ env:
   PRODUCT_NAME: 燧岚开发盒子
   ARTIFACT_NAME: DevEnv
   COMPANY_NAME: FireNeb
-  FRAMEWORK: net10-x64-desktop
   RUNTIME: win-x64
-  ICON: DevEnv/Resources/icon.ico
 
 concurrency:
   group: release-${{ github.workflow }}-${{ github.ref }}
@@ -128,51 +126,61 @@ jobs:
       - name: Run tests
         run: dotnet test DevEnv.Tests/DevEnv.Tests.csproj -c Release --nologo
 
-      # Framework-dependent single-file (Setup.exe installs missing Desktop Runtime via --framework)
-      - name: Publish Windows x64
+      # 便携发布：瘦身单文件 exe + Resources + 3 个组件 zip + latest.json/components.json。
+      # package-release.ps1 内部会再跑一次完整发布到 staging，用于提取组件运行时资产。
+      - name: Package portable release
         shell: pwsh
         run: |
-          dotnet publish ${{ env.CSPROJ }} `
-            -c Release `
-            -r ${{ env.RUNTIME }} `
-            --self-contained false `
-            -p:PublishSingleFile=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:DebugType=None `
-            -p:DebugSymbols=false `
-            -p:Version=${{ steps.version.outputs.semver }} `
-            -p:AssemblyVersion=${{ steps.version.outputs.assembly_version }} `
-            -p:FileVersion=${{ steps.version.outputs.assembly_version }} `
-            -p:InformationalVersion=${{ steps.version.outputs.semver }} `
-            -o ./artifacts/publish `
-            --nologo
-          if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
+          ./scripts/package-release.ps1 `
+            -Configuration Release `
+            -Runtime ${{ env.RUNTIME }} `
+            -OutputDir ./artifacts/release `
+            -Repository ${{ github.repository }}
+          if ($LASTEXITCODE -ne 0) { throw "package-release.ps1 failed" }
 
-      - name: Cleanup and verify built executable
+      - name: Verify release artifacts
         shell: pwsh
         run: |
-          Get-ChildItem artifacts/publish -Filter "*.xml" -File -ErrorAction SilentlyContinue |
-            Remove-Item -Force
-
-          $expected = '${{ steps.version.outputs.semver }}'
-          $exe = Join-Path $PWD 'artifacts/publish/DevEnv.exe'
-          if (-not (Test-Path $exe)) {
-            Write-Error "DevEnv.exe not found at $exe"
-            exit 1
+          $version = '${{ steps.version.outputs.semver }}'
+          $releaseDir = 'artifacts/release'
+          $expected = @(
+            "$releaseDir/DevEnv-$version-${{ env.RUNTIME }}.zip",
+            "$releaseDir/DevEnv-$version-${{ env.RUNTIME }}.zip.sha256",
+            "$releaseDir/latest.json",
+            "$releaseDir/components.json",
+            "$releaseDir/DevEnv-component-office-$version.zip",
+            "$releaseDir/DevEnv-component-ocr-$version.zip",
+            "$releaseDir/DevEnv-component-voice-$version.zip"
+          )
+          foreach ($path in $expected) {
+            if (-not (Test-Path $path)) { throw "发布产物缺失: $path" }
           }
+
+          $exe = Join-Path $releaseDir 'app-publish\DevEnv.exe'
+          if (-not (Test-Path $exe)) { throw "瘦身 exe 缺失: $exe" }
           $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
-          $product = $info.ProductVersion
-          if ($product -notlike "$expected*") {
-            Write-Error "Built exe ProductVersion is '$product', expected '$expected'"
-            exit 1
+          if ($info.ProductVersion -notlike "$version*") {
+            throw "Built exe ProductVersion is '$($info.ProductVersion)', expected '$version'"
           }
-          Write-Host "✓ DevEnv.exe ProductVersion: $product"
-          $mb = [math]::Round(((Get-ChildItem artifacts/publish -Recurse -File | Measure-Object Length -Sum).Sum)/1MB,2)
-          Write-Host "publish 目录大小: $mb MB"
+          $exeMb = [math]::Round((Get-Item $exe).Length / 1MB, 2)
+          if ($exeMb -ge 70) { throw "瘦身 exe 仍然过大: $exeMb MB（目标 < 60 MB）" }
+          Write-Host "✓ DevEnv.exe ProductVersion: $($info.ProductVersion), $exeMb MB"
+
+          $manifest = Get-Content "$releaseDir/latest.json" -Raw | ConvertFrom-Json
+          if ($manifest.version -ne $version -or -not $manifest.url -or -not $manifest.sha256) {
+            throw "latest.json 字段不完整"
+          }
+          $components = Get-Content "$releaseDir/components.json" -Raw | ConvertFrom-Json
+          if ($components.components.Count -ne 3) {
+            throw "components.json 应包含 3 个组件，实际 $($components.components.Count)"
+          }
+
+          Get-ChildItem -Path $releaseDir -File |
+            Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,2)}} |
+            Format-Table -AutoSize
 
       # 发布说明：git describe 在无上一 tag / 浅克隆时退出码非 0，
       # 必须用管道捕获 stdout 而非依赖 $LASTEXITCODE，最后显式 exit 0。
-      # RELEASE_NOTES.md 必须在 vpk pack 前存在（硬校验），先无条件写入。
       - name: Build release notes
         shell: pwsh
         run: |
@@ -187,78 +195,38 @@ jobs:
           }
           exit 0
 
-      - name: Install vpk CLI (matching Velopack NuGet version)
-        shell: pwsh
-        run: |
-          dotnet tool install -g vpk --version 1.2.0
-          dotnet tool list -g | Select-String vpk
-
-      # 下载上一版本用于生成 delta 增量包；首次发布无上一版本属正常，放行不 fail
-      - name: Download previous Velopack release (for delta)
-        shell: pwsh
-        run: |
-          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
-          vpk download github `
-            --repoUrl "https://github.com/${{ github.repository }}" `
-            --token "${{ secrets.GITHUB_TOKEN }}" `
-            --outputDir artifacts/velopack
-          if ($LASTEXITCODE -ne 0) { Write-Host "未找到上一 Velopack 版本，跳过 delta（首次发布属正常）" }
-
-      - name: vpk pack (Setup + full/delta nupkg + Portable.zip + RELEASES)
-        shell: pwsh
-        run: |
-          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
-          vpk pack `
-            -u "${{ env.APP_ID }}" `
-            -v ${{ steps.version.outputs.semver }} `
-            -r ${{ env.RUNTIME }} `
-            -p artifacts/publish `
-            -o artifacts/velopack `
-            -e ${{ env.APP_ID }}.exe `
-            --packTitle "${{ env.PRODUCT_NAME }}" `
-            --packAuthors "${{ env.COMPANY_NAME }}" `
-            -i ${{ env.ICON }} `
-            --framework ${{ env.FRAMEWORK }} `
-            --releaseNotes RELEASE_NOTES.md
-          if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }
-          if (-not (Test-Path "artifacts/velopack/${{ env.APP_ID }}-win-Setup.exe")) { throw "Velopack 安装包未生成" }
-          Get-ChildItem artifacts/velopack -File |
-            Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,2)}} |
-            Format-Table -AutoSize
-
       - name: Upload to GitHub Release (tag trigger)
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        run: |
-          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
-          vpk upload github `
-            --repoUrl "https://github.com/${{ github.repository }}" `
-            --token "${{ secrets.GITHUB_TOKEN }}" `
-            --outputDir artifacts/velopack `
-            --publish `
-            --releaseName "${{ env.PRODUCT_NAME }} ${{ steps.version.outputs.semver }}" `
-            --tag ${{ github.ref_name }}
-          if ($LASTEXITCODE -ne 0) { throw "vpk upload failed" }
-
-      # 装饰性步骤：设置 Release 正文。try/catch 兜底，任何失败都不影响发布成功。
-      - name: Set release body from RELEASE_NOTES.md (best effort)
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          try {
-            gh release edit ${{ github.ref_name }} `
-              --notes-file RELEASE_NOTES.md `
-              --repo ${{ github.repository }}
-          } catch {
-            Write-Host "release body 更新跳过: $($_.Exception.Message)"
-          }
+          $version = '${{ steps.version.outputs.semver }}'
+          $releaseDir = 'artifacts/release'
+          $assets = @(
+            "$releaseDir/DevEnv-$version-${{ env.RUNTIME }}.zip",
+            "$releaseDir/DevEnv-$version-${{ env.RUNTIME }}.zip.sha256",
+            "$releaseDir/latest.json",
+            "$releaseDir/components.json"
+          )
+          $assets += Get-ChildItem -Path $releaseDir -Filter "DevEnv-component-*.zip" |
+            ForEach-Object { $_.FullName }
 
-      # workflow_dispatch 手动触发时保留产物供下载
+          $ghArgs = @('release', 'create', '${{ github.ref_name }}') + $assets + @(
+            '--repo', '${{ github.repository }}',
+            '--title', "${{ env.PRODUCT_NAME }} $version",
+            '--notes-file', 'RELEASE_NOTES.md')
+          & gh @ghArgs
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }
+
+      # workflow_dispatch 手动触发时保留最终产物供下载（不包含 full/app-publish 暂存目录）。
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}-${{ steps.version.outputs.semver }}
-          path: artifacts/velopack/**
+          path: |
+            artifacts/release/*.zip
+            artifacts/release/*.sha256
+            artifacts/release/latest.json
+            artifacts/release/components.json
           retention-days: 30

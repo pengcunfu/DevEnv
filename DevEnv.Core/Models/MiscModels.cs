@@ -72,10 +72,14 @@ public sealed class ToolInfo
 /// <summary>自更新状态。</summary>
 public sealed class UpdateStatusView
 {
+    /// <summary>兼容旧命名：当前安装是否支持自更新（便携版可写目录为 true）。</summary>
     public bool IsInstalled { get; init; }
+    public bool CanUpdate { get; init; }
+    public bool HasBackup { get; init; }
     public string CurrentVersion { get; init; } = string.Empty;
     public string? PendingVersion { get; init; }
     public bool Downloading { get; init; }
+    public bool ReadyToApply { get; init; }
     public int DownloadProgress { get; init; }
     public string? Error { get; init; }
 }

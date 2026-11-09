@@ -8,6 +8,7 @@ using DevEnv.Core;
 using DevEnv.Core.Input;
 using DevEnv.Core.Services;
 using DevEnv.Core.LavaEnv.Services;
+using DevEnv.Core.Updates;
 using DevEnv.Host.Infrastructure;
 using DevEnv.Host.SigXor;
 using DevEnv.Host.SigXor.Diagnostics;
@@ -15,7 +16,6 @@ using DevEnv.Host.Themes;
 using DevEnv.Host.ViewModels;
 using DevEnv.Host.Views;
 using DevEnv.Host.Windows;
-using Velopack;
 using Forms = System.Windows.Forms;
 using WpfClipboard = System.Windows.Clipboard;
 
@@ -59,9 +59,6 @@ public partial class App : System.Windows.Application
             WriteCrashLog(args.Exception, "Task");
             args.SetObserved();
         };
-
-        // Velopack 必须最先处理：安装 / 卸载 / 更新重启都在参数里
-        VelopackApp.Build().SetArgs(e.Args).Run();
 
         // SigXor 模块自检探针：独立进程跑完检查即退出，不进单例、不建窗口。
         // 用法见 SigXorDiagnostics 的说明。
@@ -269,6 +266,46 @@ public partial class App : System.Windows.Application
         // 左 Alt 拦截放在启动流程最后安装：前面的探针 / 提权子进程早已 return，
         // 不会把键盘钩子带进那些只跑一次就退出的进程。
         ApplyAltKeyLauncher(CoreServices.Settings.GetConfig().AltKeyLauncher);
+
+        CompleteStartupForUpdate();
+    }
+
+    /// <summary>
+    /// 更新器重启后的收尾：新版启动成功时写 <c>.update_ok</c> 让看门狗确认，并提示更新/回滚结果。
+    /// 普通启动则清掉上次残留的标记。
+    /// </summary>
+    private void CompleteStartupForUpdate()
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(UpdateStartupHooks.UpdatedTo))
+            {
+                File.WriteAllText(UpdatePaths.MarkerPath, DateTime.UtcNow.ToString("O"));
+                _tray?.ShowBalloon($"已更新到 v{UpdateStartupHooks.UpdatedTo}", Forms.ToolTipIcon.Info);
+                return;
+            }
+
+            if (UpdateStartupHooks.ManualRollback)
+            {
+                _tray?.ShowBalloon("已手动回滚到上一版本", Forms.ToolTipIcon.Info);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(UpdateStartupHooks.RolledBackTo))
+            {
+                _tray?.ShowBalloon(
+                    $"更新失败，已回滚到 v{UpdateStartupHooks.RolledBackTo}",
+                    Forms.ToolTipIcon.Warning);
+                return;
+            }
+
+            if (File.Exists(UpdatePaths.MarkerPath))
+                File.Delete(UpdatePaths.MarkerPath);
+        }
+        catch
+        {
+            // 标记写入失败只影响看门狗判定，不影响正常启动。
+        }
     }
 
     /// <summary>
@@ -684,7 +721,8 @@ public partial class App : System.Windows.Application
             Dispatcher.BeginInvoke(new Action(() => ApplyGlobalHotkeys()));
         HotkeyCaptureState.Changed += OnHotkeyCaptureChanged;
         HostCallbacks.OnExitApp += () => Dispatcher.BeginInvoke(ExitApp);
-        HostCallbacks.OnBeforeExitForUpdate += () => _exiting = true;
+        // 更新时也要走完整的退出路径：先释放托盘 / 钩子 / 窗口，更新器才能拿到 exe 锁。
+        HostCallbacks.OnBeforeExitForUpdate += () => Dispatcher.BeginInvoke(ExitApp);
         HostCallbacks.SetClipboardText += text =>
             Dispatcher.BeginInvoke(new Action(() =>
             {
