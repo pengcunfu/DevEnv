@@ -16,9 +16,9 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全屏全局启动器（Launchpad 样式）：本地应用 / 文件夹 / 网站三个横向页签，
-/// 系统工具与内置工具是搜索框右侧的两个只读文件夹；
-/// 左上角页签、顶部搜索、中部大图标网格；单击图标即启动，Esc 或点击空白处关闭。
+/// 全屏全局启动器（Launchpad 样式）：顶部一行依次是本地应用 / 文件夹 / 网站三个横向页签、
+/// 紧凑搜索框与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
+/// 单击图标即启动，Esc 或点击空白处关闭。
 /// 非模态、单实例（由 <see cref="Infrastructure.ShortcutWindowHost"/> 管理）。
 /// </summary>
 public partial class ShortcutsWindow : Window

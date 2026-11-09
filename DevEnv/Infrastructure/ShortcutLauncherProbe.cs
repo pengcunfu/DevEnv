@@ -94,11 +94,18 @@ public static class ShortcutLauncherProbe
             Check("页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
             var tabsLeft = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).X;
             var tabsTop = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).Y;
+            var tabsRight = window.PageTabs.TranslatePoint(new Point(window.PageTabs.ActualWidth, 0), window.Root).X;
+            var searchLeft = window.SearchShell.TranslatePoint(new Point(0, 0), window.Root).X;
             var searchTop = window.SearchShell.TranslatePoint(new Point(0, 0), window.Root).Y;
-            Check("页签位于左上角（靠左且在搜索框上方）",
+            var tabsMiddle = tabsTop + window.PageTabs.ActualHeight / 2;
+            var searchMiddle = searchTop + window.SearchShell.ActualHeight / 2;
+            Check("页签、搜索框、工具文件夹排在同一行",
                 tabsLeft < window.Root.ActualWidth / 3
-                && tabsTop + window.PageTabs.ActualHeight <= searchTop + 0.5,
-                $"left={tabsLeft:F1}, top={tabsTop:F1}, h={window.PageTabs.ActualHeight:F1}, searchTop={searchTop:F1}");
+                && tabsRight <= searchLeft + 0.5
+                && Math.Abs(tabsMiddle - searchMiddle) <= 2,
+                $"tabsRight={tabsRight:F1}, searchLeft={searchLeft:F1}, tabsMiddle={tabsMiddle:F1}, searchMiddle={searchMiddle:F1}");
+            Check("搜索框宽度紧凑（不超过 320）",
+                window.SearchShell.ActualWidth <= 320, $"width={window.SearchShell.ActualWidth:F1}");
             Check("图标网格已生成卡片容器",
                 vm.VisibleEntries.Count == 0 || window.EntryGrid.ItemContainerGenerator.ContainerFromIndex(0) is not null);
 
@@ -124,8 +131,9 @@ public static class ShortcutLauncherProbe
             Check("工具文件夹按钮在搜索框右侧依次排列",
                 systemLeft >= searchRight - 0.5 && builtinLeft >= systemLeft,
                 $"searchRight={searchRight:F1}, systemLeft={systemLeft:F1}, builtinLeft={builtinLeft:F1}");
-            Check("搜索框 + 工具文件夹整组不超出窗口",
-                builtinRight <= window.Root.ActualWidth, $"builtinRight={builtinRight:F1}, width={window.Root.ActualWidth:F1}");
+            Check("顶部一行不超出窗口",
+                tabsLeft >= 0 && builtinRight <= window.Root.ActualWidth,
+                $"tabsLeft={tabsLeft:F1}, builtinRight={builtinRight:F1}, width={window.Root.ActualWidth:F1}");
             Check("系统工具文件夹载入完整的 Windows 工具目录",
                 vm.SystemToolsShelf is { GroupItems.Count: > 0 } systemShelf
                 && systemShelf.GroupItems.All(e => e.Kind == ShortcutKind.Tool),
