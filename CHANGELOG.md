@@ -174,6 +174,9 @@
 - 删除未引用的独立项目 `WinBootSelfStarting/`（启动项已由 `DevEnv.Core` 承接）与对应过时文档
 - 删除独立工程 `Clipboard` / `NetworkWatch` / `ProcessWatch` / `Translator` / `LavaEnv` 与独立应用 `MenuManager`（含其独立 sln、About 对话框）；功能已并入 `DevEnv.Core` 与 `DevEnv.Host`，右键菜单配置路径仍为 `文档\FNSoftware\MenuManager\menu_configs.json`
 
+### Fixed
+- 全局启动器补上窗口外点击监听（`OutsideClickDismissHook`，`WH_MOUSE_LL`）：点击任务栏空白处、窗口尚未真正拿到前台权限等不会触发 `Deactivated` 的场景也会收起；钩子只在启动器可见期间安装，收起或退出时卸载
+
 ## [1.2.0] - 2026-10-15
 
 ### Added

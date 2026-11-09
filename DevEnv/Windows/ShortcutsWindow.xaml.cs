@@ -77,6 +77,9 @@ public partial class ShortcutsWindow : Window
     /// <summary>启动器可见期间监听 Win 键：用户要打开开始菜单时先把悬浮窗口收起。</summary>
     private readonly WinKeyDismissHook _winKeyHook;
 
+    /// <summary>启动器可见期间监听窗口外点击：补上不会触发 Deactivated 的点击场景。</summary>
+    private readonly OutsideClickDismissHook _outsideClickHook;
+
     /// <summary>玻璃面板圆角；根元素裁剪与边缘高光共用同一个值。</summary>
     private const double GlassCornerRadius = 22;
 
@@ -116,7 +119,19 @@ public partial class ShortcutsWindow : Window
 
         _winKeyHook = new WinKeyDismissHook(Dispatcher);
         _winKeyHook.WindowsKeyPressed += OnWindowsKeyPressed;
-        Closed += (_, _) => _winKeyHook.Dispose();
+
+        // 失焦收起覆盖不到所有点击（任务栏空白、窗口尚未激活等），再监听一层窗口外点击
+        _outsideClickHook = new OutsideClickDismissHook(
+            Dispatcher,
+            () => new WindowInteropHelper(this).Handle,
+            () => _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive || _hiding);
+        _outsideClickHook.OutsideClicked += OnOutsideClicked;
+
+        Closed += (_, _) =>
+        {
+            _winKeyHook.Dispose();
+            _outsideClickHook.Dispose();
+        };
 
         // 空白处的右键菜单也属于「弹窗」：菜单打开期间不许因失去焦点收起
         if (Root.ContextMenu is { } rootMenu)
@@ -320,8 +335,9 @@ public partial class ShortcutsWindow : Window
             Show();
         }
 
-        // 启动器可见期间才监听 Win 键，隐藏后卸载，不常驻在系统里
+        // 启动器可见期间才监听 Win 键与窗口外点击，隐藏后卸载，不常驻在系统里
         _winKeyHook.Install();
+        _outsideClickHook.Install();
 
         _shownAtUtc = DateTime.UtcNow;
         BringToForeground();
@@ -435,6 +451,7 @@ public partial class ShortcutsWindow : Window
             {
                 Hide();
                 _winKeyHook.Uninstall();
+                _outsideClickHook.Uninstall();
             }
             finally
             {
@@ -444,6 +461,25 @@ public partial class ShortcutsWindow : Window
         };
         Root.BeginAnimation(OpacityProperty, fade);
     }
+
+    /// <summary>
+    /// 点在启动器窗口之外：收起窗口。即使窗口没有被真正激活、点击落在任务栏空白处，
+    /// 或系统弹出层吞掉了 Deactivated，也能按「点外面就收起」处理。
+    /// </summary>
+    private void OnOutsideClicked()
+    {
+        if (!IsVisible || _hiding || _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive)
+            return;
+
+        HideLauncher();
+        AutoDismissed?.Invoke();
+    }
+
+    /// <summary>自检探针用：窗口外点击监听是否处于安装状态。</summary>
+    internal bool IsOutsideClickHookInstalled => _outsideClickHook.IsInstalled;
+
+    /// <summary>自检探针用：模拟一次窗口外点击，走与钩子相同的收起路径。</summary>
+    internal void SimulateOutsideClick() => OnOutsideClicked();
 
     /// <summary>
     /// 启动器显示期间按了 Win 键：先收起自己的全屏置顶窗口，

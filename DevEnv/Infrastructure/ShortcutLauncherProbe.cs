@@ -259,6 +259,18 @@ public static class ShortcutLauncherProbe
             window.ShowPage("apps");
             Pump();
             Check("回到 apps 页签时收起工具文件夹", !vm.IsInsideGroup && vm.SelectedPage == 0);
+            Check("ShowPage 可见时安装窗口外点击监听", window.IsOutsideClickHookInstalled);
+
+            // 窗口外点击必须真的收起，而不是只装了钩子
+            window.SimulateOutsideClick();
+            Check("窗口外点击触发淡出收起", window.IsHiding && window.IsVisible);
+            WaitUntil(() => !window.IsVisible);
+            Check("窗口外点击后隐藏并卸载监听",
+                !window.IsVisible && !window.IsOutsideClickHookInstalled);
+            window.ShowPage("apps");
+            Pump();
+            Check("窗口外点击收起后可以重新打开",
+                window.IsVisible && !window.IsHiding && window.IsOutsideClickHookInstalled);
 
             // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：
             // 收起必须先淡出到全透明再隐藏，否则分层窗口缓存的是不透明画面，下次 Show 会闪。
@@ -270,6 +282,7 @@ public static class ShortcutLauncherProbe
                 window.IsHiding && window.IsVisible);
             WaitUntil(() => !window.IsVisible);
             Check("收起完成并隐藏", !window.IsVisible);
+            Check("收起后卸载窗口外点击监听", !window.IsOutsideClickHookInstalled);
             Check("收起后缓存为全透明（下次 Show 不会闪出旧画面）",
                 window.Root.Opacity < 0.001, $"Root.Opacity={window.Root.Opacity}");
 
