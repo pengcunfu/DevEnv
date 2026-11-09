@@ -11,7 +11,7 @@ namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
 /// 全局启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
-/// 这里加载启动器、遍历五个页签、跑一次搜索，并收集数据绑定错误。
+/// 这里加载启动器、遍历三个页签、展开两个工具文件夹、跑一次搜索，并收集数据绑定错误。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
 public static class ShortcutLauncherProbe
@@ -89,9 +89,16 @@ public static class ShortcutLauncherProbe
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
-            Check("页签为横向五个", vm.Pages.Count == 5, string.Join(" / ", vm.Pages.Select(p => p.Title)));
+            Check("页签为横向三个", vm.Pages.Count == 3, string.Join(" / ", vm.Pages.Select(p => p.Title)));
             Check("默认显示本地应用", vm.SelectedPage == 0);
-            Check("底部页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
+            Check("页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
+            var tabsLeft = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).X;
+            var tabsTop = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).Y;
+            var searchTop = window.SearchShell.TranslatePoint(new Point(0, 0), window.Root).Y;
+            Check("页签位于左上角（靠左且在搜索框上方）",
+                tabsLeft < window.Root.ActualWidth / 3
+                && tabsTop + window.PageTabs.ActualHeight <= searchTop + 0.5,
+                $"left={tabsLeft:F1}, top={tabsTop:F1}, h={window.PageTabs.ActualHeight:F1}, searchTop={searchTop:F1}");
             Check("图标网格已生成卡片容器",
                 vm.VisibleEntries.Count == 0 || window.EntryGrid.ItemContainerGenerator.ContainerFromIndex(0) is not null);
 
@@ -104,36 +111,69 @@ public static class ShortcutLauncherProbe
                     vm.SelectedPage == page.Index && window.PageTabs.SelectedIndex == page.Index);
             }
 
-            // 系统工具页签应载入完整的 Windows 工具目录，并且全部是 Tool 类型
-            var toolsPage = vm.Pages.First(p => p.Title == "系统工具");
-            vm.SelectedPage = toolsPage.Index;
-            Pump();
-            Check("系统工具页签加载工具目录",
-                vm.VisibleEntries.Count > 0 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.Tool),
-                $"共 {vm.VisibleEntries.Count} 项");
-            Check("系统工具页签隐藏「添加」按钮", !vm.CanAddOnCurrentPage);
-            Check("系统工具页签禁止框选与拖动", !vm.IsEditableView);
+            // 系统工具与内置工具不再是页签，而是搜索框右侧的两个只读文件夹
+            Check("顶部两个工具文件夹按钮可见",
+                window.SystemToolsShelfButton.IsVisible && window.BuiltinToolsShelfButton.IsVisible);
+            // 两个按钮必须排在搜索框右侧，并且整组不超出窗口，否则会被裁掉
+            var searchRight = window.SearchShell.TranslatePoint(
+                new Point(window.SearchShell.ActualWidth, 0), window.Root).X;
+            var systemLeft = window.SystemToolsShelfButton.TranslatePoint(new Point(0, 0), window.Root).X;
+            var builtinLeft = window.BuiltinToolsShelfButton.TranslatePoint(new Point(0, 0), window.Root).X;
+            var builtinRight = window.BuiltinToolsShelfButton.TranslatePoint(
+                new Point(window.BuiltinToolsShelfButton.ActualWidth, 0), window.Root).X;
+            Check("工具文件夹按钮在搜索框右侧依次排列",
+                systemLeft >= searchRight - 0.5 && builtinLeft >= systemLeft,
+                $"searchRight={searchRight:F1}, systemLeft={systemLeft:F1}, builtinLeft={builtinLeft:F1}");
+            Check("搜索框 + 工具文件夹整组不超出窗口",
+                builtinRight <= window.Root.ActualWidth, $"builtinRight={builtinRight:F1}, width={window.Root.ActualWidth:F1}");
+            Check("系统工具文件夹载入完整的 Windows 工具目录",
+                vm.SystemToolsShelf is { GroupItems.Count: > 0 } systemShelf
+                && systemShelf.GroupItems.All(e => e.Kind == ShortcutKind.Tool),
+                $"共 {vm.SystemToolsShelf?.GroupItems.Count ?? 0} 项");
+            Check("内置工具文件夹载入宿主工具目录",
+                vm.BuiltinToolsShelf is { GroupItems.Count: 12 } builtinShelf
+                && builtinShelf.GroupItems.All(e => e.Kind == ShortcutKind.InternalTool),
+                $"共 {vm.BuiltinToolsShelf?.GroupItems.Count ?? 0} 项");
+            var builtinKeys = vm.BuiltinToolsShelf?.GroupItems.Select(e => e.Key).ToList() ?? [];
+            Check("内置工具文件夹含两个主窗口入口",
+                builtinKeys.Contains("dev-window") && builtinKeys.Contains("monitor-window"));
+            Check("内置工具文件夹含翻译 / 剪贴板 / 文件浏览器入口",
+                builtinKeys.Contains("translator")
+                && builtinKeys.Contains("clipboard")
+                && builtinKeys.Contains("browser"),
+                string.Join(" / ", builtinKeys));
 
-            // 内置工具页签应载入主窗口原来的工具菜单项，并且全部是 InternalTool 类型
-            var builtinPage = vm.Pages.First(p => p.Title == "内置工具");
-            vm.SelectedPage = builtinPage.Index;
+            vm.OpenSystemToolsShelf();
             Pump();
-            Check("内置工具页签加载宿主工具目录",
-                vm.VisibleEntries.Count == 9
+            Check("打开系统工具文件夹后以文件夹形式展开",
+                vm.IsInsideGroup && vm.IsInsideReadOnlyGroup
+                && vm.VisibleEntries.Count > 0
+                && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.Tool),
+                $"共 {vm.VisibleEntries.Count} 项");
+            Check("系统工具文件夹隐藏「添加」按钮", !vm.CanAddOnCurrentPage);
+            Check("系统工具文件夹禁止框选与拖动", !vm.IsEditableView);
+            Check("系统工具文件夹内禁止再建文件夹", !vm.CanCreateGroup);
+            vm.CloseGroup();
+            Pump();
+            Check("关闭系统工具文件夹后回到页签视图", !vm.IsInsideGroup);
+
+            vm.OpenBuiltinToolsShelf();
+            Pump();
+            Check("打开内置工具文件夹后以文件夹形式展开",
+                vm.IsInsideGroup && vm.IsInsideReadOnlyGroup
+                && vm.VisibleEntries.Count == 12
                 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.InternalTool),
                 $"共 {vm.VisibleEntries.Count} 项");
-            Check("内置工具页签含两个主窗口入口",
-                vm.VisibleEntries.Any(e => e.Key == "dev-window")
-                && vm.VisibleEntries.Any(e => e.Key == "monitor-window"));
-            Check("内置工具页签隐藏「添加」按钮", !vm.CanAddOnCurrentPage);
-            Check("内置工具页签禁止框选与拖动", !vm.IsEditableView);
+            Check("内置工具文件夹禁止框选与拖动", !vm.IsEditableView);
+            vm.CloseGroup();
+            Pump();
 
             vm.SelectedPage = 0;
             vm.Query = string.Empty;
             Pump();
             Check("本地应用页允许框选与拖动", vm.IsEditableView && vm.CanCreateGroup);
             Check("每个页签的卡片标识不重复",
-                vm.Pages.Where(p => p.Index != toolsPage.Index).All(p =>
+                vm.Pages.All(p =>
                 {
                     vm.SelectedPage = p.Index;
                     Pump();
@@ -206,6 +246,19 @@ public static class ShortcutLauncherProbe
             vm.Query = string.Empty;
             Pump();
             Check("清空搜索后退出搜索模式", !vm.IsSearching);
+
+            // 环境变量路由：tools / builtin 不是页签，ShowPage 直接展开对应工具文件夹
+            window.ShowPage("tools");
+            Pump();
+            Check("DEVENV_START_PAGE=tools 直接展开系统工具文件夹",
+                vm.IsInsideGroup && vm.IsInsideReadOnlyGroup && !vm.IsSearching);
+            window.ShowPage("builtin");
+            Pump();
+            Check("DEVENV_START_PAGE=builtin 直接展开内置工具文件夹",
+                vm.IsInsideGroup && vm.IsInsideReadOnlyGroup && !vm.IsSearching);
+            window.ShowPage("apps");
+            Pump();
+            Check("回到 apps 页签时收起工具文件夹", !vm.IsInsideGroup && vm.SelectedPage == 0);
 
             // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：
             // 收起必须先淡出到全透明再隐藏，否则分层窗口缓存的是不透明画面，下次 Show 会闪。

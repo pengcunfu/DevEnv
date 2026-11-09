@@ -98,7 +98,7 @@ export const sidebarGroups: SidebarGroup[] = [
         text: '小工具',
         path: '/guide/lava/tools',
         description:
-          '熔岩环境工具栏提供环境变量、应用目录、数据目录等快捷入口；JSON、Hosts、图像转换与文件哈希等工具已归入全局启动器的内置工具页签。',
+          '熔岩环境工具栏提供环境变量、应用目录、数据目录等快捷入口；JSON、Hosts、图像转换与文件哈希等工具已归入全局启动器搜索框右侧的内置工具文件夹。',
       },
       {
         text: '数据目录',

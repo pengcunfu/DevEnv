@@ -5,8 +5,9 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器宿主：本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具五页共用一个居中悬浮窗口。
-/// 单实例，重复打开是「切到对应页签并前置已有窗口」，不再开一堆。
+/// 全局启动器宿主：本地应用 / 文件夹 / 网站三个页签共用同一个居中悬浮窗口，
+/// 系统工具与内置工具是搜索框右侧的两个只读文件夹。
+/// 单实例，重复打开是「切到对应页签 / 展开文件夹并前置已有窗口」，不再开一堆。
 ///
 /// 全局启动器**不设 Owner**：它居中悬浮且置顶，本来就不跟主窗最小化 / 隐藏联动；
 /// 一旦挂到主窗名下，从托盘（主窗隐藏）唤起时会把主窗一起拉出来，
@@ -42,7 +43,7 @@ public static class ShortcutWindowHost
         return window;
     }
 
-    /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs / tools / builtin。</summary>
+    /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs；tools / builtin 直接展开对应工具文件夹。</summary>
     public static void Open(string? pageId = null)
     {
         // 开始菜单和启动器都是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，

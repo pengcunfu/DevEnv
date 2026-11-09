@@ -43,7 +43,7 @@
 |------|-------:|-----------|---------|------|
 | 主壳 / 配置 / 对话框 | 12 | `SettingsService` + `HostCallbacks` | 设置页 / 各页按钮 / 菜单 | ✅ |
 | 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` | 启动器（Launchpad）本地应用 / 文件夹 / 网站三页 | ✅ |
-| 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 启动器（Launchpad）「系统工具」页签 | ✅ |
+| 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 启动器（Launchpad）搜索框右侧「系统工具」文件夹 | ✅ |
 | 进程监控 | 3 | `ProcessService` | 进程监控页 | ✅ |
 | 网络监控 | 8 | `NetworkService` | 网络监控页（流量/端口/测速） | ✅ |
 | 熔岩 - 进程与目录 | 9 | `LavaService` | 熔岩环境页 | ✅ |
@@ -65,7 +65,7 @@
 - `/api/nav` → `ViewFactory.NavItems`（前端原本就硬编码，等价迁移）
 - `POST /api/shell/*`（7 个）→ `HostCallbacks` 委托 → WPF 对话框 / 独立窗 / 页面跳转
 - `native-apps / folders / webs`（16 个）→ `ShortcutService` 同名方法 → 三个卡片页
-- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 全局启动器「系统工具」页签（19 个磁贴）
+- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 全局启动器搜索框右侧「系统工具」文件夹（19 个磁贴）
 - `/api/processes` 三件套 → `ProcessService.GetSnapshot / Kill / OpenFolder` → 进程监控页
 - `/api/network/*` 八个 → `NetworkService`（含测速状态机原样搬运）→ 网络监控页三页签
 - `/api/lava/*` 二十一个 → `LavaService` → 熔岩环境页七页签

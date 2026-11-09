@@ -16,8 +16,9 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全屏全局启动器（Launchpad 样式）：本地应用 / 文件夹 / 网站 / 系统工具四个横向页签，
-/// 顶部搜索、中部大图标网格、底部页签；单击图标即启动，Esc 或点击空白处关闭。
+/// 全屏全局启动器（Launchpad 样式）：本地应用 / 文件夹 / 网站三个横向页签，
+/// 系统工具与内置工具是搜索框右侧的两个只读文件夹；
+/// 左上角页签、顶部搜索、中部大图标网格；单击图标即启动，Esc 或点击空白处关闭。
 /// 非模态、单实例（由 <see cref="Infrastructure.ShortcutWindowHost"/> 管理）。
 /// </summary>
 public partial class ShortcutsWindow : Window
@@ -268,7 +269,10 @@ public partial class ShortcutsWindow : Window
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DeleteObject(IntPtr hObject);
 
-    /// <summary>居中铺到工作区 78% 并切到指定页签（apps / folders / webs / tools），每次打开都重新读取数据。</summary>
+    /// <summary>
+    /// 居中铺到工作区 78% 并切到指定页签（apps / folders / webs）；
+    /// tools / builtin 不是页签，改为直接展开搜索框右侧对应的工具文件夹。每次打开都重新读取数据。
+    /// </summary>
     public void ShowPage(string? pageId)
     {
         CancelMarquee();
@@ -280,6 +284,15 @@ public partial class ShortcutsWindow : Window
         ViewModel.Query = string.Empty;
         ViewModel.Reload();
         ViewModel.SelectedPage = NormalizePageId(pageId);
+        switch (pageId?.Trim().ToLowerInvariant())
+        {
+            case "tools":
+                ViewModel.OpenSystemToolsShelf();
+                break;
+            case "builtin":
+                ViewModel.OpenBuiltinToolsShelf();
+                break;
+        }
 
         var wasVisible = IsVisible;
         if (_hiding)
@@ -373,8 +386,6 @@ public partial class ShortcutsWindow : Window
     {
         "folders" => 1,
         "webs" => 2,
-        "tools" => 3,
-        "builtin" => 4,
         _ => 0,
     };
 
@@ -454,6 +465,20 @@ public partial class ShortcutsWindow : Window
     }
 
     #region 交互
+
+    /// <summary>搜索框右侧的「系统工具」文件夹：在文件夹浮层里展开 Windows 工具目录。</summary>
+    private void OnSystemToolsShelfClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel.OpenSystemToolsShelf();
+        FocusSearch();
+    }
+
+    /// <summary>搜索框右侧的「内置工具」文件夹：在文件夹浮层里展开宿主内置工具。</summary>
+    private void OnBuiltinToolsShelfClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel.OpenBuiltinToolsShelf();
+        FocusSearch();
+    }
 
     /// <summary>
     /// 图标单击启动（Launchpad 习惯）。

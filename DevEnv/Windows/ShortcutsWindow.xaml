@@ -15,9 +15,10 @@
         TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
-    <!-- 悬浮启动器（Launchpad 样式）：居中占工作区 78% 的半透明深色面板上，
-         顶部搜索、中部大图标网格、底部横向页签（本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具）；
-         单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
+    <!-- 悬浮启动器（Launchpad 样式）：居中占工作区 78% 的浅色磨砂玻璃面板上，
+         左上角横向页签（本地应用 / 文件夹 / 网站）、顶部居中搜索框（右侧是「系统工具」
+         「内置工具」两个只读文件夹）、中部大图标网格；单击图标即启动，Esc 关闭；
+         空白处拖拽框选，拖到图标上合并为文件夹。 -->
     <Window.DataContext>
         <vm:ShortcutLauncherViewModel />
     </Window.DataContext>
@@ -50,6 +51,35 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="Text" Value="">
                                 <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 搜索框右侧的固定工具文件夹：与搜索框同高的玻璃胶囊，点击后在文件夹浮层里展开 -->
+        <Style x:Key="LaunchpadShelfButton" TargetType="Button">
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Shelf"
+                                Background="#59FFFFFF"
+                                BorderBrush="#26000000"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="14,0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Shelf" Property="Background" Value="#8CFFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Shelf" Property="Background" Value="#CCFFFFFF" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -136,7 +166,7 @@
             </Style.Triggers>
         </Style>
 
-        <!-- 底部页签（横向胶囊） -->
+        <!-- 左上角页签（横向胶囊） -->
         <Style x:Key="LaunchpadTabItem" TargetType="ListBoxItem">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="4,0" />
@@ -356,8 +386,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <!-- 固定底行高度：右下角「＋」只在可编辑页显示，若由它撑高，切换系统工具 /
-                 内置工具页时底行会矮一截，页签跟着上下跳 -->
+            <!-- 固定底行高度：右下角「＋」只在可编辑页显示，若由它撑高，
+                 进入文件夹浮层时底行会矮一截，状态提示跟着上下跳 -->
             <RowDefinition Height="Auto" MinHeight="82" />
         </Grid.RowDefinitions>
 
@@ -385,50 +415,143 @@
             </Border.Background>
         </Border>
 
-        <!-- 顶部：提示 + 搜索框 -->
-        <TextBlock Grid.Row="0"
-                   Margin="28,24,0,0"
-                   HorizontalAlignment="Left"
-                   Text="拖入 .exe 或文件夹即可添加"
-                   FontSize="11"
-                   Foreground="#663C3C43"
-                   Visibility="{Binding CanAddOnCurrentPage, Converter={StaticResource TrueToVisibility}}" />
-        <TextBlock Grid.Row="0"
-                   Margin="0,24,28,0"
-                   HorizontalAlignment="Right"
-                   Text="拖动空白框选 · Esc 关闭"
-                   FontSize="11"
-                   Foreground="#663C3C43" />
+        <!-- 左上角：三个页签（搜索 / 文件夹浮层打开时自动隐藏）；右上角：操作提示 -->
+        <ListBox x:Name="PageTabs"
+                 Grid.Row="0"
+                 Margin="24,16,0,0"
+                 HorizontalAlignment="Left"
+                 VerticalAlignment="Top"
+                 ItemsSource="{Binding Pages}"
+                 SelectedIndex="{Binding SelectedPage, Mode=TwoWay}"
+                 ItemContainerStyle="{StaticResource LaunchpadTabItem}"
+                 Focusable="False">
+            <ListBox.Style>
+                <Style TargetType="ListBox">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="HorizontalAlignment" Value="Left" />
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSearching}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsInsideGroup}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.Style>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{Binding Glyph}"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="12"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Title}"
+                                   FontSize="12.5"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
-        <Border x:Name="SearchShell"
-                Grid.Row="0"
-                Width="560"
-                Height="46"
-                Margin="0,54,0,0"
-                HorizontalAlignment="Center"
-                Background="#59FFFFFF"
-                BorderBrush="#26000000"
-                BorderThickness="1"
-                CornerRadius="12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0"
-                           Margin="16,0,10,0"
-                           VerticalAlignment="Center"
-                           Text="&#xE721;"
-                           FontFamily="Segoe MDL2 Assets"
-                           FontSize="16"
-                           Foreground="#993C3C43" />
-                <TextBox x:Name="SearchBox"
-                         Grid.Column="1"
-                         Margin="0,0,12,0"
-                         Style="{StaticResource LaunchpadSearchBox}"
-                         Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
-            </Grid>
-        </Border>
+        <StackPanel Grid.Row="0"
+                    Margin="0,22,28,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top">
+            <TextBlock HorizontalAlignment="Right"
+                       Text="拖动空白框选 · Esc 关闭"
+                       FontSize="11"
+                       Foreground="#663C3C43" />
+            <TextBlock Margin="0,4,0,0"
+                       HorizontalAlignment="Right"
+                       Text="拖入 .exe 或文件夹即可添加"
+                       FontSize="11"
+                       Foreground="#663C3C43"
+                       Visibility="{Binding CanAddOnCurrentPage, Converter={StaticResource TrueToVisibility}}" />
+        </StackPanel>
+
+        <!-- 搜索框与右侧两个工具文件夹同高并排，整体居中 -->
+        <StackPanel Grid.Row="0"
+                    Margin="0,54,0,0"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+            <Border x:Name="SearchShell"
+                    Width="560"
+                    Height="46"
+                    Background="#59FFFFFF"
+                    BorderBrush="#26000000"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               Margin="16,0,10,0"
+                               VerticalAlignment="Center"
+                               Text="&#xE721;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="16"
+                               Foreground="#993C3C43" />
+                    <TextBox x:Name="SearchBox"
+                             Grid.Column="1"
+                             Margin="0,0,12,0"
+                             Style="{StaticResource LaunchpadSearchBox}"
+                             Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+            </Border>
+
+            <!-- 系统工具 / 内置工具不是页签，而是搜索框右侧的两个只读文件夹 -->
+            <Button x:Name="SystemToolsShelfButton"
+                    Margin="10,0,0,0"
+                    Style="{StaticResource LaunchpadShelfButton}"
+                    ToolTip="系统工具（Windows 管理工具目录）"
+                    Click="OnSystemToolsShelfClick">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="&#xE8B7;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="17"
+                               Foreground="#B31C1C1E" />
+                    <TextBlock Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="系统工具"
+                               FontSize="13"
+                               Foreground="#F21C1C1E" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="BuiltinToolsShelfButton"
+                    Margin="8,0,0,0"
+                    Style="{StaticResource LaunchpadShelfButton}"
+                    ToolTip="内置工具（JSON / Hosts / 哈希等）"
+                    Click="OnBuiltinToolsShelfClick">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="&#xE8B7;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="17"
+                               Foreground="#B31C1C1E" />
+                    <TextBlock Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="内置工具"
+                               FontSize="13"
+                               Foreground="#F21C1C1E" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
 
         <!-- 中部：图标网格 -->
         <Grid Grid.Row="2" Margin="0,16,0,0">
@@ -520,7 +643,7 @@
             </StackPanel>
         </Grid>
 
-        <!-- 底部：提示 + 横向页签 -->
+        <!-- 底部：搜索条数 / 文件夹条目数 / 操作失败提示 -->
         <StackPanel Grid.Row="3"
                     Margin="0,4,0,34"
                     HorizontalAlignment="Center">
@@ -538,51 +661,6 @@
                        TextWrapping="Wrap"
                        MaxWidth="640"
                        Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
-            <ListBox x:Name="PageTabs"
-                     ItemsSource="{Binding Pages}"
-                     SelectedIndex="{Binding SelectedPage, Mode=TwoWay}"
-                     ItemContainerStyle="{StaticResource LaunchpadTabItem}"
-                     Focusable="False">
-                <ListBox.Style>
-                    <Style TargetType="ListBox">
-                        <Setter Property="Background" Value="Transparent" />
-                        <Setter Property="BorderThickness" Value="0" />
-                        <Setter Property="HorizontalAlignment" Value="Center" />
-                        <Setter Property="Visibility" Value="Visible" />
-                        <Setter Property="ItemsPanel">
-                            <Setter.Value>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSearching}" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding IsInsideGroup}" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </ListBox.Style>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock VerticalAlignment="Center"
-                                       Text="{Binding Glyph}"
-                                       FontFamily="Segoe MDL2 Assets"
-                                       FontSize="12"
-                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                            <TextBlock Margin="6,0,0,0"
-                                       VerticalAlignment="Center"
-                                       Text="{Binding Title}"
-                                       FontSize="12.5"
-                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
         </StackPanel>
 
         <!-- 右下角添加 -->

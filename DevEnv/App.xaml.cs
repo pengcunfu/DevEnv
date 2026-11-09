@@ -121,7 +121,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // 全局启动器自检：五个页签能加载、搜索可用、没有数据绑定错误
+        // 全局启动器自检：三个页签与两个工具文件夹能加载、搜索可用、没有数据绑定错误
         int shortcutsIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ShortcutLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
         if (shortcutsIndex >= 0)
