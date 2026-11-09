@@ -57,17 +57,22 @@ public static class ShortcutLauncherProbe
             Check("预热后保持隐藏（不打扰当前前台程序）", !window.IsVisible);
             Check("预热已完成", window.IsPrewarmed);
             // 预热必须落在最终几何上，否则 Show 时还要挪窗口，DWM 重新合成会闪
-            var area = SystemParameters.WorkArea;
-            var expectedWidth = Math.Round(area.Width * 0.78);
-            var expectedHeight = Math.Round(area.Height * 0.78);
-            var expectedLeft = Math.Round(area.Left + (area.Width - expectedWidth) / 2);
-            var expectedTop = Math.Round(area.Top + (area.Height - expectedHeight) / 2);
-            Check("预热使用最终几何（居中占工作区 78%，显示时不再移动窗口）",
-                Math.Abs(window.Left - expectedLeft) < 0.5
-                && Math.Abs(window.Top - expectedTop) < 0.5
-                && Math.Abs(window.Width - expectedWidth) < 0.5
-                && Math.Abs(window.Height - expectedHeight) < 0.5,
-                $"Left={window.Left}, Top={window.Top}, W={window.Width}, H={window.Height}");
+            var expected = ShortcutsWindow.ComputeScreenBounds();
+            Check("预热使用最终几何（与开始菜单同尺寸、贴底对齐，显示时不再移动窗口）",
+                Math.Abs(window.Left - expected.Left) < 0.5
+                && Math.Abs(window.Top - expected.Top) < 0.5
+                && Math.Abs(window.Width - expected.Width) < 0.5
+                && Math.Abs(window.Height - expected.Height) < 0.5,
+                $"Left={window.Left}, Top={window.Top}, W={window.Width}, H={window.Height}, " +
+                $"expected=({expected.Left},{expected.Top},{expected.Width},{expected.Height})");
+            Check("启动器尺寸与 Windows 11 开始菜单一致（832 × 862 DIP）",
+                Math.Abs(window.Width - DevEnv.Core.Services.LauncherGeometry.Width) < 0.5
+                && Math.Abs(window.Height - DevEnv.Core.Services.LauncherGeometry.Height) < 0.5,
+                $"W={window.Width}, H={window.Height}");
+            // 配色跟随系统应用模式：浅 / 深两套 key 一致，读不到时应至少能解析到画刷
+            Check("启动器配色已加载（跟随系统浅 / 深色）",
+                window.TryFindResource("LauncherGlassBrush") is System.Windows.Media.Brush
+                && window.TryFindResource("LauncherTextPrimaryBrush") is System.Windows.Media.Brush);
             // 隐藏时内容必须留在全透明：分层窗口缓存的最后一帧会直接在下次 Show 时露出
             Check("预热后内容保持全透明（缓存的表层不会闪）",
                 window.Root.Opacity < 0.001, $"Root.Opacity={window.Root.Opacity}");

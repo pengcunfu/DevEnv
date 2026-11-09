@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
+using Microsoft.Win32;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -16,13 +17,21 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全屏全局启动器（Launchpad 样式）：顶部一行依次是本地应用 / 文件夹 / 网站 / 开始菜单
-/// 四个横向页签、紧凑搜索框与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
+/// 全局启动器（Launchpad 样式）：与 Windows 11 开始菜单同等大小、同等颜色、同等位置。
+/// 顶部一行依次是本地应用 / 文件夹 / 网站 / 开始菜单四个横向页签、紧凑搜索框
+/// 与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
 /// 单击图标即启动，Esc 或点击空白处关闭。
 /// 非模态、单实例（由 <see cref="Infrastructure.ShortcutWindowHost"/> 管理）。
 /// </summary>
 public partial class ShortcutsWindow : Window
 {
+    /// <summary>浅色 / 深色两套启动器配色，与开始菜单保持一致。</summary>
+    private static readonly Uri LauncherLightPalette =
+        new("/DevEnv;component/Themes/Launcher.Light.xaml", UriKind.Relative);
+
+    private static readonly Uri LauncherDarkPalette =
+        new("/DevEnv;component/Themes/Launcher.Dark.xaml", UriKind.Relative);
+
     /// <summary>打开文件对话框 / 重命名框时会先失去激活，期间不自动收起。</summary>
     private bool _suppressDeactivate;
 
@@ -101,6 +110,7 @@ public partial class ShortcutsWindow : Window
     public ShortcutsWindow()
     {
         InitializeComponent();
+        ApplySystemColorScheme();
 
         AllowDrop = true;
         DragOver += OnDragOver;
@@ -193,18 +203,14 @@ public partial class ShortcutsWindow : Window
     }
 
     /// <summary>
-    /// 居中铺到工作区的 78%：整屏分层窗口每次合成都要处理整个屏幕，缩到约六成面积后
-    /// 打开与动画明显更轻快，同时也不会盖住任务栏。只在尺寸/位置确实不同时才改，
-    /// 显示过程中改窗口几何会让 DWM 重新合成，肉眼就是闪一下；预热后这里通常一次都不改。
+    /// 摆到与 Windows 11 开始菜单相同的区域：832 × 862 DIP，贴着任务栏上方，
+    /// 任务栏左对齐时靠左（13 DIP），任务栏居中时水平居中。
+    /// 只在尺寸/位置确实不同时才改，显示过程中改窗口几何会让 DWM 重新合成，肉眼就是闪一下；
+    /// 预热后这里通常一次都不改。
     /// </summary>
     private void ApplyScreenBounds()
     {
-        const double ratio = 0.78;
-        var area = SystemParameters.WorkArea;
-        var width = Math.Round(area.Width * ratio);
-        var height = Math.Round(area.Height * ratio);
-        var left = Math.Round(area.Left + (area.Width - width) / 2);
-        var top = Math.Round(area.Top + (area.Height - height) / 2);
+        var bounds = ComputeScreenBounds();
 
         if (WindowState != WindowState.Normal)
             WindowState = WindowState.Normal;
@@ -212,14 +218,97 @@ public partial class ShortcutsWindow : Window
         // 注意 NaN：新窗口没设过位置时 Left/Top 是 NaN，而 "Math.Abs(NaN) > 0.5" 恒为 false，
         // 漏掉这个判断会让窗口带着 NaN 显示，由 WPF 临时挑一个位置（屏幕中间偏一点），
         // 表现出来就是显示时窗口先出现在错误位置再跳过来。
-        if (double.IsNaN(Left) || Math.Abs(Left - left) > 0.5)
-            Left = left;
-        if (double.IsNaN(Top) || Math.Abs(Top - top) > 0.5)
-            Top = top;
-        if (double.IsNaN(Width) || Math.Abs(Width - width) > 0.5)
-            Width = width;
-        if (double.IsNaN(Height) || Math.Abs(Height - height) > 0.5)
-            Height = height;
+        if (double.IsNaN(Left) || Math.Abs(Left - bounds.Left) > 0.5)
+            Left = bounds.Left;
+        if (double.IsNaN(Top) || Math.Abs(Top - bounds.Top) > 0.5)
+            Top = bounds.Top;
+        if (double.IsNaN(Width) || Math.Abs(Width - bounds.Width) > 0.5)
+            Width = bounds.Width;
+        if (double.IsNaN(Height) || Math.Abs(Height - bounds.Height) > 0.5)
+            Height = bounds.Height;
+    }
+
+    /// <summary>启动器的目标屏幕区域（DIP）；自检探针用同一份计算做断言。</summary>
+    internal static Rect ComputeScreenBounds()
+    {
+        var area = SystemParameters.WorkArea;
+        var bounds = LauncherGeometry.Compute(
+            area.Left, area.Top, area.Width, area.Height, IsTaskbarCentered());
+        return new Rect(
+            Math.Round(bounds.Left),
+            Math.Round(bounds.Top),
+            Math.Round(bounds.Width),
+            Math.Round(bounds.Height));
+    }
+
+    /// <summary>
+    /// Windows 11 任务栏图标是否居中（<c>TaskbarAl</c> = 1，默认值）。
+    /// 左对齐时开始菜单贴着屏幕左边出现，启动器也跟着靠左，才能与开始菜单同位置。
+    /// </summary>
+    private static bool IsTaskbarCentered()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced");
+            var value = key?.GetValue("TaskbarAl");
+            return value is null || Convert.ToInt32(value) != 0;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// 启动器配色跟随 Windows 的开始菜单：读取系统「应用模式」<c>AppsUseLightTheme</c>，
+    /// 而不是 DevEnv 自己的深色开关。两套资源 key 完全一致，整块替换即可。
+    /// 每次打开前重新读取，用户在系统设置里切换浅 / 深色后无需重启程序。
+    /// </summary>
+    private void ApplySystemColorScheme()
+    {
+        var target = SystemUsesLightAppTheme() ? LauncherLightPalette : LauncherDarkPalette;
+        var merged = Resources.MergedDictionaries;
+        for (var i = 0; i < merged.Count; i++)
+        {
+            if (!IsLauncherPalette(merged[i]))
+                continue;
+
+            if (!string.Equals(
+                    merged[i].Source?.OriginalString,
+                    target.OriginalString,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                merged[i] = new ResourceDictionary { Source = target };
+            }
+            return;
+        }
+
+        merged.Insert(0, new ResourceDictionary { Source = target });
+    }
+
+    private static bool IsLauncherPalette(ResourceDictionary dictionary)
+    {
+        var source = dictionary.Source?.OriginalString;
+        return source is not null
+            && (source.EndsWith("Launcher.Light.xaml", StringComparison.OrdinalIgnoreCase)
+                || source.EndsWith("Launcher.Dark.xaml", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>系统「应用模式」是否为浅色；读不到时按浅色处理（Windows 默认值）。</summary>
+    private static bool SystemUsesLightAppTheme()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            var value = key?.GetValue("AppsUseLightTheme");
+            return value is null || Convert.ToInt32(value) != 0;
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     /// <summary>根元素按玻璃圆角裁剪；尺寸变化时重建裁剪区域。</summary>
@@ -285,11 +374,12 @@ public partial class ShortcutsWindow : Window
     private static extern bool DeleteObject(IntPtr hObject);
 
     /// <summary>
-    /// 居中铺到工作区 78% 并切到指定页签（apps / folders / webs / startmenu）；
-    /// tools / builtin 不是页签，改为直接展开搜索框右侧对应的工具文件夹。每次打开都重新读取数据。
+    /// 摆到开始菜单的位置并切到指定页签（apps / folders / webs / startmenu）；
+    /// tools / builtin 不是页签，改为直接展开搜索框右侧对应的工具文件夹。每次打开都重新读取数据与系统配色。
     /// </summary>
     public void ShowPage(string? pageId)
     {
+        ApplySystemColorScheme();
         CancelMarquee();
         HideDropIndicators();
         _dropPlan = null;
