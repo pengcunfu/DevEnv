@@ -74,7 +74,7 @@ JSON 格式化器、Hosts 文件编辑器、图像格式转换器、文件哈希
 
 - WebView2 打开有道 / 搜狗 / 百度 / 谷歌 / DeepL / 必应 / 腾讯等站点
 - **快捷应用顶部入口**：打开翻译窗时，剪贴板有内容会自动填入当前站点；不再占用全局快捷键
-- 配置目录：`%USERPROFILE%\.lava_translator\`
+- 配置目录：`文档\FNSoftware\DevEnv\Translator\`
 
 详见 [熔岩翻译 · 快速开始](./translator/getting-started.md)。
 

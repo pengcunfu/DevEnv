@@ -11,7 +11,7 @@ namespace DevEnv.Host.ViewModels;
 /// <summary>
 /// 右键菜单管理：
 /// 上半部分切换 Win11 一级 / 完整二级菜单，下半部分管理「用 XXX 打开」右键菜单项。
-/// 配置沿用旧版 MenuManager 的路径（文档\FNSoftware\MenuManager\menu_configs.json）。
+/// 配置存放在文档\FNSoftware\DevEnv\ContextMenu\menu_configs.json，旧版 MenuManager 配置会自动迁入。
 /// </summary>
 public sealed partial class ContextMenuViewModel : ObservableObject
 {

@@ -140,3 +140,4 @@ make deploy-docs                  # 文档站构建并部署到 Cloudflare Pages
 14. **样式不能跨兄弟类型 `BasedOn`**。WPF 只允许 `BasedOn` 自己或自己的基类；`CheckBox` 与 `RadioButton` 互不为基类，公共部分必须抽到 `ToggleButton` 基样式上。
 15. **服务层逻辑改动要配测试**。`DevEnv.Tests` 只引用 `DevEnv.Core`，测纯函数、序列化与文件/路径处理；测不了的东西（注册表、提权、进程、界面）不要硬写，要测就把逻辑抽成可注入的纯函数。涉及格式化的断言必须锁 `InvariantCulture`（见 `InvariantCultureScope`），否则换个语言环境就红。测试文件放在 `DevEnv.Tests/` 根目录，一个被测类型一个文件。
 16. **文档站不用 VitePress**。`website/` 是 Vue 3 + Vite 官网：首页为 Vue 组件，指南正文继续维护在 `website/guide/**/*.md`，由 `src/docs/markdown.ts` 渲染。不要为了加文档重新引入 VitePress 或把正文改成 Vue 组件。
+17. **用户数据与配置统一放在 `文档\FNSoftware\DevEnv\`**。宿主 `data.json`、熔岩环境配置与各模块配置都放这里，模块用子目录区分（如 `Translator/`、`Clipboard/`、`ContextMenu/`）；不要在用户主目录（如 `%USERPROFILE%\.lava_translator`）或 `文档\FNSoftware\` 下给功能模块另建独立目录。`文档\FNSoftware\SigXor`（文件预览 / 语音 / OCR 模块）与 `%LOCALAPPDATA%\DevEnv` 下的缓存、组件与更新产物是既有例外。

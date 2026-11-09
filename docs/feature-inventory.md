@@ -144,7 +144,7 @@
 
 | 项 | 说明 |
 |---|------|
-| 右键菜单管理（工具） | 集成 MenuManager：Win11 一级 / 完整二级菜单切换 + 「用 XXX 打开」右键菜单项增删；配置与 MenuManager 共用同一文件，实测已加载你现有 10 条配置 |
+| 右键菜单管理（工具） | 集成 MenuManager：Win11 一级 / 完整二级菜单切换 + 「用 XXX 打开」右键菜单项增删；配置存到 `文档\FNSoftware\DevEnv\ContextMenu\menu_configs.json`，旧版 MenuManager 配置首次启动自动迁入 |
 | 提权执行 | 写 `HKEY_CLASSES_ROOT` 需要管理员：DevEnv 以 `--context-menu-apply <请求文件>` 提权重启执行完即退出（与 `--edit-hosts` 同一套路） |
 | 工具独立窗口 | `工具` 菜单 6 项全部改为独立非模态窗口，同一工具只开一个；主窗最小化/退到托盘时随主窗一起隐藏 |
 | 系统工具目录联动 | `WindowsToolRunner` 里 5 个内置工具的 `tools/*` 激活同样改为开窗，不再切主窗内容区 |

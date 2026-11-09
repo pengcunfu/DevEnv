@@ -14,7 +14,7 @@
 
 ## 数据目录
 
-用户数据在文档目录：`文档\FNSoftware\Clipboard\`
+用户数据在 DevEnv 用户数据目录下的 `文档\FNSoftware\DevEnv\Clipboard\`
 
 | 文件 / 目录 | 说明 |
 |-------------|------|
@@ -22,7 +22,7 @@
 | `clipboard.db` | SQLite 历史库 |
 | `clipboard_images/` | 图片文件 |
 
-启动时会自动迁移旧位置（程序目录或 `data/`）中的数据。
+启动时会自动迁移旧位置（旧版 `文档\FNSoftware\Clipboard\`、程序目录或 `data/`）中的数据。
 
 ## 与独立版差异
 

@@ -14,11 +14,13 @@ public sealed class ClipboardService
 {
     public ClipboardService()
     {
+        // 必须先迁移旧数据，再打开历史库；否则新位置会先建成空库，旧库因目标已存在而不再迁移。
         DevEnv.Core.Clipboard.Services.AppPaths.MigrateLegacyData();
+        History = new HistoryService();
     }
 
     /// <summary>底层历史服务：剪贴板轮询捕获到新内容时直接写入。</summary>
-    public HistoryService History { get; } = new();
+    public HistoryService History { get; }
 
     public IReadOnlyList<ClipboardEntryView> GetEntries(string? search = null, string? type = null)
     {

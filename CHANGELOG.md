@@ -7,6 +7,10 @@
 ## [Unreleased]
 
 ### Changed
+- 用户数据与配置统一收拢到 `文档\FNSoftware\DevEnv\`：
+  - 熔岩翻译配置从 `%USERPROFILE%\.lava_translator\config.json` 迁到 `文档\FNSoftware\DevEnv\Translator\config.json`，首次启动自动迁移并清理旧目录
+  - 熔岩剪贴板数据从 `文档\FNSoftware\Clipboard\` 迁到 `文档\FNSoftware\DevEnv\Clipboard\`，首次启动自动迁移 `config.json`、`clipboard.db`、`clipboard_history.json` 与 `clipboard_images/`
+  - 右键菜单管理配置从 `文档\FNSoftware\MenuManager\menu_configs.json` 迁到 `文档\FNSoftware\DevEnv\ContextMenu\menu_configs.json`，旧位置与程序目录下的配置会在首次启动时自动迁入
 - 全局启动器顶部改为一行工具条：「本地应用 / 文件夹 / 网站」三页签、搜索框、系统工具与内置工具文件夹从左到右依次排列；搜索框宽度从 560 收窄到 280，底部只保留搜索结果条数与操作提示，页签在搜索态与文件夹浮层打开时隐藏但仍占位，搜索框不会向左跳
 - 全局启动器把「系统工具」「内置工具」从底部页签移到搜索框右侧，作为两个只读文件夹按钮：点击后复用启动器文件夹浮层展开工具图标，页签减为「本地应用 / 文件夹 / 网站」三个。`DEVENV_START_PAGE=tools|builtin` 仍会直接展开对应文件夹，`--shortcuts-check` 增加工具文件夹按钮、浮层展开与路由检查
 

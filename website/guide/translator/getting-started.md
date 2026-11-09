@@ -28,13 +28,13 @@
 
 ## 配置目录
 
-翻译站点偏好等保存在：
+翻译站点偏好等保存在 DevEnv 的用户数据目录：
 
 ```
-%USERPROFILE%\.lava_translator\config.json
+文档\FNSoftware\DevEnv\Translator\config.json
 ```
 
-与 DevEnv 的 `文档\FNSoftware\DevEnv\` 相互独立。
+旧版位于 `%USERPROFILE%\.lava_translator\` 的配置会在首次启动时自动迁入，迁移成功后旧目录会被清理。
 
 ## 说明
 

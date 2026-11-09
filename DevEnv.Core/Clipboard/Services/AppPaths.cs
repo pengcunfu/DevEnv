@@ -17,12 +17,12 @@ public static class AppPaths
         }
     }
 
+    /// <summary>模块数据目录：文档\FNSoftware\DevEnv\Clipboard（与其他模块统一放在 DevEnv 根目录下）。</summary>
     public static string DataDir
     {
         get
         {
-            var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var path = Path.Combine(documents, VendorFolderName, AppFolderName);
+            var path = Path.Combine(DevEnv.Core.AppPaths.UserDataDirectory, AppFolderName);
             Directory.CreateDirectory(path);
             return path;
         }
@@ -80,7 +80,15 @@ public static class AppPaths
     public static void MigrateLegacyData()
     {
         var dest = DataDir;
-        var names = new[] { "config.json", "clipboard_history.json", "clipboard_images" };
+        var names = new[]
+        {
+            "config.json",
+            "clipboard_history.json",
+            "clipboard.db",
+            "clipboard.db-wal",
+            "clipboard.db-shm",
+            "clipboard_images",
+        };
 
         foreach (var srcRoot in LegacyDataRoots())
         {
@@ -114,6 +122,8 @@ public static class AppPaths
     private static IEnumerable<string> LegacyDataRoots()
     {
         var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        // 旧版独立 Clipboard 应用的数据目录（文档\FNSoftware\Clipboard），迁移到 DevEnv 根目录下
+        yield return Path.Combine(documents, VendorFolderName, AppFolderName);
         yield return Path.Combine(documents, VendorFolderName);
         yield return Path.Combine(AppRoot, "data");
         yield return AppRoot;

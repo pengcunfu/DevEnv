@@ -14,9 +14,9 @@ namespace DevEnv.Core.Services;
 /// 2) 「用 XXX 打开」右键菜单项的增删（写 HKEY_CLASSES_ROOT，需要管理员，
 ///    非管理员时以 --context-menu-apply 参数提权重启当前程序执行）
 ///
-/// 配置路径沿用旧版独立的 MenuManager 工具
-/// （文档\FNSoftware\MenuManager\menu_configs.json），老用户配置和旧版安装目录下的
-/// menu_configs.json 会自动迁移。
+/// 配置路径统一放在 DevEnv 用户数据目录
+/// （文档\FNSoftware\DevEnv\ContextMenu\menu_configs.json），旧版独立 MenuManager 的
+/// 配置和旧版安装目录下的 menu_configs.json 会自动迁移。
 /// </summary>
 public sealed class ContextMenuService
 {
@@ -25,7 +25,7 @@ public sealed class ContextMenuService
         MigrateLegacyConfigIfNeeded();
     }
 
-    /// <summary>旧版把 menu_configs.json 放在程序目录；首次运行时并入用户数据目录。</summary>
+    /// <summary>旧版配置在文档\FNSoftware\MenuManager 或程序目录；首次运行时并入用户数据目录。</summary>
     private static void MigrateLegacyConfigIfNeeded()
     {
         try
@@ -33,18 +33,29 @@ public sealed class ContextMenuService
             if (File.Exists(ConfigFilePath))
                 return;
 
-            var installDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
-            var legacyPath = Path.Combine(installDir, ConfigFileName);
-            if (!File.Exists(legacyPath))
-                return;
+            foreach (var legacyPath in GetLegacyConfigPaths())
+            {
+                if (!File.Exists(legacyPath))
+                    continue;
 
-            Directory.CreateDirectory(UserDataDirectory);
-            File.Copy(legacyPath, ConfigFilePath);
+                Directory.CreateDirectory(UserDataDirectory);
+                File.Copy(legacyPath, ConfigFilePath);
+                return;
+            }
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"迁移右键菜单配置失败：{ex.Message}");
         }
+    }
+
+    private static IEnumerable<string> GetLegacyConfigPaths()
+    {
+        var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        yield return Path.Combine(documents, "FNSoftware", "MenuManager", ConfigFileName);
+
+        var installDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+        yield return Path.Combine(installDir, ConfigFileName);
     }
 
     /// <summary>提权子进程的命令行参数。</summary>
@@ -57,9 +68,8 @@ public sealed class ContextMenuService
     private static readonly object Gate = new();
 
     public static string UserDataDirectory { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-        "FNSoftware",
-        "MenuManager");
+        AppPaths.UserDataDirectory,
+        "ContextMenu");
 
     public static string ConfigFilePath => Path.Combine(UserDataDirectory, ConfigFileName);
 
