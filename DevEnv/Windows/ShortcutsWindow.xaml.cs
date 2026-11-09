@@ -41,7 +41,7 @@ public partial class ShortcutsWindow : Window
     /// <summary>预热期间（屏幕外显示一次又隐藏）不处理失焦收起。</summary>
     private bool _prewarming;
 
-    /// <summary>正在淡出、尚未真正隐藏。</summary>
+    /// <summary>正在滑出、尚未真正隐藏。</summary>
     private bool _hiding;
 
     /// <summary>启动器内部拖拽的数据格式；不与外部文件拖入的 FileDrop 混用。</summary>
@@ -95,8 +95,14 @@ public partial class ShortcutsWindow : Window
     /// <summary>换页时网格的横向位移；只做渲染变换，不影响布局与框选坐标。</summary>
     private readonly TranslateTransform _pageSlide = new();
 
-    /// <summary>整窗缩放：打开时从 1.5% 放大收进，收起时反向，和淡入淡出叠在一起。</summary>
-    private readonly ScaleTransform _rootScale = new(1, 1);
+    /// <summary>
+    /// 整窗纵向位移：打开时从窗口下方整块滑入，收起时滑回下方。
+    /// 与 Windows 11 开始菜单一致：自下而上滑入，时长与缓动曲线相同。
+    /// </summary>
+    private readonly TranslateTransform _rootSlide = new();
+
+    /// <summary>Windows 11 开始菜单的入场 / 退场动画时长（毫秒）。</summary>
+    private const int SlideDurationMs = 167;
 
     /// <summary>文件夹浮层的弹出缩放。</summary>
     private readonly ScaleTransform _folderScale = new(1, 1);
@@ -118,8 +124,7 @@ public partial class ShortcutsWindow : Window
         Drop += OnDrop;
 
         EntryGrid.RenderTransform = _pageSlide;
-        Root.RenderTransform = _rootScale;
-        Root.RenderTransformOrigin = new Point(0.5, 0.5);
+        Root.RenderTransform = _rootSlide;
         Root.SizeChanged += (_, e) => UpdateRootClip(e.NewSize);
         FolderCard.RenderTransform = _folderScale;
         FolderCard.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -403,7 +408,7 @@ public partial class ShortcutsWindow : Window
         var wasVisible = IsVisible;
         if (_hiding)
         {
-            // 正在淡出时又要求打开：取消这次收起，直接淡回全不透明
+            // 正在滑出时又要求打开：取消这次收起，从当前位置滑回最终位置
             _hiding = false;
             _suppressDeactivate = false;
             wasVisible = true;
@@ -416,11 +421,11 @@ public partial class ShortcutsWindow : Window
                 Prewarm();
 
             ApplyScreenBounds();
-            // 淡入做在根元素上而不是 Window.Opacity：分层窗口改自身透明度
-            // 会先按不透明画一帧再被拉回 0，看起来就是闪
+            // 内容整体先放到窗口下沿之外，显示后再自下而上滑入。
+            // 分层窗口的第一帧因此是全透明的，不会先闪一下旧画面。
             Root.BeginAnimation(OpacityProperty, null);
-            Root.Opacity = 0;
-            ResetRootScale(1.015);
+            Root.Opacity = 1;
+            ResetRootSlide(SlideDistance);
             // 窗口还没显示时截取它背后的桌面，作为磨砂玻璃的底图
             CaptureBackdrop();
             Show();
@@ -436,39 +441,44 @@ public partial class ShortcutsWindow : Window
 
         if (wasVisible)
         {
-            // 已经开着（例如拖放后再打开）就别再淡入一次，否则会闪一下
+            // 已经开着（例如拖放后再打开）就别重播入场，只确保停在最终位置
             Root.BeginAnimation(OpacityProperty, null);
             Root.Opacity = 1;
-            ResetRootScale(1);
+            if (_rootSlide.Y > 0.5)
+                AnimateRootSlide(0, EasingMode.EaseOut);
+            else
+                ResetRootSlide(0);
             return;
         }
 
-        Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0d, 1d, TimeSpan.FromMilliseconds(150))
-        {
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-        });
-        AnimateRootScale(1d, 190, EasingMode.EaseOut);
+        // 与 Windows 11 开始菜单一致：自下而上滑入，167ms 减速收尾
+        AnimateRootSlide(0, EasingMode.EaseOut);
     }
 
-    /// <summary>取消整窗缩放的残留动画并直接落到指定比例。</summary>
-    private void ResetRootScale(double scale)
+    /// <summary>入场 / 退场位移距离：整块面板的高度，让面板完全落在窗口之外。</summary>
+    private double SlideDistance =>
+        Root.ActualHeight > 0 ? Root.ActualHeight : Math.Max(0, double.IsNaN(Height) ? 0 : Height);
+
+    /// <summary>取消纵向位移动画并直接落到指定偏移。</summary>
+    private void ResetRootSlide(double offset)
     {
-        _rootScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-        _rootScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-        _rootScale.ScaleX = scale;
-        _rootScale.ScaleY = scale;
+        _rootSlide.BeginAnimation(TranslateTransform.YProperty, null);
+        _rootSlide.Y = offset;
     }
 
-    private void AnimateRootScale(double target, int milliseconds, EasingMode easing)
+    /// <summary>
+    /// 从当前偏移滑到目标偏移。时长固定 167ms，减速用 EaseOut，滑出用 EaseIn，
+    /// 与 Windows 11 开始菜单的入场 / 退场曲线一致。
+    /// </summary>
+    private void AnimateRootSlide(double target, EasingMode easing)
     {
-        var ease = new CubicEase { EasingMode = easing };
-        var duration = new Duration(TimeSpan.FromMilliseconds(milliseconds));
-        _rootScale.BeginAnimation(
-            ScaleTransform.ScaleXProperty,
-            new DoubleAnimation(target, duration) { EasingFunction = ease });
-        _rootScale.BeginAnimation(
-            ScaleTransform.ScaleYProperty,
-            new DoubleAnimation(target, duration) { EasingFunction = ease });
+        var from = _rootSlide.Y;
+        _rootSlide.BeginAnimation(
+            TranslateTransform.YProperty,
+            new DoubleAnimation(from, target, new Duration(TimeSpan.FromMilliseconds(SlideDurationMs)))
+            {
+                EasingFunction = new CubicEase { EasingMode = easing },
+            });
     }
 
     /// <summary>
@@ -497,7 +507,7 @@ public partial class ShortcutsWindow : Window
         _ => 0,
     };
 
-    /// <summary>正在淡出、尚未真正隐藏（此刻再按 Win / 点托盘应按「重新打开」处理）。</summary>
+    /// <summary>正在滑出、尚未真正隐藏（此刻再按 Win / 点托盘应按「重新打开」处理）。</summary>
     public bool IsHiding => _hiding;
 
     /// <summary>从外部收起（Win 键再次按下、托盘入口等）。</summary>
@@ -515,9 +525,10 @@ public partial class ShortcutsWindow : Window
     private DateTime _shownAtUtc;
 
     /// <summary>
-    /// 收起：先淡出到全透明，**在可见状态下**完成这一帧渲染，再真正 Hide。
+    /// 收起：入场动画的反向，整块面板 167ms 加速滑出窗口下沿，
+    /// **在可见状态下**完成这一帧渲染，再真正 Hide。
     ///
-    /// 直接 Hide 后再把内容设成全透明是没用的——窗口已经不可见，不会再渲染，
+    /// 直接 Hide 后再把内容移出是没用的——窗口已经不可见，不会再渲染，
     /// 分层窗口缓存里留着的仍是不透明画面，下次 Show 的头一帧就会把它贴出来。
     /// 这就是「第一次打开正常、之后每次打开都闪一下」的原因。
     /// </summary>
@@ -529,14 +540,19 @@ public partial class ShortcutsWindow : Window
         _suppressDeactivate = true;
         _hiding = true;
 
-        var fade = new DoubleAnimation(0d, TimeSpan.FromMilliseconds(110))
+        var slide = new DoubleAnimation(
+            _rootSlide.Y,
+            SlideDistance,
+            new Duration(TimeSpan.FromMilliseconds(SlideDurationMs)))
         {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn },
         };
-        // 收起时轻微放大，读起来像整块界面淡出退场，而不是“啪”一下消失
-        AnimateRootScale(1.015d, 110, EasingMode.EaseIn);
-        fade.Completed += (_, _) =>
+        slide.Completed += (_, _) =>
         {
+            // 滑出途中又被要求打开：ShowPage 会清掉 _hiding，这里不要再隐藏
+            if (!_hiding)
+                return;
+
             Root.BeginAnimation(OpacityProperty, null);
             Root.Opacity = 0;
             try
@@ -551,7 +567,7 @@ public partial class ShortcutsWindow : Window
                 _hiding = false;
             }
         };
-        Root.BeginAnimation(OpacityProperty, fade);
+        _rootSlide.BeginAnimation(TranslateTransform.YProperty, slide);
     }
 
     /// <summary>
@@ -1325,7 +1341,7 @@ public partial class ShortcutsWindow : Window
 
     /// <summary>
     /// 弹窗期间压制「失去焦点即收起」，并临时取消置顶：
-    /// 启动器居中悬浮且置顶时，没有 owner 的系统文件对话框会被它挡住。
+    /// 启动器贴底悬浮且置顶时，没有 owner 的系统文件对话框会被它挡住。
     /// </summary>
     private async Task RunDialogAsync(Func<Task> action)
     {

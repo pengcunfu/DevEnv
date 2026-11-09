@@ -88,9 +88,11 @@ public static class ShortcutLauncherProbe
             Check("启动器窗口可正常加载", window.IsVisible);
             // 全局启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
             Check("全局启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
-            // 淡入必须做在根元素上：分层窗口改自己的 Opacity 会先画一帧不透明再淡入，闪两下
-            Check("淡入作用在根元素上（窗口 Opacity 恒为 1）", Math.Abs(window.Opacity - 1) < 0.001,
-                $"Opacity={window.Opacity}");
+            // 入场是根元素上的纵向位移动画，窗口自身 Opacity 保持不变
+            Check("入场为自下而上的位移动画（窗口 Opacity 恒为 1）",
+                Math.Abs(window.Opacity - 1) < 0.001
+                && window.Root.RenderTransform is System.Windows.Media.TranslateTransform,
+                $"Opacity={window.Opacity}, transform={window.Root.RenderTransform?.GetType().Name}");
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
@@ -302,7 +304,7 @@ public static class ShortcutLauncherProbe
 
             // 窗口外点击必须真的收起，而不是只装了钩子
             window.SimulateOutsideClick();
-            Check("窗口外点击触发淡出收起", window.IsHiding && window.IsVisible);
+            Check("窗口外点击触发滑出收起", window.IsHiding && window.IsVisible);
             WaitUntil(() => !window.IsVisible);
             Check("窗口外点击后隐藏并卸载监听",
                 !window.IsVisible && !window.IsOutsideClickHookInstalled);
@@ -312,12 +314,12 @@ public static class ShortcutLauncherProbe
                 window.IsVisible && !window.IsHiding && window.IsOutsideClickHookInstalled);
 
             // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：
-            // 收起必须先淡出到全透明再隐藏，否则分层窗口缓存的是不透明画面，下次 Show 会闪。
+            // 收起必须先滑出到窗口下沿之外再隐藏，否则分层窗口缓存的是不透明画面，下次 Show 会闪。
             window.Dismiss();
-            // 关键顺序：先淡出、窗口仍然可见，淡完才 Hide。
-            // 若先 Hide 再把内容设成全透明，窗口已不可见、不会重新渲染，
+            // 关键顺序：先滑出、窗口仍然可见，滑完才 Hide。
+            // 若先 Hide 再把内容移出，窗口已不可见、不会重新渲染，
             // 分层窗口缓存里仍是不透明画面，下次 Show 会闪出旧画面。
-            Check("收起时先淡出、窗口仍可见（缓存才会更新为透明）",
+            Check("收起时先滑出、窗口仍可见（缓存才会更新为透明）",
                 window.IsHiding && window.IsVisible);
             WaitUntil(() => !window.IsVisible);
             Check("收起完成并隐藏", !window.IsVisible);

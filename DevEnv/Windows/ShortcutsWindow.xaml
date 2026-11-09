@@ -15,7 +15,7 @@
         TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
-    <!-- 悬浮启动器（Launchpad 样式）：居中占工作区 78% 的浅色磨砂玻璃面板上，
+    <!-- 悬浮启动器（Launchpad 样式）：与 Windows 11 开始菜单同尺寸、同位置、同配色的磨砂玻璃面板上，
          顶部一行从左到右是横向页签（本地应用 / 文件夹 / 网站 / 开始菜单）、紧凑搜索框，
          以及「系统工具」「内置工具」两个只读文件夹；中部是大图标网格；
          单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->

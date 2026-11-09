@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Changed
+- 全局启动器的入场 / 退场动画与 Windows 11 开始菜单一致：面板从窗口下沿自下而上滑入（167ms，`CubicEase` EaseOut），收起时反向滑回窗口下沿（167ms，`CubicEase` EaseIn），不再使用整窗缩放与透明度淡入淡出；分层窗口首帧仍保持全透明，避免第二次打开时闪出旧画面
 - 全局启动器改为与 Windows 11 开始菜单**同等大小、同等颜色、同等位置**：窗口固定 832 × 862 DIP，底部贴着任务栏（间距 14 DIP），任务栏图标居中时水平居中、左对齐时左边距 13 DIP；面板配色按系统的「应用模式」（`AppsUseLightTheme`）在浅 / 深两套之间切换，与开始菜单一致，不再固定为浅色玻璃。顶部一行按新宽度收紧页签内边距、搜索框（280 → 250）与工具文件夹按钮，操作提示从右上角移到底部居中；`DevEnv.Core/Services/LauncherGeometry.cs` 集中几何计算并补单元测试，`--shortcuts-check` 增加尺寸与配色检查
 - 移除「快捷应用」界面（SigXor 搜索框式启动器 `LauncherWindow` / `LauncherService`）及其托盘菜单、系统工具目录和自检探针入口，托盘单击改为打开全局启动器；熔岩剪贴板与熔岩翻译改回全局热键：`Ctrl+Space` 打开剪贴板窗口，`Alt+Space` 打开翻译窗口并自动填充剪贴板文本。`data.json` 的 `Config.QuickAppHotkey` 由 `Config.ClipboardHotkey` 与 `Config.TranslatorHotkey` 取代，「设置 → 快捷键」页对应增加两个录制框；应用、文件、命令的启动能力继续由全局启动器提供
 - 全局启动器页签扩为「本地应用 / 文件夹 / 网站 / 开始菜单」四个：第四个页签只读展示用户与公共开始菜单里的 `.lnk` / `.url`，按一级文件夹分组，已收进启动器的条目按目标路径 / URL 自动隐藏，右键可启动、定位或添加到启动器
