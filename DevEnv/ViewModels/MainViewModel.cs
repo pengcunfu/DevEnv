@@ -118,6 +118,7 @@ public sealed partial class MainViewModel : ObservableObject
         id.Equals("apps", StringComparison.OrdinalIgnoreCase)
         || id.Equals("folders", StringComparison.OrdinalIgnoreCase)
         || id.Equals("webs", StringComparison.OrdinalIgnoreCase)
+        || id.Equals("startmenu", StringComparison.OrdinalIgnoreCase)
         || id.Equals("tools", StringComparison.OrdinalIgnoreCase)
         || id.Equals("builtin", StringComparison.OrdinalIgnoreCase);
 

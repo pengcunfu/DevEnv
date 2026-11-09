@@ -11,7 +11,7 @@ namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
 /// 全局启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
-/// 这里加载启动器、遍历三个页签、展开两个工具文件夹、跑一次搜索，并收集数据绑定错误。
+/// 这里加载启动器、遍历四个页签、展开两个工具文件夹、跑一次搜索，并收集数据绑定错误。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
 public static class ShortcutLauncherProbe
@@ -89,7 +89,10 @@ public static class ShortcutLauncherProbe
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
-            Check("页签为横向三个", vm.Pages.Count == 3, string.Join(" / ", vm.Pages.Select(p => p.Title)));
+            // 开始菜单在后台异步读取；等它落定再断言，避免图标提取 / COM 解析还没完成就切页
+            WaitUntil(() => !vm.IsStartMenuLoading, 10_000);
+
+            Check("页签为横向四个", vm.Pages.Count == 4, string.Join(" / ", vm.Pages.Select(p => p.Title)));
             Check("默认显示本地应用", vm.SelectedPage == 0);
             Check("页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
             var tabsLeft = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).X;
@@ -117,6 +120,29 @@ public static class ShortcutLauncherProbe
                 Check($"页签「{page.Title}」可切换（{vm.VisibleEntries.Count} 项）",
                     vm.SelectedPage == page.Index && window.PageTabs.SelectedIndex == page.Index);
             }
+
+            // 第四个页签是 Windows 开始菜单的只读投影：只能启动或收进启动器
+            vm.SelectedPage = 3;
+            window.UpdateLayout();
+            WaitUntil(() => !vm.IsStartMenuLoading, 10_000);
+            Pump();
+            Check("开始菜单页只读（无添加 / 框选 / 分组）",
+                vm.IsStartMenuPage
+                && !vm.IsEditableView
+                && !vm.CanCreateGroup
+                && !vm.CanAddOnCurrentPage
+                && !vm.CanAcceptExternalDrop);
+            Check("开始菜单页顶层条目类型正确",
+                vm.VisibleEntries.All(entry =>
+                    entry.Kind is ShortcutKind.StartMenu or ShortcutKind.Group),
+                $"共 {vm.VisibleEntries.Count} 项");
+            window.ShowPage("startmenu");
+            WaitUntil(() => !vm.IsStartMenuLoading, 10_000);
+            Pump();
+            Check("DEVENV_START_PAGE=startmenu 切到开始菜单页",
+                vm.SelectedPage == 3 && !vm.IsInsideGroup && !vm.IsSearching);
+            window.ShowPage("apps");
+            Pump();
 
             // 系统工具与内置工具不再是页签，而是搜索框右侧的两个只读文件夹
             Check("顶部两个工具文件夹按钮可见",

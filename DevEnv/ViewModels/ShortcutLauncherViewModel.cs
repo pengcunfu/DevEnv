@@ -20,6 +20,8 @@ public enum ShortcutKind
     Tool,
     /// <summary>宿主内置工具（JSON / Hosts / 哈希等小工具）。</summary>
     InternalTool,
+    /// <summary>Windows 开始菜单里的快捷方式；只读，可启动或收进启动器。</summary>
+    StartMenu,
     /// <summary>启动器文件夹（多个图标的合并磁贴），不是磁盘文件夹快捷方式。</summary>
     Group,
 }
@@ -35,6 +37,12 @@ public sealed partial class LauncherEntry : ObservableObject
     public required string Name { get; init; }
     public string IconPath { get; init; } = string.Empty;
     public string TargetPath { get; init; } = string.Empty;
+
+    /// <summary>开始菜单条目的 .lnk / .url 路径；其它类型为空。</summary>
+    public string LinkPath { get; init; } = string.Empty;
+
+    /// <summary>开始菜单条目的原始索引记录；收进启动器时使用。</summary>
+    public StartMenuItem? StartMenuSource { get; init; }
 
     /// <summary>布局里的稳定标识：普通条目为 app|路径 / folder|路径 / web|url，系统工具为工具键。</summary>
     public string Key { get; init; } = string.Empty;
@@ -70,6 +78,7 @@ public sealed partial class LauncherEntry : ObservableObject
         ShortcutKind.Web => "",
         ShortcutKind.Tool => "",
         ShortcutKind.InternalTool => "",
+        ShortcutKind.StartMenu => "",
         ShortcutKind.Group => "",
         _ => "",
     };
@@ -80,6 +89,7 @@ public sealed partial class LauncherEntry : ObservableObject
         ShortcutKind.Web => "网站",
         ShortcutKind.Tool => string.IsNullOrEmpty(Category) ? "系统工具" : Category,
         ShortcutKind.InternalTool => "内置工具",
+        ShortcutKind.StartMenu => string.IsNullOrEmpty(Category) ? "开始菜单" : Category,
         ShortcutKind.Group => $"{GroupItems.Count} 项",
         _ => "应用",
     };
@@ -107,6 +117,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private const int AppsPage = 0;
     private const int FoldersPage = 1;
     private const int WebsPage = 2;
+    private const int StartMenuPage = 3;
 
     /// <summary>固定工具架条目的 key；只用于标识，不参与布局。</summary>
     private const string SystemToolsShelfKey = "shelf|tools";
@@ -154,6 +165,13 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private List<LauncherEntry>[] _pageTiles = [[], [], []];
     private LauncherLayout _layout = new();
 
+    /// <summary>开始菜单页的数据：索引结果与按一级文件夹分组的磁贴，不参与 LauncherLayout。</summary>
+    private IReadOnlyList<StartMenuItem> _startMenuItems = [];
+    private List<LauncherEntry> _startMenuTiles = [];
+    private bool _startMenuLoading;
+    private bool _startMenuReloadRequested;
+    private string? _startMenuError;
+
     /// <summary>批量重建时暂时屏蔽属性变更回调里的 Refresh，避免重复刷新。</summary>
     private bool _suspendRefresh;
 
@@ -164,6 +182,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         new(AppsPage, "本地应用", ""),
         new(FoldersPage, "文件夹", ""),
         new(WebsPage, "网站", ""),
+        new(StartMenuPage, "开始菜单", ""),
     ];
 
     /// <summary>搜索框右侧的「系统工具」文件夹；条目来自 Windows 工具目录，只读。</summary>
@@ -204,6 +223,18 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     [ObservableProperty]
     private string _message = string.Empty;
 
+    /// <summary>操作成功后的中性提示（如「已添加到启动器」），显示在底部中间。</summary>
+    [ObservableProperty]
+    private string _notice = string.Empty;
+
+    /// <summary>空状态标题，随当前页切换（开始菜单页与其它页文案不同）。</summary>
+    [ObservableProperty]
+    private string _emptyTitle = "这里还没有快捷方式";
+
+    /// <summary>空状态补充说明，随当前页切换。</summary>
+    [ObservableProperty]
+    private string _emptyHint = "把 .exe 或文件夹拖进来，或点右下角 ＋ 添加";
+
     /// <summary>当前展开的启动器文件夹；为空表示在普通页签。</summary>
     [ObservableProperty]
     private LauncherEntry? _currentGroup;
@@ -213,14 +244,23 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>当前展开的是不是固定工具架（系统工具 / 内置工具）：只读，不能框选、拖动、分组或移除。</summary>
     public bool IsInsideReadOnlyGroup => CurrentGroup?.IsReadOnlyGroup == true;
 
+    /// <summary>当前是不是只读的开始菜单页。</summary>
+    public bool IsStartMenuPage => SelectedPage == StartMenuPage;
+
+    /// <summary>开始菜单正在后台读取；页面显示「正在读取开始菜单…」而不是空状态。</summary>
+    public bool IsStartMenuLoading => _startMenuLoading;
+
+    /// <summary>开始菜单页不接受外部文件拖入（页面只读）。</summary>
+    public bool CanAcceptExternalDrop => !IsStartMenuPage;
+
     /// <summary>当前视图是否允许框选、拖动、排序与分组。</summary>
-    public bool IsEditableView => !IsSearching && !IsInsideReadOnlyGroup;
+    public bool IsEditableView => !IsSearching && !IsInsideReadOnlyGroup && !IsStartMenuPage;
 
-    /// <summary>只有普通页签能创建新文件夹，固定工具架与文件夹内不行。</summary>
-    public bool CanCreateGroup => !IsSearching && !IsInsideGroup;
+    /// <summary>只有普通页签能创建新文件夹，固定工具架、开始菜单页与文件夹内不行。</summary>
+    public bool CanCreateGroup => !IsSearching && !IsInsideGroup && !IsStartMenuPage;
 
-    /// <summary>文件夹内与固定工具架不需要「添加」，右下角按钮随之隐藏。</summary>
-    public bool CanAddOnCurrentPage => !IsInsideGroup;
+    /// <summary>文件夹内、固定工具架与开始菜单页不需要「添加」，右下角按钮随之隐藏。</summary>
+    public bool CanAddOnCurrentPage => !IsInsideGroup && !IsStartMenuPage;
 
     public IReadOnlyList<LauncherEntry> SelectedEntries =>
         VisibleEntries.Where(entry => entry.IsSelected).ToList();
@@ -237,7 +277,13 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             _suspendRefresh = false;
         }
 
+        Notice = string.Empty;
+        OnPropertyChanged(nameof(IsStartMenuPage));
+        OnPropertyChanged(nameof(CanAcceptExternalDrop));
+        UpdateEmptyText();
         NotifyEditableChanged();
+        if (value == StartMenuPage)
+            BeginStartMenuLoad(force: false);
         if (!IsSearching)
             Refresh();
     }
@@ -272,8 +318,11 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         OnPropertyChanged(nameof(CanAddOnCurrentPage));
     }
 
-    /// <summary>重新读取本地应用 / 文件夹 / 网站与两个工具文件夹；启动器每次打开都调用，保证其他入口的改动可见。</summary>
-    public void Reload()
+    /// <summary>
+    /// 重新读取本地应用 / 文件夹 / 网站与两个工具文件夹；启动器每次打开都调用，保证其他入口的改动可见。
+    /// <paramref name="forceStartMenuRefresh"/> 为 true 时重新扫描开始菜单（F5 / 右键刷新）。
+    /// </summary>
+    public void Reload(bool forceStartMenuRefresh = false)
     {
         _suspendRefresh = true;
         CurrentGroup = null;
@@ -365,8 +414,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             IsReadOnlyGroup = true,
         };
 
-        _allItems = _apps.Concat(_folders).Concat(_webs).Concat(_tools).Concat(_builtinTools).ToList();
-        foreach (var entry in _allItems)
+        foreach (var entry in _apps.Concat(_folders).Concat(_webs).Concat(_tools).Concat(_builtinTools))
             _itemsByKey[entry.Key] = entry;
 
         _layout = CoreServices.Shortcuts.ReadLauncherLayout();
@@ -377,10 +425,176 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             _webs.Select(entry => entry.Key).ToList(),
         ]);
         RebuildTiles();
+        RebuildStartMenuTiles();
+        RebuildAllItems();
 
         _suspendRefresh = false;
         NotifyEditableChanged();
+        UpdateEmptyText();
+        BeginStartMenuLoad(forceStartMenuRefresh);
         Refresh();
+    }
+
+    /// <summary>把应用 / 文件夹 / 网站 / 工具与开始菜单条目合并成搜索数据源。</summary>
+    private void RebuildAllItems()
+    {
+        _allItems = _apps
+            .Concat(_folders)
+            .Concat(_webs)
+            .Concat(_tools)
+            .Concat(_builtinTools)
+            .Concat(_startMenuTiles.Where(entry => !entry.IsGroup))
+            .Concat(_startMenuTiles.Where(entry => entry.IsGroup).SelectMany(entry => entry.GroupItems))
+            .ToList();
+    }
+
+    /// <summary>按一级文件夹重建开始菜单页；已经收进启动器的条目在这里被过滤掉。</summary>
+    private void RebuildStartMenuTiles()
+    {
+        var launcherPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in _apps.Concat(_folders))
+            launcherPaths.Add(StartMenuIndex.NormalizePathForCompare(entry.TargetPath));
+
+        var launcherUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in _webs)
+            launcherUrls.Add(StartMenuIndex.NormalizeUrlForCompare(entry.TargetPath));
+
+        var visible = _startMenuItems
+            .Where(item => !StartMenuIndex.ShouldHide(item, launcherPaths, launcherUrls))
+            .ToList();
+
+        var tiles = new List<LauncherEntry>();
+
+        foreach (var group in visible
+            .Where(item => !string.IsNullOrWhiteSpace(item.FirstLevelFolder))
+            .GroupBy(item => item.FirstLevelFolder, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            var children = group
+                .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(item => item.RelativePath, StringComparer.OrdinalIgnoreCase)
+                .Select(BuildStartMenuEntry)
+                .ToList();
+            if (children.Count == 0)
+                continue;
+
+            tiles.Add(new LauncherEntry
+            {
+                Kind = ShortcutKind.Group,
+                Index = -1,
+                Key = $"startmenu-group|{group.Key}",
+                GroupId = $"startmenu|{group.Key}",
+                Name = group.Key,
+                GroupItems = children,
+                IsReadOnlyGroup = true,
+            });
+        }
+
+        foreach (var item in visible
+            .Where(item => string.IsNullOrWhiteSpace(item.FirstLevelFolder))
+            .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item.RelativePath, StringComparer.OrdinalIgnoreCase))
+        {
+            tiles.Add(BuildStartMenuEntry(item));
+        }
+
+        _startMenuTiles = tiles;
+    }
+
+    private static LauncherEntry BuildStartMenuEntry(StartMenuItem item) => new()
+    {
+        Kind = ShortcutKind.StartMenu,
+        Index = -1,
+        Key = item.Key,
+        Name = item.Name,
+        IconPath = item.IconPath,
+        TargetPath = string.IsNullOrWhiteSpace(item.TargetPath) ? item.LinkPath : item.TargetPath,
+        LinkPath = item.LinkPath,
+        Category = BuildStartMenuCategory(item),
+        StartMenuSource = item,
+    };
+
+    /// <summary>搜索时显示的开始菜单目录：一级文件夹 + 更深的子目录。</summary>
+    private static string BuildStartMenuCategory(StartMenuItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.SubFolder))
+            return item.FirstLevelFolder;
+        if (string.IsNullOrWhiteSpace(item.FirstLevelFolder))
+            return item.SubFolder;
+        return $"{item.FirstLevelFolder} / {item.SubFolder}";
+    }
+
+    /// <summary>后台读取开始菜单；已有请求在跑时不重复启动，必要时完成后补一次强制刷新。</summary>
+    private void BeginStartMenuLoad(bool force)
+    {
+        if (_startMenuLoading)
+        {
+            if (force)
+                _startMenuReloadRequested = true;
+            return;
+        }
+
+        _ = LoadStartMenuAsync(force);
+    }
+
+    private async Task LoadStartMenuAsync(bool force)
+    {
+        _startMenuLoading = true;
+        _startMenuError = null;
+
+        try
+        {
+            _startMenuItems = await Task.Run(() => CoreServices.StartMenu.GetItems(force));
+        }
+        catch (Exception ex)
+        {
+            _startMenuError = ex.Message;
+        }
+        finally
+        {
+            _startMenuLoading = false;
+        }
+
+        var groupId = CurrentGroup?.GroupId;
+        var wasStartMenuGroup = CurrentGroup?.Key.StartsWith("startmenu-group|", StringComparison.OrdinalIgnoreCase) == true;
+
+        RebuildStartMenuTiles();
+        RebuildAllItems();
+
+        if (wasStartMenuGroup && groupId is not null)
+        {
+            _suspendRefresh = true;
+            CurrentGroup = FindStartMenuGroup(groupId);
+            _suspendRefresh = false;
+        }
+
+        OnPropertyChanged(nameof(IsStartMenuLoading));
+        Refresh();
+
+        if (_startMenuReloadRequested)
+        {
+            _startMenuReloadRequested = false;
+            BeginStartMenuLoad(force: true);
+        }
+    }
+
+    private LauncherEntry? FindStartMenuGroup(string groupId) =>
+        _startMenuTiles.FirstOrDefault(entry => entry.IsGroup
+            && string.Equals(entry.GroupId, groupId, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>空状态文案随页签切换：开始菜单页不显示「拖入 .exe」这类添加提示。</summary>
+    private void UpdateEmptyText()
+    {
+        if (IsStartMenuPage)
+        {
+            EmptyTitle = "开始菜单里没有可显示的项";
+            EmptyHint = "系统开始菜单中的快捷方式会显示在这里；已加入启动器的条目会自动隐藏";
+        }
+        else
+        {
+            EmptyTitle = "这里还没有快捷方式";
+            EmptyHint = "把 .exe 或文件夹拖进来，或点右下角 ＋ 添加";
+        }
     }
 
     /// <summary>
@@ -445,7 +659,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         IEnumerable<LauncherEntry> pageSource = IsSearching
             ? _allItems.Where(entry => entry.Matches(query))
-            : _pageTiles[SelectedPage];
+            : GetPageEntries(SelectedPage);
 
         var pageEntries = pageSource.ToList();
         PageEntries.Clear();
@@ -458,16 +672,26 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         foreach (var entry in source)
             VisibleEntries.Add(entry);
 
-        IsEmpty = !IsInsideGroup && VisibleEntries.Count == 0;
+        var startMenuPending = IsStartMenuPage && _startMenuLoading && _startMenuTiles.Count == 0;
+        IsEmpty = !IsInsideGroup && VisibleEntries.Count == 0 && !startMenuPending;
         Summary = IsSearching
             ? $"{VisibleEntries.Count} 个匹配项"
             : IsInsideGroup
                 ? $"{VisibleEntries.Count} 项"
-                : string.Empty;
+                : IsStartMenuPage
+                    ? startMenuPending
+                        ? "正在读取开始菜单…"
+                        : !string.IsNullOrEmpty(_startMenuError) && _startMenuTiles.Count == 0
+                            ? "开始菜单读取失败"
+                            : $"{_startMenuTiles.Sum(entry => entry.IsGroup ? entry.GroupItems.Count : 1)} 项"
+                    : string.Empty;
 
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(SelectedEntries));
     }
+
+    private IReadOnlyList<LauncherEntry> GetPageEntries(int page) =>
+        page == StartMenuPage ? _startMenuTiles : _pageTiles[page];
 
     #region 启动器文件夹
 
@@ -507,7 +731,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>把若干卡片拖到目标卡片上：目标不是文件夹时新建文件夹，目标是文件夹时加入其中。</summary>
     public void MergeIntoFolder(IReadOnlyList<LauncherEntry> sources, LauncherEntry target, string name = "文件夹")
     {
-        if (IsSearching || IsInsideGroup)
+        if (IsSearching || IsInsideGroup || IsStartMenuPage)
             return;
 
         if (target.IsGroup)
@@ -536,7 +760,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void AddToGroup(IReadOnlyList<LauncherEntry> sources, LauncherEntry group)
     {
-        if (!group.IsGroup)
+        if (!group.IsGroup || IsStartMenuPage)
             return;
 
         var keys = sources
@@ -556,7 +780,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void MoveOutOfGroup(IReadOnlyList<LauncherEntry> entries)
     {
-        if (CurrentGroup is null)
+        if (CurrentGroup is null || IsStartMenuPage)
             return;
 
         var keys = entries
@@ -577,7 +801,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void RenameGroup(LauncherEntry group, string name)
     {
-        if (!group.IsGroup || string.IsNullOrWhiteSpace(name))
+        if (!group.IsGroup || group.IsReadOnlyGroup || IsStartMenuPage || string.IsNullOrWhiteSpace(name))
             return;
 
         _layout.RenameGroup(group.GroupId, name);
@@ -586,7 +810,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void DissolveGroup(LauncherEntry group)
     {
-        if (!group.IsGroup)
+        if (!group.IsGroup || group.IsReadOnlyGroup || IsStartMenuPage)
             return;
 
         var groupId = group.GroupId;
@@ -767,6 +991,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             ShortcutKind.Folder => CoreServices.Shortcuts.OpenFolder(entry.Index),
             ShortcutKind.Web => CoreServices.Shortcuts.OpenWeb(entry.Index),
             ShortcutKind.Tool => CoreServices.Shortcuts.RunSystemTool(entry.Key),
+            ShortcutKind.StartMenu => CoreServices.StartMenu.OpenLink(entry.LinkPath),
             ShortcutKind.InternalTool => entry.Key switch
             {
                 DevelopmentWindowKey => ShowHostWindow(HostCallbacks.OnShowDevelopmentWindow, "开发窗口"),
@@ -787,6 +1012,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             Report(CoreServices.Shortcuts.OpenAppFolder(entry.Index));
         else if (entry.Kind == ShortcutKind.Folder)
             HostServices.OpenFolder(entry.TargetPath);
+        else if (entry.Kind == ShortcutKind.StartMenu)
+            Report(CoreServices.StartMenu.RevealLink(entry.LinkPath));
         // 系统工具、内置工具与启动器文件夹没有可定位的本地路径
     }
 
@@ -834,9 +1061,27 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         Reload();
     }
 
+    /// <summary>把开始菜单页的一条快捷方式收进启动器。</summary>
+    public void AddStartMenuEntry(LauncherEntry entry)
+    {
+        if (entry.StartMenuSource is null)
+            return;
+
+        var result = CoreServices.Shortcuts.AddFromStartMenu(entry.StartMenuSource);
+        Report(result);
+        if (!result.Ok)
+            return;
+
+        Notice = $"已添加到启动器：{entry.Name}";
+        Reload();
+    }
+
     /// <summary>底部「＋」按当前页签添加。</summary>
     public async Task AddForCurrentPageAsync(Window owner)
     {
+        if (IsStartMenuPage)
+            return;
+
         switch (SelectedPage)
         {
             case FoldersPage:
@@ -854,6 +1099,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>拖入的 .exe / 文件夹落到对应页签；返回加入的页签，未识别时返回 null。</summary>
     public int? AddDropped(string path)
     {
+        if (IsStartMenuPage)
+            return null;
+
         if (File.Exists(path) && path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
         {
             var result = CoreServices.Shortcuts.AddApp(path);
@@ -883,6 +1131,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public async Task RenameAsync(LauncherEntry entry, Window owner)
     {
+        if (entry.Kind == ShortcutKind.StartMenu || entry.IsReadOnlyGroup)
+            return;
+
         var name = PromptDialog.Show(owner, entry.IsGroup ? "文件夹名称" : "显示名称", entry.Name);
         if (name is null)
             return;
@@ -904,6 +1155,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void Remove(LauncherEntry entry, Window owner)
     {
+        if (entry.Kind == ShortcutKind.StartMenu || entry.IsReadOnlyGroup)
+            return;
+
         if (entry.IsGroup)
         {
             DissolveGroup(entry);
@@ -924,7 +1178,12 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>批量移除当前选中的卡片；选中文件夹时只解散，不删除其中的快捷方式。</summary>
     public void RemoveSelected(Window owner)
     {
-        var selected = SelectedEntries;
+        if (IsStartMenuPage)
+            return;
+
+        var selected = SelectedEntries
+            .Where(entry => entry.Kind != ShortcutKind.StartMenu && !entry.IsReadOnlyGroup)
+            .ToList();
         if (selected.Count == 0)
             return;
 
@@ -961,7 +1220,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>刷新图标：应用重新提取 exe 图标，网站重新抓 favicon；文件夹没有图标源。</summary>
     public async Task RefreshIconAsync(LauncherEntry entry)
     {
-        if (entry.IsGroup)
+        if (entry.IsGroup || entry.Kind == ShortcutKind.StartMenu)
             return;
 
         switch (entry.Kind)

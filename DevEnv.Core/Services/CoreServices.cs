@@ -18,7 +18,8 @@ public static class CoreServices
     public static DataStore Data { get; } = new();
     public static ConfigStore Config { get; } = new();
 
-    public static ShortcutService Shortcuts { get; } = new(Data);
+    public static StartMenuService StartMenu { get; } = new();
+    public static ShortcutService Shortcuts { get; } = new(Data, StartMenu);
     public static LavaService Lava { get; } = new();
     public static DevEnvService DevEnvServices { get; } = new(new DevServiceStore(Data));
     public static ProcessService Processes { get; } = new();

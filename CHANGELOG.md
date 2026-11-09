@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Changed
+- 全局启动器页签扩为「本地应用 / 文件夹 / 网站 / 开始菜单」四个：第四个页签只读展示用户与公共开始菜单里的 `.lnk` / `.url`，按一级文件夹分组，已收进启动器的条目按目标路径 / URL 自动隐藏，右键可启动、定位或添加到启动器
 - 用户数据与配置统一收拢到 `文档\FNSoftware\DevEnv\`：
   - 熔岩翻译配置从 `%USERPROFILE%\.lava_translator\config.json` 迁到 `文档\FNSoftware\DevEnv\Translator\config.json`，首次启动自动迁移并清理旧目录
   - 熔岩剪贴板数据从 `文档\FNSoftware\Clipboard\` 迁到 `文档\FNSoftware\DevEnv\Clipboard\`，首次启动自动迁移 `config.json`、`clipboard.db`、`clipboard_history.json` 与 `clipboard_images/`
@@ -15,6 +16,7 @@
 - 全局启动器把「系统工具」「内置工具」从底部页签移到搜索框右侧，作为两个只读文件夹按钮：点击后复用启动器文件夹浮层展开工具图标，页签减为「本地应用 / 文件夹 / 网站」三个。`DEVENV_START_PAGE=tools|builtin` 仍会直接展开对应文件夹，`--shortcuts-check` 增加工具文件夹按钮、浮层展开与路由检查
 
 ### Added
+- 全局启动器与 Windows 开始菜单双向打通：往「本地应用」添加 `.exe` 时自动在 `开始菜单\程序\燧岚开发盒子\` 创建 `.lnk`，移除时只删除该受管目录里的快捷方式；已有启动器应用在下次启动预热后后台补建一次。外部安装器已有的同目标快捷方式不会重复创建，也不会被删除；托管文件名记录在 `data.json` 的 `StartMenuLink`
 - 全局启动器「内置工具」文件夹新增「熔岩翻译」「熔岩剪贴板」「文件浏览器」三个入口：翻译沿用翻译热键行为（打开翻译窗并填充剪贴板文本），剪贴板打开历史窗口，文件浏览器打开目录导航与内嵌预览窗口
 - 全局启动器的「内置工具」页签新增两个主窗口入口：**「燧岚开发盒子」**（开发环境 / 熔岩环境，key 为 `dev-window`）与 **「燧岚监控中心」**（网络 / 进程 / 服务监控，key 为 `monitor-window`），分别走 `HostCallbacks.OnShowDevelopmentWindow` / `OnShowMonitorWindow`
 - 新增 `--windows-check` 自检探针：验证开发窗口与监控窗口各自加载、导航项与默认页正确、切页互不影响

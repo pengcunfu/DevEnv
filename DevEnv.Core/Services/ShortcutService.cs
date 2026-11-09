@@ -24,43 +24,154 @@ public sealed class ShortcutService
     };
 
     private readonly DataStore _store;
+    private readonly StartMenuService _startMenu;
 
-    public ShortcutService(DataStore store) => _store = store;
+    /// <summary>应用列表的读取 / 写入锁：启动后台补建开始菜单快捷方式时不能和 UI 添加互相覆盖。</summary>
+    private readonly object _gate = new();
+
+    public ShortcutService(DataStore store, StartMenuService startMenu)
+    {
+        _store = store;
+        _startMenu = startMenu;
+    }
 
     #region 本地应用
 
-    public IReadOnlyList<NativeAppItem> GetApps() => ReadApps();
-
-    public OperationResult AddApp(string? path)
+    public IReadOnlyList<NativeAppItem> GetApps()
     {
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-            return OperationResult.Fail("无效的 exe 路径");
+        lock (_gate)
+            return ReadApps();
+    }
 
-        var name = IconHelper.GetDisplayName(path);
-        var icon = IconHelper.ExtractExecutableIcon(path) ?? string.Empty;
-        var list = ReadApps();
-        var existing = list.FirstOrDefault(x =>
-            string.Equals(x.ExecPath, path, StringComparison.OrdinalIgnoreCase));
-        if (existing is not null)
+    /// <summary>
+    /// 添加本地应用。默认同时确保开始菜单里有对应快捷方式；
+    /// 从开始菜单页收进启动器时传 <paramref name="syncStartMenu"/> = false，避免重复创建。
+    /// </summary>
+    public OperationResult AddApp(
+        string? path,
+        string? nameOverride = null,
+        string? iconOverride = null,
+        bool syncStartMenu = true)
+    {
+        lock (_gate)
         {
-            existing.Name = name;
-            existing.Description = path;
-            if (string.IsNullOrWhiteSpace(existing.IconPath))
-                existing.IconPath = icon;
-        }
-        else
-        {
-            list.Add(new NativeAppItem
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                return OperationResult.Fail("无效的 exe 路径");
+
+            var name = string.IsNullOrWhiteSpace(nameOverride)
+                ? IconHelper.GetDisplayName(path)
+                : nameOverride;
+            var icon = string.IsNullOrWhiteSpace(iconOverride)
+                ? IconHelper.ExtractExecutableIcon(path) ?? string.Empty
+                : iconOverride;
+
+            var list = ReadApps();
+            var existing = list.FirstOrDefault(x =>
+                string.Equals(x.ExecPath, path, StringComparison.OrdinalIgnoreCase));
+            if (existing is not null)
             {
-                Name = name,
-                IconPath = icon,
-                Description = path,
-                ExecPath = path,
-            });
-        }
+                existing.Name = name;
+                existing.Description = path;
+                if (string.IsNullOrWhiteSpace(existing.IconPath))
+                    existing.IconPath = icon;
+            }
+            else
+            {
+                existing = new NativeAppItem
+                {
+                    Name = name,
+                    IconPath = icon,
+                    Description = path,
+                    ExecPath = path,
+                };
+                list.Add(existing);
+            }
 
-        _store.SaveList(NativeKey, new JArray(list.Select(WriteApp)));
-        return OperationResult.Success(name);
+            if (syncStartMenu)
+                SyncStartMenuShortcut(existing);
+            else
+                existing.StartMenuChecked = true;
+
+            _store.SaveList(NativeKey, new JArray(list.Select(WriteApp)));
+            return OperationResult.Success(name);
+        }
+    }
+
+    /// <summary>确保单条应用有开始菜单快捷方式；空串 = 外部已有 / 源本身是快捷方式，null = 失败待重试。</summary>
+    private void SyncStartMenuShortcut(NativeAppItem item)
+    {
+        var link = _startMenu.EnsureShortcut(item.ExecPath, item.Name, item.StartMenuLink);
+        if (link is null)
+            return;
+
+        item.StartMenuLink = link;
+        item.StartMenuChecked = true;
+    }
+
+    /// <summary>
+    /// 启动时后台补建：只处理还没检查过、或托管文件被手动删掉的条目。
+    /// 返回实际创建 / 复用托管快捷方式的条目数。
+    /// </summary>
+    public int EnsureStartMenuShortcuts()
+    {
+        lock (_gate)
+        {
+            var list = ReadApps();
+            var changed = false;
+            var synced = 0;
+
+            foreach (var item in list)
+            {
+                if (string.IsNullOrWhiteSpace(item.ExecPath) || !File.Exists(item.ExecPath))
+                    continue;
+
+                var linkMissing = !string.IsNullOrWhiteSpace(item.StartMenuLink)
+                    && !File.Exists(Path.Combine(_startMenu.ManagedFolderPath, item.StartMenuLink));
+                if (item.StartMenuChecked && !linkMissing)
+                    continue;
+
+                var link = _startMenu.EnsureShortcut(item.ExecPath, item.Name, item.StartMenuLink);
+                if (link is null)
+                    continue;
+
+                item.StartMenuLink = link;
+                item.StartMenuChecked = true;
+                changed = true;
+                synced++;
+            }
+
+            if (changed)
+                _store.SaveList(NativeKey, new JArray(list.Select(WriteApp)));
+
+            return synced;
+        }
+    }
+
+    /// <summary>把开始菜单里的一条快捷方式收进启动器：网址进网站页、目录进文件夹页，其余按应用处理。</summary>
+    public OperationResult AddFromStartMenu(StartMenuItem? item)
+    {
+        if (item is null)
+            return OperationResult.Fail("快捷方式不存在");
+
+        lock (_gate)
+        {
+            if (item.Kind == StartMenuLinkKind.InternetShortcut)
+            {
+                if (string.IsNullOrWhiteSpace(item.TargetPath))
+                    return OperationResult.Fail("网址无效");
+                return AddWebCore(item.TargetPath, item.Name, item.IconPath);
+            }
+
+            var target = !string.IsNullOrWhiteSpace(item.TargetPath) && File.Exists(item.TargetPath)
+                ? item.TargetPath
+                : item.LinkPath;
+
+            if (Directory.Exists(target))
+                return AddFolderCore(target, item.Name);
+
+            // 源快捷方式已经在开始菜单里，不再创建托管副本；图标优先从目标文件重新提取
+            return AddApp(target, item.Name, iconOverride: null, syncStartMenu: false);
+        }
     }
 
     public OperationResult UpdateApp(
@@ -70,25 +181,39 @@ public sealed class ShortcutService
         string? iconPath = null,
         bool refreshIcon = false)
     {
-        var list = ReadApps();
-        if (index < 0 || index >= list.Count)
-            return OperationResult.Fail("条目不存在");
-
-        var item = list[index];
-        if (name is not null)
-            item.Name = name;
-        if (!string.IsNullOrWhiteSpace(execPath) && File.Exists(execPath))
+        lock (_gate)
         {
-            item.ExecPath = execPath;
-            item.Description = execPath;
-        }
-        if (iconPath is not null)
-            item.IconPath = iconPath;
-        if (refreshIcon && !string.IsNullOrWhiteSpace(item.ExecPath))
-            item.IconPath = IconHelper.ExtractExecutableIcon(item.ExecPath) ?? item.IconPath;
+            var list = ReadApps();
+            if (index < 0 || index >= list.Count)
+                return OperationResult.Fail("条目不存在");
 
-        _store.SaveList(NativeKey, new JArray(list.Select(WriteApp)));
-        return OperationResult.Success();
+            var item = list[index];
+            if (name is not null)
+            {
+                item.Name = name;
+                if (!string.IsNullOrWhiteSpace(item.StartMenuLink))
+                {
+                    var renamed = _startMenu.RenameManagedShortcut(item.StartMenuLink, name);
+                    if (!string.IsNullOrWhiteSpace(renamed))
+                        item.StartMenuLink = renamed;
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(execPath) && File.Exists(execPath))
+            {
+                item.ExecPath = execPath;
+                item.Description = execPath;
+            }
+            if (iconPath is not null)
+                item.IconPath = iconPath;
+            if (refreshIcon && !string.IsNullOrWhiteSpace(item.ExecPath))
+                item.IconPath = IconHelper.ExtractExecutableIcon(item.ExecPath) ?? item.IconPath;
+
+            if (!item.StartMenuChecked)
+                SyncStartMenuShortcut(item);
+
+            _store.SaveList(NativeKey, new JArray(list.Select(WriteApp)));
+            return OperationResult.Success();
+        }
     }
 
     public OperationResult RunApp(int index)
@@ -145,12 +270,20 @@ public sealed class ShortcutService
 
     public OperationResult RemoveApp(int index)
     {
-        var list = ReadApps();
-        if (index < 0 || index >= list.Count)
-            return OperationResult.Fail("条目不存在");
-        list.RemoveAt(index);
-        _store.SaveList(NativeKey, new JArray(list.Select(WriteApp)));
-        return OperationResult.Success();
+        lock (_gate)
+        {
+            var list = ReadApps();
+            if (index < 0 || index >= list.Count)
+                return OperationResult.Fail("条目不存在");
+
+            var removed = list[index];
+            list.RemoveAt(index);
+            _store.SaveList(NativeKey, new JArray(list.Select(WriteApp)));
+
+            // 只删我们托管的快捷方式；外部安装器创建的同目标快捷方式不受影响
+            _startMenu.RemoveManagedShortcut(removed.StartMenuLink, removed.ExecPath);
+            return OperationResult.Success();
+        }
     }
 
     #endregion
@@ -161,6 +294,12 @@ public sealed class ShortcutService
 
     public OperationResult AddFolder(string? path)
     {
+        lock (_gate)
+            return AddFolderCore(path, null);
+    }
+
+    private OperationResult AddFolderCore(string? path, string? nameOverride)
+    {
         if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
             return OperationResult.Fail("无效的文件夹路径");
 
@@ -170,7 +309,9 @@ public sealed class ShortcutService
         if (duplicate is not null)
             return OperationResult.Success(duplicate.Name);
 
-        var name = new DirectoryInfo(path).Name;
+        var name = string.IsNullOrWhiteSpace(nameOverride)
+            ? new DirectoryInfo(path).Name
+            : nameOverride;
         list.Add(new FolderItem
         {
             Name = name,
@@ -267,21 +408,31 @@ public sealed class ShortcutService
         if (!string.IsNullOrWhiteSpace(titleOverride))
             title = titleOverride;
 
+        lock (_gate)
+            return AddWebCore(url, title, iconPath);
+    }
+
+    private OperationResult AddWebCore(string? url, string name, string? iconPath)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return OperationResult.Fail("缺少 url");
+
         var list = ReadWebs();
+        var normalized = StartMenuIndex.NormalizeUrlForCompare(url);
         var duplicate = list.FirstOrDefault(x =>
-            string.Equals(x.Url, url, StringComparison.OrdinalIgnoreCase));
+            string.Equals(StartMenuIndex.NormalizeUrlForCompare(x.Url), normalized, StringComparison.OrdinalIgnoreCase));
         if (duplicate is not null)
             return OperationResult.Success(duplicate.Name);
 
         list.Add(new WebItem
         {
-            Name = title,
-            IconPath = iconPath,
+            Name = name,
+            IconPath = iconPath ?? string.Empty,
             Description = url,
             Url = url,
         });
         _store.SaveList(WebKey, new JArray(list.Select(WriteWeb)));
-        return OperationResult.Success(title);
+        return OperationResult.Success(name);
     }
 
     public async Task<OperationResult> UpdateWebAsync(
@@ -407,6 +558,8 @@ public sealed class ShortcutService
         IconPath = IconHelper.ResolveIconPath(o["IconPath"]?.ToString()) ?? string.Empty,
         Description = o["Description"]?.ToString() ?? string.Empty,
         ExecPath = o["ExecPath"]?.ToString() ?? string.Empty,
+        StartMenuLink = o["StartMenuLink"]?.ToString() ?? string.Empty,
+        StartMenuChecked = o["StartMenuChecked"]?.Value<bool>() ?? false,
     };
 
     private static JObject WriteApp(NativeAppItem item) => new()
@@ -416,6 +569,8 @@ public sealed class ShortcutService
         ["Tag"] = "native",
         ["Description"] = item.Description,
         ["ExecPath"] = item.ExecPath,
+        ["StartMenuLink"] = item.StartMenuLink,
+        ["StartMenuChecked"] = item.StartMenuChecked,
     };
 
     private static FolderItem ReadFolder(JObject o) => new()

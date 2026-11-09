@@ -16,8 +16,8 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全屏全局启动器（Launchpad 样式）：顶部一行依次是本地应用 / 文件夹 / 网站三个横向页签、
-/// 紧凑搜索框与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
+/// 全屏全局启动器（Launchpad 样式）：顶部一行依次是本地应用 / 文件夹 / 网站 / 开始菜单
+/// 四个横向页签、紧凑搜索框与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
 /// 单击图标即启动，Esc 或点击空白处关闭。
 /// 非模态、单实例（由 <see cref="Infrastructure.ShortcutWindowHost"/> 管理）。
 /// </summary>
@@ -285,7 +285,7 @@ public partial class ShortcutsWindow : Window
     private static extern bool DeleteObject(IntPtr hObject);
 
     /// <summary>
-    /// 居中铺到工作区 78% 并切到指定页签（apps / folders / webs）；
+    /// 居中铺到工作区 78% 并切到指定页签（apps / folders / webs / startmenu）；
     /// tools / builtin 不是页签，改为直接展开搜索框右侧对应的工具文件夹。每次打开都重新读取数据。
     /// </summary>
     public void ShowPage(string? pageId)
@@ -296,6 +296,7 @@ public partial class ShortcutsWindow : Window
         _suppressEntryClickUntilUtc = DateTime.MinValue;
 
         ViewModel.Message = string.Empty;
+        ViewModel.Notice = string.Empty;
         ViewModel.Query = string.Empty;
         ViewModel.Reload();
         ViewModel.SelectedPage = NormalizePageId(pageId);
@@ -402,6 +403,7 @@ public partial class ShortcutsWindow : Window
     {
         "folders" => 1,
         "webs" => 2,
+        "startmenu" => 3,
         _ => 0,
     };
 
@@ -657,6 +659,28 @@ public partial class ShortcutsWindow : Window
 
         var menu = new ContextMenu();
 
+        // 开始菜单条目只读：可启动、收进启动器、定位文件，不允许改名 / 移除
+        if (entry.Kind == ShortcutKind.StartMenu)
+        {
+            menu.Items.Add(MenuItemFor("运行", () => LaunchEntry(entry)));
+            menu.Items.Add(MenuItemFor("添加到启动器", () => ViewModel.AddStartMenuEntry(entry)));
+            menu.Items.Add(new Separator());
+            menu.Items.Add(MenuItemFor("在资源管理器中显示",
+                () => { ViewModel.Reveal(entry); HideLauncher(); }));
+            ShowMenu(menu, target);
+            e.Handled = true;
+            return;
+        }
+
+        // 开始菜单按一级文件夹分出来的只读文件夹只提供展开
+        if (entry.IsGroup && entry.IsReadOnlyGroup)
+        {
+            menu.Items.Add(MenuItemFor("打开文件夹", () => ViewModel.OpenGroup(entry)));
+            ShowMenu(menu, target);
+            e.Handled = true;
+            return;
+        }
+
         // 系统工具与内置工具是固定目录，只提供「运行」，不参与改名 / 移除 / 刷新图标
         if (entry.Kind is ShortcutKind.Tool or ShortcutKind.InternalTool)
         {
@@ -818,7 +842,7 @@ public partial class ShortcutsWindow : Window
 
             case Key.F5:
                 e.Handled = true;
-                ViewModel.Reload();
+                ViewModel.Reload(forceStartMenuRefresh: true);
                 break;
 
             case Key.F when Keyboard.Modifiers == ModifierKeys.Control:
@@ -1275,7 +1299,8 @@ public partial class ShortcutsWindow : Window
     private void OnAddWebMenu(object sender, RoutedEventArgs e) =>
         _ = RunDialogAsync(() => ViewModel.AddWebAsync(this));
 
-    private void OnReloadMenu(object sender, RoutedEventArgs e) => ViewModel.Reload();
+    private void OnReloadMenu(object sender, RoutedEventArgs e) =>
+        ViewModel.Reload(forceStartMenuRefresh: true);
 
     private void OnCloseMenu(object sender, RoutedEventArgs e) => HideLauncher();
 
@@ -1302,6 +1327,7 @@ public partial class ShortcutsWindow : Window
         _dropPlan = null;
         HideDropIndicators();
         e.Effects = e.Data?.GetDataPresent(DataFormats.FileDrop) == true
+            && ViewModel.CanAcceptExternalDrop
             ? DragDropEffects.Copy
             : DragDropEffects.None;
         e.Handled = true;
@@ -1340,6 +1366,11 @@ public partial class ShortcutsWindow : Window
 
         if (e.Data?.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
             return;
+        if (!ViewModel.CanAcceptExternalDrop)
+        {
+            e.Handled = true;
+            return;
+        }
 
         foreach (var file in files)
         {

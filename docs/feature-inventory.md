@@ -42,7 +42,7 @@
 | 分组 | 接口数 | 现在的实现 | 界面入口 | 状态 |
 |------|-------:|-----------|---------|------|
 | 主壳 / 配置 / 对话框 | 12 | `SettingsService` + `HostCallbacks` | 设置页 / 各页按钮 / 菜单 | ✅ |
-| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` | 启动器（Launchpad）本地应用 / 文件夹 / 网站三页 | ✅ |
+| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` + `StartMenuService` | 启动器（Launchpad）本地应用 / 文件夹 / 网站三页 + 只读「开始菜单」页 | ✅ |
 | 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 启动器（Launchpad）搜索框右侧「系统工具」文件夹 | ✅ |
 | 进程监控 | 3 | `ProcessService` | 进程监控页 | ✅ |
 | 网络监控 | 8 | `NetworkService` | 网络监控页（流量/端口/测速） | ✅ |
@@ -86,12 +86,12 @@
 | `Layout`（菜单/侧栏/状态栏） | `MainWindow.xaml` | — | ✅ |
 | `AppMenuBar`（含关于窗） | `Menu` + `AboutWindow` | — | ✅ |
 | `ContextMenu`（卡片右键） | 三个视图的 `ContextMenu`（Tag 分派） | — | ✅ 本轮修复 |
-| `AppsPage` / `FoldersPage` / `WebsPage` | `ShortcutsWindow`（Launchpad 启动器） | `apps` / `folders` / `webs` | ✅ |
+| `AppsPage` / `FoldersPage` / `WebsPage` / `StartMenuPage` | `ShortcutsWindow`（Launchpad 启动器） | `apps` / `folders` / `webs` / `startmenu` | ✅ |
 | `DevEnvPage` | `DevEnvView` | `devenv` | ✅ |
 | `LavaPage`（7 个 Tab） | `LavaView`（7 个页签） | `lava` | ✅ |
 | `NetworkPage`（3 个 Tab） | `NetworkView`（3 个页签） | `network` | ✅ |
 | `ProcessesPage` | `ProcessesView` | `processes` | ✅ |
-| 系统工具（启动器页签） | `ShortcutsWindow`（系统工具页签） | `tools` | ✅ |
+| 系统工具（启动器文件夹） | `ShortcutService.GetSystemTools` → 搜索框右侧「系统工具」浮层 | `tools` | ✅ |
 | `JsonToolPage` | `JsonToolView` | `tools/json` | ✅ |
 | `HostsToolPage` | `HostsToolView` | `tools/hosts` | ✅ |
 | `HashToolPage` | `HashToolView` | `tools/hash` | ✅ |

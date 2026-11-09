@@ -16,7 +16,7 @@
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
     <!-- 悬浮启动器（Launchpad 样式）：居中占工作区 78% 的浅色磨砂玻璃面板上，
-         顶部一行从左到右是横向页签（本地应用 / 文件夹 / 网站）、紧凑搜索框，
+         顶部一行从左到右是横向页签（本地应用 / 文件夹 / 网站 / 开始菜单）、紧凑搜索框，
          以及「系统工具」「内置工具」两个只读文件夹；中部是大图标网格；
          单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
     <Window.DataContext>
@@ -602,12 +602,12 @@
                            Foreground="#403C3C43" />
                 <TextBlock Margin="0,12,0,0"
                            HorizontalAlignment="Center"
-                           Text="这里还没有快捷方式"
+                           Text="{Binding EmptyTitle}"
                            FontSize="15"
                            Foreground="#993C3C43" />
                 <TextBlock Margin="0,6,0,0"
                            HorizontalAlignment="Center"
-                           Text="把 .exe 或文件夹拖进来，或点右下角 ＋ 添加"
+                           Text="{Binding EmptyHint}"
                            FontSize="12"
                            Foreground="#663C3C43" />
             </StackPanel>
@@ -647,6 +647,12 @@
         <StackPanel Grid.Row="3"
                     Margin="0,4,0,34"
                     HorizontalAlignment="Center">
+            <TextBlock Margin="0,0,0,10"
+                       HorizontalAlignment="Center"
+                       Text="{Binding Notice}"
+                       FontSize="12"
+                       Foreground="#B33C3C43"
+                       Visibility="{Binding Notice, Converter={StaticResource NonEmptyString}}" />
             <TextBlock Margin="0,0,0,10"
                        HorizontalAlignment="Center"
                        Text="{Binding Summary}"

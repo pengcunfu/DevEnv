@@ -1,11 +1,12 @@
 using System.Windows;
 using System.Windows.Threading;
+using DevEnv.Core.Services;
 using DevEnv.Host.Windows;
 
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器宿主：本地应用 / 文件夹 / 网站三个页签共用同一个居中悬浮窗口，
+/// 全局启动器宿主：本地应用 / 文件夹 / 网站 / 开始菜单四个页签共用同一个居中悬浮窗口，
 /// 系统工具与内置工具是搜索框右侧的两个只读文件夹。
 /// 单实例，重复打开是「切到对应页签 / 展开文件夹并前置已有窗口」，不再开一堆。
 ///
@@ -24,12 +25,38 @@ public static class ShortcutWindowHost
     private static ShortcutsWindow? _window;
     private static DateTime _lastAutoDismissUtc = DateTime.MinValue;
     private static DispatcherTimer? _pendingOpenTimer;
+    private static bool _startMenuSyncStarted;
 
     /// <summary>
     /// 启动后调用一次：在内存里建好窗口并完成布局与首帧渲染（屏幕外、不可见）。
     /// 每次打开都临时创建窗口会让首次显示先闪空白，预热后 Show 只是把窗口摆出来。
+    /// 预热完成后顺带在后台给已有启动器应用补建开始菜单快捷方式，不阻塞界面。
     /// </summary>
-    public static void Prewarm() => EnsureWindow().Prewarm();
+    public static void Prewarm()
+    {
+        EnsureWindow().Prewarm();
+        StartStartMenuSync();
+    }
+
+    /// <summary>补建开始菜单快捷方式只跑一次；探针直接创建窗口，不会走到这里。</summary>
+    private static void StartStartMenuSync()
+    {
+        if (_startMenuSyncStarted)
+            return;
+
+        _startMenuSyncStarted = true;
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                CoreServices.Shortcuts.EnsureStartMenuShortcuts();
+            }
+            catch
+            {
+                // 开始菜单同步失败不影响启动与启动器本身
+            }
+        });
+    }
 
     private static ShortcutsWindow EnsureWindow()
     {
@@ -43,7 +70,7 @@ public static class ShortcutWindowHost
         return window;
     }
 
-    /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs；tools / builtin 直接展开对应工具文件夹。</summary>
+    /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs / startmenu；tools / builtin 直接展开对应工具文件夹。</summary>
     public static void Open(string? pageId = null)
     {
         // 开始菜单和启动器都是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，

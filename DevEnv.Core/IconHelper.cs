@@ -12,7 +12,14 @@ public static class IconHelper
     /// <summary>启动器里的图标要显示到 56px 以上，低于这个宽度的缓存视为旧图需要重提。</summary>
     private const int LauncherIconSize = 64;
 
+    /// <summary>图标缓存文件写入锁：开始菜单后台加载与 UI 刷新可能同时写同一目录。</summary>
+    private static readonly object IconGate = new();
+
     public static string IconsDirectory => Path.Combine(AppPaths.UserDataDirectory, "icons");
+
+    /// <summary>exe 图标缓存文件路径（不一定存在）。</summary>
+    public static string GetExecutableIconPath(string exePath) =>
+        Path.Combine(IconsDirectory, $"exe_{ComputeHash(exePath)}.png");
 
     public static string ComputeHash(string key)
     {
@@ -26,15 +33,68 @@ public static class IconHelper
     /// </summary>
     public static string? ExtractExecutableIcon(string exePath)
     {
-        var destPath = Path.Combine(IconsDirectory, $"exe_{ComputeHash(exePath)}.png");
+        var destPath = GetExecutableIconPath(exePath);
         try
         {
             using var bitmap = ExtractLargeBitmap(exePath);
             if (bitmap is null)
                 return File.Exists(destPath) ? destPath : null;
 
-            Directory.CreateDirectory(IconsDirectory);
-            bitmap.Save(destPath, ImageFormat.Png);
+            lock (IconGate)
+            {
+                Directory.CreateDirectory(IconsDirectory);
+                bitmap.Save(destPath, ImageFormat.Png);
+            }
+            return destPath;
+        }
+        catch
+        {
+            return File.Exists(destPath) ? destPath : null;
+        }
+    }
+
+    /// <summary>
+    /// 开始菜单批量加载用：缓存已经够大就直接复用，不做重复提取。
+    /// 与 <see cref="ExtractExecutableIcon"/> 的区别是不强制刷新（刷新图标仍走原方法）。
+    /// </summary>
+    public static string? EnsureCachedExecutableIcon(string exePath, int minSize = LauncherIconSize)
+    {
+        var cached = GetExecutableIconPath(exePath);
+        try
+        {
+            if (File.Exists(cached) && GetPixelWidth(cached) >= minSize)
+                return cached;
+        }
+        catch
+        {
+            // 缓存文件损坏时按未命中处理
+        }
+
+        return ExtractExecutableIcon(exePath);
+    }
+
+    /// <summary>
+    /// 为 .lnk / .url 等非 PE 文件提取 shell 关联图标并缓存。缓存键包含解析目标，
+    /// 快捷方式改目标后不会继续用旧图。
+    /// </summary>
+    public static string? EnsureAssociatedIcon(string filePath, string cacheKey, bool force = false)
+    {
+        var destPath = Path.Combine(IconsDirectory, $"lnk_{ComputeHash(cacheKey)}.png");
+        try
+        {
+            if (!force && File.Exists(destPath))
+                return destPath;
+
+            using var icon = Icon.ExtractAssociatedIcon(filePath);
+            if (icon is null)
+                return File.Exists(destPath) ? destPath : null;
+
+            lock (IconGate)
+            {
+                Directory.CreateDirectory(IconsDirectory);
+                using var bitmap = icon.ToBitmap();
+                bitmap.Save(destPath, ImageFormat.Png);
+            }
             return destPath;
         }
         catch
