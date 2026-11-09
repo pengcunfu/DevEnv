@@ -10,8 +10,11 @@ public sealed class AppConfig
     public bool DarkMode { get; set; }
     public string ShowWindowHotkey { get; set; } = "Ctrl+Alt+D";
 
-    /// <summary>全局唤起快捷应用（SigXor 搜索框）。</summary>
-    public string QuickAppHotkey { get; set; } = "Alt+Space";
+    /// <summary>全局唤起熔岩剪贴板。</summary>
+    public string ClipboardHotkey { get; set; } = "Ctrl+Space";
+
+    /// <summary>全局唤起熔岩翻译。</summary>
+    public string TranslatorHotkey { get; set; } = "Alt+Space";
 
     /// <summary>单独按 Win 键打开全局启动器（默认开启）；关闭后 Win 键回到系统开始菜单。</summary>
     public bool AltKeyLauncher { get; set; } = true;

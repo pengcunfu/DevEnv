@@ -68,7 +68,8 @@ public sealed class ConfigStore
         ["Language"] = "zh-CN",
         ["DarkMode"] = false,
         ["ShowWindowHotkey"] = "Ctrl+Alt+D",
-        ["QuickAppHotkey"] = "Alt+Space",
+        ["ClipboardHotkey"] = "Ctrl+Space",
+        ["TranslatorHotkey"] = "Alt+Space",
         ["AltKeyLauncher"] = true,
     };
 }

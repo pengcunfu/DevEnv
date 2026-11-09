@@ -208,7 +208,7 @@ public partial class App : System.Windows.Application
 
         _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
         // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
-        // 单击托盘图标 = 快捷应用；全局启动器与主窗口都从右键菜单进入
+        // 单击托盘图标 = 全局启动器；主窗口从右键菜单进入
         _tray.ShortcutsRequested += () => Dispatcher.InvokeAsync(() => ShortcutWindowHost.Toggle());
         _tray.MainWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
         _tray.SettingsRequested += () => Dispatcher.InvokeAsync(() => SettingsDialogHost.Open());
@@ -216,7 +216,7 @@ public partial class App : System.Windows.Application
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
         _tray.ExitRequested += ExitApp;
 
-        // SigXor 模块：文件快速预览 / 语音输入 / 区域截图 OCR 取色 / 快捷应用
+        // SigXor 模块：文件快速预览 / 语音输入 / 区域截图 OCR 取色 / 文件浏览器
         _sigXor = new SigXorHost(Dispatcher);
         _sigXor.NotificationRequested += (title, message) =>
             Dispatcher.BeginInvoke(new Action(() => _tray?.ShowBalloon(message, Forms.ToolTipIcon.Info)));
@@ -232,7 +232,6 @@ public partial class App : System.Windows.Application
         _tray.StartVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StartVoiceService());
         _tray.StopVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StopVoiceService());
         _tray.SigXorSettingsRequested += () => Dispatcher.InvokeAsync(() => OpenSigXorSettingsTab(SettingsSection.Voice));
-        _tray.SigXorLauncherRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowLauncher());
         _tray.SigXorBrowserRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowBrowser());
         _tray.SetVoiceServiceState(_sigXor?.IsVoiceServiceRunning ?? false);
 
@@ -572,7 +571,9 @@ public partial class App : System.Windows.Application
         {
             _hotkeys = new GlobalHotkeys(hwnd);
             _hotkeys.ShowWindowPressed += ShowMainWindow;
-            _hotkeys.LauncherPressed += () => _sigXor?.ShowLauncher();
+            _hotkeys.ClipboardPressed += () => ShowClipboardWindow(true);
+            _hotkeys.TranslatorPressed += () =>
+                ShowTranslatorWindow(new TranslatorRequest { Visible = true, FillClipboard = true });
         }
         else
         {
@@ -597,15 +598,18 @@ public partial class App : System.Windows.Application
     private void ApplyGlobalHotkeys(bool notify = true, bool includeAltKey = true)
     {
         string show = "Ctrl+Alt+D";
-        string quick = "Alt+Space";
+        string clipboard = "Ctrl+Space";
+        string translator = "Alt+Space";
         bool altKeyLauncher = true;
         try
         {
             var cfg = CoreServices.Settings.GetConfig();
             if (!string.IsNullOrWhiteSpace(cfg.ShowWindowHotkey))
                 show = cfg.ShowWindowHotkey;
-            if (!string.IsNullOrWhiteSpace(cfg.QuickAppHotkey))
-                quick = cfg.QuickAppHotkey;
+            if (!string.IsNullOrWhiteSpace(cfg.ClipboardHotkey))
+                clipboard = cfg.ClipboardHotkey;
+            if (!string.IsNullOrWhiteSpace(cfg.TranslatorHotkey))
+                translator = cfg.TranslatorHotkey;
             altKeyLauncher = cfg.AltKeyLauncher;
         }
         catch
@@ -617,8 +621,10 @@ public partial class App : System.Windows.Application
         {
             if (!_hotkeys.ApplyShowWindowHotkey(show) && notify)
                 ShowHotkeyFailure(show, "显示主窗口");
-            if (!_hotkeys.ApplyLauncherHotkey(quick) && notify)
-                ShowHotkeyFailure(quick, "快捷应用");
+            if (!_hotkeys.ApplyClipboardHotkey(clipboard) && notify)
+                ShowHotkeyFailure(clipboard, "熔岩剪贴板");
+            if (!_hotkeys.ApplyTranslatorHotkey(translator) && notify)
+                ShowHotkeyFailure(translator, "熔岩翻译");
         }
 
         if (includeAltKey)
@@ -798,7 +804,6 @@ public partial class App : System.Windows.Application
         HostCallbacks.OnOpenFilePreview += () => Dispatcher.BeginInvoke(new Action(ShowFilePreviewDialog));
         HostCallbacks.OnOpenScreenshot += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.StartCapture()));
         HostCallbacks.OnOpenSigXorSettings += section => Dispatcher.BeginInvoke(new Action(() => OpenSigXorSettingsTab(section)));
-        HostCallbacks.OnOpenSigXorLauncher += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowLauncher()));
         HostCallbacks.OnOpenSigXorBrowser += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.ShowBrowser()));
         HostCallbacks.OnOpenSigXorUpdate += () => Dispatcher.BeginInvoke(new Action(() => _sigXor?.OpenUpdateWindow()));
     }

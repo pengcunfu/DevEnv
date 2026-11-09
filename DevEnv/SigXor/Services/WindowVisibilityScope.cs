@@ -18,7 +18,7 @@ public sealed class WindowVisibilityScope : IDisposable
             if (!window.IsVisible) continue;
             // 设置窗口已并入宿主设置对话框（DevEnv.Host.Windows.SettingsWindow），
             // 截图前同样要隐藏，否则会被截进画面。
-            if (window is not (HostWindows.SettingsWindow or ShellPreviewWindow or LauncherWindow or UpdateWindow or MainWindow))
+            if (window is not (HostWindows.SettingsWindow or ShellPreviewWindow or UpdateWindow or MainWindow))
                 continue;
 
             try

@@ -91,7 +91,7 @@ public sealed class SigXorHost : IDisposable
         };
         _screens = new WpfScreenService();
 
-        _shellPreview = new ShellPreviewService(_settings, _backup, _dispatcher, _hotkeyRouter, () => OpenSettings());
+        _shellPreview = new ShellPreviewService(_settings, _backup, _dispatcher, _hotkeyRouter);
         _voiceService = new VoiceInputService(_settings, _hotkeyRouter, _screens, _dispatcher);
         _voiceService.NotificationRequested += (title, message) => NotificationRequested?.Invoke(title, message);
         _voiceService.StatusChanged += (_, status) => VoiceStatusChanged?.Invoke(status);
@@ -103,9 +103,6 @@ public sealed class SigXorHost : IDisposable
 
         // 后台预热 WebView2 环境与各预览宿主，缩短 md / pdf / office 首次预览等待
         WebViewHostPool.StartWarmup(_dispatcher);
-
-        // 空闲时预热启动器（后台扫描开始菜单 + 预建窗口），避免首次打开时卡界面
-        _dispatcher.BeginInvoke(() => _shellPreview?.WarmLauncher(), DispatcherPriority.ApplicationIdle);
 
         if (_settings.Current.Voice.AutoStartService)
             _ = _voiceService.TryAutoStartAsync();
@@ -121,13 +118,6 @@ public sealed class SigXorHost : IDisposable
     {
         if (!IsInitialized) Initialize();
         _shellPreview?.ShowPreviewForPaths(paths);
-    }
-
-    /// <summary>打开快捷应用（应用 / 文件 / 命令启动）。</summary>
-    public void ShowLauncher()
-    {
-        if (!IsInitialized) Initialize();
-        _shellPreview?.ShowLauncher();
     }
 
     /// <summary>打开文件浏览器窗口（目录导航 + 内嵌预览）。</summary>

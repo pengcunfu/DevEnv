@@ -66,8 +66,6 @@ public static class SigXorSmokeProbe
 
         // ---- 窗口 ----
         Probe("Views.ShellPreviewWindow", () => new Views.ShellPreviewWindow());
-        Probe("Views.LauncherWindow", () =>
-            new Views.LauncherWindow(new Services.LauncherService(), () => { }));
         Probe("MainWindow", () => new MainWindow());
         Probe("Views.SigXorGeneralView", () =>
             new Views.SigXorGeneralView(new Services.SettingsService()));

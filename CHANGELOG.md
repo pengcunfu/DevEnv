@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Changed
+- 移除「快捷应用」界面（SigXor 搜索框式启动器 `LauncherWindow` / `LauncherService`）及其托盘菜单、系统工具目录和自检探针入口，托盘单击改为打开全局启动器；熔岩剪贴板与熔岩翻译改回全局热键：`Ctrl+Space` 打开剪贴板窗口，`Alt+Space` 打开翻译窗口并自动填充剪贴板文本。`data.json` 的 `Config.QuickAppHotkey` 由 `Config.ClipboardHotkey` 与 `Config.TranslatorHotkey` 取代，「设置 → 快捷键」页对应增加两个录制框；应用、文件、命令的启动能力继续由全局启动器提供
 - 全局启动器页签扩为「本地应用 / 文件夹 / 网站 / 开始菜单」四个：第四个页签只读展示用户与公共开始菜单里的 `.lnk` / `.url`，按一级文件夹分组，已收进启动器的条目按目标路径 / URL 自动隐藏，右键可启动、定位或添加到启动器
 - 用户数据与配置统一收拢到 `文档\FNSoftware\DevEnv\`：
   - 熔岩翻译配置从 `%USERPROFILE%\.lava_translator\config.json` 迁到 `文档\FNSoftware\DevEnv\Translator\config.json`，首次启动自动迁移并清理旧目录

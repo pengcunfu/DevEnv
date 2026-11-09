@@ -21,7 +21,8 @@ public sealed class SettingsService
             Language = json.Value<string>("Language") ?? "zh-CN",
             DarkMode = json.Value<bool?>("DarkMode") == true,
             ShowWindowHotkey = json.Value<string>("ShowWindowHotkey") ?? "Ctrl+Alt+D",
-            QuickAppHotkey = json.Value<string>("QuickAppHotkey") ?? "Alt+Space",
+            ClipboardHotkey = json.Value<string>("ClipboardHotkey") ?? "Ctrl+Space",
+            TranslatorHotkey = json.Value<string>("TranslatorHotkey") ?? "Alt+Space",
             // 缺省开启：新用户装上就能用左 Alt 键唤出全局启动器
             AltKeyLauncher = json.Value<bool?>("AltKeyLauncher") != false,
         };
@@ -54,24 +55,28 @@ public sealed class SettingsService
     /// <summary>保存全局快捷键与 Win 键开关，并通知宿主重新注册热键。</summary>
     public OperationResult SaveHotkeys(
         string showWindowHotkey,
-        string quickAppHotkey,
+        string clipboardHotkey,
+        string translatorHotkey,
         bool altKeyLauncher)
     {
         var errors = HotkeyValidator.ValidateBindings(
         [
             ("显示主窗口", showWindowHotkey),
-            ("快捷应用", quickAppHotkey),
+            ("熔岩剪贴板", clipboardHotkey),
+            ("熔岩翻译", translatorHotkey),
         ]);
         if (errors.Count > 0)
             return OperationResult.Fail(errors[0].Message);
 
         HotkeyParser.TryParse(showWindowHotkey, out HotkeyGesture show);
-        HotkeyParser.TryParse(quickAppHotkey, out HotkeyGesture quick);
+        HotkeyParser.TryParse(clipboardHotkey, out HotkeyGesture clipboard);
+        HotkeyParser.TryParse(translatorHotkey, out HotkeyGesture translator);
 
         var patch = new Newtonsoft.Json.Linq.JObject
         {
             ["ShowWindowHotkey"] = HotkeyParser.FormatCanonical(show),
-            ["QuickAppHotkey"] = HotkeyParser.FormatCanonical(quick),
+            ["ClipboardHotkey"] = HotkeyParser.FormatCanonical(clipboard),
+            ["TranslatorHotkey"] = HotkeyParser.FormatCanonical(translator),
             ["AltKeyLauncher"] = altKeyLauncher,
         };
 

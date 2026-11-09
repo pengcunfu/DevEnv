@@ -20,11 +20,11 @@
                 <TextBlock Margin="0,12,0,0"
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource TextSecondaryBrush}"
-                           Text="专为程序员设计的多语言开发环境管理工具，内置开发环境管理、熔岩翻译、熔岩剪贴板、文件快速预览、语音输入、区域截图、快捷应用与全局启动器。" />
+                           Text="专为程序员设计的多语言开发环境管理工具，内置开发环境管理、熔岩翻译、熔岩剪贴板、文件快速预览、语音输入、区域截图与全局启动器。" />
                 <TextBlock Margin="0,10,0,0"
                            TextWrapping="Wrap"
                            Style="{DynamicResource MutedTextStyle}"
-                           Text="熔岩翻译 / 熔岩剪贴板：快捷应用顶部入口；显示窗口：设置 → 快捷键" />
+                           Text="熔岩翻译：Alt+Space；熔岩剪贴板：Ctrl+Space；显示窗口：Ctrl+Alt+D（均可在设置 → 快捷键修改）" />
                 <TextBlock Margin="0,12,0,0" Text="© 2026 FireNeb · DevEnv" Style="{DynamicResource MutedTextStyle}" />
             </StackPanel>
         </Border>

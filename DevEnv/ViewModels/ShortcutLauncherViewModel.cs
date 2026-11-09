@@ -1251,7 +1251,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         return OperationResult.Success();
     }
 
-    /// <summary>打开熔岩翻译并填充剪贴板文本，行为与翻译热键、快捷应用入口一致。</summary>
+    /// <summary>打开熔岩翻译并填充剪贴板文本，行为与 Alt+Space 翻译热键一致。</summary>
     private static OperationResult RunTranslator()
     {
         if (HostCallbacks.OnShowTranslator is not { } show)

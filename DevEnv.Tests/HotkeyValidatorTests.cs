@@ -7,6 +7,7 @@ public class HotkeyValidatorTests
     [Theory]
     [InlineData("Ctrl+Alt+D", true)]
     [InlineData("Alt+Space", true)]
+    [InlineData("Ctrl+Space", true)]
     [InlineData("Ctrl+Shift+`", true)]
     [InlineData("Shift+D", false)]
     [InlineData("D", false)]
@@ -27,10 +28,10 @@ public class HotkeyValidatorTests
         var errors = HotkeyValidator.ValidateBindings(
         [
             ("显示主窗口", "Ctrl+Alt+D"),
-            ("快捷应用", "Ctrl+Alt+D"),
+            ("熔岩剪贴板", "Ctrl+Alt+D"),
         ]);
 
-        Assert.Contains(errors, e => e.Id == "快捷应用");
+        Assert.Contains(errors, e => e.Id == "熔岩剪贴板");
     }
 
     [Fact]
@@ -39,7 +40,8 @@ public class HotkeyValidatorTests
         var errors = HotkeyValidator.ValidateBindings(
         [
             ("显示主窗口", "Ctrl+Alt+D"),
-            ("快捷应用", "Alt+Space"),
+            ("熔岩剪贴板", "Ctrl+Space"),
+            ("熔岩翻译", "Alt+Space"),
         ]);
 
         Assert.Empty(errors);

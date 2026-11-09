@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Interop;
 using System.Windows.Threading;
-using DevEnv.Core.Services;
 using DevEnv.Core.SigXor;
 using DevEnv.Core.SigXor.Toolkit;
 using DevEnv.Host.SigXor.ViewModels;
@@ -23,12 +22,8 @@ public sealed class ShellPreviewService : IDisposable
     private readonly IDisposable _hotkeyRegistration;
     private readonly ExplorerSelectionService _selection = new();
     private readonly DesktopSelectionService _desktopSelection = new();
-    // 快捷应用同时搜索全局启动器里的本地应用 / 文件夹 / 网站
-    private readonly LauncherService _launcher = new(CoreServices.Shortcuts);
-    private readonly Action _openSettings;
     private ShellPreviewViewModel? _viewModel;
     private ShellPreviewWindow? _window;
-    private LauncherWindow? _launcherWindow;
     /// <summary>最近一次预览的资源管理器选中项，用于区分「再按空格关闭」和「换了文件继续预览」。</summary>
     private string _lastSelectionKey = "";
     private bool _disposed;
@@ -37,13 +32,11 @@ public sealed class ShellPreviewService : IDisposable
         SettingsService settings,
         BackupService backup,
         Dispatcher dispatcher,
-        GlobalHotkeyRouter router,
-        Action openSettings)
+        GlobalHotkeyRouter router)
     {
         _settings = settings;
         _backup = backup;
         _dispatcher = dispatcher;
-        _openSettings = openSettings;
         _hotkeyRegistration = router.Register(100, OnKeyPressed, OnKeyReleased);
     }
 
@@ -79,8 +72,8 @@ public sealed class ShellPreviewService : IDisposable
     private bool OnKeyPressed(int vkCode)
     {
         // 预览 / 关闭快捷键都是单键：带 Alt / Ctrl / Win 时放行给系统与 RegisterHotKey。
-        // 否则低级键盘钩子会把 Alt + 空格（快捷应用）、Alt + Esc（切换窗口）这类组合键吞掉，
-        // 表现为资源管理器 / 桌面里 Alt + 空格呼不出快捷应用。
+        // 否则低级键盘钩子会把 Alt + 空格（熔岩翻译）、Alt + Esc（切换窗口）这类组合键吞掉，
+        // 表现为资源管理器 / 桌面里 Alt + 空格呼不出翻译窗。
         if (HasSystemModifier()) return false;
 
         PreviewSettings preview = _settings.Current.Preview;
@@ -97,9 +90,6 @@ public sealed class ShellPreviewService : IDisposable
         }
 
         if (vkCode != openKey) return false;
-
-        // 启动器已打开：不拦截预览键，让搜索框正常输入
-        if (_launcherWindow is { IsVisible: true }) return false;
 
         // 浮窗已打开：预览窗持有前台或在资源管理器里时，再按预览键处理（吞掉按键，避免传给 Explorer）。
         // 失焦到其他应用后不拦截，预览键交给当前应用，避免在别处打字时预览被误关。
@@ -257,25 +247,6 @@ public sealed class ShellPreviewService : IDisposable
         _lastSelectionKey = "";
     }
 
-    /// <summary>
-    /// 启动期预热启动器：后台建立应用索引，并预先构造窗口。
-    /// 首次左键点托盘时不再同步扫描开始菜单、不卡界面。
-    /// </summary>
-    public void WarmLauncher()
-    {
-        if (_disposed) return;
-        _ = _launcher.WarmupAsync();
-        _launcherWindow ??= new LauncherWindow(_launcher, _openSettings);
-    }
-
-    /// <summary>显示快捷应用（Alt+Space 全局热键，或托盘左键点击）。</summary>
-    public void ShowLauncher()
-    {
-        if (_disposed) return;
-        _launcherWindow ??= new LauncherWindow(_launcher, _openSettings);
-        _launcherWindow.ShowLauncher();
-    }
-
     private static bool IsInputFocusOnTextBox(IntPtr window)
     {
         try
@@ -324,7 +295,6 @@ public sealed class ShellPreviewService : IDisposable
         _hotkeyRegistration.Dispose();
         _viewModel?.DisposeContent();
         _window?.Close();
-        _launcherWindow?.Close();
     }
 
     [DllImport("user32.dll")]

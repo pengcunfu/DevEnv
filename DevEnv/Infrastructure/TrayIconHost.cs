@@ -15,7 +15,7 @@ internal sealed class TrayIconHost : IDisposable
     public event Action? MainWindowRequested;
     /// <summary>右键菜单「设置…」：打开合并后的设置对话框（含关于与帮助）。</summary>
     public event Action? SettingsRequested;
-    /// <summary>右键菜单「全局启动器…」（单击托盘图标打开的是 SigXor 快捷应用）。</summary>
+    /// <summary>全局启动器（单击托盘图标或右键菜单「全局启动器…」）。</summary>
     public event Action? ShortcutsRequested;
     public event Action? TranslatorRequested;
     public event Action? ClipboardRequested;
@@ -31,8 +31,6 @@ internal sealed class TrayIconHost : IDisposable
     public event Action? StopVoiceRequested;
     /// <summary>SigXor 模块：打开模块设置。</summary>
     public event Action? SigXorSettingsRequested;
-    /// <summary>SigXor 模块：打开快捷应用（搜索并启动应用 / 文件 / 命令）。</summary>
-    public event Action? SigXorLauncherRequested;
     /// <summary>SigXor 模块：打开文件浏览器窗口。</summary>
     public event Action? SigXorBrowserRequested;
 
@@ -52,7 +50,6 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add("熔岩剪贴板", null, (_, _) => Raise(ClipboardRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("文件快速预览…", null, (_, _) => Raise(FilePreviewRequested));
-        _menu.Items.Add("快捷应用…", null, (_, _) => Raise(SigXorLauncherRequested));
         _menu.Items.Add("文件浏览器…", null, (_, _) => Raise(SigXorBrowserRequested));
         _menu.Items.Add("区域截图", null, (_, _) => Raise(ScreenshotRequested));
         _menu.Items.Add("启动语音服务", null, (_, _) => Raise(StartVoiceRequested));
@@ -62,8 +59,7 @@ internal sealed class TrayIconHost : IDisposable
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;
 
-        // 单击托盘图标打开 SigXor 快捷应用（搜索并启动应用 / 文件 / 命令）；
-        // 全局启动器（Launchpad）与主窗口都从右键菜单进入。
+        // 单击托盘图标打开全局启动器（Launchpad）；主窗口仍从右键菜单进入。
         // 右键仍然弹出菜单（NotifyIcon 挂上 ContextMenuStrip 后的默认行为）。
         _notifyIcon.MouseClick += OnMouseClick;
     }
@@ -72,7 +68,7 @@ internal sealed class TrayIconHost : IDisposable
     {
         if (e.Button != Forms.MouseButtons.Left)
             return;
-        Raise(SigXorLauncherRequested);
+        Raise(ShortcutsRequested);
     }
 
     /// <summary>语音服务运行时，把「启动语音服务」置灰，只留「停止」。</summary>

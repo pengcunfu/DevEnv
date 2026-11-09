@@ -53,7 +53,7 @@
         <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
             <StackPanel>
                 <TextBlock Text="熔岩剪贴板" Style="{DynamicResource PageTitleStyle}" />
-                <TextBlock Text="自动记录文本 / 图片 · 双击复制 · 从快捷应用顶部入口打开" Style="{DynamicResource PageHintStyle}" />
+                <TextBlock Text="自动记录文本 / 图片 · 双击复制 · 按 Ctrl+Space 或从托盘菜单打开" Style="{DynamicResource PageHintStyle}" />
             </StackPanel>
         </Grid>
 

@@ -79,7 +79,10 @@ $expectedMissing = @(
     'UI\Services\Updater.cs',            # 更新统一由 DevEnv 宿主自研更新器提供
     'UI\Services\AutoStartService.cs',   # 自启改由 DevEnv 的 SelfStarting 统一管理
     'UI\SettingsWindow.xaml',            # 独立设置窗口 → 并入宿主设置对话框的页签
-    'UI\SettingsWindow.xaml.cs'
+    'UI\SettingsWindow.xaml.cs',
+    'UI\Views\LauncherWindow.xaml',      # 快捷应用界面已移除，入口改为剪贴板 / 翻译全局热键
+    'UI\Views\LauncherWindow.xaml.cs',
+    'UI\Services\LauncherService.cs'     # 仅服务于快捷应用，随界面一并删除
 )
 
 # 有意改写的文件：为适配 DevEnv 宿主而做的必要改动。
@@ -90,9 +93,10 @@ $expectedChanged = @(
     'UI\Services\UpdateService.cs',      # 改为包装 DevEnv 的宿主更新服务
     'UI\ViewModels\UpdateViewModel.cs',  # 适配新的更新接口
     'UI\Views\TextView.xaml.cs',         # 编辑器底色固定为深色，配 VS Code Dark 语法配色
-    'UI\Views\LauncherWindow.xaml.cs',   # 设置入口改为打开宿主设置对话框的对应页签
-    'UI\Services\ShellPreviewService.cs', # 设置入口改为打开宿主设置对话框的对应页签
+    'UI\Services\ShellPreviewService.cs', # 移除快捷应用接线，设置入口并入宿主设置对话框
     'UI\Services\WindowVisibilityScope.cs', # 设置窗口已并入宿主，截图前改为隐藏宿主设置对话框
+    'UI\AppPaths.cs',                    # 移除快捷应用固定列表路径
+    'UI\Diagnostics\SigXorSmokeProbe.cs', # 移除快捷应用窗口探针
     'UI\Toolkit\Capture\ScreenshotToolbarWindow.xaml', # 深色工具条上的按钮文字改为跟随按钮 Foreground
     'UI\Toolkit\Ocr\OcrResultWindow.xaml',             # 同上（标题栏按钮文字）
 
@@ -107,7 +111,6 @@ $expectedChanged = @(
     'UI\Views\HtmlView.xaml',
     'UI\Views\ImageView.xaml',
     'UI\Views\InfoView.xaml',
-    'UI\Views\LauncherWindow.xaml',
     'UI\Views\MarkdownView.xaml',
     'UI\Views\OfficeView.xaml',
     'UI\Views\PdfView.xaml',

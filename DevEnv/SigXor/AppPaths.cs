@@ -22,8 +22,6 @@ public static class AppPaths
     public static string LogDirectory { get; } = Path.Combine(DataDirectory, "Logs");
     /// <summary>临时预览缓存（如 PPT 导出的幻灯片 PNG）。</summary>
     public static string PreviewCacheDirectory { get; } = Path.Combine(DataDirectory, "PreviewCache");
-    /// <summary>用户固定的快捷应用列表。</summary>
-    public static string PinnedAppsPath { get; } = Path.Combine(DataDirectory, "pinned-apps.json");
     public static string ModelsDirectory { get; } = Path.Combine(DataDirectory, "Models");
     public static string SpeechModelsDirectory { get; } = Path.Combine(ModelsDirectory, "Speech");
     public static string OcrModelsDirectory { get; } = Path.Combine(ModelsDirectory, "Ocr");

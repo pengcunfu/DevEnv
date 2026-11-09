@@ -62,7 +62,8 @@ public partial class HotkeysSettingsView : UserControl
     public void CancelCapture()
     {
         ShowWindowRecorder.CancelCapture();
-        QuickAppRecorder.CancelCapture();
+        ClipboardRecorder.CancelCapture();
+        TranslatorRecorder.CancelCapture();
     }
 
     private void InitializeOptions()
@@ -106,7 +107,8 @@ public partial class HotkeysSettingsView : UserControl
 
         var cfg = _hostSettings.GetConfig();
         ShowWindowRecorder.Hotkey = NormalizeHotkey(cfg.ShowWindowHotkey, "Ctrl+Alt+D");
-        QuickAppRecorder.Hotkey = NormalizeHotkey(cfg.QuickAppHotkey, "Alt+Space");
+        ClipboardRecorder.Hotkey = NormalizeHotkey(cfg.ClipboardHotkey, "Ctrl+Space");
+        TranslatorRecorder.Hotkey = NormalizeHotkey(cfg.TranslatorHotkey, "Alt+Space");
         AltKeyLauncherCheck.IsChecked = cfg.AltKeyLauncher;
 
         var s = _settings.Current;
@@ -157,7 +159,8 @@ public partial class HotkeysSettingsView : UserControl
         var errors = HotkeyValidator.ValidateBindings(
         [
             ("显示主窗口", ShowWindowRecorder.Hotkey),
-            ("快捷应用", QuickAppRecorder.Hotkey),
+            ("熔岩剪贴板", ClipboardRecorder.Hotkey),
+            ("熔岩翻译", TranslatorRecorder.Hotkey),
         ]);
         if (errors.Count > 0)
         {
@@ -184,7 +187,8 @@ public partial class HotkeysSettingsView : UserControl
 
         var hostResult = _hostSettings.SaveHotkeys(
             ShowWindowRecorder.Hotkey,
-            QuickAppRecorder.Hotkey,
+            ClipboardRecorder.Hotkey,
+            TranslatorRecorder.Hotkey,
             AltKeyLauncherCheck.IsChecked == true);
         if (!hostResult.Ok)
         {
@@ -217,7 +221,8 @@ public partial class HotkeysSettingsView : UserControl
         if (result != MessageBoxResult.OK) return;
 
         ShowWindowRecorder.Hotkey = "Ctrl+Alt+D";
-        QuickAppRecorder.Hotkey = "Alt+Space";
+        ClipboardRecorder.Hotkey = "Ctrl+Space";
+        TranslatorRecorder.Hotkey = "Alt+Space";
         AltKeyLauncherCheck.IsChecked = true;
         VoiceShortcutCombo.SelectedValue = ShortcutDefinition.RightAlt;
         CaptureEnabledCheck.IsChecked = true;

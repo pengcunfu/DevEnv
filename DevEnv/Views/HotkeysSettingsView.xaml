@@ -13,8 +13,12 @@
                 <controls:HotkeyRecorderBox x:Name="ShowWindowRecorder" Width="260"
                                             HorizontalAlignment="Left" />
 
-                <TextBlock Text="快捷应用" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,4" />
-                <controls:HotkeyRecorderBox x:Name="QuickAppRecorder" Width="260"
+                <TextBlock Text="熔岩剪贴板" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,4" />
+                <controls:HotkeyRecorderBox x:Name="ClipboardRecorder" Width="260"
+                                            HorizontalAlignment="Left" />
+
+                <TextBlock Text="熔岩翻译" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,4" />
+                <controls:HotkeyRecorderBox x:Name="TranslatorRecorder" Width="260"
                                             HorizontalAlignment="Left" />
 
                 <CheckBox x:Name="AltKeyLauncherCheck" Content="单独按一下左 Alt 键打开全局启动器"

@@ -13,7 +13,7 @@
     <DockPanel Margin="14">
         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
             <TextBlock Text="熔岩翻译" Style="{DynamicResource PageTitleStyle}" />
-            <TextBlock Text="翻译站运行在独立窗口（WPF + WebView2），不嵌在主界面里。从快捷应用窗口顶部的翻译入口打开，自动填充剪贴板文本。"
+            <TextBlock Text="翻译站运行在独立窗口（WPF + WebView2），不嵌在主界面里。按 Alt+Space 或从托盘菜单打开，自动填充剪贴板文本。"
                        Style="{DynamicResource PageHintStyle}" />
         </StackPanel>
 

@@ -1,6 +1,6 @@
 # 熔岩剪贴板
 
-剪贴板历史模块，位于 `DevEnv.Core/Clipboard/`，由 `DevEnv.Host` 的剪贴板窗口承载界面。独立窗口是纯 WPF（不再需要 WebView2）；从快捷应用窗口顶部的剪贴板入口打开，不再注册全局快捷键。
+剪贴板历史模块，位于 `DevEnv.Core/Clipboard/`，由 `DevEnv.Host` 的剪贴板窗口承载界面。独立窗口是纯 WPF（不再需要 WebView2）；按 `Ctrl+Space` 全局热键或托盘菜单打开。
 
 ## 源码位置
 
