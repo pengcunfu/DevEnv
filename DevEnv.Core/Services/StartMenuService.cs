@@ -18,6 +18,7 @@ public sealed class StartMenuService
     private IReadOnlyList<StartMenuItem> _items = [];
     private HashSet<string> _targets = new(StringComparer.OrdinalIgnoreCase);
     private DateTime _loadedAtUtc = DateTime.MinValue;
+    private int _iconsEnrichedCount;
 
     public StartMenuService()
     {
@@ -83,14 +84,42 @@ public sealed class StartMenuService
         }
 
         var items = StartMenuIndex.Build(DefaultRoots(), ManagedFolderName, ["Startup"]);
-        Enrich(items);
+        ResolveTargets(items);
         _items = items;
         _targets = BuildTargets(items);
+        _iconsEnrichedCount = 0;
         _loadedAtUtc = DateTime.UtcNow;
         LastError = null;
     }
 
-    private static void Enrich(IReadOnlyList<StartMenuItem> items)
+    /// <summary>开始菜单索引与目标路径（不含图标提取）。</summary>
+    public bool IconsFullyEnriched => _iconsEnrichedCount >= _items.Count;
+
+    /// <summary>后台分批提取图标；返回已处理到的索引（等于 Count 时表示完成）。</summary>
+    public int EnrichIconsBatch(int startIndex, int batchSize)
+    {
+        if (batchSize <= 0)
+            batchSize = 24;
+
+        lock (_gate)
+        {
+            if (_items.Count == 0)
+                return 0;
+
+            var start = Math.Max(startIndex, _iconsEnrichedCount);
+            if (start >= _items.Count)
+                return _items.Count;
+
+            var end = Math.Min(start + batchSize, _items.Count);
+            for (var i = start; i < end; i++)
+                EnrichIcon(_items[i]);
+
+            _iconsEnrichedCount = end;
+            return end;
+        }
+    }
+
+    private static void ResolveTargets(IReadOnlyList<StartMenuItem> items)
     {
         using var gateway = ShellLinkGateway.Create();
         foreach (var item in items)
@@ -99,17 +128,26 @@ public sealed class StartMenuService
             {
                 item.IsResolved = StartMenuIndex.TryReadInternetShortcut(item.LinkPath, out var url);
                 item.TargetPath = item.IsResolved ? url : string.Empty;
-                item.IconPath = IconHelper.EnsureAssociatedIcon(
-                    item.LinkPath,
-                    item.LinkPath + "|" + item.TargetPath) ?? string.Empty;
                 continue;
             }
 
             var resolved = gateway.TryRead(item.LinkPath, out var target, out _);
             item.TargetPath = resolved ? target : string.Empty;
             item.IsResolved = resolved && !string.IsNullOrWhiteSpace(target);
-            item.IconPath = ResolveIcon(item, target);
         }
+    }
+
+    private static void EnrichIcon(StartMenuItem item)
+    {
+        if (item.Kind == StartMenuLinkKind.InternetShortcut)
+        {
+            item.IconPath = IconHelper.EnsureAssociatedIcon(
+                item.LinkPath,
+                item.LinkPath + "|" + item.TargetPath) ?? string.Empty;
+            return;
+        }
+
+        item.IconPath = ResolveIcon(item, item.TargetPath);
     }
 
     private static string ResolveIcon(StartMenuItem item, string target)

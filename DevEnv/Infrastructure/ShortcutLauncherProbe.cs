@@ -102,8 +102,9 @@ public static class ShortcutLauncherProbe
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
-            // 开始菜单在后台异步读取；等它落定再断言，避免图标提取 / COM 解析还没完成就切页
-            WaitUntil(() => !vm.IsStartMenuLoading, 10_000);
+            // 快捷方式与开始菜单都在后台加载；等索引落定再断言（图标可继续分批补齐）
+            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
+            WaitUntil(() => !vm.IsStartMenuLoading, 15_000);
 
             Check("页签为横向四个", vm.Pages.Count == 4, string.Join(" / ", vm.Pages.Select(p => p.Title)));
             Check("默认显示本地应用", vm.SelectedPage == 0);
@@ -300,14 +301,17 @@ public static class ShortcutLauncherProbe
 
             // 环境变量路由：tools / builtin 不是页签，ShowPage 直接展开对应工具文件夹
             window.ShowPage("tools");
+            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
             Check("DEVENV_START_PAGE=tools 直接展开系统工具文件夹",
                 vm.IsInsideGroup && vm.IsInsideReadOnlyGroup && !vm.IsSearching);
             window.ShowPage("builtin");
+            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
             Check("DEVENV_START_PAGE=builtin 直接展开内置工具文件夹",
                 vm.IsInsideGroup && vm.IsInsideReadOnlyGroup && !vm.IsSearching);
             window.ShowPage("apps");
+            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
             Check("回到 apps 页签时收起工具文件夹", !vm.IsInsideGroup && vm.SelectedPage == 0);
             Check("ShowPage 可见时安装窗口外点击监听", window.IsOutsideClickHookInstalled);

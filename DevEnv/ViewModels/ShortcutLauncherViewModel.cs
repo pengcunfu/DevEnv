@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DevEnv.Core;
 using DevEnv.Core.Models;
@@ -36,7 +38,12 @@ public sealed partial class LauncherEntry : ObservableObject
     public required ShortcutKind Kind { get; init; }
     public required int Index { get; init; }
     public required string Name { get; init; }
-    public string IconPath { get; init; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasIcon))]
+    [NotifyPropertyChangedFor(nameof(ShowsKindGlyph))]
+    private string _iconPath = string.Empty;
+
     public string TargetPath { get; init; } = string.Empty;
 
     /// <summary>开始菜单条目的 .lnk / .url 路径；其它类型为空。</summary>
@@ -193,11 +200,22 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private bool _startMenuLoading;
     private bool _startMenuReloadRequested;
     private string? _startMenuError;
+    private CancellationTokenSource? _startMenuIconCts;
+    private int _reloadGeneration;
+    private int _refreshGeneration;
+
+    /// <summary>快捷方式数据（应用 / 文件夹 / 网站）是否正在后台加载。</summary>
+    private bool _shortcutDataLoading;
+
+    /// <summary>Reload 期间请求打开的工具架，数据落定后补开，避免被异步重建清掉。</summary>
+    private string? _pendingShelfKey;
 
     /// <summary>批量重建时暂时屏蔽属性变更回调里的 Refresh，避免重复刷新。</summary>
     private bool _suspendRefresh;
 
     public ShortcutLauncherViewModel() => Reload();
+
+    public bool IsShortcutDataLoading => _shortcutDataLoading;
 
     public IReadOnlyList<LauncherPage> Pages { get; } =
     [
@@ -342,52 +360,95 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     /// <summary>
     /// 重新读取本地应用 / 文件夹 / 网站与两个工具文件夹；启动器每次打开都调用，保证其他入口的改动可见。
-    /// <paramref name="forceStartMenuRefresh"/> 为 true 时重新扫描开始菜单（F5 / 右键刷新）。
+    /// 数据在后台线程读取，图标分批补齐；<paramref name="forceStartMenuRefresh"/> 为 true 时重新扫描开始菜单。
     /// </summary>
-    public void Reload(bool forceStartMenuRefresh = false)
-    {
-        _suspendRefresh = true;
-        CurrentGroup = null;
-        _itemsByKey.Clear();
+    public void Reload(bool forceStartMenuRefresh = false) => _ = ReloadAsync(forceStartMenuRefresh);
 
-        _apps = CoreServices.Shortcuts.GetApps()
+    private async Task ReloadAsync(bool forceStartMenuRefresh)
+    {
+        var generation = Interlocked.Increment(ref _reloadGeneration);
+        SetShortcutDataLoading(true);
+
+        ShortcutReloadPayload payload;
+        try
+        {
+            payload = await Task.Run(BuildShortcutPayload).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            if (generation == _reloadGeneration)
+            {
+                await RunOnUiAsync(() => Message = ex.Message).ConfigureAwait(false);
+                SetShortcutDataLoading(false);
+            }
+            return;
+        }
+
+        if (generation != _reloadGeneration)
+            return;
+
+        await RunOnUiAsync(() =>
+        {
+            ApplyShortcutPayload(payload);
+            _suspendRefresh = false;
+            NotifyEditableChanged();
+            UpdateEmptyText();
+            if (forceStartMenuRefresh || _startMenuItems.Count == 0)
+                BeginStartMenuLoad(forceStartMenuRefresh);
+            else
+            {
+                RebuildStartMenuTiles();
+                RebuildAllItems();
+            }
+            Refresh();
+            SetShortcutDataLoading(false);
+        }).ConfigureAwait(false);
+
+        if (generation != _reloadGeneration)
+            return;
+
+        _ = UpgradeAppIconsAsync(generation);
+    }
+
+    private static ShortcutReloadPayload BuildShortcutPayload()
+    {
+        var apps = CoreServices.Shortcuts.GetApps()
             .Select((item, index) => new LauncherEntry
             {
                 Kind = ShortcutKind.App,
                 Index = index,
                 Key = LauncherLayout.AppKey(item.ExecPath),
                 Name = item.Name,
-                IconPath = UpgradeIcon(item.ExecPath, item.IconPath),
+                IconPath = item.IconPath ?? string.Empty,
                 TargetPath = item.ExecPath,
             })
             .ToList();
 
-        _folders = CoreServices.Shortcuts.GetFolders()
+        var folders = CoreServices.Shortcuts.GetFolders()
             .Select((item, index) => new LauncherEntry
             {
                 Kind = ShortcutKind.Folder,
                 Index = index,
                 Key = LauncherLayout.FolderKey(item.FolderPath),
                 Name = item.Name,
-                IconPath = item.IconPath,
+                IconPath = item.IconPath ?? string.Empty,
                 TargetPath = item.FolderPath,
             })
             .ToList();
 
-        _webs = CoreServices.Shortcuts.GetWebs()
+        var webs = CoreServices.Shortcuts.GetWebs()
             .Select((item, index) => new LauncherEntry
             {
                 Kind = ShortcutKind.Web,
                 Index = index,
                 Key = LauncherLayout.WebKey(item.Url),
                 Name = item.Name,
-                IconPath = item.IconPath,
+                IconPath = item.IconPath ?? string.Empty,
                 TargetPath = item.Url,
             })
             .ToList();
 
-        // 分类内保持目录原顺序；OrderBy 是稳定排序
-        _tools = CoreServices.Shortcuts.GetSystemTools()
+        var tools = CoreServices.Shortcuts.GetSystemTools()
             .OrderBy(item =>
             {
                 var rank = Array.IndexOf(ToolCategoryOrder, item.Category);
@@ -400,12 +461,12 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                 Key = item.Key,
                 Name = item.Name,
                 Category = item.Category,
-                IconPath = item.IconPath,
+                IconPath = item.IconPath ?? string.Empty,
                 TargetPath = item.Description,
             })
             .ToList();
 
-        _builtinTools = BuiltinToolDefinitions
+        var builtinTools = BuiltinToolDefinitions
             .Select((item, index) => new LauncherEntry
             {
                 Kind = ShortcutKind.InternalTool,
@@ -418,7 +479,29 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             })
             .ToList();
 
-        // 两个固定工具架不是页签，也不参与布局；它们只是在搜索框右侧展开的只读文件夹
+        var layout = CoreServices.Shortcuts.ReadLauncherLayout();
+        layout.Normalize(
+        [
+            apps.Select(entry => entry.Key).ToList(),
+            folders.Select(entry => entry.Key).ToList(),
+            webs.Select(entry => entry.Key).ToList(),
+        ]);
+
+        return new ShortcutReloadPayload(apps, folders, webs, tools, builtinTools, layout);
+    }
+
+    private void ApplyShortcutPayload(ShortcutReloadPayload payload)
+    {
+        _suspendRefresh = true;
+        CurrentGroup = null;
+        _itemsByKey.Clear();
+
+        _apps = payload.Apps;
+        _folders = payload.Folders;
+        _webs = payload.Webs;
+        _tools = payload.Tools;
+        _builtinTools = payload.BuiltinTools;
+
         SystemToolsShelf = new LauncherEntry
         {
             Kind = ShortcutKind.Group,
@@ -441,23 +524,29 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         foreach (var entry in _apps.Concat(_folders).Concat(_webs).Concat(_tools).Concat(_builtinTools))
             _itemsByKey[entry.Key] = entry;
 
-        _layout = CoreServices.Shortcuts.ReadLauncherLayout();
-        _layout.Normalize(
-        [
-            _apps.Select(entry => entry.Key).ToList(),
-            _folders.Select(entry => entry.Key).ToList(),
-            _webs.Select(entry => entry.Key).ToList(),
-        ]);
+        _layout = payload.Layout;
         RebuildTiles();
-        RebuildStartMenuTiles();
         RebuildAllItems();
 
-        _suspendRefresh = false;
-        NotifyEditableChanged();
-        UpdateEmptyText();
-        BeginStartMenuLoad(forceStartMenuRefresh);
-        Refresh();
+        // ShowPage 在 Reload 之后立刻打开工具架时，旧工具架会在异步重建中被清掉；
+        // 这里按请求的 key 在新数据上补开一次，保证 tools / builtin 路由落得住
+        var pendingShelfKey = _pendingShelfKey;
+        _pendingShelfKey = null;
+        CurrentGroup = pendingShelfKey switch
+        {
+            SystemToolsShelfKey => SystemToolsShelf,
+            BuiltinToolsShelfKey => BuiltinToolsShelf,
+            _ => null,
+        };
     }
+
+    private sealed record ShortcutReloadPayload(
+        List<LauncherEntry> Apps,
+        List<LauncherEntry> Folders,
+        List<LauncherEntry> Webs,
+        List<LauncherEntry> Tools,
+        List<LauncherEntry> BuiltinTools,
+        LauncherLayout Layout);
 
     /// <summary>把应用 / 文件夹 / 网站 / 工具与开始菜单条目合并成搜索数据源。</summary>
     private void RebuildAllItems()
@@ -551,6 +640,13 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>后台读取开始菜单；已有请求在跑时不重复启动，必要时完成后补一次强制刷新。</summary>
     private void BeginStartMenuLoad(bool force)
     {
+        if (!force && _startMenuItems.Count > 0)
+        {
+            if (!CoreServices.StartMenu.IconsFullyEnriched)
+                ContinueStartMenuIcons();
+            return;
+        }
+
         if (_startMenuLoading)
         {
             if (force)
@@ -565,10 +661,13 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     {
         _startMenuLoading = true;
         _startMenuError = null;
+        _startMenuIconCts?.Cancel();
+        _startMenuIconCts = new CancellationTokenSource();
+        var iconCt = _startMenuIconCts.Token;
 
         try
         {
-            _startMenuItems = await Task.Run(() => CoreServices.StartMenu.GetItems(force));
+            _startMenuItems = await Task.Run(() => CoreServices.StartMenu.GetItems(force)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -582,23 +681,100 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         var groupId = CurrentGroup?.GroupId;
         var wasStartMenuGroup = CurrentGroup?.Key.StartsWith("startmenu-group|", StringComparison.OrdinalIgnoreCase) == true;
 
-        RebuildStartMenuTiles();
-        RebuildAllItems();
-
-        if (wasStartMenuGroup && groupId is not null)
+        await RunOnUiAsync(() =>
         {
-            _suspendRefresh = true;
-            CurrentGroup = FindStartMenuGroup(groupId);
-            _suspendRefresh = false;
-        }
+            RebuildStartMenuTiles();
+            RebuildAllItems();
 
-        OnPropertyChanged(nameof(IsStartMenuLoading));
-        Refresh();
+            if (wasStartMenuGroup && groupId is not null)
+            {
+                _suspendRefresh = true;
+                CurrentGroup = FindStartMenuGroup(groupId);
+                _suspendRefresh = false;
+            }
+
+            OnPropertyChanged(nameof(IsStartMenuLoading));
+            Refresh();
+        }).ConfigureAwait(false);
 
         if (_startMenuReloadRequested)
         {
             _startMenuReloadRequested = false;
             BeginStartMenuLoad(force: true);
+            return;
+        }
+
+        _ = EnrichStartMenuIconsAsync(iconCt);
+    }
+
+    private void ContinueStartMenuIcons()
+    {
+        if (CoreServices.StartMenu.IconsFullyEnriched)
+            return;
+
+        _startMenuIconCts?.Cancel();
+        _startMenuIconCts = new CancellationTokenSource();
+        _ = EnrichStartMenuIconsAsync(_startMenuIconCts.Token);
+    }
+
+    private async Task EnrichStartMenuIconsAsync(CancellationToken cancellationToken)
+    {
+        var index = 0;
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var next = await Task.Run(
+                        () => CoreServices.StartMenu.EnrichIconsBatch(index, 24),
+                        cancellationToken)
+                    .ConfigureAwait(false);
+                if (next <= index)
+                    break;
+
+                index = next;
+                await RunOnUiAsync(SyncStartMenuIcons).ConfigureAwait(false);
+
+                if (next >= _startMenuItems.Count)
+                    break;
+
+                await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 新一轮加载会自行取消上一轮
+        }
+    }
+
+    /// <summary>开始菜单图标分批落盘后，同步到已生成的卡片（含文件夹内的子项）。</summary>
+    private void SyncStartMenuIcons()
+    {
+        foreach (var entry in EnumerateStartMenuEntries())
+        {
+            if (entry.StartMenuSource is null)
+                continue;
+
+            var path = entry.StartMenuSource.IconPath;
+            if (string.Equals(entry.IconPath, path, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            entry.IconPath = path;
+        }
+    }
+
+    private IEnumerable<LauncherEntry> EnumerateStartMenuEntries()
+    {
+        foreach (var tile in _startMenuTiles)
+        {
+            if (tile.IsGroup)
+            {
+                foreach (var child in tile.GroupItems)
+                    yield return child;
+            }
+            else
+            {
+                yield return tile;
+            }
         }
     }
 
@@ -621,18 +797,60 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// 旧版本按 32px 缓存应用图标，放大到启动器的 64px 会发虚；
-    /// 这里按需重新提取大图标，并让图片转换器丢掉旧缓存。
-    /// </summary>
-    private static string UpgradeIcon(string execPath, string iconPath)
+    /// <summary>后台把应用图标升到启动器需要的 64px，结果写回卡片，不阻塞打开启动器。</summary>
+    private async Task UpgradeAppIconsAsync(int generation)
     {
-        var upgraded = IconHelper.EnsureLargeIcon(execPath, iconPath);
-        // 原地升级时路径不变，图片转换器的缓存也要丢掉，否则还是旧的小图
-        FilePathToImageConverter.Invalidate(iconPath);
-        if (!string.Equals(upgraded, iconPath, StringComparison.OrdinalIgnoreCase))
-            FilePathToImageConverter.Invalidate(upgraded);
-        return upgraded ?? string.Empty;
+        var apps = _apps.ToList();
+        foreach (var entry in apps)
+        {
+            if (generation != _reloadGeneration)
+                return;
+
+            var execPath = entry.TargetPath;
+            var currentPath = entry.IconPath;
+            var upgraded = await Task.Run(() => IconHelper.EnsureLargeIcon(execPath, currentPath))
+                .ConfigureAwait(false);
+            if (generation != _reloadGeneration)
+                return;
+
+            var path = upgraded ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(path)
+                || string.Equals(path, currentPath, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            await RunOnUiAsync(() =>
+            {
+                if (generation != _reloadGeneration)
+                    return;
+
+                FilePathToImageConverter.Invalidate(currentPath);
+                FilePathToImageConverter.Invalidate(path);
+                entry.IconPath = path;
+            }).ConfigureAwait(false);
+        }
+    }
+
+    private void SetShortcutDataLoading(bool loading)
+    {
+        if (_shortcutDataLoading == loading)
+            return;
+
+        _shortcutDataLoading = loading;
+        OnPropertyChanged(nameof(IsShortcutDataLoading));
+    }
+
+    private static Task RunOnUiAsync(Action action)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+        {
+            action();
+            return Task.CompletedTask;
+        }
+
+        return dispatcher.InvokeAsync(action, DispatcherPriority.Background).Task;
     }
 
     /// <summary>按布局重建每个页签的顶层卡片（普通条目 + 文件夹磁贴）。</summary>
@@ -686,15 +904,11 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             : GetPageEntries(SelectedPage);
 
         var pageEntries = pageSource.ToList();
-        PageEntries.Clear();
-        foreach (var entry in pageEntries)
-            PageEntries.Add(entry);
+        ReplaceCollectionBatched(PageEntries, pageEntries);
 
         // 文件夹展开时，可见条目换成组内条目；底层页签仍保留在 PageEntries 里
         IEnumerable<LauncherEntry> source = CurrentGroup is not null ? CurrentGroup.GroupItems : pageEntries;
-        VisibleEntries.Clear();
-        foreach (var entry in source)
-            VisibleEntries.Add(entry);
+        ReplaceCollectionBatched(VisibleEntries, source.ToList());
 
         var startMenuPending = IsStartMenuPage && _startMenuLoading && _startMenuTiles.Count == 0;
         IsEmpty = !IsInsideGroup && VisibleEntries.Count == 0 && !startMenuPending;
@@ -716,6 +930,51 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     private IReadOnlyList<LauncherEntry> GetPageEntries(int page) =>
         page == StartMenuPage ? _startMenuTiles : _pageTiles[page];
+
+    private const int CollectionBatchThreshold = 40;
+    private const int CollectionBatchSize = 24;
+
+    private void ReplaceCollectionBatched(
+        ObservableCollection<LauncherEntry> target,
+        IReadOnlyList<LauncherEntry> entries)
+    {
+        var generation = Interlocked.Increment(ref _refreshGeneration);
+        if (entries.Count <= CollectionBatchThreshold)
+        {
+            target.Clear();
+            foreach (var entry in entries)
+                target.Add(entry);
+            return;
+        }
+
+        target.Clear();
+        _ = PumpCollectionAsync(target, entries, generation);
+    }
+
+    private async Task PumpCollectionAsync(
+        ObservableCollection<LauncherEntry> target,
+        IReadOnlyList<LauncherEntry> entries,
+        int generation)
+    {
+        for (var index = 0; index < entries.Count; index += CollectionBatchSize)
+        {
+            if (generation != _refreshGeneration)
+                return;
+
+            var slice = entries.Skip(index).Take(CollectionBatchSize).ToList();
+            await RunOnUiAsync(() =>
+            {
+                if (generation != _refreshGeneration)
+                    return;
+
+                foreach (var entry in slice)
+                    target.Add(entry);
+            }).ConfigureAwait(false);
+
+            if (index + CollectionBatchSize < entries.Count)
+                await Task.Delay(1).ConfigureAwait(false);
+        }
+    }
 
     #region 启动器文件夹
 
@@ -742,12 +1001,15 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         Message = string.Empty;
         Query = string.Empty;
+        if (_shortcutDataLoading)
+            _pendingShelfKey = shelf.Key;
         CurrentGroup = shelf;
     }
 
     public void CloseGroup()
     {
         Query = string.Empty;
+        _pendingShelfKey = null;
         CurrentGroup = null;
         Refresh();
     }
