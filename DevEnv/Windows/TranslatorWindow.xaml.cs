@@ -26,6 +26,7 @@ public partial class TranslatorWindow : Window
     private string? _loadedSiteId;
     private bool _ready;
     private bool _initialized;
+    private bool _handlersWired;
     private bool _filling;
     private bool _suppressSiteChange;
     private bool _allowClose;
@@ -128,11 +129,16 @@ public partial class TranslatorWindow : Window
             return;
         }
 
-        if (!IsSameLoaded(site))
-            NavigateHome(site);
-        else
+        // EnsureReadyAsync 不再导航；这里负责首次 / 切站。已在加载同站时不要再 Navigate，
+        // 否则会中止上一趟导航，NavigationCompleted 报 ConnectionAborted。
+        if (IsSameLoaded(site))
             SetStatus($"已打开 {site.Name}");
+        else if (!IsLoadingSite(site))
+            NavigateHome(site);
     }
+
+    private bool IsLoadingSite(WebTranslateSite site) =>
+        !_ready && string.Equals(_loadedSiteId, site.Id, StringComparison.OrdinalIgnoreCase);
 
     private void OnSiteChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -187,26 +193,57 @@ public partial class TranslatorWindow : Window
             customNativeMenu: true,
             contextMenuTarget: BrowserHost);
 
-        _browser.CoreWebView2.NavigationStarting += (_, _) => _ready = false;
-        _browser.CoreWebView2.NavigationCompleted += async (_, e) =>
+        // 控件生命周期内只挂一次：TearDown 只卸内容，不销毁 CoreWebView2
+        if (!_handlersWired)
         {
-            _ready = e.IsSuccess;
-            _readyTcs?.TrySetResult(e.IsSuccess);
-            _readyTcs = null;
-            if (e.IsSuccess)
-                await InjectThinScrollbarAsync();
-            else
-                // 把 WebView2 的原始错误一并带出来：网络问题与运行时缺失看起来一模一样
-                SetStatus($"网页加载失败（{e.WebErrorStatus}），请检查网络或 WebView2 运行时", error: true);
-        };
+            _browser.CoreWebView2.NavigationStarting += (_, _) =>
+            {
+                if (_initialized)
+                    _ready = false;
+            };
+            _browser.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
+            _handlersWired = true;
+        }
 
         _initialized = true;
         WebView2EnvironmentFactory.AddRef();
         _browser.Visibility = Visibility.Visible;
         Placeholder.Visibility = Visibility.Collapsed;
-
-        NavigateHome(CurrentSite());
+        // 不在这里 Navigate：Apply / SwitchSite / Fill 会接着导航；
+        // 这里再 Navigate 会被紧跟着的第二次 Navigate 中止，首次打开就会误报 ConnectionAborted。
     }
+
+    private async void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+    {
+        // TearDown 后的 about:blank / 被顶替的导航一律忽略，避免首次打开残留红字
+        if (!_initialized)
+            return;
+
+        if (!e.IsSuccess)
+        {
+            // 被新导航顶替时不要结束 WaitReady，也不要刷红字；等后续成功/真失败
+            if (IsTransientNavigationFailure(e.WebErrorStatus))
+                return;
+
+            _ready = false;
+            _readyTcs?.TrySetResult(false);
+            _readyTcs = null;
+            SetStatus($"网页加载失败（{e.WebErrorStatus}），请检查网络或 WebView2 运行时", error: true);
+            return;
+        }
+
+        _ready = true;
+        _readyTcs?.TrySetResult(true);
+        _readyTcs = null;
+        await InjectThinScrollbarAsync();
+        var site = CurrentSite();
+        if (IsSameLoaded(site))
+            SetStatus($"已加载 {site.Name}");
+    }
+
+    private static bool IsTransientNavigationFailure(CoreWebView2WebErrorStatus status) =>
+        status is CoreWebView2WebErrorStatus.ConnectionAborted
+            or CoreWebView2WebErrorStatus.OperationCanceled;
 
     /// <summary>隐藏时销毁控件：翻译站很重，拆掉控件才能让 renderer 真正退出。</summary>
     private void TearDown()
