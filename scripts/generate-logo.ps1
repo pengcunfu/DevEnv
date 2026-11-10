@@ -1,4 +1,4 @@
-﻿# 生成平面品牌 Logo：SVG、各尺寸 PNG 与多尺寸 ICO。
+# 生成平面品牌 Logo：SVG、各尺寸 PNG 与多尺寸 ICO。
 # 全部图形由同一套 64 单位坐标系绘制，SVG 与位图输出保持一致。
 # 用法: .\scripts\generate-logo.ps1            # 仅输出 assets\brand\
 #       .\scripts\generate-logo.ps1 -Apply    # 同时写入程序图标与站点 logo
@@ -129,7 +129,7 @@ function Write-IcoFile([object[]]$Frames, [string]$Dest) {
 # ---- SVG：与上面的绘制共用同一套坐标 ----
 $svgLogo = @'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <title>燧岚开发盒子 DevEnv</title>
+  <title>FireNeb DevEnv DevEnv</title>
   <rect width="64" height="64" rx="15" fill="#0F766E"/>
   <path d="M16 20 30 32 16 44" stroke="#F0FDFA" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M36 44h12" stroke="#FBBF24" stroke-width="6.2" stroke-linecap="round"/>

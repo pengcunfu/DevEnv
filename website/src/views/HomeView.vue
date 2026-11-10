@@ -9,10 +9,10 @@ import { useSeo } from '@/seo/useSeo'
 const version = __APP_VERSION__
 
 const description =
-  '燧岚开发盒子（DevEnv，FireNeb）：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控、服务监控与剪贴板历史。基于 .NET 10 + WPF，Apache 2.0 开源。'
+  'FireNeb DevEnv：Windows 开发环境管理工具，集成熔岩绿色版环境、网页翻译、网络监控、进程监控、服务监控与剪贴板历史。基于 .NET 10 + WPF，Apache 2.0 开源。'
 
 useSeo({
-  title: 'DevEnv · 燧岚开发盒子 — Windows 开发环境管理工具',
+  title: 'FireNeb DevEnv — Windows 开发环境管理工具',
   description,
   path: '/',
   jsonLd: [
@@ -126,8 +126,7 @@ const steps = [
             FireNeb · v{{ version }} · Apache 2.0 开源 · Windows 10+
           </p>
           <h1>
-            <span class="hero-name">燧岚开发盒子</span>
-            <span class="hero-en">DevEnv</span>
+            <span class="hero-name">FireNeb DevEnv</span>
           </h1>
           <p class="hero-tagline">
             Windows 开发环境管理工具。把日常开发要用的环境、翻译、监控与剪贴板，收进同一个盒子里。
@@ -213,7 +212,7 @@ const steps = [
       <div class="container download-panel">
         <div class="download-copy">
           <p class="eyebrow">下载</p>
-          <h2>下载燧岚开发盒子 v{{ version }}</h2>
+          <h2>下载 FireNeb DevEnv v{{ version }}</h2>
           <p>
             提供 Windows x64 安装包与便携版。安装器为框架依赖发布，缺少 .NET 10 Desktop Runtime
             时会自动安装。
@@ -333,10 +332,6 @@ const steps = [
 }
 
 .hero-name {
-  color: var(--text);
-}
-
-.hero-en {
   background: linear-gradient(100deg, var(--brand) 10%, #38bdf8 55%, var(--accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;

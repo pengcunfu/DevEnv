@@ -161,7 +161,7 @@ public sealed partial class NetworkViewModel : ObservableObject, IDisposable
     private void RestartElevated()
     {
         var asAdmin = !IsElevated;
-        var prompt = asAdmin ? "将以管理员身份重启燧岚开发盒子？" : "将以降权普通用户重启？";
+        var prompt = asAdmin ? "将以管理员身份重启FireNeb DevEnv？" : "将以降权普通用户重启？";
         if (!Windows.ConfirmDialog.Show(HostServices.DialogOwner, prompt, "重启"))
             return;
         var result = CoreServices.Network.RestartElevated(asAdmin);

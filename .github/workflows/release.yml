@@ -16,7 +16,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   CSPROJ: DevEnv/DevEnv.csproj
   APP_ID: DevEnv
-  PRODUCT_NAME: 燧岚开发盒子
+  PRODUCT_NAME: FireNeb DevEnv
   ARTIFACT_NAME: DevEnv
   COMPANY_NAME: FireNeb
   RUNTIME: win-x64

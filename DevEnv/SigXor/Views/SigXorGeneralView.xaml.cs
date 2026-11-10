@@ -95,7 +95,7 @@ public partial class SigXorGeneralView : UserControl
     {
         if (!Save(out string? error))
         {
-            MessageBox.Show(error ?? "保存失败。", "燧岚开发盒子",
+            MessageBox.Show(error ?? "保存失败。", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }

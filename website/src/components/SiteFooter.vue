@@ -11,7 +11,7 @@ const version = __APP_VERSION__
         <div class="footer-logo">
           <img src="/logo.svg" alt="" width="34" height="34" />
           <div>
-            <strong>燧岚开发盒子</strong>
+            <strong>FireNeb DevEnv</strong>
             <span>FireNeb · DevEnv v{{ version }}</span>
           </div>
         </div>
@@ -53,7 +53,7 @@ const version = __APP_VERSION__
     </div>
 
     <div class="site-footer-bottom">
-      <span>© 2025–2026 FireNeb · 燧岚开发盒子 DevEnv · devenv.cn</span>
+      <span>© 2025–2026 FireNeb · FireNeb DevEnv · devenv.cn</span>
     </div>
   </footer>
 </template>

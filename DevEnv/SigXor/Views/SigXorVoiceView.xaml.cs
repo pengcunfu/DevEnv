@@ -108,7 +108,7 @@ public partial class SigXorVoiceView : UserControl
     {
         MessageBoxResult result = MessageBox.Show(
             "恢复语音输入与截屏的默认设置？快捷键与常规设置不会改变。",
-            "燧岚开发盒子",
+            "FireNeb DevEnv",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Question);
         if (result != MessageBoxResult.OK) return;
@@ -121,7 +121,7 @@ public partial class SigXorVoiceView : UserControl
     {
         if (!Save(out string? error))
         {
-            MessageBox.Show(error ?? "保存失败。", "燧岚开发盒子",
+            MessageBox.Show(error ?? "保存失败。", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }

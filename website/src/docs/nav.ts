@@ -40,13 +40,13 @@ export const sidebarGroups: SidebarGroup[] = [
         text: '快速开始',
         path: '/guide/getting-started',
         description:
-          '从 GitHub Releases 下载燧岚开发盒子（DevEnv）Windows 安装包，完成首次启动与数据目录初始化，并了解应用内自动更新。',
+          '从 GitHub Releases 下载 FireNeb DevEnv Windows 安装包，完成首次启动与数据目录初始化，并了解应用内自动更新。',
       },
       {
         text: '开源协议',
         path: '/guide/license',
         description:
-          '燧岚开发盒子（DevEnv，FireNeb）采用 Apache License 2.0 开源，可自由使用、修改与分发；了解版权与归属声明、修改标注、专利授权与免责声明。',
+          'FireNeb DevEnv 采用 Apache License 2.0 开源，可自由使用、修改与分发；了解版权与归属声明、修改标注、专利授权与免责声明。',
       },
     ],
   },

@@ -160,7 +160,7 @@ public sealed class SigXorHost : IDisposable
     public void StopVoiceService() => _voiceService?.StopService();
 
     /// <summary>
-    /// 打开设置：内容已并入燧岚开发盒子的设置对话框，这里只负责跳转到对应页签。
+    /// 打开设置：内容已并入FireNeb DevEnv的设置对话框，这里只负责跳转到对应页签。
     /// </summary>
     /// <param name="section">目标页签（常规 / 快捷键 / 语音与截屏 / 服务与模型）。</param>
     public void OpenSettings(SettingsSection section = SettingsSection.General)
@@ -262,7 +262,7 @@ public sealed class SigXorHost : IDisposable
             bool hasUpdate = await updater.CheckForUpdatesAsync();
             if (!hasUpdate) return; // 已是最新
 
-            NotificationRequested?.Invoke("燧岚开发盒子有可用更新",
+            NotificationRequested?.Invoke("FireNeb DevEnv 有可用更新",
                 $"新版本 v{updater.PendingVersion} 已发布（当前 v{updater.CurrentVersion}），点击此提示可查看。");
         }
         catch

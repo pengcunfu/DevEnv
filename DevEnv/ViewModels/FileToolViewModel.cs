@@ -190,7 +190,7 @@ public sealed partial class FileToolViewModel : ObservableObject, IDisposable
     {
         if (!Windows.ConfirmDialog.Show(
                 HostServices.DialogOwner,
-                "将以管理员身份重启燧岚开发盒子，当前打开的工具窗口会关闭。是否继续？",
+                "将以管理员身份重启FireNeb DevEnv，当前打开的工具窗口会关闭。是否继续？",
                 "重启"))
             return;
 

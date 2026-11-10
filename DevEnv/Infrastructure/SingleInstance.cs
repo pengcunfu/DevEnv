@@ -13,7 +13,7 @@ internal static class SingleInstance
     /// <summary>
     /// 文件参数转发用的命名管道名。
     /// 二次启动时把要预览的文件路径写进管道，主实例读到后弹预览浮窗
-    /// （「用燧岚开发盒子打开文件」与资源管理器里的文件关联都靠它）。
+    /// （「用FireNeb DevEnv打开文件」与资源管理器里的文件关联都靠它）。
     /// </summary>
     private const string FilePipeName = @"Local\FNSoftware.DevEnv.FilePipe";
 

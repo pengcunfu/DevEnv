@@ -215,7 +215,7 @@ public partial class HotkeysSettingsView : UserControl
     {
         MessageBoxResult result = MessageBox.Show(
             "恢复所有快捷键的默认值？不会改动语音引擎、识别语言等非快捷键设置。",
-            "燧岚开发盒子",
+            "FireNeb DevEnv",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Question);
         if (result != MessageBoxResult.OK) return;

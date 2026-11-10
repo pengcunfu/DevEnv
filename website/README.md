@@ -1,6 +1,6 @@
 # DevEnv 官网与文档站
 
-燧岚开发盒子（DevEnv，FireNeb）的官网、使用文档与开发环境下载站。Vue 3 + Vite 构建，静态部署到 Cloudflare Pages，线上地址 [devenv.cn](https://devenv.cn/)。
+FireNeb DevEnv 的官网、使用文档与开发环境下载站。Vue 3 + Vite 构建，静态部署到 Cloudflare Pages，线上地址 [devenv.cn](https://devenv.cn/)。
 
 ## 站点构成
 

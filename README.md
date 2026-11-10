@@ -1,6 +1,6 @@
-# 燧岚开发盒子 · DevEnv
+# FireNeb DevEnv
 
-FireNeb 出品的 Windows 开发环境管理工具，中文名「燧岚开发盒子」，英文名保持 **DevEnv**，官网/文档域名 **devenv.cn**。
+FireNeb 出品的 Windows 开发环境管理工具。产品显示名为 **FireNeb DevEnv**，程序集 / 进程名 / 发布资产前缀保持 **DevEnv**，官网/文档域名 **devenv.cn**。
 
 [![Release](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml/badge.svg)](https://github.com/pengcunfu/DevEnv/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/release/pengcunfu/DevEnv?label=release)](https://github.com/pengcunfu/DevEnv/releases/latest)

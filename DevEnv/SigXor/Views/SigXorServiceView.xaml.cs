@@ -159,7 +159,7 @@ public partial class SigXorServiceView : UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"安装 {definition.DisplayName} 失败：{ex.Message}", "燧岚开发盒子",
+            MessageBox.Show($"安装 {definition.DisplayName} 失败：{ex.Message}", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
@@ -182,7 +182,7 @@ public partial class SigXorServiceView : UserControl
 
         MessageBoxResult result = MessageBox.Show(
             $"删除 {definition.DisplayName} 组件？下次使用需要重新下载（约 {FormatBytes(definition.ApproximateBytes)}）。",
-            "燧岚开发盒子",
+            "FireNeb DevEnv",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Question);
         if (result != MessageBoxResult.OK)
@@ -195,13 +195,13 @@ public partial class SigXorServiceView : UserControl
         {
             if (!CoreServices.ComponentsInstaller.Remove(id, out string? error))
             {
-                MessageBox.Show(error ?? "删除组件失败。", "燧岚开发盒子",
+                MessageBox.Show(error ?? "删除组件失败。", "FireNeb DevEnv",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"删除组件失败：{ex.Message}", "燧岚开发盒子",
+            MessageBox.Show($"删除组件失败：{ex.Message}", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         RefreshServiceUi();
@@ -221,7 +221,7 @@ public partial class SigXorServiceView : UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"打开组件目录失败：{ex.Message}", "燧岚开发盒子",
+            MessageBox.Show($"打开组件目录失败：{ex.Message}", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -327,7 +327,7 @@ public partial class SigXorServiceView : UserControl
 
         if (!ok)
         {
-            MessageBox.Show("模型下载失败，请检查网络后重试。", "燧岚开发盒子",
+            MessageBox.Show("模型下载失败，请检查网络后重试。", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         RefreshServiceUi();
@@ -337,7 +337,7 @@ public partial class SigXorServiceView : UserControl
     {
         MessageBoxResult result = MessageBox.Show(
             "删除已下载的 SenseVoice 模型？下次使用需要重新下载（约 230 MB）。",
-            "燧岚开发盒子",
+            "FireNeb DevEnv",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Question);
         if (result != MessageBoxResult.OK) return;
@@ -345,7 +345,7 @@ public partial class SigXorServiceView : UserControl
         _voiceService?.StopService();
         if (!SpeechModelManager.Delete(out string? error))
         {
-            MessageBox.Show(error ?? "删除模型失败。", "燧岚开发盒子",
+            MessageBox.Show(error ?? "删除模型失败。", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         RefreshServiceUi();
@@ -356,7 +356,7 @@ public partial class SigXorServiceView : UserControl
         try { SpeechModelManager.OpenFolder(); }
         catch (Exception ex)
         {
-            MessageBox.Show($"打开模型目录失败：{ex.Message}", "燧岚开发盒子",
+            MessageBox.Show($"打开模型目录失败：{ex.Message}", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -394,7 +394,7 @@ public partial class SigXorServiceView : UserControl
 
         if (!ok)
         {
-            MessageBox.Show("OCR 模型下载失败，请检查网络后重试。", "燧岚开发盒子",
+            MessageBox.Show("OCR 模型下载失败，请检查网络后重试。", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         RefreshServiceUi();
@@ -404,14 +404,14 @@ public partial class SigXorServiceView : UserControl
     {
         MessageBoxResult result = MessageBox.Show(
             "删除已下载的 OCR 模型？下次使用需要重新下载。",
-            "燧岚开发盒子",
+            "FireNeb DevEnv",
             MessageBoxButton.OKCancel,
             MessageBoxImage.Question);
         if (result != MessageBoxResult.OK) return;
 
         if (!OcrModelManager.Delete(out string? error))
         {
-            MessageBox.Show(error ?? "删除 OCR 模型失败。", "燧岚开发盒子",
+            MessageBox.Show(error ?? "删除 OCR 模型失败。", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         RefreshServiceUi();
@@ -422,7 +422,7 @@ public partial class SigXorServiceView : UserControl
         try { OcrModelManager.OpenFolder(); }
         catch (Exception ex)
         {
-            MessageBox.Show($"打开 OCR 模型目录失败：{ex.Message}", "燧岚开发盒子",
+            MessageBox.Show($"打开 OCR 模型目录失败：{ex.Message}", "FireNeb DevEnv",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

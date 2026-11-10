@@ -25,7 +25,7 @@ const neighbors = computed(() => getPrevNext(route.path))
 const editUrl = computed(() => (doc.value ? `${editBase}${doc.value.file}` : ''))
 const groupPath = computed(() => (doc.value ? getGroupEntryPath(doc.value.group) : undefined))
 
-const seoDescription = computed(() => doc.value?.description || '燧岚开发盒子（DevEnv）使用文档。')
+const seoDescription = computed(() => doc.value?.description || 'FireNeb DevEnv 使用文档。')
 
 const jsonLd = computed(() => {
   const entry = doc.value

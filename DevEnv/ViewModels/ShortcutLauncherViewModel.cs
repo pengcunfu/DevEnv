@@ -158,8 +158,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private static readonly (string Key, string Name, string Description, string Glyph, string Color)[]
         BuiltinToolDefinitions =
     [
-        (DevelopmentWindowKey, "燧岚开发盒子", "开发环境与熔岩环境", "\uE756", "#0F766E"),
-        (MonitorWindowKey, "燧岚监控中心", "网络、进程与服务监控", "\uE9D9", "#2563EB"),
+        (DevelopmentWindowKey, "FireNeb DevEnv", "开发环境与熔岩环境", "\uE756", "#0F766E"),
+        (MonitorWindowKey, "FireNeb Monitor", "网络、进程与服务监控", "\uE9D9", "#2563EB"),
         (TranslatorKey, "熔岩翻译", "翻译剪贴板文本", "\uE774", "#EA580C"),
         (ClipboardKey, "熔岩剪贴板", "剪贴板历史与图片", "\uE8C8", "#7C3AED"),
         (BrowserKey, "文件浏览器", "目录导航与内嵌预览", "\uE8B7", "#D97706"),

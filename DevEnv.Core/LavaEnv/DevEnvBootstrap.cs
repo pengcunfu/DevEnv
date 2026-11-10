@@ -5,7 +5,7 @@ using DevEnv.Core.LavaEnv.Services;
 namespace DevEnv.Core.LavaEnv;
 
 /// <summary>
-/// 熔岩环境嵌入宿主（DevEnv / 燧岚开发盒子）时的一次性初始化。
+/// 熔岩环境嵌入宿主（DevEnv / FireNeb DevEnv）时的一次性初始化。
 /// </summary>
 public static class DevEnvBootstrap
 {

@@ -18,8 +18,8 @@ public static class MainWindowProbe
 {
     public const string Argument = "--windows-check";
 
-    private const string DevelopmentTitle = "燧岚开发盒子";
-    private const string MonitorTitle = "燧岚监控中心";
+    private const string DevelopmentTitle = "FireNeb DevEnv";
+    private const string MonitorTitle = "FireNeb Monitor";
 
     public static int Run(string[] args)
     {

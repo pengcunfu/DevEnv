@@ -4,7 +4,6 @@ import { absoluteUrl, siteName } from './useSeo'
 const publisher = {
   '@type': 'Organization',
   name: 'FireNeb',
-  alternateName: '燧岚开发盒子',
   url: `${siteUrl}/`,
   logo: `${siteUrl}/logo.svg`,
   sameAs: [repoUrl, 'https://fireneb.com'],
@@ -26,7 +25,7 @@ export function softwareSchema(version: string, description: string): Record<str
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: '燧岚开发盒子（DevEnv）',
+    name: 'FireNeb DevEnv',
     alternateName: 'DevEnv',
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Windows 10, Windows 11',
@@ -54,7 +53,7 @@ export function sourceCodeSchema(version: string, description: string): Record<s
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareSourceCode',
-    name: '燧岚开发盒子（DevEnv）',
+    name: 'FireNeb DevEnv',
     description,
     codeRepository: repoUrl,
     programmingLanguage: 'C#',

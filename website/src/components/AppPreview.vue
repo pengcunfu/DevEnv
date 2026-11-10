@@ -17,7 +17,7 @@ const bars = [24, 38, 30, 46, 40, 58, 44, 68, 54, 76, 62, 84, 70, 92, 76, 88, 66
       <span class="dot red"></span>
       <span class="dot amber"></span>
       <span class="dot green"></span>
-      <span class="preview-title">燧岚开发盒子 — DevEnv</span>
+      <span class="preview-title">FireNeb DevEnv</span>
       <span class="preview-version">v{{ version }}</span>
     </div>
 
@@ -25,7 +25,7 @@ const bars = [24, 38, 30, 46, 40, 58, 44, 68, 54, 76, 62, 84, 70, 92, 76, 88, 66
       <aside class="preview-side">
         <div class="preview-brand">
           <img src="/logo.svg" alt="" width="20" height="20" />
-          <span>燧岚开发盒子</span>
+          <span>FireNeb DevEnv</span>
         </div>
         <ul>
           <li>应用与服务</li>

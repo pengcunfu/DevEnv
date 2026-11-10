@@ -27,8 +27,8 @@ namespace DevEnv.Host;
 /// </summary>
 public partial class App : System.Windows.Application
 {
-    private const string DevelopmentWindowTitle = "燧岚开发盒子";
-    private const string MonitorWindowTitle = "燧岚监控中心";
+    private const string DevelopmentWindowTitle = "FireNeb DevEnv";
+    private const string MonitorWindowTitle = "FireNeb Monitor";
 
     /// <summary>开发窗口：开发环境 / 熔岩环境，启动时创建（隐藏驻留托盘）。</summary>
     private MainWindow? _devWindow;
@@ -192,6 +192,7 @@ public partial class App : System.Windows.Application
         }
 
         CoreServices.Initialize();
+        AutostartHelper.MigrateLegacyNames();
         ThemeManager.ApplyFromSettings();
         WireHostCallbacks();
 
@@ -206,7 +207,7 @@ public partial class App : System.Windows.Application
         SingleInstance.StartActivateListener(Dispatcher, ShowMainWindow);
         SingleInstance.StartFileListener(Dispatcher, paths => _sigXor?.ShowPreviewForPaths(paths));
 
-        _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
+        _tray = new TrayIconHost("FireNeb DevEnv", LoadAppIcon());
         // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
         // 单击托盘图标 = 全局启动器；主窗口从右键菜单进入
         _tray.ShortcutsRequested += () => Dispatcher.InvokeAsync(() => ShortcutWindowHost.Toggle());
@@ -866,7 +867,7 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"无法重启: {ex.Message}", "燧岚开发盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Windows.MessageBox.Show($"无法重启: {ex.Message}", "FireNeb DevEnv", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

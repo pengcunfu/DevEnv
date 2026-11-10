@@ -5,12 +5,15 @@ namespace DevEnv.Core.Services;
 
 /// <summary>
 /// Windows 开始菜单：读取用户与公共 Programs 目录，并为启动器应用维护
-/// 「开始菜单\程序\燧岚开发盒子」下的托管快捷方式。
+/// 「开始菜单\程序\FireNeb DevEnv」下的托管快捷方式。
 /// </summary>
 public sealed class StartMenuService
 {
     /// <summary>我们创建的快捷方式所在的一级目录名，同时用于把它从开始菜单页里排除。</summary>
-    public const string ManagedFolderName = "燧岚开发盒子";
+    public const string ManagedFolderName = "FireNeb DevEnv";
+
+    /// <summary>历史托管目录名；启动时迁入新目录，并从开始菜单页排除。</summary>
+    private static readonly string[] LegacyManagedFolderNames = ["燧岚开发盒子", "程序盒子"];
 
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(5);
 
@@ -23,9 +26,10 @@ public sealed class StartMenuService
     public StartMenuService()
     {
         ManagedFolderPath = Path.Combine(GetProgramsRoot(user: true), ManagedFolderName);
+        MigrateLegacyManagedFolder();
     }
 
-    /// <summary>托管快捷方式目录：%APPDATA%\Microsoft\Windows\Start Menu\Programs\燧岚开发盒子。</summary>
+    /// <summary>托管快捷方式目录：%APPDATA%\Microsoft\Windows\Start Menu\Programs\FireNeb DevEnv。</summary>
     public string ManagedFolderPath { get; }
 
     /// <summary>最近一次读取 / 写入失败的原因；成功时为空。</summary>
@@ -52,6 +56,44 @@ public sealed class StartMenuService
         new(GetProgramsRoot(user: false), IsUserRoot: false),
         new(GetProgramsRoot(user: true), IsUserRoot: true),
     ];
+
+    /// <summary>
+    /// 把旧显示名目录里的托管快捷方式迁到「FireNeb DevEnv」。
+    /// 新目录已存在时合并文件；冲突文件名保留新目录里的。
+    /// </summary>
+    private void MigrateLegacyManagedFolder()
+    {
+        var programs = GetProgramsRoot(user: true);
+        foreach (var legacyName in LegacyManagedFolderNames)
+        {
+            var legacyPath = Path.Combine(programs, legacyName);
+            if (!Directory.Exists(legacyPath))
+                continue;
+
+            try
+            {
+                if (!Directory.Exists(ManagedFolderPath))
+                {
+                    Directory.Move(legacyPath, ManagedFolderPath);
+                    continue;
+                }
+
+                foreach (var file in Directory.EnumerateFiles(legacyPath))
+                {
+                    var dest = Path.Combine(ManagedFolderPath, Path.GetFileName(file));
+                    if (!File.Exists(dest))
+                        File.Move(file, dest);
+                }
+
+                if (!Directory.EnumerateFileSystemEntries(legacyPath).Any())
+                    Directory.Delete(legacyPath);
+            }
+            catch
+            {
+                // 迁移失败不影响启动；旧目录仍会从开始菜单页排除
+            }
+        }
+    }
 
     /// <summary>
     /// 读取开始菜单条目并补齐目标与图标。默认使用 5 分钟缓存；
@@ -83,7 +125,9 @@ public sealed class StartMenuService
             return;
         }
 
-        var items = StartMenuIndex.Build(DefaultRoots(), ManagedFolderName, ["Startup"]);
+        var excluded = new List<string>(["Startup"]);
+        excluded.AddRange(LegacyManagedFolderNames);
+        var items = StartMenuIndex.Build(DefaultRoots(), ManagedFolderName, excluded);
         ResolveTargets(items);
         _items = items;
         _targets = BuildTargets(items);
@@ -266,7 +310,7 @@ public sealed class StartMenuService
                     return null;
                 }
 
-                if (!gateway.TryWrite(fullPath, targetPath, "由燧岚开发盒子创建"))
+                if (!gateway.TryWrite(fullPath, targetPath, "由 FireNeb DevEnv 创建"))
                 {
                     LastError = "创建开始菜单快捷方式失败";
                     return null;

@@ -25,8 +25,7 @@ function closeMobile(): void {
     <div class="site-header-inner">
       <RouterLink to="/" class="brand" @click="closeMobile">
         <img src="/logo.svg" alt="" width="30" height="30" />
-        <span class="brand-name">燧岚开发盒子</span>
-        <span class="brand-sub">DevEnv</span>
+        <span class="brand-name">FireNeb DevEnv</span>
       </RouterLink>
 
       <nav class="site-nav" aria-label="主导航">
@@ -158,16 +157,6 @@ function closeMobile(): void {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.01em;
-}
-
-.brand-sub {
-  padding: 1px 7px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
 }
 
 .site-nav {
@@ -324,7 +313,6 @@ function closeMobile(): void {
     padding: 0 16px;
   }
 
-  .brand-sub,
   .search-trigger-text,
   .search-trigger kbd,
   .github-btn {
