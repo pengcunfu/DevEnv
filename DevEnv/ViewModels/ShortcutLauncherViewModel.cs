@@ -32,6 +32,19 @@ public enum ShortcutKind
 /// <summary>启动器的一页（本地应用 / 文件夹 / 网站）。</summary>
 public sealed record LauncherPage(int Index, string Title, string Glyph);
 
+/// <summary>系统工具 / 内置工具页的分类区块：上方标签，下方图标网格。</summary>
+public sealed class LauncherSection
+{
+    public LauncherSection(string title, IReadOnlyList<LauncherEntry> entries)
+    {
+        Title = title;
+        Entries = entries;
+    }
+
+    public string Title { get; }
+    public IReadOnlyList<LauncherEntry> Entries { get; }
+}
+
 /// <summary>启动器里的一张图标卡片。</summary>
 public sealed partial class LauncherEntry : ObservableObject
 {
@@ -102,14 +115,11 @@ public sealed partial class LauncherEntry : ObservableObject
         ShortcutKind.Folder => "文件夹",
         ShortcutKind.Web => "网站",
         ShortcutKind.Tool => string.IsNullOrEmpty(Category) ? "系统工具" : Category,
-        ShortcutKind.InternalTool => "内置工具",
+        ShortcutKind.InternalTool => string.IsNullOrEmpty(Category) ? "内置工具" : Category,
         ShortcutKind.StartMenu => string.IsNullOrEmpty(Category) ? "开始菜单" : Category,
         ShortcutKind.Group => $"{GroupItems.Count} 项",
         _ => "应用",
     };
-
-    /// <summary>系统工具与内置工具卡片始终显示分类；快捷方式只在搜索时显示类型。</summary>
-    public bool IsToolCard => Kind is ShortcutKind.Tool or ShortcutKind.InternalTool;
 
     /// <summary>图标文件存在时才显示图片，否则回退到彩色图标或 KindGlyph；文件夹磁贴用 2×2 预览。</summary>
     public bool HasIcon => !IsGroup && !string.IsNullOrWhiteSpace(IconPath) && File.Exists(IconPath);
@@ -145,6 +155,10 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private static readonly string[] ToolCategoryOrder =
         ["系统管理", "硬件与设备", "网络与安全", "性能与监控"];
 
+    /// <summary>内置工具的分类排序。</summary>
+    private static readonly string[] BuiltinCategoryOrder =
+        ["窗口入口", "实用工具"];
+
     /// <summary>内置工具页里代表宿主两个主窗口的条目 key。</summary>
     private const string DevelopmentWindowKey = "dev-window";
     private const string MonitorWindowKey = "monitor-window";
@@ -154,22 +168,22 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private const string ClipboardKey = "clipboard";
     private const string BrowserKey = "browser";
 
-    /// <summary>宿主内置工具：tool id、显示名、说明、彩色图标字形与底色，窗口类入口排在最前。</summary>
-    private static readonly (string Key, string Name, string Description, string Glyph, string Color)[]
+    /// <summary>宿主内置工具：tool id、显示名、分类、说明、彩色图标字形与底色。</summary>
+    private static readonly (string Key, string Name, string Category, string Description, string Glyph, string Color)[]
         BuiltinToolDefinitions =
     [
-        (DevelopmentWindowKey, "FireNeb DevEnv", "开发环境与熔岩环境", "\uE756", "#0F766E"),
-        (MonitorWindowKey, "FireNeb Monitor", "网络、进程与服务监控", "\uE9D9", "#2563EB"),
-        (TranslatorKey, "熔岩翻译", "翻译剪贴板文本", "\uE774", "#EA580C"),
-        (ClipboardKey, "熔岩剪贴板", "剪贴板历史与图片", "\uE8C8", "#7C3AED"),
-        (BrowserKey, "文件浏览器", "目录导航与内嵌预览", "\uE8B7", "#D97706"),
-        ("json", "JSON 格式化器", "格式化与校验 JSON", "\uE943", "#0891B2"),
-        ("hosts", "Hosts 文件编辑器", "编辑系统 hosts 解析记录", "\uE968", "#DC2626"),
-        ("image", "图像格式转换器", "图像格式转换与压缩", "\uE91B", "#16A34A"),
-        ("hash", "文件哈希计算器", "计算文件校验值", "\uE8EF", "#475569"),
-        ("file-tools", "文件解锁与粉碎", "解除占用与安全粉碎", "\uE785", "#0369A1"),
-        ("startup", "启动项管理", "查看与管理开机启动项", "\uE7E8", "#CA8A04"),
-        ("context-menu", "右键菜单管理", "自定义资源管理器右键菜单", "\uE700", "#6B7280"),
+        (DevelopmentWindowKey, "FireNeb DevEnv", "窗口入口", "开发环境与熔岩环境", "\uE756", "#0F766E"),
+        (MonitorWindowKey, "FireNeb Monitor", "窗口入口", "网络、进程与服务监控", "\uE9D9", "#2563EB"),
+        (TranslatorKey, "熔岩翻译", "窗口入口", "翻译剪贴板文本", "\uE774", "#EA580C"),
+        (ClipboardKey, "熔岩剪贴板", "窗口入口", "剪贴板历史与图片", "\uE8C8", "#7C3AED"),
+        (BrowserKey, "文件浏览器", "窗口入口", "目录导航与内嵌预览", "\uE8B7", "#D97706"),
+        ("json", "JSON 格式化器", "实用工具", "格式化与校验 JSON", "\uE943", "#0891B2"),
+        ("hosts", "Hosts 文件编辑器", "实用工具", "编辑系统 hosts 解析记录", "\uE968", "#DC2626"),
+        ("image", "图像格式转换器", "实用工具", "图像格式转换与压缩", "\uE91B", "#16A34A"),
+        ("hash", "文件哈希计算器", "实用工具", "计算文件校验值", "\uE8EF", "#475569"),
+        ("file-tools", "文件解锁与粉碎", "实用工具", "解除占用与安全粉碎", "\uE785", "#0369A1"),
+        ("startup", "启动项管理", "实用工具", "查看与管理开机启动项", "\uE7E8", "#CA8A04"),
+        ("context-menu", "右键菜单管理", "实用工具", "自定义资源管理器右键菜单", "\uE700", "#6B7280"),
     ];
 
     /// <summary>固定色值转成冻结的画刷，避免每次绑定都新建一遍。</summary>
@@ -232,6 +246,16 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// 保证浮层后面还是原来的页签，而不是一片空白。
     /// </summary>
     public ObservableCollection<LauncherEntry> PageEntries { get; } = [];
+
+    /// <summary>系统工具 / 内置工具页按分类分组后的区块（非搜索态）。</summary>
+    public ObservableCollection<LauncherSection> ToolSections { get; } = [];
+
+    /// <summary>
+    /// 系统工具与内置工具在非搜索态用「分类标签 + 图标」布局；
+    /// 搜索 / 其它页签仍用扁平网格。
+    /// </summary>
+    public bool ShowsToolSections =>
+        !IsSearching && !IsInsideGroup && (IsSystemToolsPage || IsBuiltinToolsPage);
 
     /// <summary>当前页签：0 本地应用 / 1 文件夹 / 2 网站。</summary>
     [ObservableProperty]
@@ -326,6 +350,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         OnPropertyChanged(nameof(IsReadOnlyLauncherPage));
         OnPropertyChanged(nameof(IsEditableLauncherPage));
         OnPropertyChanged(nameof(CanAcceptExternalDrop));
+        OnPropertyChanged(nameof(ShowsToolSections));
         UpdateEmptyText();
         NotifyEditableChanged();
         if (value == StartMenuPage)
@@ -348,9 +373,12 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         Refresh();
     }
 
+    partial void OnIsSearchingChanged(bool value) => OnPropertyChanged(nameof(ShowsToolSections));
+
     partial void OnCurrentGroupChanged(LauncherEntry? value)
     {
         OnPropertyChanged(nameof(IsInsideGroup));
+        OnPropertyChanged(nameof(ShowsToolSections));
         NotifyEditableChanged();
         ClearSelection();
         if (!_suspendRefresh)
@@ -479,6 +507,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                 Index = index,
                 Key = item.Key,
                 Name = item.Name,
+                Category = item.Category,
                 TargetPath = item.Description,
                 IconGlyph = item.Glyph,
                 IconBrush = CreateBadgeBrush(item.Color),
@@ -902,6 +931,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         IEnumerable<LauncherEntry> source = CurrentGroup is not null ? CurrentGroup.GroupItems : pageEntries;
         ReplaceCollectionBatched(VisibleEntries, source.ToList());
 
+        RebuildToolSections(pageEntries);
+
         var startMenuPending = IsStartMenuPage && _startMenuLoading && _startMenuTiles.Count == 0;
         IsEmpty = !IsInsideGroup && VisibleEntries.Count == 0 && !startMenuPending;
         Summary = IsSearching
@@ -922,6 +953,34 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(SelectedEntries));
+        OnPropertyChanged(nameof(ShowsToolSections));
+    }
+
+    /// <summary>把系统 / 内置工具按 Category 拆成「标签 + 图标」区块；其它页签清空。</summary>
+    private void RebuildToolSections(IReadOnlyList<LauncherEntry> pageEntries)
+    {
+        ToolSections.Clear();
+        if (!ShowsToolSections)
+            return;
+
+        var order = IsBuiltinToolsPage ? BuiltinCategoryOrder : ToolCategoryOrder;
+        foreach (var section in BuildSections(pageEntries, order))
+            ToolSections.Add(section);
+    }
+
+    private static IEnumerable<LauncherSection> BuildSections(
+        IReadOnlyList<LauncherEntry> entries,
+        string[] categoryOrder)
+    {
+        return entries
+            .GroupBy(entry => string.IsNullOrWhiteSpace(entry.Category) ? "其它" : entry.Category)
+            .OrderBy(group =>
+            {
+                var rank = Array.IndexOf(categoryOrder, group.Key);
+                return rank < 0 ? int.MaxValue : rank;
+            })
+            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new LauncherSection(group.Key, group.ToList()));
     }
 
     private IReadOnlyList<LauncherEntry> GetPageEntries(int page) => page switch

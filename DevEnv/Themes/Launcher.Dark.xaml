@@ -15,7 +15,7 @@
     <SolidColorBrush x:Key="LauncherSurfaceBrush" Color="#33FFFFFF" />
     <SolidColorBrush x:Key="LauncherSurfaceHoverBrush" Color="#4DFFFFFF" />
     <SolidColorBrush x:Key="LauncherSurfacePressedBrush" Color="#66FFFFFF" />
-    <SolidColorBrush x:Key="LauncherIconBackdropBrush" Color="#1FFFFFFF" />
+    <SolidColorBrush x:Key="LauncherIconBackdropBrush" Color="#28FFFFFF" />
     <!-- 侧栏选中底：比未选中透明底更亮一档 -->
     <SolidColorBrush x:Key="LauncherPillSelectedBrush" Color="#59FFFFFF" />
     <SolidColorBrush x:Key="LauncherBorderBrush" Color="#26FFFFFF" />
@@ -29,8 +29,9 @@
     <SolidColorBrush x:Key="LauncherAccentSelectionBrush" Color="#3360CDFF" />
     <SolidColorBrush x:Key="LauncherAccentFaintBrush" Color="#2660CDFF" />
 
-    <SolidColorBrush x:Key="LauncherTileHoverBrush" Color="#1FFFFFFF" />
-    <SolidColorBrush x:Key="LauncherTilePressedBrush" Color="#33FFFFFF" />
+    <!-- 磁贴悬停 / 按下：开始菜单深色抬升面 -->
+    <SolidColorBrush x:Key="LauncherTileHoverBrush" Color="#2EFFFFFF" />
+    <SolidColorBrush x:Key="LauncherTilePressedBrush" Color="#3DFFFFFF" />
 
     <SolidColorBrush x:Key="LauncherCircleBrush" Color="#33FFFFFF" />
     <SolidColorBrush x:Key="LauncherCircleHoverBrush" Color="#4DFFFFFF" />

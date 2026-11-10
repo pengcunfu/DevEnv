@@ -280,11 +280,22 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("DEVENV_START_PAGE=tools 切到系统工具页签",
                 vm.SelectedPage == 3 && vm.IsSystemToolsPage && !vm.IsInsideGroup && !vm.IsSearching);
+            Check("系统工具按分类标签展示",
+                vm.ShowsToolSections
+                && vm.ToolSections.Count >= 2
+                && vm.ToolSections.All(section => !string.IsNullOrWhiteSpace(section.Title) && section.Entries.Count > 0),
+                $"sections={vm.ToolSections.Count}: {string.Join(", ", vm.ToolSections.Select(s => $"{s.Title}×{s.Entries.Count}"))}");
             window.ShowPage("builtin");
             WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
             Check("DEVENV_START_PAGE=builtin 切到内置工具页签",
                 vm.SelectedPage == 4 && vm.IsBuiltinToolsPage && !vm.IsInsideGroup && !vm.IsSearching);
+            Check("内置工具按分类标签展示",
+                vm.ShowsToolSections
+                && vm.ToolSections.Count >= 2
+                && vm.ToolSections.Any(section => section.Title == "窗口入口")
+                && vm.ToolSections.Any(section => section.Title == "实用工具"),
+                $"sections={string.Join(", ", vm.ToolSections.Select(s => s.Title))}");
             window.ShowPage("apps");
             WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();

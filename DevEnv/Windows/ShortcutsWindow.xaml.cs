@@ -107,7 +107,7 @@ public partial class ShortcutsWindow : Window
         DragLeave += OnDragLeave;
         Drop += OnDrop;
 
-        EntryGrid.RenderTransform = _pageSlide;
+        PageContentHost.RenderTransform = _pageSlide;
         FolderCard.RenderTransform = _folderScale;
         FolderCard.RenderTransformOrigin = new Point(0.5, 0.5);
 
@@ -845,22 +845,24 @@ public partial class ShortcutsWindow : Window
     {
         if (EntryScroller.VerticalOffset > 0)
             EntryScroller.ScrollToTop();
+        if (SectionScroller.VerticalOffset > 0)
+            SectionScroller.ScrollToTop();
     }
 
     /// <summary>新页内容从切换方向的一侧（24 DIP）滑入并淡入；只动渲染层，不触发重新布局。</summary>
     private void PlayPageTransition(int direction)
     {
         _pageSlide.BeginAnimation(TranslateTransform.XProperty, null);
-        EntryGrid.BeginAnimation(OpacityProperty, null);
+        PageContentHost.BeginAnimation(OpacityProperty, null);
 
         _pageSlide.X = direction * 24;
-        EntryGrid.Opacity = 0;
+        PageContentHost.Opacity = 0;
 
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         _pageSlide.BeginAnimation(
             TranslateTransform.XProperty,
             new DoubleAnimation(0d, new Duration(TimeSpan.FromMilliseconds(190))) { EasingFunction = ease });
-        EntryGrid.BeginAnimation(
+        PageContentHost.BeginAnimation(
             OpacityProperty,
             new DoubleAnimation(1d, new Duration(TimeSpan.FromMilliseconds(150))) { EasingFunction = ease });
     }
@@ -1300,8 +1302,8 @@ public partial class ShortcutsWindow : Window
         var bounds = GetBounds(container);
         var position = e.GetPosition(container);
 
-        // 卡片 90×156，图标底板 40×40 居中；热区略放大便于拖放合并
-        var iconZone = new Rect(20, 8, 50, 50);
+        // 卡片 90×112，图标 48×48 居中；热区略放大便于拖放合并
+        var iconZone = new Rect(16, 10, 58, 56);
         var canMerge = !ViewModel.IsInsideGroup
             && target.Kind is not (ShortcutKind.Tool or ShortcutKind.InternalTool)
             && entries.All(entry => !entry.IsGroup)

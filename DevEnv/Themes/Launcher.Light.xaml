@@ -17,7 +17,8 @@
     <SolidColorBrush x:Key="LauncherSurfaceBrush" Color="#B3F5F5F5" />
     <SolidColorBrush x:Key="LauncherSurfaceHoverBrush" Color="#CCF8F8F8" />
     <SolidColorBrush x:Key="LauncherSurfacePressedBrush" Color="#D9EDEDED" />
-    <SolidColorBrush x:Key="LauncherIconBackdropBrush" Color="#99F0F0F0" />
+    <!-- 文件夹磁贴底板；普通应用图标不铺灰底，贴近开始菜单 -->
+    <SolidColorBrush x:Key="LauncherIconBackdropBrush" Color="#E6FFFFFF" />
     <!-- 侧栏选中底：比侧栏表面更深一档，和未选中拉开对比 -->
     <SolidColorBrush x:Key="LauncherPillSelectedBrush" Color="#FFDCDCDC" />
     <SolidColorBrush x:Key="LauncherBorderBrush" Color="#1F000000" />
@@ -33,8 +34,9 @@
     <SolidColorBrush x:Key="LauncherAccentSelectionBrush" Color="#330078D4" />
     <SolidColorBrush x:Key="LauncherAccentFaintBrush" Color="#260078D4" />
 
-    <SolidColorBrush x:Key="LauncherTileHoverBrush" Color="#14000000" />
-    <SolidColorBrush x:Key="LauncherTilePressedBrush" Color="#1F000000" />
+    <!-- 磁贴悬停 / 按下：开始菜单式抬升白底，不要半透明灰竖条 -->
+    <SolidColorBrush x:Key="LauncherTileHoverBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="LauncherTilePressedBrush" Color="#FFF5F5F5" />
 
     <SolidColorBrush x:Key="LauncherCircleBrush" Color="#99F0F0F0" />
     <SolidColorBrush x:Key="LauncherCircleHoverBrush" Color="#BFF5F5F5" />

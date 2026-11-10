@@ -16,7 +16,7 @@ public sealed class CenteredWrapPanel : Panel
 
     public static readonly DependencyProperty ItemHeightProperty = DependencyProperty.Register(
         nameof(ItemHeight), typeof(double), typeof(CenteredWrapPanel),
-        new FrameworkPropertyMetadata(156d, FrameworkPropertyMetadataOptions.AffectsMeasure));
+        new FrameworkPropertyMetadata(112d, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public double ItemWidth
     {
