@@ -244,19 +244,19 @@
                     PreviewMouseMove="OnEntryPreviewMouseMove"
                     ContextMenuOpening="OnEntryContextMenuOpening">
                 <StackPanel Width="116">
-                    <Grid Height="76">
-                        <Border Width="72"
-                                Height="72"
+                    <Grid Height="68">
+                        <Border Width="64"
+                                Height="64"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Background="{DynamicResource LauncherIconBackdropBrush}"
-                                CornerRadius="17"
+                                CornerRadius="15"
                                 Tag="IconDropZone">
                             <Grid>
                                 <!-- 普通卡片：单图标 -->
                                 <Grid Visibility="{Binding IsGroup, Converter={StaticResource FalseToVisibility}}">
-                                    <Image Width="56"
-                                           Height="56"
+                                    <Image Width="48"
+                                           Height="48"
                                            Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
                                            Stretch="Uniform"
                                            RenderOptions.BitmapScalingMode="HighQuality"
@@ -265,12 +265,12 @@
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                FontFamily="Segoe MDL2 Assets"
-                                               FontSize="30"
+                                               FontSize="26"
                                                Foreground="{DynamicResource LauncherTextPrimaryBrush}"
                                                Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
                                 </Grid>
                                 <!-- 启动器文件夹：前四项 2×2 预览 -->
-                                <ItemsControl Margin="7"
+                                <ItemsControl Margin="6"
                                               ItemsSource="{Binding GroupPreview}"
                                               Visibility="{Binding IsGroup, Converter={StaticResource TrueToVisibility}}">
                                     <ItemsControl.ItemsPanel>
@@ -280,7 +280,7 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Width="27" Height="27">
+                                            <Grid Width="24" Height="24">
                                                 <Image Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
                                                        Stretch="Uniform"
                                                        RenderOptions.BitmapScalingMode="HighQuality"
@@ -289,7 +289,7 @@
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"
                                                            FontFamily="Segoe MDL2 Assets"
-                                                           FontSize="14"
+                                                           FontSize="13"
                                                            Foreground="{DynamicResource LauncherTextPrimaryBrush}"
                                                            Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
                                             </Grid>
