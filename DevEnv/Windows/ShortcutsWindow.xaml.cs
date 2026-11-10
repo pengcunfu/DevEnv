@@ -8,7 +8,6 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using DevEnv.Core.Services;
 using DevEnv.Host.Infrastructure;
@@ -17,7 +16,7 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全局启动器（Launchpad 样式）：与 Windows 11 开始菜单同等大小、同等颜色、同等位置。
+/// 全局启动器（Launchpad 样式）：固定 1200 × 800 DIP、居中，配色与 Windows 11 开始菜单一致。
 /// 顶部一行依次是本地应用 / 文件夹 / 网站 / 开始菜单四个横向页签、紧凑搜索框
 /// 与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
 /// 单击图标即启动，Esc 或点击空白处关闭。
@@ -38,11 +37,8 @@ public partial class ShortcutsWindow : Window
     /// <summary>右键菜单打开期间不自动收起。</summary>
     private bool _menuOpen;
 
-    /// <summary>预热期间（屏幕外显示一次又隐藏）不处理失焦收起。</summary>
+    /// <summary>预热期间（透明显示一次又隐藏）不处理失焦收起。</summary>
     private bool _prewarming;
-
-    /// <summary>正在滑出、尚未真正隐藏。</summary>
-    private bool _hiding;
 
     /// <summary>启动器内部拖拽的数据格式；不与外部文件拖入的 FileDrop 混用。</summary>
     private const string EntryDragFormat = "DevEnv.LauncherEntries";
@@ -89,20 +85,8 @@ public partial class ShortcutsWindow : Window
     /// <summary>启动器可见期间监听窗口外点击：补上不会触发 Deactivated 的点击场景。</summary>
     private readonly OutsideClickDismissHook _outsideClickHook;
 
-    /// <summary>玻璃面板圆角；根元素裁剪与边缘高光共用同一个值。</summary>
-    private const double GlassCornerRadius = 22;
-
     /// <summary>换页时网格的横向位移；只做渲染变换，不影响布局与框选坐标。</summary>
     private readonly TranslateTransform _pageSlide = new();
-
-    /// <summary>
-    /// 整窗纵向位移：打开时从窗口下方整块滑入，收起时滑回下方。
-    /// 与 Windows 11 开始菜单一致：自下而上滑入，时长与缓动曲线相同。
-    /// </summary>
-    private readonly TranslateTransform _rootSlide = new();
-
-    /// <summary>Windows 11 开始菜单的入场 / 退场动画时长（毫秒）。</summary>
-    private const int SlideDurationMs = 167;
 
     /// <summary>文件夹浮层的弹出缩放。</summary>
     private readonly ScaleTransform _folderScale = new(1, 1);
@@ -124,8 +108,6 @@ public partial class ShortcutsWindow : Window
         Drop += OnDrop;
 
         EntryGrid.RenderTransform = _pageSlide;
-        Root.RenderTransform = _rootSlide;
-        Root.SizeChanged += (_, e) => UpdateRootClip(e.NewSize);
         FolderCard.RenderTransform = _folderScale;
         FolderCard.RenderTransformOrigin = new Point(0.5, 0.5);
 
@@ -139,7 +121,7 @@ public partial class ShortcutsWindow : Window
         _outsideClickHook = new OutsideClickDismissHook(
             Dispatcher,
             () => new WindowInteropHelper(this).Handle,
-            () => _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive || _hiding);
+            () => _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive);
         _outsideClickHook.OutsideClicked += OnOutsideClicked;
 
         Closed += (_, _) =>
@@ -163,7 +145,7 @@ public partial class ShortcutsWindow : Window
     private ShortcutLauncherViewModel ViewModel => (ShortcutLauncherViewModel)DataContext;
 
     /// <summary>
-    /// 把窗口在内存里准备好：在屏幕外以完全透明、不抢焦点的状态显示一次再隐藏，
+    /// 把窗口在内存里准备好：在最终位置以完全透明、不抢焦点的状态显示一次再隐藏，
     /// 让 WPF 完成 HWND 创建、模板加载、布局与首帧渲染。
     ///
     /// 不预热的话，首次打开时这些工作都在“已经可见”之后才做，表现出来就是
@@ -183,11 +165,9 @@ public partial class ShortcutsWindow : Window
             // 用最终尺寸/位置预热：显示时不再挪窗口，DWM 也就没有重新合成可看
             ApplyScreenBounds();
 
-            // 内容保持全透明（不碰 Window.Opacity）。
-            // 分层窗口会把最后一次合成结果缓存下来：若预热时把内容画成不透明，
-            // 下次 Show 的头一帧就是那张不透明缓存 —— 这正是「先闪一下」的来源。
-            Root.BeginAnimation(OpacityProperty, null);
-            Root.Opacity = 0;
+            // 标准窗口不能靠根元素透明来隐身（不透明窗口仍会画出背景），
+            // 用 Window.Opacity 让预热这一帧完全不显示。
+            Opacity = 0;
 
             Show();
             UpdateLayout();
@@ -200,16 +180,15 @@ public partial class ShortcutsWindow : Window
         }
         finally
         {
-            // 保持 Root.Opacity = 0 再隐藏：缓存的表层是全透明的，Show 不会闪
             Hide();
+            Opacity = 1;
             ShowActivated = showActivated;
             _prewarming = false;
         }
     }
 
     /// <summary>
-    /// 摆到与 Windows 11 开始菜单相同的区域：832 × 862 DIP，贴着任务栏上方，
-    /// 任务栏左对齐时靠左（13 DIP），任务栏居中时水平居中。
+    /// 固定 1200 × 800 DIP，在工作区内水平、垂直居中。
     /// 只在尺寸/位置确实不同时才改，显示过程中改窗口几何会让 DWM 重新合成，肉眼就是闪一下；
     /// 预热后这里通常一次都不改。
     /// </summary>
@@ -238,31 +217,12 @@ public partial class ShortcutsWindow : Window
     {
         var area = SystemParameters.WorkArea;
         var bounds = LauncherGeometry.Compute(
-            area.Left, area.Top, area.Width, area.Height, IsTaskbarCentered());
+            area.Left, area.Top, area.Width, area.Height);
         return new Rect(
             Math.Round(bounds.Left),
             Math.Round(bounds.Top),
             Math.Round(bounds.Width),
             Math.Round(bounds.Height));
-    }
-
-    /// <summary>
-    /// Windows 11 任务栏图标是否居中（<c>TaskbarAl</c> = 1，默认值）。
-    /// 左对齐时开始菜单贴着屏幕左边出现，启动器也跟着靠左，才能与开始菜单同位置。
-    /// </summary>
-    private static bool IsTaskbarCentered()
-    {
-        try
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced");
-            var value = key?.GetValue("TaskbarAl");
-            return value is null || Convert.ToInt32(value) != 0;
-        }
-        catch
-        {
-            return true;
-        }
     }
 
     /// <summary>
@@ -316,70 +276,8 @@ public partial class ShortcutsWindow : Window
         }
     }
 
-    /// <summary>根元素按玻璃圆角裁剪；尺寸变化时重建裁剪区域。</summary>
-    private void UpdateRootClip(Size size)
-    {
-        if (size.Width <= 0 || size.Height <= 0)
-            return;
-
-        Root.Clip = new RectangleGeometry(new Rect(size), GlassCornerRadius, GlassCornerRadius);
-    }
-
     /// <summary>
-    /// 抓取启动器背后的桌面并缩到 1/10，铺满窗口后自然虚化，就是一层廉价的磨砂玻璃。
-    /// 必须在窗口显示前调用，否则会把自己截进去；锁屏 / 远程会话断开等场景截不到图时
-    /// 退化为纯玻璃色，界面仍然可用。
-    /// </summary>
-    private void CaptureBackdrop()
-    {
-        GlassBackdrop.Source = null;
-
-        try
-        {
-            var dpi = VisualTreeHelper.GetDpi(this);
-            var left = (int)Math.Round(Left * dpi.DpiScaleX);
-            var top = (int)Math.Round(Top * dpi.DpiScaleY);
-            var width = Math.Max(1, (int)Math.Round(Width * dpi.DpiScaleX));
-            var height = Math.Max(1, (int)Math.Round(Height * dpi.DpiScaleY));
-
-            using var bitmap = new System.Drawing.Bitmap(
-                width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
-            {
-                graphics.CopyFromScreen(
-                    left, top, 0, 0, new System.Drawing.Size(width, height),
-                    System.Drawing.CopyPixelOperation.SourceCopy);
-            }
-
-            var handle = bitmap.GetHbitmap();
-            try
-            {
-                var source = Imaging.CreateBitmapSourceFromHBitmap(
-                    handle, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                source.Freeze();
-
-                // 缩小 1/10 再拉伸回来，双线性插值本身就是一次很便宜的高斯近似
-                var small = new TransformedBitmap(source, new ScaleTransform(0.1, 0.1));
-                small.Freeze();
-                GlassBackdrop.Source = small;
-            }
-            finally
-            {
-                DeleteObject(handle);
-            }
-        }
-        catch
-        {
-            // 锁屏 / 远程会话断开 / 前台是受保护窗口时截不到图，纯玻璃色也能用
-        }
-    }
-
-    [DllImport("gdi32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool DeleteObject(IntPtr hObject);
-
-    /// <summary>
-    /// 摆到开始菜单的位置并切到指定页签（apps / folders / webs / startmenu）；
+    /// 摆到工作区居中的位置并切到指定页签（apps / folders / webs / startmenu）；
     /// tools / builtin 不是页签，改为直接展开搜索框右侧对应的工具文件夹。每次打开都重新读取数据与系统配色。
     /// </summary>
     public void ShowPage(string? pageId)
@@ -405,29 +303,13 @@ public partial class ShortcutsWindow : Window
                 break;
         }
 
-        var wasVisible = IsVisible;
-        if (_hiding)
-        {
-            // 正在滑出时又要求打开：取消这次收起，从当前位置滑回最终位置
-            _hiding = false;
-            _suppressDeactivate = false;
-            wasVisible = true;
-        }
-
-        if (!wasVisible)
+        if (!IsVisible)
         {
             // 没预热过就先补一次：Show 之后再布局会看到一帧空白
             if (!IsPrewarmed)
                 Prewarm();
 
             ApplyScreenBounds();
-            // 内容整体先放到窗口下沿之外，显示后再自下而上滑入。
-            // 分层窗口的第一帧因此是全透明的，不会先闪一下旧画面。
-            Root.BeginAnimation(OpacityProperty, null);
-            Root.Opacity = 1;
-            ResetRootSlide(SlideDistance);
-            // 窗口还没显示时截取它背后的桌面，作为磨砂玻璃的底图
-            CaptureBackdrop();
             Show();
         }
 
@@ -438,47 +320,6 @@ public partial class ShortcutsWindow : Window
         _shownAtUtc = DateTime.UtcNow;
         BringToForeground();
         FocusSearch();
-
-        if (wasVisible)
-        {
-            // 已经开着（例如拖放后再打开）就别重播入场，只确保停在最终位置
-            Root.BeginAnimation(OpacityProperty, null);
-            Root.Opacity = 1;
-            if (_rootSlide.Y > 0.5)
-                AnimateRootSlide(0, EasingMode.EaseOut);
-            else
-                ResetRootSlide(0);
-            return;
-        }
-
-        // 与 Windows 11 开始菜单一致：自下而上滑入，167ms 减速收尾
-        AnimateRootSlide(0, EasingMode.EaseOut);
-    }
-
-    /// <summary>入场 / 退场位移距离：整块面板的高度，让面板完全落在窗口之外。</summary>
-    private double SlideDistance =>
-        Root.ActualHeight > 0 ? Root.ActualHeight : Math.Max(0, double.IsNaN(Height) ? 0 : Height);
-
-    /// <summary>取消纵向位移动画并直接落到指定偏移。</summary>
-    private void ResetRootSlide(double offset)
-    {
-        _rootSlide.BeginAnimation(TranslateTransform.YProperty, null);
-        _rootSlide.Y = offset;
-    }
-
-    /// <summary>
-    /// 从当前偏移滑到目标偏移。时长固定 167ms，减速用 EaseOut，滑出用 EaseIn，
-    /// 与 Windows 11 开始菜单的入场 / 退场曲线一致。
-    /// </summary>
-    private void AnimateRootSlide(double target, EasingMode easing)
-    {
-        var from = _rootSlide.Y;
-        _rootSlide.BeginAnimation(
-            TranslateTransform.YProperty,
-            new DoubleAnimation(from, target, new Duration(TimeSpan.FromMilliseconds(SlideDurationMs)))
-            {
-                EasingFunction = new CubicEase { EasingMode = easing },
-            });
     }
 
     /// <summary>
@@ -507,9 +348,6 @@ public partial class ShortcutsWindow : Window
         _ => 0,
     };
 
-    /// <summary>正在滑出、尚未真正隐藏（此刻再按 Win / 点托盘应按「重新打开」处理）。</summary>
-    public bool IsHiding => _hiding;
-
     /// <summary>从外部收起（Win 键再次按下、托盘入口等）。</summary>
     public void Dismiss() => HideLauncher();
 
@@ -524,50 +362,23 @@ public partial class ShortcutsWindow : Window
     private static readonly TimeSpan FocusGrace = TimeSpan.FromMilliseconds(400);
     private DateTime _shownAtUtc;
 
-    /// <summary>
-    /// 收起：入场动画的反向，整块面板 167ms 加速滑出窗口下沿，
-    /// **在可见状态下**完成这一帧渲染，再真正 Hide。
-    ///
-    /// 直接 Hide 后再把内容移出是没用的——窗口已经不可见，不会再渲染，
-    /// 分层窗口缓存里留着的仍是不透明画面，下次 Show 的头一帧就会把它贴出来。
-    /// 这就是「第一次打开正常、之后每次打开都闪一下」的原因。
-    /// </summary>
+    /// <summary>收起：标准窗口直接隐藏，不播退出动画，同时卸载只在该窗口可见期间需要的两个钩子。</summary>
     private void HideLauncher()
     {
-        if (!IsVisible || _hiding)
+        if (!IsVisible)
             return;
 
         _suppressDeactivate = true;
-        _hiding = true;
-
-        var slide = new DoubleAnimation(
-            _rootSlide.Y,
-            SlideDistance,
-            new Duration(TimeSpan.FromMilliseconds(SlideDurationMs)))
+        try
         {
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn },
-        };
-        slide.Completed += (_, _) =>
+            Hide();
+            _winKeyHook.Uninstall();
+            _outsideClickHook.Uninstall();
+        }
+        finally
         {
-            // 滑出途中又被要求打开：ShowPage 会清掉 _hiding，这里不要再隐藏
-            if (!_hiding)
-                return;
-
-            Root.BeginAnimation(OpacityProperty, null);
-            Root.Opacity = 0;
-            try
-            {
-                Hide();
-                _winKeyHook.Uninstall();
-                _outsideClickHook.Uninstall();
-            }
-            finally
-            {
-                _suppressDeactivate = false;
-                _hiding = false;
-            }
-        };
-        _rootSlide.BeginAnimation(TranslateTransform.YProperty, slide);
+            _suppressDeactivate = false;
+        }
     }
 
     /// <summary>
@@ -576,7 +387,7 @@ public partial class ShortcutsWindow : Window
     /// </summary>
     private void OnOutsideClicked()
     {
-        if (!IsVisible || _hiding || _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive)
+        if (!IsVisible || _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive)
             return;
 
         HideLauncher();
@@ -596,7 +407,7 @@ public partial class ShortcutsWindow : Window
     private void OnWindowsKeyPressed()
     {
         // 打开文件 / 重命名对话框期间不动窗口，避免把模态对话框的宿主一起藏掉
-        if (!IsVisible || _hiding || _suppressDeactivate)
+        if (!IsVisible || _suppressDeactivate)
             return;
 
         HideLauncher();
@@ -1037,7 +848,7 @@ public partial class ShortcutsWindow : Window
         ResetScrollPosition();
 
         // 预热 / 收起过程中换页不播放动画，否则首次显示会带着一半透明
-        if (!IsVisible || _hiding || _prewarming || ViewModel.IsSearching)
+        if (!IsVisible || _prewarming || ViewModel.IsSearching)
             return;
 
         // 循环页签按更短的一侧判断方向：4 → 0 是下一页，0 → 4 是上一页
@@ -1079,7 +890,7 @@ public partial class ShortcutsWindow : Window
     /// </summary>
     private void OnEntryContainerLoaded(object sender, RoutedEventArgs e)
     {
-        if (sender is not ContentPresenter container || !IsVisible || _hiding || _prewarming)
+        if (sender is not ContentPresenter container || !IsVisible || _prewarming)
             return;
 
         var elapsed = (DateTime.UtcNow - _entranceAtUtc).TotalMilliseconds;
@@ -1119,7 +930,7 @@ public partial class ShortcutsWindow : Window
     /// <summary>文件夹浮层弹出：暗底淡入，卡片从 90% 回弹到 100%。</summary>
     private void PlayFolderOpenAnimation()
     {
-        if (!IsVisible || _hiding || _prewarming)
+        if (!IsVisible || _prewarming)
             return;
 
         _folderScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
@@ -1341,7 +1152,7 @@ public partial class ShortcutsWindow : Window
 
     /// <summary>
     /// 弹窗期间压制「失去焦点即收起」，并临时取消置顶：
-    /// 启动器贴底悬浮且置顶时，没有 owner 的系统文件对话框会被它挡住。
+    /// 启动器悬浮且置顶时，没有 owner 的系统文件对话框会被它挡住。
     /// </summary>
     private async Task RunDialogAsync(Func<Task> action)
     {

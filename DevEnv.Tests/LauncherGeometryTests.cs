@@ -9,53 +9,44 @@ public class LauncherGeometryTests
     private const double WorkHeight = 1104;
 
     [Fact]
-    public void Compute_LeftAlignedTaskbar_MatchesStartMenu()
+    public void Compute_UsesFixedSize()
     {
-        var bounds = LauncherGeometry.Compute(0, 0, WorkWidth, WorkHeight, taskbarCentered: false);
+        var bounds = LauncherGeometry.Compute(0, 0, WorkWidth, WorkHeight);
 
-        // 与开始菜单实测值一致：左边距 13 DIP，832 × 862 DIP，底边距任务栏 14 DIP
-        Assert.Equal(LauncherGeometry.LeftInset, bounds.Left);
-        Assert.Equal(LauncherGeometry.Width, bounds.Width);
-        Assert.Equal(LauncherGeometry.Height, bounds.Height);
-        Assert.Equal(WorkHeight - LauncherGeometry.Height - LauncherGeometry.BottomInset, bounds.Top);
+        Assert.Equal(1200, bounds.Width);
+        Assert.Equal(800, bounds.Height);
     }
 
     [Fact]
-    public void Compute_CenteredTaskbar_CentersHorizontally()
+    public void Compute_CentersBothAxes()
     {
-        var bounds = LauncherGeometry.Compute(0, 0, WorkWidth, WorkHeight, taskbarCentered: true);
+        var bounds = LauncherGeometry.Compute(0, 0, WorkWidth, WorkHeight);
 
         Assert.Equal((WorkWidth - LauncherGeometry.Width) / 2, bounds.Left);
-        Assert.Equal(LauncherGeometry.Width, bounds.Width);
+        Assert.Equal((WorkHeight - LauncherGeometry.Height) / 2, bounds.Top);
+        // 左右、上下留白相等
+        Assert.Equal(bounds.Left, WorkWidth - (bounds.Left + bounds.Width));
+        Assert.Equal(bounds.Top, WorkHeight - (bounds.Top + bounds.Height));
     }
 
     [Fact]
     public void Compute_RespectsWorkAreaOffset()
     {
-        var bounds = LauncherGeometry.Compute(-1920, 100, WorkWidth, WorkHeight, taskbarCentered: false);
+        var bounds = LauncherGeometry.Compute(-1920, 100, WorkWidth, WorkHeight);
 
-        Assert.Equal(-1920 + LauncherGeometry.LeftInset, bounds.Left);
-        Assert.Equal(100 + WorkHeight - LauncherGeometry.Height - LauncherGeometry.BottomInset, bounds.Top);
+        Assert.Equal(-1920 + (WorkWidth - LauncherGeometry.Width) / 2, bounds.Left);
+        Assert.Equal(100 + (WorkHeight - LauncherGeometry.Height) / 2, bounds.Top);
     }
 
     [Fact]
-    public void Compute_ShrinksOnShortWorkArea_WithoutOverflow()
+    public void Compute_SizeStaysFixedRegardlessOfWorkArea()
     {
-        const double shortHeight = 700;
-        var bounds = LauncherGeometry.Compute(0, 40, WorkWidth, shortHeight, taskbarCentered: false);
+        var small = LauncherGeometry.Compute(0, 0, 1024, 768);
+        var large = LauncherGeometry.Compute(0, 0, 3840, 2080);
 
-        Assert.True(bounds.Top >= 40);
-        Assert.True(bounds.Top + bounds.Height <= 40 + shortHeight - LauncherGeometry.BottomInset);
-        Assert.True(bounds.Height < LauncherGeometry.Height);
-    }
-
-    [Fact]
-    public void Compute_ShrinksOnNarrowWorkArea_WithoutOverflow()
-    {
-        const double narrowWidth = 900;
-        var bounds = LauncherGeometry.Compute(0, 0, narrowWidth, WorkHeight, taskbarCentered: false);
-
-        Assert.True(bounds.Left >= 0);
-        Assert.True(bounds.Left + bounds.Width <= narrowWidth);
+        Assert.Equal(LauncherGeometry.Width, small.Width);
+        Assert.Equal(LauncherGeometry.Height, small.Height);
+        Assert.Equal(LauncherGeometry.Width, large.Width);
+        Assert.Equal(LauncherGeometry.Height, large.Height);
     }
 }

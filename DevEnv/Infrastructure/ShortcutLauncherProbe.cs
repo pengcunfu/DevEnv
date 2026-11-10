@@ -58,41 +58,47 @@ public static class ShortcutLauncherProbe
             Check("预热已完成", window.IsPrewarmed);
             // 预热必须落在最终几何上，否则 Show 时还要挪窗口，DWM 重新合成会闪
             var expected = ShortcutsWindow.ComputeScreenBounds();
-            Check("预热使用最终几何（与开始菜单同尺寸、贴底对齐，显示时不再移动窗口）",
+            Check("预热使用最终几何（固定 1200 × 800 DIP、居中，显示时不再移动窗口）",
                 Math.Abs(window.Left - expected.Left) < 0.5
                 && Math.Abs(window.Top - expected.Top) < 0.5
                 && Math.Abs(window.Width - expected.Width) < 0.5
                 && Math.Abs(window.Height - expected.Height) < 0.5,
                 $"Left={window.Left}, Top={window.Top}, W={window.Width}, H={window.Height}, " +
                 $"expected=({expected.Left},{expected.Top},{expected.Width},{expected.Height})");
-            Check("启动器尺寸与 Windows 11 开始菜单一致（832 × 862 DIP）",
+            var area = SystemParameters.WorkArea;
+            Check("启动器为固定尺寸（1200 × 800 DIP）",
                 Math.Abs(window.Width - DevEnv.Core.Services.LauncherGeometry.Width) < 0.5
                 && Math.Abs(window.Height - DevEnv.Core.Services.LauncherGeometry.Height) < 0.5,
-                $"W={window.Width}, H={window.Height}");
+                $"W={window.Width}, H={window.Height}, area={area.Width}×{area.Height}");
+            // 居中：左右与上下留白相等（取整误差在 1 DIP 内）
+            var leftGap = window.Left - area.Left;
+            var rightGap = area.Left + area.Width - (window.Left + window.Width);
+            var topGap = window.Top - area.Top;
+            var bottomGap = area.Top + area.Height - (window.Top + window.Height);
+            Check("启动器在工作区内水平、垂直居中",
+                Math.Abs(leftGap - rightGap) <= 1 && Math.Abs(topGap - bottomGap) <= 1,
+                $"left={leftGap:F1}, right={rightGap:F1}, top={topGap:F1}, bottom={bottomGap:F1}");
             // 配色跟随系统应用模式：浅 / 深两套 key 一致，读不到时应至少能解析到画刷
             Check("启动器配色已加载（跟随系统浅 / 深色）",
-                window.TryFindResource("LauncherGlassBrush") is System.Windows.Media.Brush
-                && window.TryFindResource("LauncherTextPrimaryBrush") is System.Windows.Media.Brush);
-            // 隐藏时内容必须留在全透明：分层窗口缓存的最后一帧会直接在下次 Show 时露出
-            Check("预热后内容保持全透明（缓存的表层不会闪）",
-                window.Root.Opacity < 0.001, $"Root.Opacity={window.Root.Opacity}");
+                window.TryFindResource("LauncherBackgroundBrush") is System.Windows.Media.Brush
+                && window.TryFindResource("LauncherTextPrimaryBrush") is System.Windows.Media.Brush
+                && window.Background is System.Windows.Media.Brush,
+                $"window.Background={window.Background?.GetType().Name ?? "null"}");
 
             // 后面的渲染检查放到屏幕外，避免真的盖住用户桌面
             window.Left = -4000;
             window.Top = -4000;
             window.Show();
-            window.Root.Opacity = 1;
             Pump();
             window.UpdateLayout();
 
             Check("启动器窗口可正常加载", window.IsVisible);
             // 全局启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
             Check("全局启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
-            // 入场是根元素上的纵向位移动画，窗口自身 Opacity 保持不变
-            Check("入场为自下而上的位移动画（窗口 Opacity 恒为 1）",
-                Math.Abs(window.Opacity - 1) < 0.001
-                && window.Root.RenderTransform is System.Windows.Media.TranslateTransform,
-                $"Opacity={window.Opacity}, transform={window.Root.RenderTransform?.GetType().Name}");
+            // 窗口改用 Windows 默认外观：系统标题栏与边框，不再自绘透明分层窗口
+            Check("使用 Windows 默认窗口（标准边框与标题栏）",
+                window.WindowStyle == WindowStyle.SingleBorderWindow && !window.AllowsTransparency,
+                $"WindowStyle={window.WindowStyle}, AllowsTransparency={window.AllowsTransparency}");
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
@@ -302,34 +308,24 @@ public static class ShortcutLauncherProbe
             Check("回到 apps 页签时收起工具文件夹", !vm.IsInsideGroup && vm.SelectedPage == 0);
             Check("ShowPage 可见时安装窗口外点击监听", window.IsOutsideClickHookInstalled);
 
-            // 窗口外点击必须真的收起，而不是只装了钩子
+            // 窗口外点击必须真的收起，而不是只装了钩子；标准窗口直接隐藏，没有退出动画
             window.SimulateOutsideClick();
-            Check("窗口外点击触发滑出收起", window.IsHiding && window.IsVisible);
-            WaitUntil(() => !window.IsVisible);
-            Check("窗口外点击后隐藏并卸载监听",
-                !window.IsVisible && !window.IsOutsideClickHookInstalled);
+            Check("窗口外点击立即收起并隐藏", !window.IsVisible);
+            Check("窗口外点击后卸载监听", !window.IsOutsideClickHookInstalled);
             window.ShowPage("apps");
             Pump();
             Check("窗口外点击收起后可以重新打开",
-                window.IsVisible && !window.IsHiding && window.IsOutsideClickHookInstalled);
+                window.IsVisible && window.IsOutsideClickHookInstalled,
+                $"visible={window.IsVisible}, hook={window.IsOutsideClickHookInstalled}");
 
-            // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：
-            // 收起必须先滑出到窗口下沿之外再隐藏，否则分层窗口缓存的是不透明画面，下次 Show 会闪。
+            // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：标准窗口不播退出动画，直接 Hide
             window.Dismiss();
-            // 关键顺序：先滑出、窗口仍然可见，滑完才 Hide。
-            // 若先 Hide 再把内容移出，窗口已不可见、不会重新渲染，
-            // 分层窗口缓存里仍是不透明画面，下次 Show 会闪出旧画面。
-            Check("收起时先滑出、窗口仍可见（缓存才会更新为透明）",
-                window.IsHiding && window.IsVisible);
-            WaitUntil(() => !window.IsVisible);
-            Check("收起完成并隐藏", !window.IsVisible);
+            Check("收起立即隐藏（无退出动画）", !window.IsVisible);
             Check("收起后卸载窗口外点击监听", !window.IsOutsideClickHookInstalled);
-            Check("收起后缓存为全透明（下次 Show 不会闪出旧画面）",
-                window.Root.Opacity < 0.001, $"Root.Opacity={window.Root.Opacity}");
 
             window.ShowPage("apps");
             Pump();
-            Check("再次打开仍正常显示", window.IsVisible && !window.IsHiding);
+            Check("再次打开仍正常显示", window.IsVisible, $"visible={window.IsVisible}");
 
             Check("无数据绑定错误", bindingErrors.Count == 0,
                 bindingErrors.Count == 0 ? null : string.Join(" | ", bindingErrors.Take(5)));
@@ -357,7 +353,7 @@ public static class ShortcutLauncherProbe
         return failures == 0 ? 0 : 1;
     }
 
-    /// <summary>反复跑消息循环直到条件成立（最多等 timeoutMs）。动画收尾依赖计时器，必须泵消息。</summary>
+    /// <summary>反复跑消息循环直到条件成立（最多等 timeoutMs）。后台加载与异步绑定需要泵消息。</summary>
     private static void WaitUntil(Func<bool> condition, int timeoutMs = 2000)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();

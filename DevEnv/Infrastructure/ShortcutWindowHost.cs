@@ -151,8 +151,8 @@ public static class ShortcutWindowHost
     /// </summary>
     public static bool Toggle()
     {
-        // 正在淡出时再按一次 = 想重新打开，交给 Open 取消这次收起
-        if (_window is { IsVisible: true } window && !window.IsHiding)
+        // 已经打开时再按一次 = 收起
+        if (_window is { IsVisible: true } window)
         {
             CancelPendingOpen();
             window.Dismiss();

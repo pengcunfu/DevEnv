@@ -4,9 +4,7 @@
         xmlns:controls="clr-namespace:DevEnv.Host.Controls"
         xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
         Title="全局启动器"
-        WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent"
+        Background="{DynamicResource LauncherBackgroundBrush}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Topmost="True"
@@ -15,9 +13,9 @@
         TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
-    <!-- 悬浮启动器（Launchpad 样式）：与 Windows 11 开始菜单同尺寸、同位置、同配色的磨砂玻璃面板上，
-         顶部一行从左到右是横向页签（本地应用 / 文件夹 / 网站 / 开始菜单）、紧凑搜索框，
-         以及「系统工具」「内置工具」两个只读文件夹；中部是大图标网格；
+    <!-- 启动器（Launchpad 样式）：使用 Windows 默认窗口边框与标题栏，固定 1200 × 800 DIP、在工作区内居中，
+         内容配色与 Windows 11 开始菜单一致。顶部一行从左到右是横向页签（本地应用 / 文件夹 / 网站 / 开始菜单）、
+         紧凑搜索框，以及「系统工具」「内置工具」两个只读文件夹；中部是大图标网格；
          单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
     <Window.DataContext>
         <vm:ShortcutLauncherViewModel />
@@ -399,25 +397,21 @@
             <RowDefinition Height="Auto" MinHeight="82" />
         </Grid.RowDefinitions>
 
-        <!-- 磨砂玻璃：先铺一层打开时截取的桌面缩略图（拉伸后自然虚化），
-             再叠开始菜单同款的玻璃色与顶部高光；截不到图时只剩玻璃色，仍然可用。 -->
-        <Image x:Name="GlassBackdrop"
-               Grid.RowSpan="4"
-               Stretch="Fill"
-               RenderOptions.BitmapScalingMode="HighQuality" />
-        <Border Grid.RowSpan="4" Background="{DynamicResource LauncherGlassBrush}" />
-        <Border Grid.RowSpan="4"
-                IsHitTestVisible="False"
-                Background="{DynamicResource LauncherHighlightBrush}" />
+        <!-- 窗口使用系统默认边框与标题栏，背景色由 Window.Background 提供 -->
 
         <!-- 顶部一行：页签、搜索框、两个只读工具文件夹从左到右排在同一行。
-             832 DIP 宽度按开始菜单收窄，页签内边距与搜索框相应收紧，整行仍不折行。 -->
-        <StackPanel Grid.Row="0"
-                    Margin="16,14,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Orientation="Horizontal">
+             窗口宽度固定 1200 DIP，搜索框在 120–250 DIP 之间自适应，整行仍不折行。 -->
+        <Grid Grid.Row="0"
+              Margin="16,14,16,0"
+              VerticalAlignment="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <ListBox x:Name="PageTabs"
+                     Grid.Column="0"
                      VerticalAlignment="Center"
                      ItemsSource="{Binding Pages}"
                      SelectedIndex="{Binding SelectedPage, Mode=TwoWay}"
@@ -466,9 +460,12 @@
             </ListBox>
 
             <Border x:Name="SearchShell"
-                    Width="250"
+                    Grid.Column="1"
                     Height="38"
+                    MinWidth="120"
+                    MaxWidth="250"
                     Margin="8,0,0,0"
+                    HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     Background="{DynamicResource LauncherSurfaceBrush}"
                     BorderBrush="{DynamicResource LauncherBorderBrush}"
@@ -496,7 +493,9 @@
 
             <!-- 系统工具 / 内置工具不是页签，而是紧跟搜索框的两个只读文件夹 -->
             <Button x:Name="SystemToolsShelfButton"
+                    Grid.Column="2"
                     Margin="6,0,0,0"
+                    VerticalAlignment="Center"
                     Style="{StaticResource LaunchpadShelfButton}"
                     ToolTip="系统工具（Windows 管理工具目录）"
                     Click="OnSystemToolsShelfClick">
@@ -514,7 +513,9 @@
                 </StackPanel>
             </Button>
             <Button x:Name="BuiltinToolsShelfButton"
+                    Grid.Column="3"
                     Margin="6,0,0,0"
+                    VerticalAlignment="Center"
                     Style="{StaticResource LaunchpadShelfButton}"
                     ToolTip="内置工具（JSON / Hosts / 哈希等）"
                     Click="OnBuiltinToolsShelfClick">
@@ -531,7 +532,7 @@
                                Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
                 </StackPanel>
             </Button>
-        </StackPanel>
+        </Grid>
 
         <!-- 中部：图标网格 -->
         <Grid Grid.Row="2" Margin="0,16,0,0">
@@ -624,7 +625,7 @@
         </Grid>
 
         <!-- 底部：操作提示 / 搜索条数 / 文件夹条目数 / 操作失败提示。
-             832 DIP 宽度下顶部一行已排满，提示从右上角移到底部居中。 -->
+             顶部一行已排满，提示从右上角移到底部居中。 -->
         <StackPanel Grid.Row="3"
                     Margin="0,4,0,26"
                     HorizontalAlignment="Center">
@@ -776,13 +777,5 @@
                        Fill="{DynamicResource LauncherAccentBrush}"
                        Visibility="Collapsed" />
         </Canvas>
-
-        <!-- 玻璃边缘高光：与根元素圆角裁剪一致，只做视觉不参与命中测试 -->
-        <Border x:Name="GlassEdge"
-                Grid.RowSpan="4"
-                CornerRadius="22"
-                BorderBrush="{DynamicResource LauncherEdgeBrush}"
-                BorderThickness="1"
-                IsHitTestVisible="False" />
     </Grid>
 </Window>

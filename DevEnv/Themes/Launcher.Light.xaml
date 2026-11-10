@@ -6,17 +6,11 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- 玻璃底色：接近开始菜单的 #F3F3F3，保留少量透明度让背后的桌面虚化透出来 -->
-    <LinearGradientBrush x:Key="LauncherGlassBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#F2F3F3F3" />
-        <GradientStop Offset="0.55" Color="#EDF2F2F2" />
-        <GradientStop Offset="1" Color="#F0EFEFEF" />
-    </LinearGradientBrush>
-
-    <!-- 顶部高光 -->
-    <LinearGradientBrush x:Key="LauncherHighlightBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#33FFFFFF" />
-        <GradientStop Offset="0.35" Color="#00FFFFFF" />
+    <!-- 窗口背景：接近开始菜单的 #F3F3F3，标准窗口不透明，不再依赖桌面磨砂 -->
+    <LinearGradientBrush x:Key="LauncherBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#FFF3F3F3" />
+        <GradientStop Offset="0.55" Color="#FFF2F2F2" />
+        <GradientStop Offset="1" Color="#FFEFEFEF" />
     </LinearGradientBrush>
 
     <!-- 搜索框 / 工具文件夹 / 图标底座等玻璃胶囊 -->
@@ -43,7 +37,6 @@
     <SolidColorBrush x:Key="LauncherCirclePressedBrush" Color="#F2FFFFFF" />
 
     <SolidColorBrush x:Key="LauncherCardBrush" Color="#F5FFFFFF" />
-    <SolidColorBrush x:Key="LauncherEdgeBrush" Color="#99FFFFFF" />
     <SolidColorBrush x:Key="LauncherDangerBrush" Color="#FFC42B1C" />
 
 </ResourceDictionary>
