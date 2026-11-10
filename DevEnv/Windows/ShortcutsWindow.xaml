@@ -104,13 +104,15 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="Transparent"
                                 BorderThickness="1"
-                                CornerRadius="16"
-                                Padding="8,10"
+                                CornerRadius="14"
+                                Padding="4,6"
+                                ClipToBounds="True"
                                 RenderTransformOrigin="0.5,0.5">
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="TileScale" ScaleX="1" ScaleY="1" />
                             </Border.RenderTransform>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Top" />
+                            <!-- Stretch 才能把单元格宽度传给标题 TextBlock，否则 Width 失效、文字单行溢出遮挡邻居 -->
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Top" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <EventTrigger RoutedEvent="MouseEnter">
@@ -176,7 +178,8 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Foreground" Value="{DynamicResource LauncherTextMutedBrush}" />
+            <!-- 未选中用 Secondary，Muted 在浅色底上偏淡，侧栏页签会看不清 -->
+            <Setter Property="Foreground" Value="{DynamicResource LauncherTextSecondaryBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -195,7 +198,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Pill" Property="Background" Value="{DynamicResource LauncherTileHoverBrush}" />
-                                <Setter Property="Foreground" Value="{DynamicResource LauncherTextSecondaryBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource LauncherTextPrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Pill" Property="Background" Value="{DynamicResource LauncherPillSelectedBrush}" />
@@ -239,52 +242,55 @@
         <!-- 图标卡片：页签网格与文件夹浮层共用 -->
         <DataTemplate x:Key="LauncherEntryTemplate">
             <Button Style="{StaticResource LaunchpadTile}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
                     ToolTip="{Binding TargetPath}"
                     Click="OnEntryClick"
                     PreviewMouseLeftButtonDown="OnEntryPreviewMouseLeftButtonDown"
                     PreviewMouseMove="OnEntryPreviewMouseMove"
                     ContextMenuOpening="OnEntryContextMenuOpening">
-                <StackPanel Width="80" HorizontalAlignment="Center">
-                    <Grid Height="52">
-                        <Border Width="44"
-                                Height="44"
+                <StackPanel HorizontalAlignment="Stretch">
+                    <Grid Height="48">
+                        <Border Width="40"
+                                Height="40"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Background="{DynamicResource LauncherIconBackdropBrush}"
-                                CornerRadius="11"
+                                CornerRadius="10"
                                 Tag="IconDropZone">
                             <Grid>
                                 <!-- 普通卡片：单图标 -->
                                 <Grid Visibility="{Binding IsGroup, Converter={StaticResource FalseToVisibility}}">
-                                    <Image Width="36"
-                                           Height="36"
+                                    <Image Width="32"
+                                           Height="32"
                                            Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
                                            Stretch="Uniform"
                                            RenderOptions.BitmapScalingMode="HighQuality"
                                            Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
                                     <!-- 内置工具：固定品牌色圆角底 + 白色字形，和图片图标一眼区分 -->
-                                    <Border Width="36"
-                                            Height="36"
-                                            CornerRadius="9"
+                                    <Border Width="32"
+                                            Height="32"
+                                            CornerRadius="8"
                                             Background="{Binding IconBrush}"
                                             Visibility="{Binding HasToolBadge, Converter={StaticResource TrueToVisibility}}">
                                         <TextBlock Text="{Binding IconGlyph}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontFamily="Segoe MDL2 Assets"
-                                                   FontSize="18"
+                                                   FontSize="16"
                                                    Foreground="{DynamicResource LauncherBadgeGlyphBrush}" />
                                     </Border>
                                     <TextBlock Text="{Binding KindGlyph}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                FontFamily="Segoe MDL2 Assets"
-                                               FontSize="20"
+                                               FontSize="18"
                                                Foreground="{DynamicResource LauncherTextPrimaryBrush}"
                                                Visibility="{Binding ShowsKindGlyph, Converter={StaticResource TrueToVisibility}}" />
                                 </Grid>
                                 <!-- 启动器文件夹：前四项 2×2 预览 -->
-                                <ItemsControl Margin="4"
+                                <ItemsControl Margin="3"
                                               ItemsSource="{Binding GroupPreview}"
                                               Visibility="{Binding IsGroup, Converter={StaticResource TrueToVisibility}}">
                                     <ItemsControl.ItemsPanel>
@@ -294,26 +300,26 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Width="18" Height="18">
+                                            <Grid Width="16" Height="16">
                                                 <Image Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
                                                        Stretch="Uniform"
                                                        RenderOptions.BitmapScalingMode="HighQuality"
                                                        Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
-                                                <Border CornerRadius="4"
+                                                <Border CornerRadius="3"
                                                         Background="{Binding IconBrush}"
                                                         Visibility="{Binding HasToolBadge, Converter={StaticResource TrueToVisibility}}">
                                                     <TextBlock Text="{Binding IconGlyph}"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"
                                                                FontFamily="Segoe MDL2 Assets"
-                                                               FontSize="9"
+                                                               FontSize="8"
                                                                Foreground="{DynamicResource LauncherBadgeGlyphBrush}" />
                                                 </Border>
                                                 <TextBlock Text="{Binding KindGlyph}"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"
                                                            FontFamily="Segoe MDL2 Assets"
-                                                           FontSize="10"
+                                                           FontSize="9"
                                                            Foreground="{DynamicResource LauncherTextPrimaryBrush}"
                                                            Visibility="{Binding ShowsKindGlyph, Converter={StaticResource TrueToVisibility}}" />
                                             </Grid>
@@ -323,19 +329,22 @@
                             </Grid>
                         </Border>
                     </Grid>
-                    <TextBlock Margin="0,4,0,0"
-                               Width="80"
-                               MaxHeight="48"
+                    <TextBlock Margin="2,6,2,0"
+                               HorizontalAlignment="Stretch"
+                               MaxHeight="54"
                                Text="{Binding Name}"
                                TextAlignment="Center"
                                TextWrapping="Wrap"
                                TextTrimming="CharacterEllipsis"
                                FontSize="11"
-                               LineHeight="15"
+                               LineHeight="16"
+                               LineStackingStrategy="BlockLineHeight"
                                Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
-                    <TextBlock Margin="0,1,0,0"
+                    <TextBlock Margin="2,2,2,0"
+                               HorizontalAlignment="Stretch"
                                Text="{Binding KindText}"
                                TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
                                FontSize="9.5"
                                Foreground="{DynamicResource LauncherTextMutedBrush}">
                         <TextBlock.Style>
@@ -505,7 +514,7 @@
                 <ScrollViewer x:Name="EntryScroller"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
-                              Padding="16,0,16,0"
+                              Padding="10,0,10,0"
                               Background="Transparent">
                     <ItemsControl x:Name="EntryGrid"
                                   ItemsSource="{Binding PageEntries}"
@@ -518,7 +527,7 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <controls:CenteredWrapPanel ItemWidth="88" ItemHeight="140" />
+                                <controls:CenteredWrapPanel ItemWidth="90" ItemHeight="156" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
@@ -709,7 +718,7 @@
                                       HorizontalAlignment="Stretch">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <controls:CenteredWrapPanel ItemWidth="88" ItemHeight="140" />
+                                    <controls:CenteredWrapPanel ItemWidth="90" ItemHeight="156" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>

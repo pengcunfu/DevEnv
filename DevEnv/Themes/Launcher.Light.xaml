@@ -25,7 +25,8 @@
 
     <SolidColorBrush x:Key="LauncherTextPrimaryBrush" Color="#FF1A1A1A" />
     <SolidColorBrush x:Key="LauncherTextSecondaryBrush" Color="#CC1A1A1A" />
-    <SolidColorBrush x:Key="LauncherTextMutedBrush" Color="#993C3C43" />
+    <!-- 约 70% 不透明，侧栏提示 / 底栏说明可读；页签未选中已改用 Secondary -->
+    <SolidColorBrush x:Key="LauncherTextMutedBrush" Color="#B23C3C43" />
 
     <SolidColorBrush x:Key="LauncherAccentBrush" Color="#FF0078D4" />
     <SolidColorBrush x:Key="LauncherAccentSelectionBrush" Color="#330078D4" />

@@ -1298,8 +1298,8 @@ public partial class ShortcutsWindow : Window
         var bounds = GetBounds(container);
         var position = e.GetPosition(container);
 
-        // 卡片 88×140，图标底板 44×44 居中；热区略放大便于拖放合并
-        var iconZone = new Rect(20, 10, 48, 52);
+        // 卡片 90×156，图标底板 40×40 居中；热区略放大便于拖放合并
+        var iconZone = new Rect(20, 8, 50, 50);
         var canMerge = !ViewModel.IsInsideGroup
             && target.Kind is not (ShortcutKind.Tool or ShortcutKind.InternalTool)
             && entries.All(entry => !entry.IsGroup)
