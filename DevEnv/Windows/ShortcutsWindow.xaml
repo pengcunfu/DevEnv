@@ -703,10 +703,11 @@
              不用单独的返回按钮，点击卡片外的空白处或按 Esc 收起。
              底层网格仍显示当前页签，浮层只负责组内条目。 -->
         <Grid x:Name="GroupLayer"
-              Grid.Row="1"
-              Grid.RowSpan="3"
+              Grid.Row="0"
+              Grid.RowSpan="4"
               Visibility="{Binding IsInsideGroup, Converter={StaticResource TrueToVisibility}}">
-            <Border x:Name="GroupDim" Background="#73000000" />
+            <!-- 遮罩铺满整窗（含顶栏），避免顶栏在浅色主题下成为一条未压暗的白带 -->
+            <Border x:Name="GroupDim" Background="{DynamicResource LauncherScrimBrush}" />
             <Border x:Name="FolderCard"
                     MinWidth="360"
                     MaxWidth="760"
@@ -720,9 +721,9 @@
                     CornerRadius="22"
                     Padding="18,16,18,12">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="32"
+                    <DropShadowEffect BlurRadius="28"
                                       ShadowDepth="0"
-                                      Opacity="0.28"
+                                      Opacity="0.22"
                                       Color="#000000" />
                 </Border.Effect>
                 <Grid>

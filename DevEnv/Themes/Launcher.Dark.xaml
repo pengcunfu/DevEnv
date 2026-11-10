@@ -18,6 +18,7 @@
     <SolidColorBrush x:Key="LauncherIconBackdropBrush" Color="#1FFFFFFF" />
     <SolidColorBrush x:Key="LauncherPillSelectedBrush" Color="#33FFFFFF" />
     <SolidColorBrush x:Key="LauncherBorderBrush" Color="#26FFFFFF" />
+    <SolidColorBrush x:Key="LauncherScrimBrush" Color="#99000000" />
 
     <SolidColorBrush x:Key="LauncherTextPrimaryBrush" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="LauncherTextSecondaryBrush" Color="#E6FFFFFF" />
@@ -34,7 +35,8 @@
     <SolidColorBrush x:Key="LauncherCircleHoverBrush" Color="#4DFFFFFF" />
     <SolidColorBrush x:Key="LauncherCirclePressedBrush" Color="#66FFFFFF" />
 
-    <SolidColorBrush x:Key="LauncherCardBrush" Color="#F22B2B2B" />
+    <!-- 文件夹浮层：半透明深灰，避免与底层网格反差过硬 -->
+    <SolidColorBrush x:Key="LauncherCardBrush" Color="#E6252525" />
     <SolidColorBrush x:Key="LauncherDangerBrush" Color="#FFFF99A4" />
 
     <!-- 内置工具彩色图标里的白色字形：两套主题都保持白色，保证与品牌底色对比 -->
