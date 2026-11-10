@@ -277,8 +277,9 @@ public partial class ShortcutsWindow : Window
     }
 
     /// <summary>
-    /// 摆到工作区居中的位置并切到指定页签（apps / folders / webs / startmenu）；
-    /// tools / builtin 切到对应页签。每次打开都重新读取数据与系统配色。
+    /// 摆到工作区居中的位置并显示。传入 apps / folders / webs / tools / builtin / startmenu
+    /// 时切到对应页签；<c>pageId</c> 为空则保留上次所在页签（托盘 / 左 Alt / 显示主窗口
+    /// 再打开时不回到「本地应用」）。每次打开都重新读取数据与系统配色。
     /// </summary>
     public void ShowPage(string? pageId)
     {
@@ -292,7 +293,8 @@ public partial class ShortcutsWindow : Window
         ViewModel.Notice = string.Empty;
         ViewModel.Query = string.Empty;
         ViewModel.Reload();
-        ViewModel.SelectedPage = NormalizePageId(pageId);
+        if (!string.IsNullOrWhiteSpace(pageId))
+            ViewModel.SelectedPage = NormalizePageId(pageId);
 
         if (!IsVisible)
         {

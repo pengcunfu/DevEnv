@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### Fixed
+- 启动器隐藏后再打开会留在上次的页签，不再一律回到「本地应用」（显式 `ShowPage(apps|…)` / `DEVENV_START_PAGE` 仍会切页）
 - 熔岩翻译首次打开不再误报「网页加载失败（ConnectionAborted）」：避免初始化与 `Apply` 连续两次 `Navigate` 互相中止，并忽略被顶替导航的瞬时失败状态
 
 ### Changed

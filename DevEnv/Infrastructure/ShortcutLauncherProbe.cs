@@ -302,13 +302,24 @@ public static class ShortcutLauncherProbe
                 $"visible={window.IsVisible}, hook={window.IsOutsideClickHookInstalled}");
 
             // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：标准窗口不播退出动画，直接 Hide
+            window.ShowPage("builtin");
+            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
+            Pump();
             window.Dismiss();
             Check("收起立即隐藏（无退出动画）", !window.IsVisible);
             Check("收起后卸载窗口外点击监听", !window.IsOutsideClickHookInstalled);
 
-            window.ShowPage("apps");
+            // 托盘 / 左 Alt / 显示主窗口不传 pageId，应留在隐藏前的页签
+            window.ShowPage(null);
+            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
             Check("再次打开仍正常显示", window.IsVisible, $"visible={window.IsVisible}");
+            Check("再次打开保留上次页签",
+                vm.SelectedPage == 4 && vm.IsBuiltinToolsPage,
+                $"SelectedPage={vm.SelectedPage}");
+
+            window.ShowPage("apps");
+            Pump();
 
             Check("无数据绑定错误", bindingErrors.Count == 0,
                 bindingErrors.Count == 0 ? null : string.Join(" | ", bindingErrors.Take(5)));
