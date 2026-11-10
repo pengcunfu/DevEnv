@@ -16,7 +16,7 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全局启动器（Launchpad 样式）：固定 960 × 680 DIP、居中，配色与 Windows 11 开始菜单一致。
+/// 启动器（Launchpad 样式）：固定 960 × 680 DIP、居中，配色与 Windows 11 开始菜单一致。
 /// 左侧栏自上而下是搜索框与本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具 / 开始菜单六个纵向页签
 /// 与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
 /// 单击图标即启动，Esc 或点击空白处关闭。
@@ -1298,8 +1298,8 @@ public partial class ShortcutsWindow : Window
         var bounds = GetBounds(container);
         var position = e.GetPosition(container);
 
-        // 卡片 132×150，图标热区约 x∈[34,98]、y∈[13,77]；拖到图标中心才是合并 / 加入组
-        var iconZone = new Rect(34, 13, 64, 64);
+        // 卡片 88×140，图标底板 44×44 居中；热区略放大便于拖放合并
+        var iconZone = new Rect(20, 10, 48, 52);
         var canMerge = !ViewModel.IsInsideGroup
             && target.Kind is not (ShortcutKind.Tool or ShortcutKind.InternalTool)
             && entries.All(entry => !entry.IsGroup)

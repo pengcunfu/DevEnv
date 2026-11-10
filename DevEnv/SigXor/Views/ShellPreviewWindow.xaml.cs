@@ -22,7 +22,7 @@ public partial class ShellPreviewWindow : Window
     public ShellPreviewWindow()
     {
         InitializeComponent();
-        // 与全局启动器共用固定尺寸，避免两套浮窗大小不一致
+        // 与启动器共用固定尺寸，避免两套浮窗大小不一致
         Width = LauncherGeometry.Width;
         Height = LauncherGeometry.Height;
     }

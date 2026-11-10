@@ -4,7 +4,7 @@ using System.Windows.Threading;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器显示期间的窗口外点击监听：鼠标按在启动器窗口矩形之外时收起窗口。
+/// 启动器显示期间的窗口外点击监听：鼠标按在启动器窗口矩形之外时收起窗口。
 ///
 /// 失焦收起已经由 <c>Window.Deactivated</c> 负责，但有几种点击不会触发它
 /// （点击任务栏空白处、窗口还没真正拿到前台权限、被系统弹出层挡住等），

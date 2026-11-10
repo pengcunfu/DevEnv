@@ -4,7 +4,7 @@ using System.Windows.Threading;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器显示期间的 Win 键监听：用户按 Win 想打开开始菜单时，先把启动器收起，
+/// 启动器显示期间的 Win 键监听：用户按 Win 想打开开始菜单时，先把启动器收起，
 /// 否则铺满全屏且置顶的启动器会把开始菜单压在下面，看起来像 Win 键没反应。
 ///
 /// - 只监听、不拦截：Win 键照常交给系统打开开始菜单，我们只是在自己的窗口上收起；

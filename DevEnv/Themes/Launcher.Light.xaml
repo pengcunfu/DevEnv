@@ -1,5 +1,5 @@
 <!--
-    全局启动器的浅色方案：与 Windows 11 开始菜单（浅色）保持同等颜色。
+    启动器的浅色方案：与 Windows 11 开始菜单（浅色）保持同等颜色。
     只被 ShortcutsWindow 的本地资源字典引用，不参与 App 主题切换；
     ShortcutsWindow 按系统的「应用模式」（AppsUseLightTheme）在浅 / 深两套之间切换。
 -->

@@ -6,7 +6,7 @@ using System.Text;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// Windows 开始菜单的识别与收起。开始菜单和全局启动器一样是置顶窗口：
+/// Windows 开始菜单的识别与收起。开始菜单和启动器一样是置顶窗口：
 /// 两者同时存在时谁在上层取决于激活顺序，不显式处理就会出现
 /// 「启动器铺满屏幕，开始菜单仍压在上面」的情况。
 ///

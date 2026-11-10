@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 namespace DevEnv.Core.Models;
 
 /// <summary>
-/// 全局启动器的布局：每个页签的卡片顺序与「启动器文件夹」分组。
+/// 启动器的布局：每个页签的卡片顺序与「启动器文件夹」分组。
 /// 快捷方式本身仍保存在 NativeAtomList / FolderAtomList / WebAtomList，这里只记录摆放方式。
 /// </summary>
 public sealed class LauncherLayout

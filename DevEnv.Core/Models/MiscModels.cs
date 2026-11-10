@@ -16,7 +16,7 @@ public sealed class AppConfig
     /// <summary>全局唤起熔岩翻译。</summary>
     public string TranslatorHotkey { get; set; } = "Alt+Space";
 
-    /// <summary>单独按 Win 键打开全局启动器（默认开启）；关闭后 Win 键回到系统开始菜单。</summary>
+    /// <summary>单独按左 Alt 键打开启动器（默认开启）；关闭后左 Alt 不再唤起启动器。</summary>
     public bool AltKeyLauncher { get; set; } = true;
 }
 

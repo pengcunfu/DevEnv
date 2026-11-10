@@ -6,10 +6,10 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器宿主：六个页签（本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具 / 开始菜单）共用同一个居中窗口。
+/// 启动器宿主：六个页签（本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具 / 开始菜单）共用同一个居中窗口。
 /// 单实例，重复打开是「切到对应页签 / 展开文件夹并前置已有窗口」，不再开一堆。
 ///
-/// 全局启动器**不设 Owner**：它居中悬浮且置顶，本来就不跟主窗最小化 / 隐藏联动；
+/// 启动器**不设 Owner**：它居中悬浮且置顶，本来就不跟主窗最小化 / 隐藏联动；
 /// 一旦挂到主窗名下，从托盘（主窗隐藏）唤起时会把主窗一起拉出来，
 /// 所以这里刻意不走 ToolWindowHost 那套 owner 绑定。
 /// </summary>
@@ -88,7 +88,7 @@ public static class ShortcutWindowHost
         app.MainWindow = window;
     }
 
-    /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs / tools / builtin / startmenu。</summary>
+    /// <summary>打开（或前置）启动器，并切到指定页签：apps / folders / webs / tools / builtin / startmenu。</summary>
     public static void Open(string? pageId = null)
     {
         // 开始菜单和启动器都是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，
@@ -164,8 +164,8 @@ public static class ShortcutWindowHost
     }
 
     /// <summary>
-    /// 开关全局启动器（左 Alt 键与托盘菜单共用）：已打开就收起，否则打开。
-    /// 返回 false 表示此刻不该由全局启动器接手（模态设置框正开着），
+    /// 开关启动器（左 Alt 键与托盘菜单共用）：已打开就收起，否则打开。
+    /// 返回 false 表示此刻不该由启动器接手（模态设置框正开着），
     /// 让左 Alt 照常交给前台程序。
     /// </summary>
     public static bool Toggle()
@@ -178,7 +178,7 @@ public static class ShortcutWindowHost
             return true;
         }
 
-        // 点托盘 / 按 Win 时全局启动器会先因失去焦点自动收起，紧接着的这次调用应视为「关闭」，
+        // 点托盘 / 按 Win 时启动器会先因失去焦点自动收起，紧接着的这次调用应视为「关闭」，
         // 否则会收起后立刻又弹出来，看起来像点了没反应。
         if (DateTime.UtcNow - _lastAutoDismissUtc < AutoDismissGrace)
             return true;
@@ -190,7 +190,7 @@ public static class ShortcutWindowHost
         return true;
     }
 
-    /// <summary>此刻能否打开全局启动器：模态对话框会禁用其它窗口，这时让给系统开始菜单。</summary>
+    /// <summary>此刻能否打开启动器：模态对话框会禁用其它窗口，这时让给系统开始菜单。</summary>
     public static bool CanOpen()
     {
         if (SettingsDialogHost.IsOpen)

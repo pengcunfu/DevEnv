@@ -121,7 +121,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // 全局启动器自检：三个页签与两个工具文件夹能加载、搜索可用、没有数据绑定错误
+        // 启动器自检：三个页签与两个工具文件夹能加载、搜索可用、没有数据绑定错误
         int shortcutsIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ShortcutLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
         if (shortcutsIndex >= 0)
@@ -196,7 +196,7 @@ public partial class App : System.Windows.Application
         ThemeManager.ApplyFromSettings();
         WireHostCallbacks();
 
-        // 启动时不显示任何窗口，只驻留托盘。主窗口 = 全局启动器（预热后挂到
+        // 启动时不显示任何窗口，只驻留托盘。主窗口 = 启动器（预热后挂到
         // Application.MainWindow）；开发窗口仍提前创建以挂热键句柄，但保持隐藏。
         // 监控窗口在第一次从启动器内置工具页进入时才创建。
         _devWindow = CreateMainWindow(DevelopmentWindowTitle, ViewFactory.DevelopmentNavItems);
@@ -237,7 +237,7 @@ public partial class App : System.Windows.Application
         _clipboardWatcher = new ClipboardWatcher();
         _clipboardWatcher.Captured += OnClipboardCaptured;
 
-        // 启动后在后台空闲时把全局启动器（主窗口）准备好（屏幕外完成布局与首帧渲染），
+        // 启动后在后台空闲时把启动器（主窗口）准备好（屏幕外完成布局与首帧渲染），
         // 之后左 Alt / 托盘 / Ctrl+Alt+D 唤起时只是把窗口摆出来，不再临时创建、不会闪。
         // 放到 ApplicationIdle 是为了不拖慢启动本身。
         Dispatcher.BeginInvoke(new Action(() =>
@@ -248,7 +248,7 @@ public partial class App : System.Windows.Application
         }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
         // 调试用：DEVENV_START_PAGE=lava / network 直接定位到对应窗口的指定页，
-        // 启动器页签（apps / tools 等）仍由 MainViewModel.Navigate 转给全局启动器。
+        // 启动器页签（apps / tools 等）仍由 MainViewModel.Navigate 转给启动器。
         var startPage = Environment.GetEnvironmentVariable("DEVENV_START_PAGE");
         if (!string.IsNullOrWhiteSpace(startPage))
         {
@@ -305,7 +305,7 @@ public partial class App : System.Windows.Application
 
     /// <summary>
     /// 按设置安装 / 卸载左 Alt 拦截钩子。
-    /// 开启时单独按左 Alt 键唤起全局启动器，Alt+组合键原样放行。
+    /// 开启时单独按左 Alt 键唤起启动器，Alt+组合键原样放行。
     /// </summary>
     private void ApplyAltKeyLauncher(bool enabled)
     {
@@ -329,7 +329,7 @@ public partial class App : System.Windows.Application
 
         if (!_altKeyHook.Install())
         {
-            _tray?.ShowBalloon("左 Alt 拦截失败：无法安装键盘钩子，左 Alt 不会唤起全局启动器。",
+            _tray?.ShowBalloon("左 Alt 拦截失败：无法安装键盘钩子，左 Alt 不会唤起启动器。",
                 Forms.ToolTipIcon.Warning);
         }
     }

@@ -1,5 +1,5 @@
 <!--
-    全局启动器的深色方案：与 Windows 11 开始菜单（深色）保持同等颜色。
+    启动器的深色方案：与 Windows 11 开始菜单（深色）保持同等颜色。
     key 与 Launcher.Light.xaml 完全一致，ShortcutsWindow 整块替换即可切换。
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

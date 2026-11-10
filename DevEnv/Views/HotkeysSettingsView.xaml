@@ -24,7 +24,7 @@
                 <controls:HotkeyRecorderBox x:Name="TranslatorRecorder" Width="260"
                                             HorizontalAlignment="Left" />
 
-                <CheckBox x:Name="AltKeyLauncherCheck" Content="单独按一下左 Alt 键打开全局启动器"
+                <CheckBox x:Name="AltKeyLauncherCheck" Content="单独按一下左 Alt 键打开启动器"
                           Margin="0,16,0,0" />
                 <TextBlock Text="左 Alt 是固定手势，只能启用或关闭；Alt+Tab / Alt+F4 / Alt+空格 等组合键不受影响。"
                            Style="{DynamicResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0" />

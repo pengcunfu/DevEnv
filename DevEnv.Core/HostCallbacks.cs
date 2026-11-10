@@ -11,7 +11,7 @@ public static class HostCallbacks
     public static Action<string?>? OnActivateTab { get; set; }
     public static Action<TranslatorRequest>? OnShowTranslator { get; set; }
     public static Action<bool>? OnShowClipboard { get; set; }
-    /// <summary>显示并激活主窗口（从托盘、全局启动器等入口唤回）。</summary>
+    /// <summary>显示并激活主窗口（从托盘、启动器等入口唤回）。</summary>
     public static Action? OnShowMainWindow { get; set; }
     /// <summary>显示并激活开发窗口（开发环境 / 熔岩环境），供启动器内置工具入口使用。</summary>
     public static Action? OnShowDevelopmentWindow { get; set; }

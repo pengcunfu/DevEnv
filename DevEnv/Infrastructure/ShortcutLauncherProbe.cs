@@ -10,7 +10,7 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 全局启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
+/// 启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
 /// 这里加载启动器、遍历四个页签、展开两个工具文件夹、跑一次搜索，并收集数据绑定错误。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
@@ -93,8 +93,9 @@ public static class ShortcutLauncherProbe
             window.UpdateLayout();
 
             Check("启动器窗口可正常加载", window.IsVisible);
-            // 全局启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
-            Check("全局启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
+            Check("窗口标题为「FireNeb DevEnv」", window.Title == "FireNeb DevEnv", $"Title={window.Title}");
+            // 启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
+            Check("启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
             // 窗口改用 Windows 默认外观：系统标题栏与边框，不再自绘透明分层窗口
             Check("使用 Windows 默认窗口（标准边框与标题栏）",
                 window.WindowStyle == WindowStyle.SingleBorderWindow && !window.AllowsTransparency,
@@ -126,6 +127,12 @@ public static class ShortcutLauncherProbe
                 $"searchRight={searchRight:F1}, rootWidth={window.Root.ActualWidth:F1}");
             Check("图标网格已生成卡片容器",
                 vm.VisibleEntries.Count == 0 || window.EntryGrid.ItemContainerGenerator.ContainerFromIndex(0) is not null);
+            // 右侧内容区 ≈ 960 − 210（侧栏）− 32（滚动区内边距）；卡片宽 88 → 每行 8 个
+            var gridWidth = window.EntryScroller.ActualWidth;
+            var columns = gridWidth > 0 ? (int)(gridWidth / 88d) : 0;
+            Check("右侧网格每行可排 8 个图标",
+                columns >= 8,
+                $"gridWidth={gridWidth:F1}, columns={columns}");
 
             foreach (var page in vm.Pages)
             {

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DevEnv.Host.Controls"
         xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
-        Title="全局启动器"
+        Title="FireNeb DevEnv"
         Background="{DynamicResource LauncherBackgroundBrush}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -244,47 +244,47 @@
                     PreviewMouseLeftButtonDown="OnEntryPreviewMouseLeftButtonDown"
                     PreviewMouseMove="OnEntryPreviewMouseMove"
                     ContextMenuOpening="OnEntryContextMenuOpening">
-                <StackPanel Width="116">
-                    <Grid Height="68">
-                        <Border Width="64"
-                                Height="64"
+                <StackPanel Width="80" HorizontalAlignment="Center">
+                    <Grid Height="52">
+                        <Border Width="44"
+                                Height="44"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Background="{DynamicResource LauncherIconBackdropBrush}"
-                                CornerRadius="15"
+                                CornerRadius="11"
                                 Tag="IconDropZone">
                             <Grid>
                                 <!-- 普通卡片：单图标 -->
                                 <Grid Visibility="{Binding IsGroup, Converter={StaticResource FalseToVisibility}}">
-                                    <Image Width="48"
-                                           Height="48"
+                                    <Image Width="36"
+                                           Height="36"
                                            Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
                                            Stretch="Uniform"
                                            RenderOptions.BitmapScalingMode="HighQuality"
                                            Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
                                     <!-- 内置工具：固定品牌色圆角底 + 白色字形，和图片图标一眼区分 -->
-                                    <Border Width="48"
-                                            Height="48"
-                                            CornerRadius="12"
+                                    <Border Width="36"
+                                            Height="36"
+                                            CornerRadius="9"
                                             Background="{Binding IconBrush}"
                                             Visibility="{Binding HasToolBadge, Converter={StaticResource TrueToVisibility}}">
                                         <TextBlock Text="{Binding IconGlyph}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontFamily="Segoe MDL2 Assets"
-                                                   FontSize="24"
+                                                   FontSize="18"
                                                    Foreground="{DynamicResource LauncherBadgeGlyphBrush}" />
                                     </Border>
                                     <TextBlock Text="{Binding KindGlyph}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                FontFamily="Segoe MDL2 Assets"
-                                               FontSize="26"
+                                               FontSize="20"
                                                Foreground="{DynamicResource LauncherTextPrimaryBrush}"
                                                Visibility="{Binding ShowsKindGlyph, Converter={StaticResource TrueToVisibility}}" />
                                 </Grid>
                                 <!-- 启动器文件夹：前四项 2×2 预览 -->
-                                <ItemsControl Margin="6"
+                                <ItemsControl Margin="4"
                                               ItemsSource="{Binding GroupPreview}"
                                               Visibility="{Binding IsGroup, Converter={StaticResource TrueToVisibility}}">
                                     <ItemsControl.ItemsPanel>
@@ -294,26 +294,26 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Width="24" Height="24">
+                                            <Grid Width="18" Height="18">
                                                 <Image Source="{Binding IconPath, Converter={StaticResource PathToImage}}"
                                                        Stretch="Uniform"
                                                        RenderOptions.BitmapScalingMode="HighQuality"
                                                        Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
-                                                <Border CornerRadius="6"
+                                                <Border CornerRadius="4"
                                                         Background="{Binding IconBrush}"
                                                         Visibility="{Binding HasToolBadge, Converter={StaticResource TrueToVisibility}}">
                                                     <TextBlock Text="{Binding IconGlyph}"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"
                                                                FontFamily="Segoe MDL2 Assets"
-                                                               FontSize="12"
+                                                               FontSize="9"
                                                                Foreground="{DynamicResource LauncherBadgeGlyphBrush}" />
                                                 </Border>
                                                 <TextBlock Text="{Binding KindGlyph}"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"
                                                            FontFamily="Segoe MDL2 Assets"
-                                                           FontSize="13"
+                                                           FontSize="10"
                                                            Foreground="{DynamicResource LauncherTextPrimaryBrush}"
                                                            Visibility="{Binding ShowsKindGlyph, Converter={StaticResource TrueToVisibility}}" />
                                             </Grid>
@@ -323,19 +323,20 @@
                             </Grid>
                         </Border>
                     </Grid>
-                    <TextBlock Margin="0,8,0,0"
-                               MaxWidth="116"
-                               MaxHeight="34"
+                    <TextBlock Margin="0,4,0,0"
+                               Width="80"
+                               MaxHeight="48"
                                Text="{Binding Name}"
                                TextAlignment="Center"
                                TextWrapping="Wrap"
                                TextTrimming="CharacterEllipsis"
-                               FontSize="12.5"
+                               FontSize="11"
+                               LineHeight="15"
                                Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
-                    <TextBlock Margin="0,2,0,0"
+                    <TextBlock Margin="0,1,0,0"
                                Text="{Binding KindText}"
                                TextAlignment="Center"
-                               FontSize="10.5"
+                               FontSize="9.5"
                                Foreground="{DynamicResource LauncherTextMutedBrush}">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
@@ -517,7 +518,7 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <controls:CenteredWrapPanel ItemWidth="132" ItemHeight="150" />
+                                <controls:CenteredWrapPanel ItemWidth="88" ItemHeight="140" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
@@ -708,7 +709,7 @@
                                       HorizontalAlignment="Stretch">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <controls:CenteredWrapPanel ItemWidth="132" ItemHeight="150" />
+                                    <controls:CenteredWrapPanel ItemWidth="88" ItemHeight="140" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>

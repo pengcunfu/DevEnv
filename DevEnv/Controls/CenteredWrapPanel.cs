@@ -12,11 +12,11 @@ public sealed class CenteredWrapPanel : Panel
 {
     public static readonly DependencyProperty ItemWidthProperty = DependencyProperty.Register(
         nameof(ItemWidth), typeof(double), typeof(CenteredWrapPanel),
-        new FrameworkPropertyMetadata(132d, FrameworkPropertyMetadataOptions.AffectsMeasure));
+        new FrameworkPropertyMetadata(88d, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public static readonly DependencyProperty ItemHeightProperty = DependencyProperty.Register(
         nameof(ItemHeight), typeof(double), typeof(CenteredWrapPanel),
-        new FrameworkPropertyMetadata(150d, FrameworkPropertyMetadataOptions.AffectsMeasure));
+        new FrameworkPropertyMetadata(140d, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     public double ItemWidth
     {

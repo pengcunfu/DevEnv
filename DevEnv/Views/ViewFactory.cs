@@ -3,7 +3,7 @@ using DevEnv.Host.ViewModels;
 
 namespace DevEnv.Host.Views;
 
-/// <summary>导航 id → 页面实例。本地应用 / 文件夹 / 网站 / 系统工具已移到独立的全局启动器。</summary>
+/// <summary>导航 id → 页面实例。本地应用 / 文件夹 / 网站 / 系统工具已移到独立的启动器。</summary>
 public static class ViewFactory
 {
     /// <summary>开发窗口的导航项：开发环境与熔岩环境。</summary>

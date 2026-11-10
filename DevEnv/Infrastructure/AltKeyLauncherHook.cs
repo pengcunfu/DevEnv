@@ -5,10 +5,10 @@ using DevEnv.Core.Input;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 左 Alt 拦截钩子：单独按一下左 Alt 时打开全局启动器，组合键原样放行。
+/// 左 Alt 拦截钩子：单独按一下左 Alt 时打开启动器，组合键原样放行。
 ///
 /// - 用 <c>WH_KEYBOARD_LL</c> 低级键盘钩子，只对真实按键生效（忽略注入事件，
-///   自动化工具模拟的按键不会弹全局启动器）；
+///   自动化工具模拟的按键不会弹启动器）；
 /// - 手势判断在 <see cref="AltKeyGestureTracker"/> 里，这里只负责转发；
 /// - **不吞任何按键**：左 Alt 的按下与抬起都交给系统，Alt+Tab / Alt+F4 / Alt+空格
 ///   等组合键完全不受影响，前台程序也不会因为缺少抬起而把 Alt 误判成一直按着；
@@ -43,12 +43,12 @@ internal sealed class AltKeyLauncherHook : IDisposable
 
     /// <summary>
     /// 触发前的可用性判断。返回 false 时不触发，让左 Alt 照常交给前台程序
-    /// （例如本程序的模态设置框正开着，此刻弹全局启动器没有意义）。
+    /// （例如本程序的模态设置框正开着，此刻弹启动器没有意义）。
     /// </summary>
     public Func<bool>? CanTrigger { get; set; }
 
     /// <summary>
-    /// 是否处理注入的按键。默认 false：自动化工具 / 宏键盘模拟的按键不该弹全局启动器；
+    /// 是否处理注入的按键。默认 false：自动化工具 / 宏键盘模拟的按键不该弹启动器；
     /// 只有自检探针需要打开它，用 SendInput 模拟按键来验证拦截链路。
     /// </summary>
     public bool AllowInjectedInput { get; init; }
@@ -116,7 +116,7 @@ internal sealed class AltKeyLauncherHook : IDisposable
                     var result = _tracker.OnKeyUp(virtualKey);
                     if (result.Trigger && (CanTrigger?.Invoke() ?? true))
                     {
-                        // 按键照常交给系统（不吞），只是在这里唤起全局启动器
+                        // 按键照常交给系统（不吞），只是在这里唤起启动器
                         _dispatcher.BeginInvoke(new Action(() => LauncherRequested?.Invoke()), DispatcherPriority.Input);
                     }
                 }

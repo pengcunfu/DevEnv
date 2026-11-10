@@ -65,7 +65,7 @@
 - `/api/nav` → `ViewFactory.NavItems`（前端原本就硬编码，等价迁移）
 - `POST /api/shell/*`（7 个）→ `HostCallbacks` 委托 → WPF 对话框 / 独立窗 / 页面跳转
 - `native-apps / folders / webs`（16 个）→ `ShortcutService` 同名方法 → 三个卡片页
-- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 全局启动器搜索框右侧「系统工具」文件夹（19 个磁贴）
+- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 启动器搜索框右侧「系统工具」文件夹（19 个磁贴）
 - `/api/processes` 三件套 → `ProcessService.GetSnapshot / Kill / OpenFolder` → 进程监控页
 - `/api/network/*` 八个 → `NetworkService`（含测速状态机原样搬运）→ 网络监控页三页签
 - `/api/lava/*` 二十一个 → `LavaService` → 熔岩环境页七页签
@@ -162,8 +162,8 @@
 | 项 | 期望 |
 |---|------|
 | 托盘双击唤醒 / 退出 / 关闭主窗进托盘 | 点关闭只隐藏，不退进程 |
-| `Alt+Space` 翻译 / `Ctrl+Space` 剪贴板 / 托盘单击全局启动器 | 翻译窗填充剪贴板文本 / 剪贴板窗前置 / 全局启动器显示与收起 |
-| 全局启动器框选 / 拖拽排序 / 启动器文件夹 | 点击空白不关窗；多选高亮；重启后顺序与分组保留；文件夹可展开、重命名、解散、移出条目 |
+| `Alt+Space` 翻译 / `Ctrl+Space` 剪贴板 / 托盘单击启动器 | 翻译窗填充剪贴板文本 / 剪贴板窗前置 / 启动器显示与收起 |
+| 启动器框选 / 拖拽排序 / 启动器文件夹 | 点击空白不关窗；多选高亮；重启后顺序与分组保留；文件夹可展开、重命名、解散、移出条目 |
 | 拖放 .exe 与文件夹进主窗 | 落到「快捷方式」窗口的对应页签并刷新 |
 | 熔岩：启停服务、开始下载、活动/历史刷新、镜像测速与切换、环境扫描 | 与迁移前一致 |
 | 网络/进程：结束进程、结束进程树、端口结束、测速进度 | 与迁移前一致 |

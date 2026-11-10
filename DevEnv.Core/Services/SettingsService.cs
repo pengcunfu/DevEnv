@@ -23,7 +23,7 @@ public sealed class SettingsService
             ShowWindowHotkey = json.Value<string>("ShowWindowHotkey") ?? "Ctrl+Alt+D",
             ClipboardHotkey = json.Value<string>("ClipboardHotkey") ?? "Ctrl+Space",
             TranslatorHotkey = json.Value<string>("TranslatorHotkey") ?? "Alt+Space",
-            // 缺省开启：新用户装上就能用左 Alt 键唤出全局启动器
+            // 缺省开启：新用户装上就能用左 Alt 键唤出启动器
             AltKeyLauncher = json.Value<bool?>("AltKeyLauncher") != false,
         };
     }

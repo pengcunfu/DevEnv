@@ -56,7 +56,7 @@ public static class AltKeyLauncherProbe
             // 1) 单独按一下左 Alt → 触发一次，按键照常交给系统（修饰键状态不会被卡住）
             TapKey(VkLeftAlt);
             Settle();
-            Check("单独按左 Alt 键触发全局启动器", triggers == 1, $"触发 {triggers} 次");
+            Check("单独按左 Alt 键触发启动器", triggers == 1, $"触发 {triggers} 次");
             Check("钩子收到了左 Alt 抬起", hook.ObservedAltKeyUps == 1, $"收到 {hook.ObservedAltKeyUps} 次");
             Check("左 Alt 键状态已复位（不会卡住修饰键）",
                 (GetAsyncKeyState(VkLeftAlt) & 0x8000) == 0,
@@ -70,7 +70,7 @@ public static class AltKeyLauncherProbe
             Key(VkF24, up: true);
             Key(VkLeftAlt, up: true);
             Settle();
-            Check("Alt+其它键不触发全局启动器", triggers == 0, $"触发 {triggers} 次");
+            Check("Alt+其它键不触发启动器", triggers == 0, $"触发 {triggers} 次");
             Check("Alt+其它键后左 Alt 状态已复位",
                 (GetAsyncKeyState(VkLeftAlt) & 0x8000) == 0,
                 "GetAsyncKeyState 仍为按下");
@@ -79,13 +79,13 @@ public static class AltKeyLauncherProbe
             triggers = 0;
             TapKey(VkLeftAlt);
             Settle();
-            Check("组合键后单按左 Alt 仍可触发全局启动器", triggers == 1, $"触发 {triggers} 次");
+            Check("组合键后单按左 Alt 仍可触发启动器", triggers == 1, $"触发 {triggers} 次");
 
             // 4) 右 Alt（AltGr / 语音键）永不触发
             triggers = 0;
             TapKey(VkRightAlt);
             Settle();
-            Check("单独按右 Alt 不触发全局启动器", triggers == 0, $"触发 {triggers} 次");
+            Check("单独按右 Alt 不触发启动器", triggers == 0, $"触发 {triggers} 次");
 
             // 5) 卸载后不再拦截
             hook.Uninstall();

@@ -113,7 +113,7 @@ public sealed partial class MainViewModel : ObservableObject
         CurrentView = ViewFactory.Create(normalized);
     }
 
-    /// <summary>是否为全局启动器的页签 id（apps / folders / webs）。</summary>
+    /// <summary>是否为启动器的页签 id（apps / folders / webs）。</summary>
     private static bool IsShortcutPage(string id) =>
         id.Equals("apps", StringComparison.OrdinalIgnoreCase)
         || id.Equals("folders", StringComparison.OrdinalIgnoreCase)
