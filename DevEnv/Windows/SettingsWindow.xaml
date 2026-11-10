@@ -10,34 +10,56 @@
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Background="{DynamicResource AppBackgroundBrush}">
-    <!-- 设置是平铺的五页签，不做二级：
-         「常规」= 主程序设置 + 文件预览的常规选项；
-         「快捷键」= 所有程序绑定的快捷键；
-         「语音与截屏」= 语音输入与区域截屏；
-         「服务与模型」= 语音 / OCR 模型与后台服务；
-         「关于与帮助」= 产品信息、检查更新与帮助文档入口。
-         「快捷键」「语音与截屏」「服务与模型」三页的内容由 SigXor 模块在运行时注入。 -->
-    <TabControl x:Name="Tabs">
+    <!-- 各页签：TabControl 与 ScrollViewer 均拉伸；Grid 绑定 ViewportWidth 保证卡片铺满 -->
+    <TabControl x:Name="Tabs"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Top">
         <TabItem Header="常规" x:Name="GeneralTab">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="14">
-                    <!-- 主程序设置：托盘、自启、主题、默认翻译引擎 -->
-                    <views:SettingsView x:Name="GeneralHostView" />
-                    <!-- 文件预览的常规选项，由 SigXor 模块注入 -->
-                    <ContentControl x:Name="SigXorGeneralSlot" />
-                </StackPanel>
+            <ScrollViewer Style="{StaticResource SettingsPageScrollStyle}"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
+                <Grid Style="{StaticResource SettingsPageHostStyle}">
+                    <StackPanel HorizontalAlignment="Stretch">
+                        <views:SettingsView x:Name="GeneralHostView" HorizontalAlignment="Stretch" />
+                        <ContentControl x:Name="SigXorGeneralSlot" Style="{StaticResource SettingsSectionHostStyle}" />
+                    </StackPanel>
+                </Grid>
             </ScrollViewer>
         </TabItem>
         <TabItem Header="快捷键" x:Name="HotkeysTab">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ContentControl x:Name="HotkeysSlot" Margin="14" />
+            <ScrollViewer Style="{StaticResource SettingsPageScrollStyle}"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
+                <Grid Style="{StaticResource SettingsPageHostStyle}">
+                    <ContentControl x:Name="HotkeysSlot" Style="{StaticResource SettingsSectionHostStyle}" />
+                </Grid>
             </ScrollViewer>
         </TabItem>
-        <TabItem Header="语音与截屏" x:Name="VoiceTab" />
-        <TabItem Header="服务与模型" x:Name="ServiceTab" />
+        <TabItem Header="语音与截屏" x:Name="VoiceTab">
+            <ScrollViewer Style="{StaticResource SettingsPageScrollStyle}"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
+                <Grid Style="{StaticResource SettingsPageHostStyle}">
+                    <ContentControl x:Name="VoiceSlot" Style="{StaticResource SettingsSectionHostStyle}" />
+                </Grid>
+            </ScrollViewer>
+        </TabItem>
+        <TabItem Header="服务与模型" x:Name="ServiceTab">
+            <ScrollViewer Style="{StaticResource SettingsPageScrollStyle}"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
+                <Grid Style="{StaticResource SettingsPageHostStyle}">
+                    <ContentControl x:Name="ServiceSlot" Style="{StaticResource SettingsSectionHostStyle}" />
+                </Grid>
+            </ScrollViewer>
+        </TabItem>
         <TabItem Header="关于与帮助" x:Name="AboutTab">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <views:AboutHelpView x:Name="AboutHelpHost" Margin="14" />
+            <ScrollViewer Style="{StaticResource SettingsPageScrollStyle}"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
+                <Grid Style="{StaticResource SettingsPageHostStyle}">
+                    <views:AboutHelpView x:Name="AboutHelpHost" HorizontalAlignment="Stretch" />
+                </Grid>
             </ScrollViewer>
         </TabItem>
     </TabControl>

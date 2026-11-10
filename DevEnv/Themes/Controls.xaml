@@ -640,6 +640,8 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
         <!-- 自定义样式会顶掉系统主题里的 ItemsPanel，必须显式指定横向 TabPanel，
              否则 TabControl 会退回 ItemsControl 的默认纵向 StackPanel。 -->
         <Setter Property="ItemsPanel">
@@ -669,7 +671,12 @@
                         </Border>
                         <ContentPresenter x:Name="PART_SelectedContentHost"
                                           Grid.Row="1"
-                                          ContentSource="SelectedContent" />
+                                          Margin="0,6,0,0"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Stretch"
+                                          ContentSource="SelectedContent"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
@@ -681,8 +688,10 @@
     <Style TargetType="TabItem" x:Key="PageTabItemStyle">
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="Padding" Value="12,8,12,10" />
         <Setter Property="Margin" Value="0,0,4,0" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
@@ -719,7 +728,11 @@
         </Setter>
     </Style>
 
-    <Style TargetType="TabItem" BasedOn="{StaticResource PageTabItemStyle}" />
+  <!-- 页签正文区：顶左对齐并横向铺满，避免只有小块内容时整块卡片漂在中间 -->
+    <Style TargetType="TabItem" BasedOn="{StaticResource PageTabItemStyle}">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
 
     <!-- ============ 菜单 ============
 
@@ -998,6 +1011,41 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Padding" Value="14" />
+    </Style>
+
+    <!-- 设置对话框：内容顶左对齐、横向铺满（ScrollViewer 配合 SettingsPageScrollStyle） -->
+    <Style x:Key="SettingsPageScrollStyle" TargetType="ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+
+    <Style x:Key="SettingsPageHostStyle" TargetType="Grid">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Margin" Value="14" />
+        <Setter Property="MinWidth">
+            <Setter.Value>
+                <Binding Path="ViewportWidth" RelativeSource="{RelativeSource AncestorType=ScrollViewer}" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SettingsSectionHostStyle" TargetType="ContentControl">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style TargetType="TextBox" x:Key="SearchBoxStyle" BasedOn="{StaticResource {x:Type TextBox}}">

@@ -34,10 +34,10 @@ public partial class SettingsWindow : Window
     public void SetHotkeysContent(object? content) => HotkeysSlot.Content = content;
 
     /// <summary>注入「语音与截屏」页的内容。</summary>
-    public void SetVoiceContent(object? content) => VoiceTab.Content = content;
+    public void SetVoiceContent(object? content) => VoiceSlot.Content = content;
 
     /// <summary>注入「服务与模型」页的内容。</summary>
-    public void SetServiceContent(object? content) => ServiceTab.Content = content;
+    public void SetServiceContent(object? content) => ServiceSlot.Content = content;
 
     private void OnClosed(object? sender, EventArgs e)
     {

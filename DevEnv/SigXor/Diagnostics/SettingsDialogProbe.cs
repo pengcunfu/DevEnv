@@ -88,14 +88,16 @@ public static class SettingsDialogProbe
                 .FirstOrDefault(t => (t.Header as string) == "语音与截屏");
             tabs.SelectedItem = voice;
             Check("切到「语音与截屏」页签", tabs.SelectedItem == voice);
-            Check("该页签内容为 SigXorVoiceView", voice?.Content is Views.SigXorVoiceView);
+            Check("该页签内容为 SigXorVoiceView",
+                FindDescendant<Views.SigXorVoiceView>(voice) is not null);
 
             // 切到「服务与模型」页，内容能渲染
             var service = tabs.Items.OfType<TabItem>()
                 .FirstOrDefault(t => (t.Header as string) == "服务与模型");
             tabs.SelectedItem = service;
             Check("切到「服务与模型」页签", tabs.SelectedItem == service);
-            Check("该页签内容为 SigXorServiceView", service?.Content is Views.SigXorServiceView);
+            Check("该页签内容为 SigXorServiceView",
+                FindDescendant<Views.SigXorServiceView>(service) is not null);
 
             // 「关于与帮助」由主程序提供：产品信息、检查更新与文档入口
             var about = tabs.Items.OfType<TabItem>()
