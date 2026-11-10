@@ -13,8 +13,8 @@ public class LauncherGeometryTests
     {
         var bounds = LauncherGeometry.Compute(0, 0, WorkWidth, WorkHeight);
 
-        Assert.Equal(1200, bounds.Width);
-        Assert.Equal(800, bounds.Height);
+        Assert.Equal(960, bounds.Width);
+        Assert.Equal(680, bounds.Height);
     }
 
     [Fact]

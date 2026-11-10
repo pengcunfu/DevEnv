@@ -16,7 +16,7 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 全局启动器（Launchpad 样式）：固定 1200 × 800 DIP、居中，配色与 Windows 11 开始菜单一致。
+/// 全局启动器（Launchpad 样式）：固定 960 × 680 DIP、居中，配色与 Windows 11 开始菜单一致。
 /// 左侧栏自上而下是搜索框与本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具 / 开始菜单六个纵向页签
 /// 与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
 /// 单击图标即启动，Esc 或点击空白处关闭。
@@ -188,7 +188,7 @@ public partial class ShortcutsWindow : Window
     }
 
     /// <summary>
-    /// 固定 1200 × 800 DIP，在工作区内水平、垂直居中。
+    /// 固定 960 × 680 DIP，在工作区内水平、垂直居中。
     /// 只在尺寸/位置确实不同时才改，显示过程中改窗口几何会让 DWM 重新合成，肉眼就是闪一下；
     /// 预热后这里通常一次都不改。
     /// </summary>

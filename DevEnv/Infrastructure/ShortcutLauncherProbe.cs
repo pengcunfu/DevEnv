@@ -58,7 +58,7 @@ public static class ShortcutLauncherProbe
             Check("预热已完成", window.IsPrewarmed);
             // 预热必须落在最终几何上，否则 Show 时还要挪窗口，DWM 重新合成会闪
             var expected = ShortcutsWindow.ComputeScreenBounds();
-            Check("预热使用最终几何（固定 1200 × 800 DIP、居中，显示时不再移动窗口）",
+            Check("预热使用最终几何（固定 960 × 680 DIP、居中，显示时不再移动窗口）",
                 Math.Abs(window.Left - expected.Left) < 0.5
                 && Math.Abs(window.Top - expected.Top) < 0.5
                 && Math.Abs(window.Width - expected.Width) < 0.5
@@ -66,7 +66,7 @@ public static class ShortcutLauncherProbe
                 $"Left={window.Left}, Top={window.Top}, W={window.Width}, H={window.Height}, " +
                 $"expected=({expected.Left},{expected.Top},{expected.Width},{expected.Height})");
             var area = SystemParameters.WorkArea;
-            Check("启动器为固定尺寸（1200 × 800 DIP）",
+            Check("启动器为固定尺寸（960 × 680 DIP）",
                 Math.Abs(window.Width - DevEnv.Core.Services.LauncherGeometry.Width) < 0.5
                 && Math.Abs(window.Height - DevEnv.Core.Services.LauncherGeometry.Height) < 0.5,
                 $"W={window.Width}, H={window.Height}, area={area.Width}×{area.Height}");

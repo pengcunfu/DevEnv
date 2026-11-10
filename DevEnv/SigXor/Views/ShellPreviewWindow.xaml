@@ -4,7 +4,7 @@
         xmlns:views="clr-namespace:DevEnv.Host.SigXor.Views"
         xmlns:vm="clr-namespace:DevEnv.Host.SigXor.ViewModels"
         WindowStyle="None" AllowsTransparency="False" Background="{DynamicResource SurfaceBrush}"
-        Topmost="True" ShowInTaskbar="True" Width="1200" Height="800"
+        Topmost="True" ShowInTaskbar="True" Width="960" Height="680"
         WindowStartupLocation="CenterScreen" PreviewKeyDown="OnPreviewKeyDown"
         ResizeMode="NoResize"
         Title="{Binding Preview.Title, FallbackValue=SigXor 预览}">

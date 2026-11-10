@@ -13,7 +13,7 @@
         TextOptions.TextFormattingMode="Display"
         PreviewKeyDown="OnPreviewKeyDown"
         Deactivated="OnDeactivated">
-    <!-- 启动器（Launchpad 样式）：使用 Windows 默认窗口边框与标题栏，固定 1200 × 800 DIP、在工作区内居中，
+    <!-- 启动器（Launchpad 样式）：使用 Windows 默认窗口边框与标题栏，固定 960 × 680 DIP、在工作区内居中，
          内容配色与 Windows 11 开始菜单一致。左侧栏自上而下是搜索框与纵向页签（本地应用 / 文件夹 /
          网站 / 系统工具 / 内置工具 / 开始菜单），右侧是大图标网格；
          单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
