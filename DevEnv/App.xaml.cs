@@ -196,12 +196,10 @@ public partial class App : System.Windows.Application
         ThemeManager.ApplyFromSettings();
         WireHostCallbacks();
 
-        // 启动时不显示任何窗口：开发窗口建好但保持隐藏，只驻留托盘。
-        // 开发窗口从托盘右键菜单「显示主窗口」或 Ctrl+Alt+D 唤出；
-        // 监控窗口在第一次从启动器内置工具页进入时才创建，避免启动即拉起监控页的定时器。
-        // 全局热键只需要窗口句柄，EnsureHotkeys 内部会 EnsureHandle，无需先 Show。
+        // 启动时不显示任何窗口，只驻留托盘。主窗口 = 全局启动器（预热后挂到
+        // Application.MainWindow）；开发窗口仍提前创建以挂热键句柄，但保持隐藏。
+        // 监控窗口在第一次从启动器内置工具页进入时才创建。
         _devWindow = CreateMainWindow(DevelopmentWindowTitle, ViewFactory.DevelopmentNavItems);
-        MainWindow = _devWindow;
         EnsureHotkeys(_devWindow);
 
         SingleInstance.StartActivateListener(Dispatcher, ShowMainWindow);
@@ -209,8 +207,7 @@ public partial class App : System.Windows.Application
 
         _tray = new TrayIconHost("FireNeb DevEnv", LoadAppIcon());
         // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
-        // 单击托盘图标 = 全局启动器；主窗口从右键菜单进入
-        _tray.ShortcutsRequested += () => Dispatcher.InvokeAsync(() => ShortcutWindowHost.Toggle());
+        // 单击托盘 / 「显示主窗口」= 打开启动器（主窗口）
         _tray.MainWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
         _tray.SettingsRequested += () => Dispatcher.InvokeAsync(() => SettingsDialogHost.Open());
         _tray.TranslatorRequested += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest { Visible = true }));
@@ -221,8 +218,6 @@ public partial class App : System.Windows.Application
         _sigXor = new SigXorHost(Dispatcher);
         _sigXor.NotificationRequested += (title, message) =>
             Dispatcher.BeginInvoke(new Action(() => _tray?.ShowBalloon(message, Forms.ToolTipIcon.Info)));
-        _sigXor.VoiceStatusChanged += status =>
-            Dispatcher.BeginInvoke(new Action(() => _tray?.SetVoiceServiceState(status.IsRunning)));
         _sigXor.Initialize();
 
         // 设置对话框的分区内容由 SigXor 模块提供
@@ -230,11 +225,7 @@ public partial class App : System.Windows.Application
 
         _tray.FilePreviewRequested += () => Dispatcher.InvokeAsync(() => ShowFilePreviewDialog());
         _tray.ScreenshotRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StartCapture());
-        _tray.StartVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StartVoiceService());
-        _tray.StopVoiceRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.StopVoiceService());
-        _tray.SigXorSettingsRequested += () => Dispatcher.InvokeAsync(() => OpenSigXorSettingsTab(SettingsSection.Voice));
         _tray.SigXorBrowserRequested += () => Dispatcher.InvokeAsync(() => _sigXor?.ShowBrowser());
-        _tray.SetVoiceServiceState(_sigXor?.IsVoiceServiceRunning ?? false);
 
         // 首次启动就带了文件路径：直接弹预览浮窗
         if (fileArgs.Length > 0)
@@ -246,11 +237,15 @@ public partial class App : System.Windows.Application
         _clipboardWatcher = new ClipboardWatcher();
         _clipboardWatcher.Captured += OnClipboardCaptured;
 
-        // 启动后在后台空闲时把全局启动器准备好（屏幕外完成布局与首帧渲染），
-        // 之后左 Alt / 托盘菜单唤起时只是把窗口摆出来，不再临时创建、不会闪。
+        // 启动后在后台空闲时把全局启动器（主窗口）准备好（屏幕外完成布局与首帧渲染），
+        // 之后左 Alt / 托盘 / Ctrl+Alt+D 唤起时只是把窗口摆出来，不再临时创建、不会闪。
         // 放到 ApplicationIdle 是为了不拖慢启动本身。
-        Dispatcher.BeginInvoke(new Action(ShortcutWindowHost.Prewarm),
-            System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            ShortcutWindowHost.Prewarm();
+            if (ShortcutWindowHost.Window is { } launcher)
+                MainWindow = launcher;
+        }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
         // 调试用：DEVENV_START_PAGE=lava / network 直接定位到对应窗口的指定页，
         // 启动器页签（apps / tools 等）仍由 MainViewModel.Navigate 转给全局启动器。
@@ -425,10 +420,8 @@ public partial class App : System.Windows.Application
 
     private MainWindow CreateMainWindow(string title, IReadOnlyList<NavItem> navItems)
     {
-        var window = new MainWindow(title, navItems) { ShowInTaskbar = false };
-        // 对话框 owner / 状态栏默认目标都取 Application.MainWindow：谁被激活就指向谁
-        window.Activated += (_, _) => MainWindow = window;
-        return window;
+        // Application.MainWindow 固定为启动器，开发 / 监控窗只作功能窗，不抢主窗口身份
+        return new MainWindow(title, navItems) { ShowInTaskbar = false };
     }
 
     /// <summary>监控窗口按需创建：没人打开时不必带着网络 / 进程监控页的定时器。</summary>
@@ -441,8 +434,11 @@ public partial class App : System.Windows.Application
         : _monitorWindow is { IsVisible: true } ? _monitorWindow
         : null;
 
-    /// <summary>托盘「显示主窗口」/ Ctrl+Alt+D 打开开发窗口；监控窗口从启动器的内置工具入口进入。</summary>
-    private void ShowMainWindow() => ShowWindow(_devWindow);
+    /// <summary>托盘「显示主窗口」/ 单击托盘 / Ctrl+Alt+D / 二次启动：打开启动器（产品主窗口）。</summary>
+    private void ShowMainWindow() => ShortcutWindowHost.Open();
+
+    /// <summary>启动器「内置工具」里的开发窗口入口。</summary>
+    private void ShowDevelopmentWindow() => ShowWindow(_devWindow);
 
     private void ShowMonitorWindow() => ShowWindow(EnsureMonitorWindow());
 
@@ -798,7 +794,7 @@ public partial class App : System.Windows.Application
         HostCallbacks.OnShowTranslator += request => Dispatcher.BeginInvoke(new Action(() => ShowTranslatorWindow(request)));
         HostCallbacks.OnShowClipboard += visible => Dispatcher.BeginInvoke(new Action(() => ShowClipboardWindow(visible)));
         HostCallbacks.OnShowMainWindow += () => Dispatcher.BeginInvoke(new Action(ShowMainWindow));
-        HostCallbacks.OnShowDevelopmentWindow += () => Dispatcher.BeginInvoke(new Action(ShowMainWindow));
+        HostCallbacks.OnShowDevelopmentWindow += () => Dispatcher.BeginInvoke(new Action(ShowDevelopmentWindow));
         HostCallbacks.OnShowMonitorWindow += () => Dispatcher.BeginInvoke(new Action(ShowMonitorWindow));
 
         // SigXor 模块接线：核心层与工具目录通过 HostCallbacks 触发模块能力

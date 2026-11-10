@@ -10,6 +10,7 @@ using DevEnv.Host.SigXor.Controls;
 using DevEnv.Core.SigXor;
 using DevEnv.Host.SigXor.Services;
 using DevEnv.Host.SigXor.ViewModels;
+using LauncherGeometry = DevEnv.Core.Services.LauncherGeometry;
 
 namespace DevEnv.Host.SigXor;
 
@@ -32,8 +33,7 @@ public partial class MainWindow : Window
         DataContext = vm;
 
         var s = settings.Current;
-        Width = s.WindowWidth;
-        Height = s.WindowHeight;
+        ApplyBrowserSize(s.WindowWidth, s.WindowHeight);
         if (s.WindowMaximized) WindowState = WindowState.Maximized;
 
         vm.Preview.PropertyChanged += OnPreviewPropertyChanged;
@@ -41,6 +41,26 @@ public partial class MainWindow : Window
 
     /// <summary>放行窗口真正关闭（宿主退出时调用）。</summary>
     public void RequestExit() => _exitRequested = true;
+
+    /// <summary>
+    /// 无效或旧版默认尺寸（1200×760）落到与启动器一致的固定值；用户自定义的其它尺寸保留。
+    /// </summary>
+    private void ApplyBrowserSize(double width, double height)
+    {
+        var invalid = width < 200 || height < 200
+            || double.IsNaN(width) || double.IsNaN(height)
+            || double.IsInfinity(width) || double.IsInfinity(height);
+        var legacyDefault = Math.Abs(width - 1200) < 0.5 && Math.Abs(height - 760) < 0.5;
+        if (invalid || legacyDefault)
+        {
+            Width = LauncherGeometry.Width;
+            Height = LauncherGeometry.Height;
+            return;
+        }
+
+        Width = width;
+        Height = height;
+    }
 
     private void OnPreviewPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

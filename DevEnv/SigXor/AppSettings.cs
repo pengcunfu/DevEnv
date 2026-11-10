@@ -1,3 +1,5 @@
+using DevEnv.Core.Services;
+
 namespace DevEnv.Host.SigXor;
 
 /// <summary>应用设置（持久化到 Documents/FNSoftware/SigXor/settings.json）。</summary>
@@ -13,8 +15,9 @@ public sealed class AppSettings
     public bool AutoStartEnabled { get; set; } = true;
     public bool CheckUpdatesOnStartup { get; set; } = true;
     public bool TrayHintShown { get; set; }
-    public double WindowWidth { get; set; } = 1200;
-    public double WindowHeight { get; set; } = 760;
+    /// <summary>文件浏览器默认尺寸与启动器 / 空格预览一致。</summary>
+    public double WindowWidth { get; set; } = LauncherGeometry.Width;
+    public double WindowHeight { get; set; } = LauncherGeometry.Height;
     public bool WindowMaximized { get; set; }
 
     public VoiceSettings Voice { get; set; } = new();

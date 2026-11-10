@@ -27,7 +27,7 @@
 | `BaseEnvPath` | string | 开发环境根目录 |
 | `Language` | string | 界面语言，如 `zh-CN` |
 | `DarkMode` | bool | 深色模式 |
-| `ShowWindowHotkey` | string | 显示主窗口的全局组合键，默认 `Ctrl+Alt+D` |
+| `ShowWindowHotkey` | string | 显示主窗口（全局启动器）的全局组合键，默认 `Ctrl+Alt+D` |
 | `ClipboardHotkey` | string | 全局打开熔岩剪贴板的组合键，默认 `Ctrl+Space` |
 | `TranslatorHotkey` | string | 全局打开熔岩翻译的组合键，默认 `Alt+Space` |
 | `AltKeyLauncher` | bool | 单独按左 Alt 键打开全局启动器 |

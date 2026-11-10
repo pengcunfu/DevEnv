@@ -11,12 +11,10 @@ internal sealed class TrayIconHost : IDisposable
     private readonly Forms.NotifyIcon _notifyIcon;
     private readonly Forms.ContextMenuStrip _menu = new();
 
-    /// <summary>右键菜单「显示主窗口」：主窗口只从菜单进入，单击托盘图标不再唤出它。</summary>
+    /// <summary>右键菜单「显示主窗口」与单击托盘：打开启动器（主窗口）。</summary>
     public event Action? MainWindowRequested;
     /// <summary>右键菜单「设置…」：打开合并后的设置对话框（含关于与帮助）。</summary>
     public event Action? SettingsRequested;
-    /// <summary>全局启动器（单击托盘图标或右键菜单「全局启动器…」）。</summary>
-    public event Action? ShortcutsRequested;
     public event Action? TranslatorRequested;
     public event Action? ClipboardRequested;
     public event Action? ExitRequested;
@@ -25,12 +23,6 @@ internal sealed class TrayIconHost : IDisposable
     public event Action? FilePreviewRequested;
     /// <summary>SigXor 模块：开始区域截图。</summary>
     public event Action? ScreenshotRequested;
-    /// <summary>SigXor 模块：启动语音服务。</summary>
-    public event Action? StartVoiceRequested;
-    /// <summary>SigXor 模块：停止语音服务。</summary>
-    public event Action? StopVoiceRequested;
-    /// <summary>SigXor 模块：打开模块设置。</summary>
-    public event Action? SigXorSettingsRequested;
     /// <summary>SigXor 模块：打开文件浏览器窗口。</summary>
     public event Action? SigXorBrowserRequested;
 
@@ -45,21 +37,17 @@ internal sealed class TrayIconHost : IDisposable
 
         _menu.Items.Add("显示主窗口", null, (_, _) => Raise(MainWindowRequested));
         _menu.Items.Add("设置…", null, (_, _) => Raise(SettingsRequested));
-        _menu.Items.Add("全局启动器…", null, (_, _) => Raise(ShortcutsRequested));
         _menu.Items.Add("熔岩翻译", null, (_, _) => Raise(TranslatorRequested));
         _menu.Items.Add("熔岩剪贴板", null, (_, _) => Raise(ClipboardRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("文件快速预览…", null, (_, _) => Raise(FilePreviewRequested));
         _menu.Items.Add("文件浏览器…", null, (_, _) => Raise(SigXorBrowserRequested));
         _menu.Items.Add("区域截图", null, (_, _) => Raise(ScreenshotRequested));
-        _menu.Items.Add("启动语音服务", null, (_, _) => Raise(StartVoiceRequested));
-        _menu.Items.Add("停止语音服务", null, (_, _) => Raise(StopVoiceRequested));
-        _menu.Items.Add("语音与截屏设置…", null, (_, _) => Raise(SigXorSettingsRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());
         _menu.Items.Add("退出", null, (_, _) => Raise(ExitRequested));
         _notifyIcon.ContextMenuStrip = _menu;
 
-        // 单击托盘图标打开全局启动器（Launchpad）；主窗口仍从右键菜单进入。
+        // 单击托盘图标 = 显示主窗口（启动器）。
         // 右键仍然弹出菜单（NotifyIcon 挂上 ContextMenuStrip 后的默认行为）。
         _notifyIcon.MouseClick += OnMouseClick;
     }
@@ -68,20 +56,7 @@ internal sealed class TrayIconHost : IDisposable
     {
         if (e.Button != Forms.MouseButtons.Left)
             return;
-        Raise(ShortcutsRequested);
-    }
-
-    /// <summary>语音服务运行时，把「启动语音服务」置灰，只留「停止」。</summary>
-    public void SetVoiceServiceState(bool running)
-    {
-        UpdateMenuItem("启动语音服务", !running);
-        UpdateMenuItem("停止语音服务", running);
-    }
-
-    private void UpdateMenuItem(string text, bool visible)
-    {
-        if (_menu.Items[text] is { } item)
-            item.Visible = visible;
+        Raise(MainWindowRequested);
     }
 
     public bool Visible

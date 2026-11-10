@@ -57,16 +57,35 @@ public static class ShortcutWindowHost
         });
     }
 
+    /// <summary>当前启动器窗口实例（预热后即存在，可能处于隐藏状态）。</summary>
+    public static Window? Window => _window;
+
     private static ShortcutsWindow EnsureWindow()
     {
         if (_window is not null)
             return _window;
 
         var window = new ShortcutsWindow();
-        window.Closed += (_, _) => _window = null;
+        window.Closed += (_, _) =>
+        {
+            var app = Application.Current;
+            if (app is not null && ReferenceEquals(app.MainWindow, _window))
+                app.MainWindow = null;
+            _window = null;
+        };
         window.AutoDismissed += () => _lastAutoDismissUtc = DateTime.UtcNow;
         _window = window;
+        BindAsApplicationMainWindow(window);
         return window;
+    }
+
+    /// <summary>启动器即产品主窗口：对话框 owner / 二次启动都以它为准。</summary>
+    private static void BindAsApplicationMainWindow(Window window)
+    {
+        var app = Application.Current;
+        if (app is null)
+            return;
+        app.MainWindow = window;
     }
 
     /// <summary>打开（或前置）全局启动器，并切到指定页签：apps / folders / webs / tools / builtin / startmenu。</summary>
@@ -133,6 +152,7 @@ public static class ShortcutWindowHost
         CancelPendingOpen();
 
         var window = EnsureWindow();
+        BindAsApplicationMainWindow(window);
         if (window.Owner is not null)
             window.Owner = null;
         if (window.WindowState == WindowState.Minimized)
