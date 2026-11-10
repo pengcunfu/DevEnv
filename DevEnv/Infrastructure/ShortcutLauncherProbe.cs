@@ -106,23 +106,24 @@ public static class ShortcutLauncherProbe
             WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             WaitUntil(() => !vm.IsStartMenuLoading, 15_000);
 
-            Check("页签为横向六个", vm.Pages.Count == 6, string.Join(" / ", vm.Pages.Select(p => p.Title)));
+            Check("页签为纵向六个", vm.Pages.Count == 6, string.Join(" / ", vm.Pages.Select(p => p.Title)));
             Check("默认显示本地应用", vm.SelectedPage == 0);
             Check("页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
             var tabsLeft = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).X;
             var tabsTop = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).Y;
-            var tabsRight = window.PageTabs.TranslatePoint(new Point(window.PageTabs.ActualWidth, 0), window.Root).X;
             var searchLeft = window.SearchShell.TranslatePoint(new Point(0, 0), window.Root).X;
             var searchTop = window.SearchShell.TranslatePoint(new Point(0, 0), window.Root).Y;
-            var tabsMiddle = tabsTop + window.PageTabs.ActualHeight / 2;
-            var searchMiddle = searchTop + window.SearchShell.ActualHeight / 2;
-            Check("页签与搜索框排在同一行",
-                tabsLeft < window.Root.ActualWidth / 3
-                && tabsRight <= searchLeft + 0.5
-                && Math.Abs(tabsMiddle - searchMiddle) <= 2,
-                $"tabsRight={tabsRight:F1}, searchLeft={searchLeft:F1}, tabsMiddle={tabsMiddle:F1}, searchMiddle={searchMiddle:F1}");
-            Check("搜索框宽度紧凑（不超过 320）",
-                window.SearchShell.ActualWidth <= 320, $"width={window.SearchShell.ActualWidth:F1}");
+            var searchBottom = searchTop + window.SearchShell.ActualHeight;
+            var searchRight = searchLeft + window.SearchShell.ActualWidth;
+            Check("搜索框与页签排在左侧栏",
+                searchLeft < window.Root.ActualWidth / 4
+                && tabsLeft < window.Root.ActualWidth / 4
+                && searchBottom <= tabsTop + 0.5
+                && Math.Abs(searchLeft - tabsLeft) <= 12,
+                $"search=({searchLeft:F1},{searchTop:F1}) tabs=({tabsLeft:F1},{tabsTop:F1})");
+            Check("搜索框落在左侧栏宽度内",
+                searchRight <= window.Root.ActualWidth / 3,
+                $"searchRight={searchRight:F1}, rootWidth={window.Root.ActualWidth:F1}");
             Check("图标网格已生成卡片容器",
                 vm.VisibleEntries.Count == 0 || window.EntryGrid.ItemContainerGenerator.ContainerFromIndex(0) is not null);
 

@@ -1,16 +1,16 @@
 namespace DevEnv.Core.Services;
 
 /// <summary>
-/// 全局启动器的屏幕几何：固定 1200 × 800 DIP，在工作区内水平、垂直居中。
+/// 全局启动器与空格预览浮窗的屏幕几何：固定 1200 × 800 DIP，在工作区内水平、垂直居中。
 ///
 /// 工作区已扣除任务栏，居中时不会压到任务栏。纯函数，不依赖 WPF / 注册表，便于单测。
 /// </summary>
 public static class LauncherGeometry
 {
-    /// <summary>窗口固定宽度（DIP）。</summary>
+    /// <summary>启动器 / 空格预览共用的固定宽度（DIP）。</summary>
     public const double Width = 1200;
 
-    /// <summary>窗口固定高度（DIP）。</summary>
+    /// <summary>启动器 / 空格预览共用的固定高度（DIP）。</summary>
     public const double Height = 800;
 
     /// <summary>屏幕几何（DIP），坐标系与 <c>SystemParameters.WorkArea</c> 一致。</summary>
