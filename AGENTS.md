@@ -78,7 +78,7 @@
 - **显示/激活只做一次**：`ShortcutWindowHost.Open` 不再补 `Show()` / `Activate()`，统一由 `ShowPage` 负责；激活用 `GetForegroundWindow()` 判断，只在确实不在前台时调用一次 `WindowPlacement.ForceForeground`；`Deactivated` 有 400ms 宽限，前台权限交接期间的假 Deactivated 不会把窗口关掉；另有 `OutsideClickDismissHook`（`WH_MOUSE_LL`）在可见期间监听窗口外点击，补上不触发 `Deactivated` 的点击场景（任务栏空白、窗口尚未激活等），与 Win 键钩子一样只在可见期间安装、隐藏后卸载。
 - 数据仍走 `ShortcutService`；原先的 `AppsView` / `FoldersView` / `WebsView` 与对应 ViewModel **已删除**，不要再恢复卡片页。
 - `DEVENV_START_PAGE=apps|folders|webs|startmenu|tools|builtin`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签：`apps` / `folders` / `webs` / `startmenu` 切页签，`tools` / `builtin` 直接展开搜索框右侧对应的工具文件夹；`DEVENV_START_PAGE=devenv|lava|network|processes|services` 由 `App.NavigateToMainPage` 路由到开发 / 监控窗口。窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
-- 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 48px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。
+- 图标：`IconHelper.ExtractExecutableIcon` 优先提取 256px 大图标（启动器显示 48px），旧版 32px 缓存会在打开启动器时自动升级；`刷新图标` 会覆盖缓存。内置工具没有 exe 图标，卡片用每个工具自己的品牌色圆角底 + 白色 Segoe MDL2 字形（`LauncherEntry.IconBrush` / `IconGlyph`，色值与字形在 `BuiltinToolDefinitions` 里集中定义，属于固定功能性配色，不随深浅主题变化）；其余缺图标条目仍回退到灰色 `KindGlyph`。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、四个页签切换、开始菜单页只读、两个工具文件夹按钮与浮层展开、`DEVENV_START_PAGE=startmenu|tools|builtin` 路由、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
 
 ### 主窗口（开发 / 监控两个）

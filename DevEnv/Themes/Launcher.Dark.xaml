@@ -37,4 +37,7 @@
     <SolidColorBrush x:Key="LauncherCardBrush" Color="#F22B2B2B" />
     <SolidColorBrush x:Key="LauncherDangerBrush" Color="#FFFF99A4" />
 
+    <!-- 内置工具彩色图标里的白色字形：两套主题都保持白色，保证与品牌底色对比 -->
+    <SolidColorBrush x:Key="LauncherBadgeGlyphBrush" Color="#FFFFFFFF" />
+
 </ResourceDictionary>

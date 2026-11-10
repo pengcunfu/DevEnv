@@ -261,13 +261,26 @@
                                            Stretch="Uniform"
                                            RenderOptions.BitmapScalingMode="HighQuality"
                                            Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
+                                    <!-- 内置工具：固定品牌色圆角底 + 白色字形，和图片图标一眼区分 -->
+                                    <Border Width="48"
+                                            Height="48"
+                                            CornerRadius="12"
+                                            Background="{Binding IconBrush}"
+                                            Visibility="{Binding HasToolBadge, Converter={StaticResource TrueToVisibility}}">
+                                        <TextBlock Text="{Binding IconGlyph}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="24"
+                                                   Foreground="{DynamicResource LauncherBadgeGlyphBrush}" />
+                                    </Border>
                                     <TextBlock Text="{Binding KindGlyph}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                FontFamily="Segoe MDL2 Assets"
                                                FontSize="26"
                                                Foreground="{DynamicResource LauncherTextPrimaryBrush}"
-                                               Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                               Visibility="{Binding ShowsKindGlyph, Converter={StaticResource TrueToVisibility}}" />
                                 </Grid>
                                 <!-- 启动器文件夹：前四项 2×2 预览 -->
                                 <ItemsControl Margin="6"
@@ -285,13 +298,23 @@
                                                        Stretch="Uniform"
                                                        RenderOptions.BitmapScalingMode="HighQuality"
                                                        Visibility="{Binding HasIcon, Converter={StaticResource TrueToVisibility}}" />
+                                                <Border CornerRadius="6"
+                                                        Background="{Binding IconBrush}"
+                                                        Visibility="{Binding HasToolBadge, Converter={StaticResource TrueToVisibility}}">
+                                                    <TextBlock Text="{Binding IconGlyph}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               FontFamily="Segoe MDL2 Assets"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource LauncherBadgeGlyphBrush}" />
+                                                </Border>
                                                 <TextBlock Text="{Binding KindGlyph}"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"
                                                            FontFamily="Segoe MDL2 Assets"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource LauncherTextPrimaryBrush}"
-                                                           Visibility="{Binding HasIcon, Converter={StaticResource FalseToVisibility}}" />
+                                                           Visibility="{Binding ShowsKindGlyph, Converter={StaticResource TrueToVisibility}}" />
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>

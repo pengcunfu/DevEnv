@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DevEnv.Core;
 using DevEnv.Core.Models;
@@ -59,6 +60,12 @@ public sealed partial class LauncherEntry : ObservableObject
     /// <summary>系统工具的分类（如「系统管理」）；其它类型为空。</summary>
     public string Category { get; init; } = string.Empty;
 
+    /// <summary>内置工具彩色图标的底色；为空时回退到种类字形。</summary>
+    public Brush? IconBrush { get; init; }
+
+    /// <summary>内置工具彩色图标里的白色字形（Segoe MDL2 Assets）。</summary>
+    public string IconGlyph { get; init; } = string.Empty;
+
     /// <summary>框选 / Ctrl+单击的选中态。</summary>
     [ObservableProperty]
     private bool _isSelected;
@@ -97,8 +104,14 @@ public sealed partial class LauncherEntry : ObservableObject
     /// <summary>系统工具与内置工具卡片始终显示分类；快捷方式只在搜索时显示类型。</summary>
     public bool IsToolCard => Kind is ShortcutKind.Tool or ShortcutKind.InternalTool;
 
-    /// <summary>图标文件存在时才显示图片，否则回退到 KindGlyph；文件夹磁贴用 2×2 预览。</summary>
+    /// <summary>图标文件存在时才显示图片，否则回退到彩色图标或 KindGlyph；文件夹磁贴用 2×2 预览。</summary>
     public bool HasIcon => !IsGroup && !string.IsNullOrWhiteSpace(IconPath) && File.Exists(IconPath);
+
+    /// <summary>内置工具用彩色圆角底 + 白色字形，和其它条目的图片图标区分开。</summary>
+    public bool HasToolBadge => !IsGroup && IconBrush is not null && !string.IsNullOrEmpty(IconGlyph);
+
+    /// <summary>既没有图片也没有彩色图标时才显示灰色的种类字形。</summary>
+    public bool ShowsKindGlyph => !HasIcon && !HasToolBadge;
 
     public bool Matches(string query) =>
         Name.Contains(query, StringComparison.OrdinalIgnoreCase)
@@ -136,22 +149,31 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private const string ClipboardKey = "clipboard";
     private const string BrowserKey = "browser";
 
-    /// <summary>宿主内置工具：tool id、显示名与说明，窗口类入口排在最前。</summary>
-    private static readonly (string Key, string Name, string Description)[] BuiltinToolDefinitions =
+    /// <summary>宿主内置工具：tool id、显示名、说明、彩色图标字形与底色，窗口类入口排在最前。</summary>
+    private static readonly (string Key, string Name, string Description, string Glyph, string Color)[]
+        BuiltinToolDefinitions =
     [
-        (DevelopmentWindowKey, "燧岚开发盒子", "开发环境与熔岩环境"),
-        (MonitorWindowKey, "燧岚监控中心", "网络、进程与服务监控"),
-        (TranslatorKey, "熔岩翻译", "翻译剪贴板文本"),
-        (ClipboardKey, "熔岩剪贴板", "剪贴板历史与图片"),
-        (BrowserKey, "文件浏览器", "目录导航与内嵌预览"),
-        ("json", "JSON 格式化器", "格式化与校验 JSON"),
-        ("hosts", "Hosts 文件编辑器", "编辑系统 hosts 解析记录"),
-        ("image", "图像格式转换器", "图像格式转换与压缩"),
-        ("hash", "文件哈希计算器", "计算文件校验值"),
-        ("file-tools", "文件解锁与粉碎", "解除占用与安全粉碎"),
-        ("startup", "启动项管理", "查看与管理开机启动项"),
-        ("context-menu", "右键菜单管理", "自定义资源管理器右键菜单"),
+        (DevelopmentWindowKey, "燧岚开发盒子", "开发环境与熔岩环境", "\uE756", "#0F766E"),
+        (MonitorWindowKey, "燧岚监控中心", "网络、进程与服务监控", "\uE9D9", "#2563EB"),
+        (TranslatorKey, "熔岩翻译", "翻译剪贴板文本", "\uE774", "#EA580C"),
+        (ClipboardKey, "熔岩剪贴板", "剪贴板历史与图片", "\uE8C8", "#7C3AED"),
+        (BrowserKey, "文件浏览器", "目录导航与内嵌预览", "\uE8B7", "#D97706"),
+        ("json", "JSON 格式化器", "格式化与校验 JSON", "\uE943", "#0891B2"),
+        ("hosts", "Hosts 文件编辑器", "编辑系统 hosts 解析记录", "\uE968", "#DC2626"),
+        ("image", "图像格式转换器", "图像格式转换与压缩", "\uE91B", "#16A34A"),
+        ("hash", "文件哈希计算器", "计算文件校验值", "\uE8EF", "#475569"),
+        ("file-tools", "文件解锁与粉碎", "解除占用与安全粉碎", "\uE785", "#0369A1"),
+        ("startup", "启动项管理", "查看与管理开机启动项", "\uE7E8", "#CA8A04"),
+        ("context-menu", "右键菜单管理", "自定义资源管理器右键菜单", "\uE700", "#6B7280"),
     ];
+
+    /// <summary>固定色值转成冻结的画刷，避免每次绑定都新建一遍。</summary>
+    private static SolidColorBrush CreateBadgeBrush(string hex)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)!);
+        brush.Freeze();
+        return brush;
+    }
 
     private readonly Dictionary<string, LauncherEntry> _itemsByKey =
         new(StringComparer.OrdinalIgnoreCase);
@@ -391,6 +413,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                 Key = item.Key,
                 Name = item.Name,
                 TargetPath = item.Description,
+                IconGlyph = item.Glyph,
+                IconBrush = CreateBadgeBrush(item.Color),
             })
             .ToList();
 

@@ -181,6 +181,10 @@ public static class ShortcutLauncherProbe
                 vm.BuiltinToolsShelf is { GroupItems.Count: 12 } builtinShelf
                 && builtinShelf.GroupItems.All(e => e.Kind == ShortcutKind.InternalTool),
                 $"共 {vm.BuiltinToolsShelf?.GroupItems.Count ?? 0} 项");
+            Check("内置工具都带彩色图标",
+                vm.BuiltinToolsShelf is { } badgeShelf
+                && badgeShelf.GroupItems.All(e => e.HasToolBadge && !e.ShowsKindGlyph),
+                $"缺图标 {vm.BuiltinToolsShelf?.GroupItems.Count(e => !e.HasToolBadge) ?? 0} 项");
             var builtinKeys = vm.BuiltinToolsShelf?.GroupItems.Select(e => e.Key).ToList() ?? [];
             Check("内置工具文件夹含两个主窗口入口",
                 builtinKeys.Contains("dev-window") && builtinKeys.Contains("monitor-window"));
