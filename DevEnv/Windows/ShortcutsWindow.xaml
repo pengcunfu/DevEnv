@@ -203,6 +203,7 @@
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Pill" Property="Background" Value="{DynamicResource LauncherPillSelectedBrush}" />
                                 <Setter Property="Foreground" Value="{DynamicResource LauncherTextPrimaryBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
                                 <!-- 选中时轻弹一下，给滚轮 / 左右键换页一个落点反馈 -->
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>

@@ -18,7 +18,8 @@
     <SolidColorBrush x:Key="LauncherSurfaceHoverBrush" Color="#CCF8F8F8" />
     <SolidColorBrush x:Key="LauncherSurfacePressedBrush" Color="#D9EDEDED" />
     <SolidColorBrush x:Key="LauncherIconBackdropBrush" Color="#99F0F0F0" />
-    <SolidColorBrush x:Key="LauncherPillSelectedBrush" Color="#BFECECEC" />
+    <!-- 侧栏选中底：比侧栏表面更深一档，和未选中拉开对比 -->
+    <SolidColorBrush x:Key="LauncherPillSelectedBrush" Color="#FFDCDCDC" />
     <SolidColorBrush x:Key="LauncherBorderBrush" Color="#1F000000" />
     <!-- 文件夹浮层遮罩 -->
     <SolidColorBrush x:Key="LauncherScrimBrush" Color="#80000000" />
