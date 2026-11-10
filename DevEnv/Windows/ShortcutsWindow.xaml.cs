@@ -278,7 +278,7 @@ public partial class ShortcutsWindow : Window
 
     /// <summary>
     /// 摆到工作区居中的位置并切到指定页签（apps / folders / webs / startmenu）；
-    /// tools / builtin 不是页签，改为直接展开搜索框右侧对应的工具文件夹。每次打开都重新读取数据与系统配色。
+    /// tools / builtin 切到对应页签。每次打开都重新读取数据与系统配色。
     /// </summary>
     public void ShowPage(string? pageId)
     {
@@ -293,15 +293,6 @@ public partial class ShortcutsWindow : Window
         ViewModel.Query = string.Empty;
         ViewModel.Reload();
         ViewModel.SelectedPage = NormalizePageId(pageId);
-        switch (pageId?.Trim().ToLowerInvariant())
-        {
-            case "tools":
-                ViewModel.OpenSystemToolsShelf();
-                break;
-            case "builtin":
-                ViewModel.OpenBuiltinToolsShelf();
-                break;
-        }
 
         if (!IsVisible)
         {
@@ -344,7 +335,9 @@ public partial class ShortcutsWindow : Window
     {
         "folders" => 1,
         "webs" => 2,
-        "startmenu" => 3,
+        "tools" => 3,
+        "builtin" => 4,
+        "startmenu" => 5,
         _ => 0,
     };
 
@@ -420,20 +413,6 @@ public partial class ShortcutsWindow : Window
     }
 
     #region 交互
-
-    /// <summary>搜索框右侧的「系统工具」文件夹：在文件夹浮层里展开 Windows 工具目录。</summary>
-    private void OnSystemToolsShelfClick(object sender, RoutedEventArgs e)
-    {
-        ViewModel.OpenSystemToolsShelf();
-        FocusSearch();
-    }
-
-    /// <summary>搜索框右侧的「内置工具」文件夹：在文件夹浮层里展开宿主内置工具。</summary>
-    private void OnBuiltinToolsShelfClick(object sender, RoutedEventArgs e)
-    {
-        ViewModel.OpenBuiltinToolsShelf();
-        FocusSearch();
-    }
 
     /// <summary>
     /// 图标单击启动（Launchpad 习惯）。

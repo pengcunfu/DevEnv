@@ -674,9 +674,7 @@
                                           Margin="0,6,0,0"
                                           HorizontalAlignment="Stretch"
                                           VerticalAlignment="Stretch"
-                                          ContentSource="SelectedContent"
-                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                          ContentSource="SelectedContent" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

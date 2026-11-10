@@ -128,8 +128,8 @@ public sealed partial class LauncherEntry : ObservableObject
 }
 
 /// <summary>
-/// 全局启动器（Launchpad 样式）的视图模型：页签为本地应用 / 文件夹 / 网站，
-/// 系统工具与内置工具是搜索框右侧的两个只读文件夹，在文件夹浮层里展开。
+/// 全局启动器（Launchpad 样式）的视图模型：页签为本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具 / 开始菜单。
+/// 后三页只读；系统工具与内置工具直接在对应页签网格展示，不再走子文件夹浮层。
 /// 支持搜索、页签切换、添加、改名、刷新图标、移除、自定义排序、多选与启动器文件夹。
 /// </summary>
 public sealed partial class ShortcutLauncherViewModel : ObservableObject
@@ -137,11 +137,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private const int AppsPage = 0;
     private const int FoldersPage = 1;
     private const int WebsPage = 2;
-    private const int StartMenuPage = 3;
-
-    /// <summary>固定工具架条目的 key；只用于标识，不参与布局。</summary>
-    private const string SystemToolsShelfKey = "shelf|tools";
-    private const string BuiltinToolsShelfKey = "shelf|builtin";
+    private const int SystemToolsPage = 3;
+    private const int BuiltinToolsPage = 4;
+    private const int StartMenuPage = 5;
 
     /// <summary>系统工具的分类排序；目录里新增分类时排在已知分类之后。</summary>
     private static readonly string[] ToolCategoryOrder =
@@ -207,8 +205,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>快捷方式数据（应用 / 文件夹 / 网站）是否正在后台加载。</summary>
     private bool _shortcutDataLoading;
 
-    /// <summary>Reload 期间请求打开的工具架，数据落定后补开，避免被异步重建清掉。</summary>
-    private string? _pendingShelfKey;
+    /// <summary>Reload 期间请求的页签，数据落定后补上，避免被异步重建清掉。</summary>
+    private int? _pendingSelectedPage;
 
     /// <summary>批量重建时暂时屏蔽属性变更回调里的 Refresh，避免重复刷新。</summary>
     private bool _suspendRefresh;
@@ -222,16 +220,10 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         new(AppsPage, "本地应用", ""),
         new(FoldersPage, "文件夹", ""),
         new(WebsPage, "网站", ""),
+        new(SystemToolsPage, "系统工具", ""),
+        new(BuiltinToolsPage, "内置工具", ""),
         new(StartMenuPage, "开始菜单", ""),
     ];
-
-    /// <summary>搜索框右侧的「系统工具」文件夹；条目来自 Windows 工具目录，只读。</summary>
-    [ObservableProperty]
-    private LauncherEntry? _systemToolsShelf;
-
-    /// <summary>搜索框右侧的「内置工具」文件夹；条目来自宿主内置工具，只读。</summary>
-    [ObservableProperty]
-    private LauncherEntry? _builtinToolsShelf;
 
     public ObservableCollection<LauncherEntry> VisibleEntries { get; } = [];
 
@@ -287,20 +279,30 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>当前是不是只读的开始菜单页。</summary>
     public bool IsStartMenuPage => SelectedPage == StartMenuPage;
 
+    public bool IsSystemToolsPage => SelectedPage == SystemToolsPage;
+
+    public bool IsBuiltinToolsPage => SelectedPage == BuiltinToolsPage;
+
+    /// <summary>本地应用 / 文件夹 / 网站以外的页签只读。</summary>
+    public bool IsReadOnlyLauncherPage => IsStartMenuPage || IsSystemToolsPage || IsBuiltinToolsPage;
+
     /// <summary>开始菜单正在后台读取；页面显示「正在读取开始菜单…」而不是空状态。</summary>
     public bool IsStartMenuLoading => _startMenuLoading;
 
-    /// <summary>开始菜单页不接受外部文件拖入（页面只读）。</summary>
-    public bool CanAcceptExternalDrop => !IsStartMenuPage;
+    /// <summary>只读页签不接受外部文件拖入。</summary>
+    public bool CanAcceptExternalDrop => IsEditableLauncherPage;
+
+    /// <summary>当前是不是可编辑的页签（本地应用 / 文件夹 / 网站）。</summary>
+    public bool IsEditableLauncherPage => SelectedPage is AppsPage or FoldersPage or WebsPage;
 
     /// <summary>当前视图是否允许框选、拖动、排序与分组。</summary>
-    public bool IsEditableView => !IsSearching && !IsInsideReadOnlyGroup && !IsStartMenuPage;
+    public bool IsEditableView => !IsSearching && !IsInsideReadOnlyGroup && IsEditableLauncherPage;
 
-    /// <summary>只有普通页签能创建新文件夹，固定工具架、开始菜单页与文件夹内不行。</summary>
-    public bool CanCreateGroup => !IsSearching && !IsInsideGroup && !IsStartMenuPage;
+    /// <summary>只有可编辑页签能创建新文件夹。</summary>
+    public bool CanCreateGroup => !IsSearching && !IsInsideGroup && IsEditableLauncherPage;
 
-    /// <summary>文件夹内、固定工具架与开始菜单页不需要「添加」，右下角按钮随之隐藏。</summary>
-    public bool CanAddOnCurrentPage => !IsInsideGroup && !IsStartMenuPage;
+    /// <summary>只有可编辑页签显示右下角「添加」。</summary>
+    public bool CanAddOnCurrentPage => !IsInsideGroup && IsEditableLauncherPage;
 
     public IReadOnlyList<LauncherEntry> SelectedEntries =>
         VisibleEntries.Where(entry => entry.IsSelected).ToList();
@@ -319,6 +321,10 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         Notice = string.Empty;
         OnPropertyChanged(nameof(IsStartMenuPage));
+        OnPropertyChanged(nameof(IsSystemToolsPage));
+        OnPropertyChanged(nameof(IsBuiltinToolsPage));
+        OnPropertyChanged(nameof(IsReadOnlyLauncherPage));
+        OnPropertyChanged(nameof(IsEditableLauncherPage));
         OnPropertyChanged(nameof(CanAcceptExternalDrop));
         UpdateEmptyText();
         NotifyEditableChanged();
@@ -502,25 +508,6 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         _tools = payload.Tools;
         _builtinTools = payload.BuiltinTools;
 
-        SystemToolsShelf = new LauncherEntry
-        {
-            Kind = ShortcutKind.Group,
-            Index = -1,
-            Key = SystemToolsShelfKey,
-            Name = "系统工具",
-            GroupItems = _tools,
-            IsReadOnlyGroup = true,
-        };
-        BuiltinToolsShelf = new LauncherEntry
-        {
-            Kind = ShortcutKind.Group,
-            Index = -1,
-            Key = BuiltinToolsShelfKey,
-            Name = "内置工具",
-            GroupItems = _builtinTools,
-            IsReadOnlyGroup = true,
-        };
-
         foreach (var entry in _apps.Concat(_folders).Concat(_webs).Concat(_tools).Concat(_builtinTools))
             _itemsByKey[entry.Key] = entry;
 
@@ -528,16 +515,11 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         RebuildTiles();
         RebuildAllItems();
 
-        // ShowPage 在 Reload 之后立刻打开工具架时，旧工具架会在异步重建中被清掉；
-        // 这里按请求的 key 在新数据上补开一次，保证 tools / builtin 路由落得住
-        var pendingShelfKey = _pendingShelfKey;
-        _pendingShelfKey = null;
-        CurrentGroup = pendingShelfKey switch
+        if (_pendingSelectedPage is int pendingPage)
         {
-            SystemToolsShelfKey => SystemToolsShelf,
-            BuiltinToolsShelfKey => BuiltinToolsShelf,
-            _ => null,
-        };
+            SelectedPage = pendingPage;
+            _pendingSelectedPage = null;
+        }
     }
 
     private sealed record ShortcutReloadPayload(
@@ -790,6 +772,16 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             EmptyTitle = "开始菜单里没有可显示的项";
             EmptyHint = "系统开始菜单中的快捷方式会显示在这里；已加入启动器的条目会自动隐藏";
         }
+        else if (IsSystemToolsPage)
+        {
+            EmptyTitle = "没有可用的系统工具";
+            EmptyHint = "Windows 管理工具会显示在这里";
+        }
+        else if (IsBuiltinToolsPage)
+        {
+            EmptyTitle = "没有可用的内置工具";
+            EmptyHint = "宿主内置小工具会显示在这里";
+        }
         else
         {
             EmptyTitle = "这里还没有快捷方式";
@@ -922,14 +914,24 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                         : !string.IsNullOrEmpty(_startMenuError) && _startMenuTiles.Count == 0
                             ? "开始菜单读取失败"
                             : $"{_startMenuTiles.Sum(entry => entry.IsGroup ? entry.GroupItems.Count : 1)} 项"
-                    : string.Empty;
+                    : IsSystemToolsPage
+                        ? $"{_tools.Count} 项"
+                        : IsBuiltinToolsPage
+                            ? $"{_builtinTools.Count} 项"
+                            : string.Empty;
 
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(SelectedEntries));
     }
 
-    private IReadOnlyList<LauncherEntry> GetPageEntries(int page) =>
-        page == StartMenuPage ? _startMenuTiles : _pageTiles[page];
+    private IReadOnlyList<LauncherEntry> GetPageEntries(int page) => page switch
+    {
+        StartMenuPage => _startMenuTiles,
+        SystemToolsPage => _tools,
+        BuiltinToolsPage => _builtinTools,
+        >= 0 and < LauncherLayout.EditablePageCount => _pageTiles[page],
+        _ => [],
+    };
 
     private const int CollectionBatchThreshold = 40;
     private const int CollectionBatchSize = 24;
@@ -984,32 +986,32 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         if (!entry.IsGroup)
             return;
 
-        OpenShelf(entry);
-    }
-
-    /// <summary>打开搜索框右侧的「系统工具」文件夹。</summary>
-    public void OpenSystemToolsShelf() => OpenShelf(SystemToolsShelf);
-
-    /// <summary>打开搜索框右侧的「内置工具」文件夹。</summary>
-    public void OpenBuiltinToolsShelf() => OpenShelf(BuiltinToolsShelf);
-
-    /// <summary>在文件夹浮层里展开一个只读工具架；普通文件夹也走这里。</summary>
-    private void OpenShelf(LauncherEntry? shelf)
-    {
-        if (shelf is null)
-            return;
-
         Message = string.Empty;
         Query = string.Empty;
+        CurrentGroup = entry;
+    }
+
+    /// <summary>切到「系统工具」页签（兼容 DEVENV_START_PAGE=tools 等路由）。</summary>
+    public void OpenSystemToolsShelf() => NavigateToLauncherPage(SystemToolsPage);
+
+    /// <summary>切到「内置工具」页签（兼容 DEVENV_START_PAGE=builtin 等路由）。</summary>
+    public void OpenBuiltinToolsShelf() => NavigateToLauncherPage(BuiltinToolsPage);
+
+    private void NavigateToLauncherPage(int page)
+    {
+        Message = string.Empty;
+        Query = string.Empty;
+        if (CurrentGroup is not null)
+            CloseGroupWithoutRefresh();
         if (_shortcutDataLoading)
-            _pendingShelfKey = shelf.Key;
-        CurrentGroup = shelf;
+            _pendingSelectedPage = page;
+        else
+            SelectedPage = page;
     }
 
     public void CloseGroup()
     {
         Query = string.Empty;
-        _pendingShelfKey = null;
         CurrentGroup = null;
         Refresh();
     }
@@ -1017,7 +1019,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>把若干卡片拖到目标卡片上：目标不是文件夹时新建文件夹，目标是文件夹时加入其中。</summary>
     public void MergeIntoFolder(IReadOnlyList<LauncherEntry> sources, LauncherEntry target, string name = "文件夹")
     {
-        if (IsSearching || IsInsideGroup || IsStartMenuPage)
+        if (IsSearching || IsInsideGroup || !IsEditableLauncherPage)
             return;
 
         if (target.IsGroup)
@@ -1046,7 +1048,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void AddToGroup(IReadOnlyList<LauncherEntry> sources, LauncherEntry group)
     {
-        if (!group.IsGroup || IsStartMenuPage)
+        if (!group.IsGroup || !IsEditableLauncherPage)
             return;
 
         var keys = sources
@@ -1066,7 +1068,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void MoveOutOfGroup(IReadOnlyList<LauncherEntry> entries)
     {
-        if (CurrentGroup is null || IsStartMenuPage)
+        if (CurrentGroup is null || IsReadOnlyLauncherPage)
             return;
 
         var keys = entries
@@ -1087,7 +1089,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void RenameGroup(LauncherEntry group, string name)
     {
-        if (!group.IsGroup || group.IsReadOnlyGroup || IsStartMenuPage || string.IsNullOrWhiteSpace(name))
+        if (!group.IsGroup || group.IsReadOnlyGroup || !IsEditableLauncherPage || string.IsNullOrWhiteSpace(name))
             return;
 
         _layout.RenameGroup(group.GroupId, name);
@@ -1096,7 +1098,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     public void DissolveGroup(LauncherEntry group)
     {
-        if (!group.IsGroup || group.IsReadOnlyGroup || IsStartMenuPage)
+        if (!group.IsGroup || group.IsReadOnlyGroup || !IsEditableLauncherPage)
             return;
 
         var groupId = group.GroupId;
@@ -1365,7 +1367,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>底部「＋」按当前页签添加。</summary>
     public async Task AddForCurrentPageAsync(Window owner)
     {
-        if (IsStartMenuPage)
+        if (!IsEditableLauncherPage)
             return;
 
         switch (SelectedPage)
@@ -1385,7 +1387,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>拖入的 .exe / 文件夹落到对应页签；返回加入的页签，未识别时返回 null。</summary>
     public int? AddDropped(string path)
     {
-        if (IsStartMenuPage)
+        if (!IsEditableLauncherPage)
             return null;
 
         if (File.Exists(path) && path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
@@ -1464,7 +1466,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>批量移除当前选中的卡片；选中文件夹时只解散，不删除其中的快捷方式。</summary>
     public void RemoveSelected(Window owner)
     {
-        if (IsStartMenuPage)
+        if (!IsEditableLauncherPage)
             return;
 
         var selected = SelectedEntries

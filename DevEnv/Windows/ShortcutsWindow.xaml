@@ -15,7 +15,7 @@
         Deactivated="OnDeactivated">
     <!-- 启动器（Launchpad 样式）：使用 Windows 默认窗口边框与标题栏，固定 1200 × 800 DIP、在工作区内居中，
          内容配色与 Windows 11 开始菜单一致。顶部一行从左到右是横向页签（本地应用 / 文件夹 / 网站 / 开始菜单）、
-         紧凑搜索框，以及「系统工具」「内置工具」两个只读文件夹；中部是大图标网格；
+         紧凑搜索框，以及「系统工具」「内置工具」两个只读页签；中部是大图标网格；
          单击图标即启动，Esc 关闭；空白处拖拽框选，拖到图标上合并为文件夹。 -->
     <Window.DataContext>
         <vm:ShortcutLauncherViewModel />
@@ -422,16 +422,13 @@
 
         <!-- 窗口使用系统默认边框与标题栏，背景色由 Window.Background 提供 -->
 
-        <!-- 顶部一行：页签、搜索框、两个只读工具文件夹从左到右排在同一行。
-             窗口宽度固定 1200 DIP，搜索框在 120–250 DIP 之间自适应，整行仍不折行。 -->
+        <!-- 顶部一行：六个页签与搜索框；系统工具 / 内置工具与本地应用等并列，不再使用右侧文件夹按钮。 -->
         <Grid Grid.Row="0"
               Margin="16,14,16,0"
               VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ListBox x:Name="PageTabs"
                      Grid.Column="0"
@@ -513,48 +510,6 @@
                              Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </Border>
-
-            <!-- 系统工具 / 内置工具不是页签，而是紧跟搜索框的两个只读文件夹 -->
-            <Button x:Name="SystemToolsShelfButton"
-                    Grid.Column="2"
-                    Margin="6,0,0,0"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource LaunchpadShelfButton}"
-                    ToolTip="系统工具（Windows 管理工具目录）"
-                    Click="OnSystemToolsShelfClick">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center"
-                               Text="&#xE8B7;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="15"
-                               Foreground="{DynamicResource LauncherTextSecondaryBrush}" />
-                    <TextBlock Margin="6,0,0,0"
-                               VerticalAlignment="Center"
-                               Text="系统工具"
-                               FontSize="12"
-                               Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
-                </StackPanel>
-            </Button>
-            <Button x:Name="BuiltinToolsShelfButton"
-                    Grid.Column="3"
-                    Margin="6,0,0,0"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource LaunchpadShelfButton}"
-                    ToolTip="内置工具（JSON / Hosts / 哈希等）"
-                    Click="OnBuiltinToolsShelfClick">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center"
-                               Text="&#xE8B7;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="15"
-                               Foreground="{DynamicResource LauncherTextSecondaryBrush}" />
-                    <TextBlock Margin="6,0,0,0"
-                               VerticalAlignment="Center"
-                               Text="内置工具"
-                               FontSize="12"
-                               Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
-                </StackPanel>
-            </Button>
         </Grid>
 
         <!-- 中部：图标网格 -->
