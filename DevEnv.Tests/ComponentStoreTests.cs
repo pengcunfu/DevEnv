@@ -58,6 +58,87 @@ public sealed class ComponentStoreTests
         }
     }
 
+    [Fact]
+    public void DevOutput_NativeKeyFilesUnderRuntimes_AreDetected()
+    {
+        // 框架依赖构建（make run 的 Debug 输出）把原生库放在 runtimes\<rid>\native，
+        // 不能因为 exe 旁边没有就直接判定「组件未安装」。
+        string root = CreateTempDirectory();
+        string baseDirectory = CreateTempDirectory();
+        try
+        {
+            string native = Path.Combine(baseDirectory, "runtimes", $"win-{ArchSuffix}", "native");
+            Directory.CreateDirectory(native);
+            File.WriteAllText(Path.Combine(native, "sherpa-onnx-c-api.dll"), "");
+            File.WriteAllText(Path.Combine(native, "onnxruntime.dll"), "");
+
+            var store = new ComponentStore(root, baseDirectory);
+            Assert.True(store.IsInstalled(ComponentCatalog.Voice));
+            Assert.Equal(Path.GetFullPath(baseDirectory), store.GetDirectory(ComponentCatalog.Voice));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+            DeleteDirectory(baseDirectory);
+        }
+    }
+
+    [Fact]
+    public void DevOutput_MixedManagedAndNativeKeyFiles_AreDetected()
+    {
+        // OCR 的 RapidOcrNet.dll 在输出目录根部，libSkiaSharp / onnxruntime 在 runtimes 下。
+        string root = CreateTempDirectory();
+        string baseDirectory = CreateTempDirectory();
+        try
+        {
+            File.WriteAllText(Path.Combine(baseDirectory, "RapidOcrNet.dll"), "");
+            string native = Path.Combine(baseDirectory, "runtimes", $"win-{ArchSuffix}", "native");
+            Directory.CreateDirectory(native);
+            foreach (string file in ComponentCatalog.OcrEngine.KeyFiles)
+            {
+                if (file == "RapidOcrNet.dll") continue;
+                File.WriteAllText(Path.Combine(native, file), "");
+            }
+
+            var store = new ComponentStore(root, baseDirectory);
+            Assert.True(store.IsInstalled(ComponentCatalog.Ocr));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+            DeleteDirectory(baseDirectory);
+        }
+    }
+
+    [Fact]
+    public void DevOutput_MissingNativeKeyFile_IsNotInstalled()
+    {
+        string root = CreateTempDirectory();
+        string baseDirectory = CreateTempDirectory();
+        try
+        {
+            string native = Path.Combine(baseDirectory, "runtimes", $"win-{ArchSuffix}", "native");
+            Directory.CreateDirectory(native);
+            File.WriteAllText(Path.Combine(native, "sherpa-onnx-c-api.dll"), "");
+
+            var store = new ComponentStore(root, baseDirectory);
+            Assert.False(store.IsInstalled(ComponentCatalog.Voice));
+        }
+        finally
+        {
+            DeleteDirectory(root);
+            DeleteDirectory(baseDirectory);
+        }
+    }
+
+    private static string ArchSuffix => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture switch
+    {
+        System.Runtime.InteropServices.Architecture.X86 => "x86",
+        System.Runtime.InteropServices.Architecture.Arm64 => "arm64",
+        System.Runtime.InteropServices.Architecture.Arm => "arm",
+        _ => "x64",
+    };
+
     private static string CreateTempDirectory()
     {
         string directory = Path.Combine(Path.GetTempPath(), "devenv-tests", Guid.NewGuid().ToString("N"));

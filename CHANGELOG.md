@@ -152,6 +152,7 @@
 
 ### Fixed
 
+- 修复开发构建（`make run` 的 Debug 输出）里右 Alt 语音输入无反应：可选组件检测只认输出目录根部的关键文件，而 `sherpa-onnx-c-api.dll` / `onnxruntime.dll` 等原生依赖由 NuGet 放在 `runtimes\<rid>\native` 下，`ComponentStore.IsInstalled` 因此误判为「语音引擎组件未安装」，语音服务在开机自启时直接跳过，按键时又因通知开关关闭而没有提示。现组件关键文件同时到 `runtimes\win-<arch>\native` 下查找，开发构建无需先下载组件即可启动语音与 OCR
 - 修复发布出的单文件 `DevEnv.exe` 高达 255 MB：`.NET 8+` 的 SDK 在 `PublishSingleFile=true` 时会推断 `SelfContained=true`，而 `--self-contained false` 的空格写法不会被转发为显式 `false`，于是本该框架依赖的发布把整个 .NET 10 Desktop Runtime（约 160 MB，含 WPF / WinForms / BCL 与本地化资源）一起打进了 exe。`scripts/publish.ps1`、`release.yml` 与发布文档统一改用 `--no-self-contained`，体积降到约 89 MB；目标机需安装 .NET 10 Desktop Runtime（便携版不携带运行时）
 - 修复资源管理器与桌面里 `Alt` + 空格呼不出快捷应用：空格预览的低级键盘钩子只按虚拟键匹配预览键，没有排除修饰键，`Alt` / `Ctrl` / `Win` 组合会被 `WH_KEYBOARD_LL` 吞掉，`RegisterHotKey` 收不到 `Alt` + 空格。现在预览与关闭键在检测到 `Alt` / `Ctrl` / `Win` 按下时直接放行，组合键交还给系统与全局热键（`Alt` + `Esc` 切换窗口等也一并恢复）
 - 修复文本预览在浅色主题下仍是深色背景：`TextView` 的编辑器底色、前景与行号颜色改为跟随主题资源（`SurfaceBrush` / `TextPrimaryBrush` / `TextMutedBrush`），不再写死深色。语法高亮配色同步改为按主题切换，深色用 VS Code Dark、浅色用 VS Code Light，`SyntaxHighlightingService` 订阅 `ThemeManager.ThemeChanged` 重新注册定义，已打开的编辑器在主题切换后立即刷新。`sigxor-theme-smoke` 探针新增编辑器底色随主题切换的断言

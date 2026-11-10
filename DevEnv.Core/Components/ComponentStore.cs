@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using DevEnv.Core.Updates;
 
@@ -21,8 +22,15 @@ public sealed class ComponentStore
     private readonly object _gate = new();
     private readonly Dictionary<string, InstalledComponent> _components =
         new(StringComparer.OrdinalIgnoreCase);
+    private readonly string _baseDirectory;
+    private readonly bool _useBaseDirectory;
 
-    public ComponentStore(string? rootDirectory = null)
+    /// <param name="rootDirectory">组件安装根目录；为空时使用 <c>%LOCALAPPDATA%\DevEnv\Components</c>。</param>
+    /// <param name="baseDirectory">
+    /// 仅测试使用：注入宿主输出目录，绕过「入口程序集必须是 DevEnv」的判定，
+    /// 以便验证开发构建从 <c>runtimes\&lt;rid&gt;\native</c> 探测组件的逻辑。
+    /// </param>
+    public ComponentStore(string? rootDirectory = null, string? baseDirectory = null)
     {
         RootDirectory = string.IsNullOrWhiteSpace(rootDirectory)
             ? Path.Combine(
@@ -30,6 +38,11 @@ public sealed class ComponentStore
                 "DevEnv",
                 "Components")
             : Path.GetFullPath(rootDirectory);
+
+        _baseDirectory = string.IsNullOrWhiteSpace(baseDirectory)
+            ? AppContext.BaseDirectory
+            : Path.GetFullPath(baseDirectory);
+        _useBaseDirectory = !string.IsNullOrWhiteSpace(baseDirectory) || IsHostOutput;
 
         Directory.CreateDirectory(RootDirectory);
         DownloadsDirectory = Path.Combine(RootDirectory, ".downloads");
@@ -60,8 +73,8 @@ public sealed class ComponentStore
         if (definition is null)
             return false;
 
-        // 开发构建 / 非单文件发布时可选 DLL 就在 exe 旁边，视为可用，避免开发时被要求下载组件。
-        if (CanUseBaseDirectory && HasKeyFiles(AppContext.BaseDirectory, definition))
+        // 开发构建 / 非单文件发布时可选 DLL 就在输出目录里，视为可用，避免开发时被要求下载组件。
+        if (_useBaseDirectory && HasKeyFiles(_baseDirectory, definition))
             return true;
 
         InstalledComponent? record = GetRecord(id);
@@ -77,8 +90,8 @@ public sealed class ComponentStore
         ComponentDefinition? definition = ComponentCatalog.Find(id);
         if (definition is null)
             return null;
-        if (CanUseBaseDirectory && HasKeyFiles(AppContext.BaseDirectory, definition))
-            return AppContext.BaseDirectory;
+        if (_useBaseDirectory && HasKeyFiles(_baseDirectory, definition))
+            return _baseDirectory;
 
         InstalledComponent? record = GetRecord(id);
         if (record is null)
@@ -93,7 +106,7 @@ public sealed class ComponentStore
         ComponentDefinition? definition = ComponentCatalog.Find(id);
         if (definition is null)
             return null;
-        if (CanUseBaseDirectory && HasKeyFiles(AppContext.BaseDirectory, definition))
+        if (_useBaseDirectory && HasKeyFiles(_baseDirectory, definition))
             return AppVersionInfo.Display;
 
         InstalledComponent? record = GetRecord(id);
@@ -102,21 +115,45 @@ public sealed class ComponentStore
             : null;
     }
 
-    /// <summary>只有非单文件的 DevEnv 宿主（开发运行 / 完整发布）才把 exe 目录当作组件来源。</summary>
-    private static bool CanUseBaseDirectory =>
+    /// <summary>只有非单文件的 DevEnv 宿主（开发运行 / 完整发布）才把输出目录当作组件来源。</summary>
+    private static bool IsHostOutput =>
         string.Equals(Assembly.GetEntryAssembly()?.GetName().Name, "DevEnv", StringComparison.OrdinalIgnoreCase)
         && File.Exists(Path.Combine(AppContext.BaseDirectory, "DevEnv.dll"));
 
+    /// <summary>
+    /// 组件的关键文件是否齐全。托管 DLL 在输出目录根部；onnxruntime 之类的原生依赖由
+    /// NuGet 放进 <c>runtimes\&lt;rid&gt;\native</c>（框架依赖构建，如 <c>make run</c> 的 Debug 输出），
+    /// 也要认，否则开发构建会误判为「组件未安装」，语音 / OCR 直接拒绝启动。
+    /// </summary>
     private static bool HasKeyFiles(string directory, ComponentDefinition definition)
     {
         if (!Directory.Exists(directory))
             return false;
+
+        string? nativeDirectory = FindNativeRuntimeDirectory(directory);
         foreach (string file in definition.KeyFiles)
         {
-            if (!File.Exists(Path.Combine(directory, file)))
-                return false;
+            if (File.Exists(Path.Combine(directory, file)))
+                continue;
+            if (nativeDirectory is not null && File.Exists(Path.Combine(nativeDirectory, file)))
+                continue;
+            return false;
         }
         return true;
+    }
+
+    private static string? FindNativeRuntimeDirectory(string directory)
+    {
+        string arch = RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.X86 => "x86",
+            Architecture.Arm64 => "arm64",
+            Architecture.Arm => "arm",
+            _ => "x64",
+        };
+
+        string candidate = Path.Combine(directory, "runtimes", $"win-{arch}", "native");
+        return Directory.Exists(candidate) ? candidate : null;
     }
 
     public InstalledComponent? GetRecord(string id)
