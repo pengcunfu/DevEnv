@@ -4,9 +4,8 @@ using System.Windows.Controls;
 namespace DevEnv.Host.Controls;
 
 /// <summary>
-/// 固定尺寸子项、逐行居中的换行面板。启动器的图标网格用它排版：
-/// WPF 自带 WrapPanel 会把每一行左对齐，项目少时整块偏左；这里按可用宽度
-/// 算出列数，再把每一行在水平方向居中，视觉上更接近 Launchpad。
+/// 固定尺寸子项的换行面板。启动器图标网格用它排版：按可用宽度算列数，
+/// 行内左对齐（贴近 Windows 11 开始菜单「已固定」），避免居中后左右空出大块边距。
 /// </summary>
 public sealed class CenteredWrapPanel : Panel
 {
@@ -36,24 +35,31 @@ public sealed class CenteredWrapPanel : Panel
         foreach (UIElement child in InternalChildren)
             child.Measure(itemSize);
 
-        var width = double.IsInfinity(availableSize.Width) ? ItemWidth : availableSize.Width;
-        var columns = ColumnsFor(width);
-        var rows = (InternalChildren.Count + columns - 1) / columns;
+        var count = InternalChildren.Count;
+        if (count == 0)
+            return new Size(0, 0);
+
+        // 按内容收窄：文件夹浮层只有两三项时不要被父级 MaxWidth 撑满整行
+        var constraint = double.IsInfinity(availableSize.Width) ? double.PositiveInfinity : availableSize.Width;
+        var maxColumns = double.IsInfinity(constraint)
+            ? count
+            : Math.Max(1, (int)(constraint / ItemWidth));
+        var columns = Math.Max(1, Math.Min(maxColumns, count));
+        var rows = (count + columns - 1) / columns;
+        var width = columns * ItemWidth;
         return new Size(width, rows * ItemHeight);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
         var columns = ColumnsFor(finalSize.Width);
-        var rowWidth = columns * ItemWidth;
-        var leftOffset = Math.Max(0, (finalSize.Width - rowWidth) / 2);
 
         for (var i = 0; i < InternalChildren.Count; i++)
         {
             var row = i / columns;
             var column = i % columns;
             var rect = new Rect(
-                leftOffset + column * ItemWidth,
+                column * ItemWidth,
                 row * ItemHeight,
                 ItemWidth,
                 ItemHeight);

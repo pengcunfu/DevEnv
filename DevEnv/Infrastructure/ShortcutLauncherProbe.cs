@@ -127,7 +127,7 @@ public static class ShortcutLauncherProbe
                 $"searchRight={searchRight:F1}, rootWidth={window.Root.ActualWidth:F1}");
             Check("图标网格已生成卡片容器",
                 vm.VisibleEntries.Count == 0 || window.EntryGrid.ItemContainerGenerator.ContainerFromIndex(0) is not null);
-            // 右侧内容区 ≈ 960 − 210（侧栏）− 20（滚动区内边距）；卡片宽 90 → 每行 8 个
+            // 右侧内容区 ≈ 客户区 − 196（侧栏）− 8（滚动区内边距）；卡片宽 90 → 每行 8 个
             var gridWidth = window.EntryScroller.ActualWidth;
             var columns = gridWidth > 0 ? (int)(gridWidth / 90d) : 0;
             Check("右侧网格每行可排 8 个图标",

@@ -106,10 +106,10 @@
                                 BorderBrush="Transparent"
                                 BorderThickness="0"
                                 CornerRadius="8"
-                                Padding="6,10,6,8"
+                                Padding="6,8,6,4"
                                 ClipToBounds="True">
-                            <!-- Stretch 才能把单元格宽度传给标题 TextBlock -->
-                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                            <!-- Top：内容贴顶，避免格高大于内容时上下居中把分类间距撑大 -->
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Top" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -204,7 +204,7 @@
         <DataTemplate x:Key="LauncherEntryTemplate">
             <Button Style="{StaticResource LaunchpadTile}"
                     HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
+                    VerticalAlignment="Top"
                     HorizontalContentAlignment="Stretch"
                     ToolTip="{Binding TargetPath}"
                     Click="OnEntryClick"
@@ -296,6 +296,7 @@
                                LineHeight="16"
                                LineStackingStrategy="BlockLineHeight"
                                Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
+                    <!-- 仅搜索态显示类型；文件夹不再显示「N 项」副标题（贴近开始菜单） -->
                     <TextBlock Margin="2,2,2,0"
                                HorizontalAlignment="Stretch"
                                Text="{Binding KindText}"
@@ -309,9 +310,6 @@
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding DataContext.IsSearching, RelativeSource={RelativeSource AncestorType=Window}}"
                                                  Value="True">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding IsGroup}" Value="True">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -374,13 +372,13 @@
         </Grid.ContextMenu>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="210" />
+            <ColumnDefinition Width="196" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- 窗口使用系统默认边框与标题栏，背景色由 Window.Background 提供 -->
 
-        <!-- 左侧栏：搜索框在上，六个纵向页签在下 -->
+        <!-- 左侧栏：搜索在上、页签居中、操作提示贴底 -->
         <Border Grid.Column="0"
                 Padding="12,14,12,14"
                 BorderBrush="{DynamicResource LauncherBorderBrush}"
@@ -414,6 +412,19 @@
                                  Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
                 </Border>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="4,16,4,4">
+                    <TextBlock Text="拖动空白框选 · Esc 关闭"
+                               FontSize="11"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource LauncherTextMutedBrush}" />
+                    <TextBlock Margin="0,4,0,0"
+                               Text="拖入 .exe 或文件夹即可添加"
+                               FontSize="11"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource LauncherTextMutedBrush}"
+                               Visibility="{Binding CanAddOnCurrentPage, Converter={StaticResource TrueToVisibility}}" />
+                </StackPanel>
 
                 <ListBox x:Name="PageTabs"
                          Margin="0,12,0,0"
@@ -456,9 +467,8 @@
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <!-- 固定底行高度：右下角「＋」只在可编辑页显示，若由它撑高，
-                     进入文件夹浮层时底行会矮一截，状态提示跟着上下跳 -->
-                <RowDefinition Height="Auto" MinHeight="82" />
+                <!-- 底行只留状态提示与「＋」；操作说明已移到左侧栏底部 -->
+                <RowDefinition Height="Auto" MinHeight="56" />
             </Grid.RowDefinitions>
 
             <Grid x:Name="PageContentHost" Grid.Row="0" Margin="0,12,0,0">
@@ -466,7 +476,7 @@
                 <ScrollViewer x:Name="EntryScroller"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
-                              Padding="10,0,10,0"
+                              Padding="4,0,4,0"
                               Background="Transparent"
                               Visibility="{Binding ShowsToolSections, Converter={StaticResource FalseToVisibility}}">
                     <ItemsControl x:Name="EntryGrid"
@@ -491,7 +501,7 @@
                 <ScrollViewer x:Name="SectionScroller"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
-                              Padding="10,0,10,0"
+                              Padding="4,0,4,0"
                               Background="Transparent"
                               Visibility="{Binding ShowsToolSections, Converter={StaticResource TrueToVisibility}}">
                     <ItemsControl x:Name="SectionGrid"
@@ -499,9 +509,9 @@
                                   HorizontalAlignment="Stretch">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <!-- 工具页不显示图标下分类字，格子比普通页签矮一截，避免分类之间空一大块 -->
-                                <StackPanel Margin="0,0,0,6">
-                                    <TextBlock Margin="8,2,8,0"
+                                <!-- 分类间距要紧凑：格子贴合图标+两行标题，区块底边距尽量小 -->
+                                <StackPanel Margin="0,0,0,2">
+                                    <TextBlock Margin="8,0,8,2"
                                                Text="{Binding Title}"
                                                FontSize="13"
                                                FontWeight="SemiBold"
@@ -511,7 +521,7 @@
                                                   HorizontalAlignment="Stretch">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <controls:CenteredWrapPanel ItemWidth="90" ItemHeight="112" />
+                                                <controls:CenteredWrapPanel ItemWidth="90" ItemHeight="100" />
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                     </ItemsControl>
@@ -588,31 +598,21 @@
             </Grid>
 
             <StackPanel Grid.Row="1"
-                        Margin="0,4,0,26"
+                        Margin="0,4,0,12"
                         HorizontalAlignment="Center">
-                <TextBlock HorizontalAlignment="Center"
-                           Text="拖动空白框选 · Esc 关闭"
-                           FontSize="11"
-                           Foreground="{DynamicResource LauncherTextMutedBrush}" />
-                <TextBlock Margin="0,2,0,0"
-                           HorizontalAlignment="Center"
-                           Text="拖入 .exe 或文件夹即可添加"
-                           FontSize="11"
-                           Foreground="{DynamicResource LauncherTextMutedBrush}"
-                           Visibility="{Binding CanAddOnCurrentPage, Converter={StaticResource TrueToVisibility}}" />
-                <TextBlock Margin="0,8,0,8"
+                <TextBlock Margin="0,0,0,4"
                            HorizontalAlignment="Center"
                            Text="{Binding Notice}"
                            FontSize="12"
                            Foreground="{DynamicResource LauncherTextSecondaryBrush}"
                            Visibility="{Binding Notice, Converter={StaticResource NonEmptyString}}" />
-                <TextBlock Margin="0,0,0,8"
+                <TextBlock Margin="0,0,0,4"
                            HorizontalAlignment="Center"
                            Text="{Binding Summary}"
                            FontSize="12"
                            Foreground="{DynamicResource LauncherTextMutedBrush}"
                            Visibility="{Binding Summary, Converter={StaticResource NonEmptyString}}" />
-                <TextBlock Margin="0,0,0,6"
+                <TextBlock Margin="0,0,0,4"
                            HorizontalAlignment="Center"
                            Text="{Binding Message}"
                            FontSize="12"
@@ -623,7 +623,7 @@
             </StackPanel>
 
             <Button Grid.Row="1"
-                    Margin="0,0,28,36"
+                    Margin="0,0,20,16"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     Style="{StaticResource LaunchpadCircleButton}"
@@ -637,82 +637,88 @@
             </Button>
         </Grid>
 
-        <!-- 启动器文件夹：居中浮层卡片（类似平板文件夹），不占满启动器；
-             不用单独的返回按钮，点击卡片外的空白处或按 Esc 收起。
-             底层网格仍显示当前页签，浮层只负责组内条目。 -->
+        <!-- 启动器文件夹：相对右侧内容区居中的半透明卡片，宽度随条目收窄；
+             点击卡片外空白或 Esc 收起。遮罩仍铺满整窗（含侧栏）。 -->
         <Grid x:Name="GroupLayer"
               Grid.Column="0"
               Grid.ColumnSpan="2"
               Visibility="{Binding IsInsideGroup, Converter={StaticResource TrueToVisibility}}">
-            <!-- 遮罩铺满整窗（含左侧栏），避免侧栏在浅色主题下成为一条未压暗的白带 -->
             <Border x:Name="GroupDim" Background="{DynamicResource LauncherScrimBrush}" />
-            <Border x:Name="FolderCard"
-                    MinWidth="360"
-                    MaxWidth="760"
-                    MaxHeight="560"
-                    Margin="24"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Background="{DynamicResource LauncherCardBrush}"
-                    BorderBrush="{DynamicResource LauncherBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="22"
-                    Padding="18,16,18,12">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="28"
-                                      ShadowDepth="0"
-                                      Opacity="0.22"
-                                      Color="#000000" />
-                </Border.Effect>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+            <!-- 与侧栏同宽占位，卡片只在内容列里居中 -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="196" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border x:Name="FolderCard"
+                        Grid.Column="1"
+                        MinWidth="240"
+                        MaxWidth="480"
+                        MaxHeight="520"
+                        Margin="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource LauncherCardBrush}"
+                        BorderBrush="{DynamicResource LauncherBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="18"
+                        Padding="14,12,14,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="28"
+                                          ShadowDepth="0"
+                                          Opacity="0.22"
+                                          Color="#000000" />
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                    <!-- 文件夹名 + 条目数 + 关闭提示（不放返回按钮） -->
-                    <Grid Grid.Row="0" Margin="4,0,4,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center"
-                                   Text="{Binding CurrentGroup.Name}"
-                                   FontSize="15"
-                                   Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
-                        <TextBlock Grid.Column="1"
-                                   Margin="10,0,0,0"
-                                   VerticalAlignment="Center"
-                                   Text="{Binding Summary}"
-                                   FontSize="11.5"
-                                   Foreground="{DynamicResource LauncherTextMutedBrush}" />
-                        <TextBlock Grid.Column="3"
-                                   VerticalAlignment="Center"
-                                   Text="点击空白处或按 Esc 关闭"
-                                   FontSize="11"
-                                   Foreground="{DynamicResource LauncherTextMutedBrush}" />
+                        <Grid Grid.Row="0" Margin="4,0,4,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="{Binding CurrentGroup.Name}"
+                                       FontSize="15"
+                                       Foreground="{DynamicResource LauncherTextPrimaryBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Summary}"
+                                       FontSize="11.5"
+                                       Foreground="{DynamicResource LauncherTextMutedBrush}" />
+                            <TextBlock Grid.Column="3"
+                                       VerticalAlignment="Center"
+                                       Text="点击空白处或按 Esc 关闭"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource LauncherTextMutedBrush}" />
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="1"
+                                      MaxHeight="400"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      HorizontalAlignment="Center"
+                                      Background="Transparent">
+                            <ItemsControl x:Name="GroupGrid"
+                                          ItemsSource="{Binding VisibleEntries}"
+                                          ItemTemplate="{StaticResource LauncherEntryTemplate}"
+                                          HorizontalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <controls:CenteredWrapPanel ItemWidth="90" ItemHeight="112" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
-
-                    <ScrollViewer Grid.Row="1"
-                                  MaxHeight="440"
-                                  VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  Background="Transparent">
-                        <ItemsControl x:Name="GroupGrid"
-                                      ItemsSource="{Binding VisibleEntries}"
-                                      ItemTemplate="{StaticResource LauncherEntryTemplate}"
-                                      HorizontalAlignment="Stretch">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <controls:CenteredWrapPanel ItemWidth="90" ItemHeight="112" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- 框选矩形与拖拽落点提示；不参与命中测试，避免挡住卡片和右键菜单 -->

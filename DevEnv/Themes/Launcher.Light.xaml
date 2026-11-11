@@ -42,8 +42,8 @@
     <SolidColorBrush x:Key="LauncherCircleHoverBrush" Color="#BFF5F5F5" />
     <SolidColorBrush x:Key="LauncherCirclePressedBrush" Color="#D9E8E8E8" />
 
-    <!-- 文件夹浮层卡片：略抬升的灰面，与窗口底 #F3F3F3 同色系 -->
-    <SolidColorBrush x:Key="LauncherCardBrush" Color="#EBF0F0F0" />
+    <!-- 文件夹浮层：半透明雾面，能透出底层图标，避免一块死白 -->
+    <SolidColorBrush x:Key="LauncherCardBrush" Color="#B8F7F7F7" />
     <SolidColorBrush x:Key="LauncherDangerBrush" Color="#FFC42B1C" />
 
     <!-- 内置工具彩色图标里的白色字形：两套主题都保持白色，保证与品牌底色对比 -->
