@@ -190,6 +190,7 @@ public sealed partial class ServicesViewModel : ObservableObject, IDisposable
             Timestamp = snapshot.Timestamp.ToString("HH:mm:ss");
             StatusHint = snapshot.StatusHint ?? string.Empty;
             ApplyFilter();
+            PublishStatus();
         }
         catch (Exception ex)
         {
@@ -200,6 +201,16 @@ public sealed partial class ServicesViewModel : ObservableObject, IDisposable
         {
             Interlocked.Exchange(ref _refreshing, 0);
         }
+    }
+
+    /// <summary>把服务数 / 运行态 / 权限写到工具窗底部状态条。</summary>
+    private void PublishStatus()
+    {
+        var summary =
+            $"服务 {ServiceCount} · 运行 {RunningCount} · 停止 {StoppedCount} · 显示 {Rows.Count} · 更新于 {Timestamp} · {ElevationText}";
+        if (!string.IsNullOrWhiteSpace(StatusHint))
+            summary += $" · {StatusHint}";
+        HostServices.SetPageStatus(summary, "services");
     }
 
     private void ApplyFilter()
@@ -420,5 +431,6 @@ public sealed partial class ServicesViewModel : ObservableObject, IDisposable
     {
         _disposed = true;
         _timer.Stop();
+        HostServices.SetPageStatus(string.Empty, "services");
     }
 }

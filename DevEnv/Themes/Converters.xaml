@@ -12,5 +12,6 @@
     <conv:BoolToVisibilityConverter x:Key="FalseToVisibility" Invert="True" />
     <conv:InverseBoolConverter x:Key="InverseBool" />
     <conv:StringEqualsConverter x:Key="StringEquals" />
+    <conv:BoolToOpacityConverter x:Key="BoolToOpacity" />
 
 </ResourceDictionary>

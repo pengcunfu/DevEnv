@@ -42,6 +42,9 @@
                 <Button Content="继续" Style="{StaticResource ToolbarButtonStyle}" Margin="0,0,2,0"
                         IsEnabled="{Binding CanContinueSelected}"
                         Command="{Binding ContinueServiceCommand}" />
+                <Button Content="详情" Style="{StaticResource ToolbarButtonStyle}" Margin="0,0,2,0"
+                        IsEnabled="{Binding HasSelection}"
+                        Click="OnShowDetailClick" />
                 <Button Content="立即刷新" Style="{StaticResource ToolbarButtonStyle}" Margin="0,0,2,0"
                         Command="{Binding RefreshCommand}" />
                 <Button Content="{Binding RefreshToggleText}" Style="{StaticResource ToolbarButtonStyle}" Margin="0,0,2,0"
@@ -58,177 +61,13 @@
                    TextWrapping="Wrap"
                    Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
 
-        <!-- ============ 底部状态 ============ -->
-        <Border DockPanel.Dock="Bottom" Style="{StaticResource CardStyle}" Padding="10,6" Margin="0,8,0,0">
-            <WrapPanel>
-                <TextBlock>
-                    <Run Text="服务数: " /><Run Text="{Binding ServiceCount, Mode=OneWay}" />
-                </TextBlock>
-                <TextBlock Margin="20,0,0,0">
-                    <Run Text="运行中: " /><Run Text="{Binding RunningCount, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" />
-                </TextBlock>
-                <TextBlock Margin="20,0,0,0">
-                    <Run Text="已停止: " /><Run Text="{Binding StoppedCount, Mode=OneWay}" />
-                </TextBlock>
-                <TextBlock Margin="20,0,0,0">
-                    <Run Text="显示: " /><Run Text="{Binding Rows.Count, Mode=OneWay}" />
-                </TextBlock>
-                <TextBlock Margin="20,0,0,0">
-                    <Run Text="更新于 " /><Run Text="{Binding Timestamp, Mode=OneWay}" />
-                </TextBlock>
-                <TextBlock Margin="20,0,0,0">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
-                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsElevated}" Value="True">
-                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                    <Run Text="{Binding ElevationText, Mode=OneWay}" />
-                </TextBlock>
-                <TextBlock Margin="20,0,0,0"
-                           Text="{Binding StatusHint}"
-                           Foreground="{DynamicResource TextMutedBrush}"
-                           Visibility="{Binding StatusHint, Converter={StaticResource NonEmptyString}}" />
-            </WrapPanel>
-        </Border>
-
-        <!-- ============ 服务详情 ============ -->
-        <Border DockPanel.Dock="Bottom" Style="{StaticResource CardStyle}" Padding="12,10" Margin="0,8,0,0" MinHeight="150">
-            <Grid>
-                <TextBlock Text="选中一个服务，查看详情并修改启动类型。"
-                           Style="{DynamicResource PageHintStyle}"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           Visibility="{Binding HasSelection, Converter={StaticResource FalseToVisibility}}" />
-
-                <Grid Visibility="{Binding HasSelection, Converter={StaticResource TrueToVisibility}}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <!-- 标题行 -->
-                    <Grid Grid.Row="0">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Selected.DisplayName}" FontSize="14" />
-                            <TextBlock Text="{Binding Selected.ServiceName}"
-                                       Margin="10,2,0,0"
-                                       Style="{DynamicResource MutedTextStyle}" />
-                            <TextBlock Text="{Binding Selected.StatusText}" Margin="12,1,0,0">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
-                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Selected.IsRunning}" Value="True">
-                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Selected.IsPaused}" Value="True">
-                                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
-                        <Button Content="打开目录" HorizontalAlignment="Right" Padding="10,4"
-                                IsEnabled="{Binding CanOpenFolderSelected}"
-                                Command="{Binding OpenFolderCommand}" />
-                    </Grid>
-
-                    <!-- 描述 -->
-                    <TextBlock Grid.Row="1"
-                               Margin="0,5,0,8"
-                               Text="{Binding Selected.DescriptionText}"
-                               ToolTip="{Binding Selected.DescriptionText}"
-                               TextWrapping="Wrap"
-                               TextTrimming="CharacterEllipsis"
-                               MaxHeight="34"
-                               Foreground="{DynamicResource TextSecondaryBrush}" />
-
-                    <!-- 字段 -->
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="68" />
-                            <ColumnDefinition Width="196" />
-                            <ColumnDefinition Width="68" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="68" />
-                            <ColumnDefinition Width="150" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="启动类型"
-                                   Style="{DynamicResource MutedTextStyle}" VerticalAlignment="Center" />
-                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
-                            <ComboBox Width="122" Height="28"
-                                      ItemsSource="{Binding StartupOptions}"
-                                      DisplayMemberPath="Title"
-                                      SelectedItem="{Binding SelectedStartupOption, Mode=TwoWay}"
-                                      IsEnabled="{Binding HasSelection}" />
-                            <Button Content="应用" Margin="6,0,0,0" Padding="9,3"
-                                    IsEnabled="{Binding CanApplyStartupType}"
-                                    Command="{Binding ApplyStartupTypeCommand}" />
-                        </StackPanel>
-
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="登录身份"
-                                   Style="{DynamicResource MutedTextStyle}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding Selected.LogOnAsText}"
-                                   ToolTip="{Binding Selected.LogOnAsText}"
-                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="服务类型"
-                                   Style="{DynamicResource MutedTextStyle}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding Selected.ServiceTypeText}"
-                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="可执行文件"
-                                   Style="{DynamicResource MutedTextStyle}" Margin="0,7,0,0" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5"
-                                   Margin="0,7,0,0"
-                                   Text="{Binding Selected.ImagePathText}"
-                                   ToolTip="{Binding Selected.ImagePathText}"
-                                   Style="{DynamicResource MonoTextStyle}"
-                                   TextTrimming="CharacterEllipsis"
-                                   VerticalAlignment="Center" />
-
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="依赖服务"
-                                   Style="{DynamicResource MutedTextStyle}" Margin="0,7,0,0" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="5"
-                                   Margin="0,7,0,0"
-                                   Text="{Binding Selected.DependenciesDisplayText}"
-                                   ToolTip="{Binding Selected.DependenciesDisplayText}"
-                                   TextTrimming="CharacterEllipsis"
-                                   VerticalAlignment="Center" />
-
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="被依赖"
-                                   Style="{DynamicResource MutedTextStyle}" Margin="0,7,0,0" />
-                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="5"
-                                   Margin="0,7,0,0"
-                                   Text="{Binding Selected.DependentsDisplayText}"
-                                   ToolTip="{Binding Selected.DependentsDisplayText}"
-                                   TextTrimming="CharacterEllipsis"
-                                   VerticalAlignment="Center" />
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Border>
-
         <!-- ============ 服务列表 ============ -->
         <Grid>
             <DataGrid x:Name="ServiceGrid"
                       ItemsSource="{Binding Rows}"
                       SelectedItem="{Binding Selected, Mode=TwoWay}"
-                      ToolTip="选中一行后在下方启动、停止或修改启动类型">
+                      ToolTip="双击查看详情；工具条可启动、停止或修改启动类型"
+                      PreviewMouseLeftButtonDown="OnServiceGridPreviewMouseDown">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="显示名" Binding="{Binding DisplayName}" Width="2*" />
                     <DataGridTextColumn Header="服务名" Binding="{Binding ServiceName}" Width="170" />
