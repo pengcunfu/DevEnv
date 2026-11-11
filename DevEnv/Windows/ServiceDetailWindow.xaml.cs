@@ -27,6 +27,8 @@ public partial class ServiceDetailWindow : Window
         var window = new ServiceDetailWindow(viewModel);
         if (owner is not null && owner.IsVisible)
             window.Owner = owner;
+        else
+            Infrastructure.CursorScreen.Center(window);
         window.ShowDialog();
     }
 

@@ -65,17 +65,17 @@ public static class ShortcutLauncherProbe
                 && Math.Abs(window.Height - expected.Height) < 0.5,
                 $"Left={window.Left}, Top={window.Top}, W={window.Width}, H={window.Height}, " +
                 $"expected=({expected.Left},{expected.Top},{expected.Width},{expected.Height})");
-            var area = SystemParameters.WorkArea;
+            var area = CursorScreen.GetWorkAreaDip();
             Check("启动器为固定尺寸（960 × 680 DIP）",
                 Math.Abs(window.Width - DevEnv.Core.Services.LauncherGeometry.Width) < 0.5
                 && Math.Abs(window.Height - DevEnv.Core.Services.LauncherGeometry.Height) < 0.5,
                 $"W={window.Width}, H={window.Height}, area={area.Width}×{area.Height}");
-            // 居中：左右与上下留白相等（取整误差在 1 DIP 内）
+            // 居中：左右与上下留白相等（取整误差在 1 DIP 内）；工作区跟鼠标所在屏
             var leftGap = window.Left - area.Left;
             var rightGap = area.Left + area.Width - (window.Left + window.Width);
             var topGap = window.Top - area.Top;
             var bottomGap = area.Top + area.Height - (window.Top + window.Height);
-            Check("启动器在工作区内水平、垂直居中",
+            Check("启动器在鼠标所在屏工作区内水平、垂直居中",
                 Math.Abs(leftGap - rightGap) <= 1 && Math.Abs(topGap - bottomGap) <= 1,
                 $"left={leftGap:F1}, right={rightGap:F1}, top={topGap:F1}, bottom={bottomGap:F1}");
             // 配色跟随系统应用模式：浅 / 深两套 key 一致，读不到时应至少能解析到画刷

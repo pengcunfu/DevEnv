@@ -164,6 +164,7 @@ public partial class App : System.Windows.Application
 
             var hostsWindow = new HostsEditWindow();
             hostsWindow.Closed += (_, _) => Shutdown();
+            CursorScreen.Center(hostsWindow);
             hostsWindow.Show();
             return;
         }

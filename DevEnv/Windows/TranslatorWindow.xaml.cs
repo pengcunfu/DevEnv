@@ -75,6 +75,8 @@ public partial class TranslatorWindow : Window
 
     public void ShowAndActivate()
     {
+        if (!IsVisible || WindowState == WindowState.Minimized)
+            Infrastructure.CursorScreen.CenterIfHidden(this);
         if (!IsVisible)
             Show();
         if (WindowState == WindowState.Minimized)

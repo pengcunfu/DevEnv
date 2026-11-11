@@ -195,6 +195,7 @@ public sealed class ShellPreviewService : IDisposable
 
         if (!wasVisible)
         {
+            Host.Infrastructure.CursorScreen.Center(_window);
             _window.Show();
             _window.Activate();
         }

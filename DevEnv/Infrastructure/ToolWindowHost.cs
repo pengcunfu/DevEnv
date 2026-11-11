@@ -76,6 +76,8 @@ public static class ToolWindowHost
             return OperationResult.Success();
         }
 
+        // 多屏：跟鼠标所在屏居中，不跟主屏 / Owner 屏
+        CursorScreen.Center(window);
         window.Show();
         window.Activate();
         return OperationResult.Success();

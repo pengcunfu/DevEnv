@@ -45,6 +45,7 @@
                      Tag="在此粘贴要计算哈希的文本…"
                      Height="120"
                      AcceptsReturn="True"
+                     VerticalContentAlignment="Top"
                      VerticalScrollBarVisibility="Auto"
                      Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
                      Margin="0,0,0,10" />

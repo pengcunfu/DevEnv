@@ -73,6 +73,7 @@
                  FontSize="13"
                  AcceptsReturn="True"
                  AcceptsTab="True"
+                 VerticalContentAlignment="Top"
                  VerticalScrollBarVisibility="Auto"
                  HorizontalScrollBarVisibility="Auto"
                  SpellCheck.IsEnabled="False"

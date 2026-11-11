@@ -128,6 +128,7 @@ public sealed class SigXorHost : IDisposable
         {
             try
             {
+                Host.Infrastructure.CursorScreen.CenterIfHidden(_browserWindow);
                 _browserWindow.Show();
                 _browserWindow.Activate();
                 _browserWindow.WindowState = WindowState.Normal;
@@ -145,6 +146,7 @@ public sealed class SigXorHost : IDisposable
         _browserWindow = new MainWindow();
         _browserWindow.Initialize(vm, _settings);
         _browserWindow.Closed += (_, _) => _browserWindow = null;
+        Host.Infrastructure.CursorScreen.Center(_browserWindow);
         _browserWindow.Show();
         _browserWindow.Activate();
         _ = vm.InitializeAsync();
@@ -245,6 +247,7 @@ public sealed class SigXorHost : IDisposable
         var updater = new UpdateService();
         _updateWindow = new UpdateWindow(new UpdateViewModel(updater));
         _updateWindow.Closed += (_, _) => _updateWindow = null;
+        Host.Infrastructure.CursorScreen.Center(_updateWindow);
         _updateWindow.Show();
         _updateWindow.Activate();
     }

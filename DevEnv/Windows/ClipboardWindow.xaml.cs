@@ -35,6 +35,8 @@ public partial class ClipboardWindow : Window
 
     public void ShowAndActivate()
     {
+        if (!IsVisible || WindowState == WindowState.Minimized)
+            CursorScreen.CenterIfHidden(this);
         if (!IsVisible)
             Show();
         if (WindowState == WindowState.Minimized)

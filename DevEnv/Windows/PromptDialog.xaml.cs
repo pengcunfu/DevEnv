@@ -19,6 +19,8 @@ public partial class PromptDialog : Window
         var dialog = new PromptDialog(message, initial);
         if (owner is not null && owner.IsVisible)
             dialog.Owner = owner;
+        else
+            Infrastructure.CursorScreen.Center(dialog);
         return dialog.ShowDialog() == true ? dialog.InputBox.Text : null;
     }
 

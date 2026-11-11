@@ -25,6 +25,7 @@
 
         <TextBox FontFamily="Consolas" FontSize="13"
                  AcceptsReturn="True" AcceptsTab="True"
+                 VerticalContentAlignment="Top"
                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
                  SpellCheck.IsEnabled="False"
                  Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />

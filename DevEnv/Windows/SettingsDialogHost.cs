@@ -1,5 +1,6 @@
 using System.Windows;
 using DevEnv.Core;
+using DevEnv.Host.Infrastructure;
 
 namespace DevEnv.Host.Windows;
 
@@ -57,8 +58,10 @@ public static class SettingsDialogHost
         window.Closed += (_, _) => _window = null;
         _window = window;
 
-        if (app.MainWindow is { } owner && owner.IsVisible && !ReferenceEquals(owner, window))
+        if (app.MainWindow is { IsVisible: true } owner && !ReferenceEquals(owner, window))
             window.Owner = owner;
+        else
+            CursorScreen.Center(window);
 
         window.SelectTab(tabIndex);
         window.ShowDialog();

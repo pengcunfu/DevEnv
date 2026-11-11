@@ -116,10 +116,10 @@ public partial class ShellPreviewWindow : Window
         Topmost = true;
         UpdatePinButton();
 
-        // WorkArea 是屏幕工作区（不含任务栏），坐标单位为 DIP
-        Rect workArea = SystemParameters.WorkArea;
-        Left = workArea.Right - Width - MiniMargin;
-        Top = workArea.Top + MiniMargin;
+        // 小窗钉在鼠标所在屏右上角（点「小窗」时鼠标就在预览窗上）
+        var area = Infrastructure.CursorScreen.GetWorkAreaDip();
+        Left = area.Left + area.Width - Width - MiniMargin;
+        Top = area.Top + MiniMargin;
 
         // 小窗空间有限：收起键盘提示和置顶按钮，只留左右切换与关闭
         KeyHintText.Visibility = Visibility.Collapsed;

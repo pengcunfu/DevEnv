@@ -18,6 +18,8 @@ public partial class ConfirmDialog : Window
         var dialog = new ConfirmDialog(message, confirmText);
         if (owner is not null && owner.IsVisible)
             dialog.Owner = owner;
+        else
+            Infrastructure.CursorScreen.Center(dialog);
         return dialog.ShowDialog() == true;
     }
 

@@ -212,18 +212,8 @@ public partial class ShortcutsWindow : Window
             Height = bounds.Height;
     }
 
-    /// <summary>启动器的目标屏幕区域（DIP）；自检探针用同一份计算做断言。</summary>
-    internal static Rect ComputeScreenBounds()
-    {
-        var area = SystemParameters.WorkArea;
-        var bounds = LauncherGeometry.Compute(
-            area.Left, area.Top, area.Width, area.Height);
-        return new Rect(
-            Math.Round(bounds.Left),
-            Math.Round(bounds.Top),
-            Math.Round(bounds.Width),
-            Math.Round(bounds.Height));
-    }
+    /// <summary>启动器的目标屏幕区域（DIP）；跟鼠标所在屏，自检探针用同一份计算做断言。</summary>
+    internal static Rect ComputeScreenBounds() => CursorScreen.GetLauncherBoundsDip();
 
     /// <summary>
     /// 启动器配色跟随 Windows 的开始菜单：读取系统「应用模式」<c>AppsUseLightTheme</c>，
