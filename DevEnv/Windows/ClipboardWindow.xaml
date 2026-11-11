@@ -3,10 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
         Title="熔岩剪贴板"
-        Width="920"
-        Height="640"
-        MinWidth="720"
-        MinHeight="480"
+        Width="960"
+        Height="680"
+        MinWidth="800"
+        MinHeight="560"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
     <Window.DataContext>

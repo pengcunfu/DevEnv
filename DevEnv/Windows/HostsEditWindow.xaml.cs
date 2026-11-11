@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using DevEnv.Core.Services;
 
 namespace DevEnv.Host.Windows;
 
@@ -14,6 +15,8 @@ public partial class HostsEditWindow : Window
     public HostsEditWindow()
     {
         InitializeComponent();
+        Width = LauncherGeometry.Width;
+        Height = LauncherGeometry.Height;
         PathText.Text = HostsPath;
 
         try

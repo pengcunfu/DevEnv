@@ -19,6 +19,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // 与启动器 / 文件浏览器默认尺寸一致（LauncherGeometry 960 × 680）
+        Width = LauncherGeometry.Width;
+        Height = LauncherGeometry.Height;
+
         Title = title;
         DataContext = new MainViewModel(navItems);
 

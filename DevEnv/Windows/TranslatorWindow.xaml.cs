@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using DevEnv.Core;
+using DevEnv.Core.Services;
 using DevEnv.Host.WebView;
 using DevEnv.Core.Translator.Models;
 using DevEnv.Core.Translator.Services;
@@ -34,6 +35,8 @@ public partial class TranslatorWindow : Window
     public TranslatorWindow()
     {
         InitializeComponent();
+        Width = LauncherGeometry.Width;
+        Height = LauncherGeometry.Height;
 
         // WebView2 控件放最后，避免盖住占位提示
         _browser.Visibility = Visibility.Collapsed;

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using DevEnv.Core.Services;
 using DevEnv.Host.Infrastructure;
 using DevEnv.Host.ViewModels;
 
@@ -16,6 +17,8 @@ public partial class ClipboardWindow : Window
     public ClipboardWindow()
     {
         InitializeComponent();
+        Width = LauncherGeometry.Width;
+        Height = LauncherGeometry.Height;
     }
 
     private ClipboardViewModel ViewModel => (ClipboardViewModel)DataContext;
