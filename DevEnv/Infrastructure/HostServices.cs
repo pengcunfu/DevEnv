@@ -18,29 +18,17 @@ public static class HostServices
         }
     }
 
-    /// <summary>把一句话写到指定页面所在主窗底部的状态栏。</summary>
+    /// <summary>把一句话写到指定工具窗底部的状态栏。</summary>
     public static void SetStatus(string message, string pageId)
     {
-        (WindowForPage(pageId) ?? Application.Current?.MainWindow as MainWindow)
-            ?.ViewModel.SetStatus(message);
+        ToolWindowHost.Find(pageId)?.SetStatus(message);
     }
 
-    /// <summary>写页面级摘要（如网络监控的连接数与速率），页面切换时由页面清空。</summary>
+    /// <summary>写页面级摘要（如网络监控的连接数与速率），关闭窗口时由页面清空。</summary>
     public static void SetPageStatus(string message, string pageId)
     {
-        (WindowForPage(pageId) ?? Application.Current?.MainWindow as MainWindow)
-            ?.ViewModel.SetPageStatus(message);
+        ToolWindowHost.Find(pageId)?.SetPageStatus(message);
     }
-
-    /// <summary>
-    /// 按页面 id 找到承载它的主窗。主窗拆成开发 / 监控两个之后，不能只认
-    /// <see cref="Application.MainWindow"/>：隐藏的监控窗口在后台刷新时，
-    /// 也必须写回自己的状态栏，而不是写到当时激活的开发窗口上。
-    /// </summary>
-    private static MainWindow? WindowForPage(string pageId) =>
-        Application.Current?.Windows.OfType<MainWindow>()
-            .FirstOrDefault(window => string.Equals(
-                window.ViewModel.CurrentPageId, pageId, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>打开资源管理器并定位到指定文件（不存在时只打开所在目录）。</summary>
     public static void OpenFolder(string path)

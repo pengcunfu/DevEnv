@@ -157,11 +157,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     /// <summary>内置工具的分类排序。</summary>
     private static readonly string[] BuiltinCategoryOrder =
-        ["窗口入口", "实用工具"];
-
-    /// <summary>内置工具页里代表宿主两个主窗口的条目 key。</summary>
-    private const string DevelopmentWindowKey = "dev-window";
-    private const string MonitorWindowKey = "monitor-window";
+        ["环境", "监控", "窗口入口", "实用工具"];
 
     /// <summary>内置工具里直接唤回宿主窗口的三个入口 key。</summary>
     private const string TranslatorKey = "translator";
@@ -172,8 +168,13 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     private static readonly (string Key, string Name, string Category, string Description, string Glyph, string Color)[]
         BuiltinToolDefinitions =
     [
-        (DevelopmentWindowKey, "FireNeb DevEnv", "窗口入口", "开发环境与熔岩环境", "\uE756", "#0F766E"),
-        (MonitorWindowKey, "FireNeb Monitor", "窗口入口", "网络、进程与服务监控", "\uE9D9", "#2563EB"),
+        ("devenv", "开发环境", "环境", "自定义后台服务启停", "\uE756", "#0F766E"),
+        ("lava", "熔岩环境", "环境", "绿色版进程与软件管理", "\uE945", "#C2410C"),
+        ("network", "网络监控", "监控", "按进程查看连接与速率", "\uE968", "#2563EB"),
+        ("processes", "进程监控", "监控", "CPU / 内存与结束进程", "\uE9D9", "#7C3AED"),
+        ("services", "服务监控", "监控", "Windows 服务启停与启动类型", "\uE9F5", "#0891B2"),
+        ("ports", "端口管理", "监控", "查看占用并结束进程", "\uE8F2", "#0369A1"),
+        ("speed", "网络测速", "监控", "延迟、下载与上传测速", "\uE9A6", "#CA8A04"),
         (TranslatorKey, "熔岩翻译", "窗口入口", "翻译剪贴板文本", "\uE774", "#EA580C"),
         (ClipboardKey, "熔岩剪贴板", "窗口入口", "剪贴板历史与图片", "\uE8C8", "#7C3AED"),
         (BrowserKey, "文件浏览器", "窗口入口", "目录导航与内嵌预览", "\uE8B7", "#D97706"),
@@ -1341,8 +1342,6 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             ShortcutKind.StartMenu => CoreServices.StartMenu.OpenLink(entry.LinkPath),
             ShortcutKind.InternalTool => entry.Key switch
             {
-                DevelopmentWindowKey => ShowHostWindow(HostCallbacks.OnShowDevelopmentWindow, "开发窗口"),
-                MonitorWindowKey => ShowHostWindow(HostCallbacks.OnShowMonitorWindow, "监控窗口"),
                 TranslatorKey => RunTranslator(),
                 ClipboardKey => RunClipboard(),
                 BrowserKey => RunBrowser(),
@@ -1587,16 +1586,6 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     }
 
     private void Report(OperationResult result) => Message = result.Ok ? string.Empty : result.DisplayMessage;
-
-    /// <summary>显示宿主某个主窗口；回调由 App 在启动时接线。</summary>
-    private static OperationResult ShowHostWindow(Action? show, string name)
-    {
-        if (show is null)
-            return OperationResult.Fail($"{name}暂不可用");
-
-        show();
-        return OperationResult.Success();
-    }
 
     /// <summary>打开熔岩翻译并填充剪贴板文本，行为与 Alt+Space 翻译热键一致。</summary>
     private static OperationResult RunTranslator()

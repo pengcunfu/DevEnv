@@ -13,9 +13,9 @@ public static class HostCallbacks
     public static Action<bool>? OnShowClipboard { get; set; }
     /// <summary>显示并激活主窗口（从托盘、启动器等入口唤回）。</summary>
     public static Action? OnShowMainWindow { get; set; }
-    /// <summary>显示并激活开发窗口（开发环境 / 熔岩环境），供启动器内置工具入口使用。</summary>
+    /// <summary>兼容旧入口：打开「开发环境」独立工具窗。</summary>
     public static Action? OnShowDevelopmentWindow { get; set; }
-    /// <summary>显示并激活监控窗口（网络 / 进程 / 服务监控），供启动器内置工具入口使用。</summary>
+    /// <summary>兼容旧入口：打开「网络监控」独立工具窗。</summary>
     public static Action? OnShowMonitorWindow { get; set; }
     public static Action? OnBeforeExitForUpdate { get; set; }
     public static Action? OnExitApp { get; set; }

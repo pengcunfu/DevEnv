@@ -13,7 +13,6 @@ using DevEnv.Host.Infrastructure;
 using DevEnv.Host.SigXor;
 using DevEnv.Host.SigXor.Diagnostics;
 using DevEnv.Host.Themes;
-using DevEnv.Host.ViewModels;
 using DevEnv.Host.Views;
 using DevEnv.Host.Windows;
 using Forms = System.Windows.Forms;
@@ -27,14 +26,8 @@ namespace DevEnv.Host;
 /// </summary>
 public partial class App : System.Windows.Application
 {
-    private const string DevelopmentWindowTitle = "FireNeb DevEnv";
-    private const string MonitorWindowTitle = "FireNeb Monitor";
-
-    /// <summary>开发窗口：开发环境 / 熔岩环境，启动时创建（隐藏驻留托盘）。</summary>
-    private MainWindow? _devWindow;
-
-    /// <summary>监控窗口：网络 / 进程 / 服务监控，第一次需要时才创建。</summary>
-    private MainWindow? _monitorWindow;
+    /// <summary>仅用于 RegisterHotKey 的隐藏 HWND，不承载任何功能页面。</summary>
+    private Window? _hotkeyWindow;
 
     private TrayIconHost? _tray;
     private GlobalHotkeys? _hotkeys;
@@ -197,10 +190,8 @@ public partial class App : System.Windows.Application
         WireHostCallbacks();
 
         // 启动时不显示任何窗口，只驻留托盘。主窗口 = 启动器（预热后挂到
-        // Application.MainWindow）；开发窗口仍提前创建以挂热键句柄，但保持隐藏。
-        // 监控窗口在第一次从启动器内置工具页进入时才创建。
-        _devWindow = CreateMainWindow(DevelopmentWindowTitle, ViewFactory.DevelopmentNavItems);
-        EnsureHotkeys(_devWindow);
+        // Application.MainWindow）；热键挂在专用隐藏 HWND 上，功能页一律走工具窗。
+        EnsureHotkeyHost();
 
         SingleInstance.StartActivateListener(Dispatcher, ShowMainWindow);
         SingleInstance.StartFileListener(Dispatcher, paths => _sigXor?.ShowPreviewForPaths(paths));
@@ -247,14 +238,14 @@ public partial class App : System.Windows.Application
                 MainWindow = launcher;
         }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
-        // 调试用：DEVENV_START_PAGE=lava / network 直接定位到对应窗口的指定页，
-        // 启动器页签（apps / tools 等）仍由 MainViewModel.Navigate 转给启动器。
+        // 调试用：DEVENV_START_PAGE=lava / network / ports 直接打开对应工具窗，
+        // 启动器页签（apps / tools 等）走 ShortcutWindowHost。
         var startPage = Environment.GetEnvironmentVariable("DEVENV_START_PAGE");
         if (!string.IsNullOrWhiteSpace(startPage))
         {
             var pageId = startPage.Trim();
             Dispatcher.BeginInvoke(
-                new Action(() => NavigateToMainPage(pageId)),
+                new Action(() => OpenFeatureOrLauncher(pageId)),
                 System.Windows.Threading.DispatcherPriority.Background);
         }
 
@@ -418,80 +409,54 @@ public partial class App : System.Windows.Application
 
     #region 主窗与托盘
 
-    private MainWindow CreateMainWindow(string title, IReadOnlyList<NavItem> navItems)
+    /// <summary>创建仅用于 RegisterHotKey 的隐藏窗口，不显示、不进任务栏。</summary>
+    private void EnsureHotkeyHost()
     {
-        // Application.MainWindow 固定为启动器，开发 / 监控窗只作功能窗，不抢主窗口身份
-        return new MainWindow(title, navItems) { ShowInTaskbar = false };
+        if (_hotkeyWindow is not null)
+            return;
+
+        _hotkeyWindow = new Window
+        {
+            Width = 0,
+            Height = 0,
+            WindowStyle = WindowStyle.None,
+            ShowInTaskbar = false,
+            ShowActivated = false,
+            AllowsTransparency = true,
+            Opacity = 0,
+            Left = -10000,
+            Top = -10000,
+        };
+        EnsureHotkeys(_hotkeyWindow);
     }
-
-    /// <summary>监控窗口按需创建：没人打开时不必带着网络 / 进程监控页的定时器。</summary>
-    private MainWindow EnsureMonitorWindow() =>
-        _monitorWindow ??= CreateMainWindow(MonitorWindowTitle, ViewFactory.MonitorNavItems);
-
-    /// <summary>最近显示的宿主窗口，翻译窗 / 剪贴板窗没有 owner 时挂到它名下。</summary>
-    private MainWindow? VisibleMainWindow =>
-        _devWindow is { IsVisible: true } ? _devWindow
-        : _monitorWindow is { IsVisible: true } ? _monitorWindow
-        : null;
 
     /// <summary>托盘「显示主窗口」/ 单击托盘 / Ctrl+Alt+D / 二次启动：打开启动器（产品主窗口）。</summary>
     private void ShowMainWindow() => ShortcutWindowHost.Open();
 
-    /// <summary>启动器「内置工具」里的开发窗口入口。</summary>
-    private void ShowDevelopmentWindow() => ShowWindow(_devWindow);
-
-    private void ShowMonitorWindow() => ShowWindow(EnsureMonitorWindow());
-
-    private void ShowWindow(MainWindow? window)
+    /// <summary>
+    /// 按 id 打开功能工具窗或启动器页签。
+    /// <c>DEVENV_START_PAGE</c> 与 <see cref="HostCallbacks.OnActivateTab"/> 共用。
+    /// </summary>
+    private void OpenFeatureOrLauncher(string? pageId)
     {
-        if (window is null)
+        if (string.IsNullOrWhiteSpace(pageId))
             return;
-        ToolWindowHost.RefreshAll();
-        AttachAuxiliaryWindows(window);
-        // ShowInTaskbar 要在 Show() 之前设，否则隐藏到托盘后再改会闪一下任务栏按钮
-        window.ShowInTaskbar = true;
-        if (!window.IsVisible)
-            window.Show();
-        if (window.WindowState == WindowState.Minimized)
-            window.WindowState = WindowState.Normal;
-        window.Activate();
-        // 托盘点击不一定会把前台权限交给本进程：先置顶再取消，强制拿到焦点。
-        // 取消置顶要延后一拍，立刻改会被系统当成同一次布局而吞掉。
-        window.Topmost = true;
-        Dispatcher.BeginInvoke(new Action(() =>
-        {
-            if (!window.IsVisible)
-                return;
-            window.Topmost = false;
-        }), System.Windows.Threading.DispatcherPriority.Background);
-        window.Focus();
-    }
 
-    /// <summary>按页面 id 路由到所属窗口：网络 / 进程 / 服务监控进监控窗口，其余走开发窗口。</summary>
-    private void NavigateToMainPage(string? pageId)
-    {
-        if (ViewFactory.IsMonitorPage(pageId))
+        var id = pageId.Trim().TrimStart('/');
+        if (ViewFactory.IsLauncherPage(id))
         {
-            EnsureMonitorWindow().NavigateTo(pageId);
+            ShortcutWindowHost.Open(id);
             return;
         }
 
-        _devWindow?.NavigateTo(pageId);
+        if (ToolWindowHost.IsTool(id))
+        {
+            ToolWindowHost.Open(id);
+            return;
+        }
     }
 
-    /// <summary>
-    /// 主窗显示后，把启动时主窗隐藏期间创建、因而没挂 Owner 的翻译 / 剪贴板窗
-    /// 补挂到主窗名下（owner 隐藏时 owned 窗口不会显示，所以当时只能不挂）。
-    /// </summary>
-    private void AttachAuxiliaryWindows(MainWindow owner)
-    {
-        if (_translatorWindow is { Owner: null } translator)
-            translator.Owner = owner;
-        if (_clipboardWindow is { Owner: null } clipboard)
-            clipboard.Owner = owner;
-    }
-
-    /// <summary>关闭主窗 → 进托盘而不是退出；返回 true 表示已隐藏（调用方应取消关闭）。</summary>
+    /// <summary>关闭遗留 MainWindow → 进托盘而不是退出；返回 true 表示已隐藏。</summary>
     internal bool TryHideToTray(MainWindow window)
     {
         if (_exiting)
@@ -518,8 +483,8 @@ public partial class App : System.Windows.Application
             _tray = null;
         }
 
-        if (_hotkeyHook is not null && _hotkeys is not null && _devWindow is not null
-            && HwndSource.FromHwnd(new WindowInteropHelper(_devWindow).Handle) is { } source)
+        if (_hotkeyHook is not null && _hotkeys is not null && _hotkeyWindow is not null
+            && HwndSource.FromHwnd(new WindowInteropHelper(_hotkeyWindow).Handle) is { } source)
         {
             source.RemoveHook(_hotkeyHook);
         }
@@ -539,8 +504,8 @@ public partial class App : System.Windows.Application
         try { _translatorWindow?.Close(); } catch { /* 已在退出路径 */ }
         try { _clipboardWindow?.Close(); } catch { /* 已在退出路径 */ }
         try { _sigXor?.Dispose(); } catch { /* 已在退出路径 */ }
-        try { _devWindow?.Close(); } catch { /* 已在退出路径 */ }
-        try { _monitorWindow?.Close(); } catch { /* 已在退出路径 */ }
+        try { _hotkeyWindow?.Close(); } catch { /* 已在退出路径 */ }
+        _hotkeyWindow = null;
         Shutdown();
     }
 
@@ -561,7 +526,7 @@ public partial class App : System.Windows.Application
 
     #region 全局热键
 
-    private void EnsureHotkeys(MainWindow window)
+    private void EnsureHotkeys(Window window)
     {
         var hwnd = new WindowInteropHelper(window).EnsureHandle();
         if (_hotkeys is null)
@@ -668,6 +633,7 @@ public partial class App : System.Windows.Application
                 _translatorWindow.HideAndRelease();
                 return;
             }
+            AttachOwnerIfMainVisible(_translatorWindow);
             _translatorWindow.ShowAndActivate();
             _translatorWindow.Apply(request);
         }));
@@ -680,17 +646,26 @@ public partial class App : System.Windows.Application
         {
             _clipboardWindow ??= CreateClipboardWindow();
             if (visible)
+            {
+                AttachOwnerIfMainVisible(_clipboardWindow);
                 _clipboardWindow.ShowAndActivate();
+            }
             else
                 _clipboardWindow.Hide();
         }));
     }
 
+    private void AttachOwnerIfMainVisible(Window window)
+    {
+        if (MainWindow is { IsVisible: true } owner && window.Owner is null)
+            window.Owner = owner;
+    }
+
     private TranslatorWindow CreateTranslatorWindow()
     {
         var window = new TranslatorWindow();
-        // 只有主窗可见时才挂 Owner：owner 隐藏时 owned 窗口也不会显示
-        if (VisibleMainWindow is { } owner)
+        // 只有启动器可见时才挂 Owner：owner 隐藏时 owned 窗口也不会显示
+        if (MainWindow is { IsVisible: true } owner)
             window.Owner = owner;
         if (Dispatcher.CheckAccess() || _tray is null)
             return window;
@@ -707,7 +682,7 @@ public partial class App : System.Windows.Application
     private ClipboardWindow CreateClipboardWindow()
     {
         var window = new ClipboardWindow();
-        if (VisibleMainWindow is { } owner)
+        if (MainWindow is { IsVisible: true } owner)
             window.Owner = owner;
         return window;
     }
@@ -780,22 +755,23 @@ public partial class App : System.Windows.Application
         };
         HostCallbacks.OnActivateTab += tab => Dispatcher.BeginInvoke(new Action(() =>
         {
-            // 系统工具目录里的内置工具（tools/json 等）改为开独立窗口
+            // 系统工具目录里的内置工具（tools/json 等）与功能页（services 等）都开独立窗口
             var tool = tab?.StartsWith("tools/", StringComparison.OrdinalIgnoreCase) == true
                 ? tab["tools/".Length..]
-                : null;
-            if (tool is not null && ToolWindowHost.IsTool(tool))
+                : tab;
+            if (!string.IsNullOrWhiteSpace(tool) && ToolWindowHost.IsTool(tool))
             {
                 ToolWindowHost.Open(tool);
                 return;
             }
-            NavigateToMainPage(tab);
+            OpenFeatureOrLauncher(tab);
         }));
         HostCallbacks.OnShowTranslator += request => Dispatcher.BeginInvoke(new Action(() => ShowTranslatorWindow(request)));
         HostCallbacks.OnShowClipboard += visible => Dispatcher.BeginInvoke(new Action(() => ShowClipboardWindow(visible)));
         HostCallbacks.OnShowMainWindow += () => Dispatcher.BeginInvoke(new Action(ShowMainWindow));
-        HostCallbacks.OnShowDevelopmentWindow += () => Dispatcher.BeginInvoke(new Action(ShowDevelopmentWindow));
-        HostCallbacks.OnShowMonitorWindow += () => Dispatcher.BeginInvoke(new Action(ShowMonitorWindow));
+        // 兼容旧回调：原先复合主窗入口改为打开对应独立工具
+        HostCallbacks.OnShowDevelopmentWindow += () => Dispatcher.BeginInvoke(new Action(() => ToolWindowHost.Open("devenv")));
+        HostCallbacks.OnShowMonitorWindow += () => Dispatcher.BeginInvoke(new Action(() => ToolWindowHost.Open("network")));
 
         // SigXor 模块接线：核心层与工具目录通过 HostCallbacks 触发模块能力
         HostCallbacks.OnOpenFilePreview += () => Dispatcher.BeginInvoke(new Action(ShowFilePreviewDialog));

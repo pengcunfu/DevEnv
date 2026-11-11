@@ -1,0 +1,49 @@
+<UserControl x:Class="DevEnv.Host.Views.PortsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:PortsViewModel}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:PortsViewModel />
+    </UserControl.DataContext>
+
+    <DockPanel Margin="12">
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <TextBox Width="220" Margin="0,0,8,0"
+                     Style="{StaticResource SearchBoxStyle}"
+                     Tag="搜索端口 / 进程"
+                     ToolTip="搜索端口 / 进程"
+                     Text="{Binding PortQuery, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Content="刷新" Command="{Binding RefreshPortsCommand}" />
+        </WrapPanel>
+
+        <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0"
+                   Text="{Binding Message}"
+                   Foreground="{DynamicResource DangerBrush}"
+                   Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
+
+        <DataGrid ItemsSource="{Binding FilteredPorts}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="协议" Binding="{Binding Protocol}" Width="70" />
+                <DataGridTextColumn Header="本地" Binding="{Binding LocalEndpoint}" Width="*" />
+                <DataGridTextColumn Header="远程" Binding="{Binding RemoteEndpoint}" Width="*" />
+                <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="110" />
+                <DataGridTextColumn Header="进程" Binding="{Binding ProcessName}" Width="150" />
+                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70" />
+                <DataGridTemplateColumn Header="操作" Width="80">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="结束"
+                                    Foreground="{DynamicResource DangerBrush}"
+                                    Command="{Binding DataContext.KillPortProcessCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

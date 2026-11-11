@@ -10,5 +10,31 @@
         Background="{DynamicResource AppBackgroundBrush}"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display">
-    <ContentControl x:Name="Host" Margin="2" />
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="12,4">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusTextBlock"
+                               Text="就绪"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock x:Name="PageStatusTextBlock"
+                               FontSize="11"
+                               Margin="24,0,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               Visibility="Collapsed" />
+                </StackPanel>
+                <TextBlock x:Name="VersionTextBlock"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+        <ContentControl x:Name="Host" Margin="2" />
+    </DockPanel>
 </Window>

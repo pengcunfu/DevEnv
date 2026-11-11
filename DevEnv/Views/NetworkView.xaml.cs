@@ -8,28 +8,13 @@ using DevEnv.Host.Windows;
 
 namespace DevEnv.Host.Views;
 
-/// <summary>网络监控页。页签切换决定哪个定时器在刷新；离开页面时全部停掉。</summary>
+/// <summary>网络监控：按进程展示流量；离开页面时停掉定时器。</summary>
 public partial class NetworkView : UserControl
 {
     public NetworkView()
     {
         InitializeComponent();
-        Tabs.SelectionChanged += OnTabsSelectionChanged;
         Unloaded += (_, _) => (DataContext as System.IDisposable)?.Dispose();
-    }
-
-    private NetworkViewModel ViewModel => (NetworkViewModel)DataContext;
-
-    /// <summary>
-    /// SelectionChanged 会从内部 DataGrid 冒泡上来，只处理 TabControl 自己发的事件。
-    /// 否则点一行进程就会触发切页签逻辑，重刷列表又改选中项，来回递归直接栈溢出。
-    /// </summary>
-    private void OnTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (!ReferenceEquals(e.OriginalSource, Tabs))
-            return;
-
-        ViewModel.OnTabChanged(Tabs.SelectedIndex);
     }
 
     /// <summary>用 PreviewMouseLeftButtonDown 判双击：DataGridCell 会把普通双击事件吃掉。</summary>

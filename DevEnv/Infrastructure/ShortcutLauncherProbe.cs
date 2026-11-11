@@ -179,15 +179,22 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("内置工具页签载入宿主工具目录",
                 vm.IsBuiltinToolsPage
-                && vm.VisibleEntries.Count == 12
+                && vm.VisibleEntries.Count == 17
                 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.InternalTool),
                 $"共 {vm.VisibleEntries.Count} 项");
             Check("内置工具都带彩色图标",
                 vm.VisibleEntries.All(e => e.HasToolBadge && !e.ShowsKindGlyph),
                 $"缺图标 {vm.VisibleEntries.Count(e => !e.HasToolBadge)} 项");
             var builtinKeys = vm.VisibleEntries.Select(e => e.Key).ToList();
-            Check("内置工具页签含两个主窗口入口",
-                builtinKeys.Contains("dev-window") && builtinKeys.Contains("monitor-window"));
+            Check("内置工具页签含环境与监控独立入口",
+                builtinKeys.Contains("devenv")
+                && builtinKeys.Contains("lava")
+                && builtinKeys.Contains("network")
+                && builtinKeys.Contains("processes")
+                && builtinKeys.Contains("services")
+                && builtinKeys.Contains("ports")
+                && builtinKeys.Contains("speed"),
+                string.Join(" / ", builtinKeys));
             Check("内置工具页签含翻译 / 剪贴板 / 文件浏览器入口",
                 builtinKeys.Contains("translator")
                 && builtinKeys.Contains("clipboard")
@@ -292,7 +299,9 @@ public static class ShortcutLauncherProbe
                 vm.SelectedPage == 4 && vm.IsBuiltinToolsPage && !vm.IsInsideGroup && !vm.IsSearching);
             Check("内置工具按分类标签展示",
                 vm.ShowsToolSections
-                && vm.ToolSections.Count >= 2
+                && vm.ToolSections.Count >= 4
+                && vm.ToolSections.Any(section => section.Title == "环境")
+                && vm.ToolSections.Any(section => section.Title == "监控")
                 && vm.ToolSections.Any(section => section.Title == "窗口入口")
                 && vm.ToolSections.Any(section => section.Title == "实用工具"),
                 $"sections={string.Join(", ", vm.ToolSections.Select(s => s.Title))}");

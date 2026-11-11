@@ -1,0 +1,53 @@
+<UserControl x:Class="DevEnv.Host.Views.SpeedTestView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:SpeedTestViewModel}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <vm:SpeedTestViewModel />
+    </UserControl.DataContext>
+
+    <Border Style="{StaticResource CardStyle}" Width="520" Margin="12"
+            HorizontalAlignment="Center" VerticalAlignment="Top" Padding="18">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <Button Content="开始测速" Margin="0,0,8,0" Command="{Binding StartSpeedTestCommand}" />
+                <Button Content="取消" Command="{Binding CancelSpeedTestCommand}" />
+            </StackPanel>
+            <StackPanel Visibility="{Binding SpeedRunning, Converter={StaticResource TrueToVisibility}}">
+                <TextBlock Style="{DynamicResource PageHintStyle}">
+                    <Run Text="{Binding SpeedProgress.Message, Mode=OneWay}" />
+                    <Run Text="{Binding SpeedProgress.Phase, Mode=OneWay}" />
+                </TextBlock>
+                <ProgressBar Height="6" Margin="0,6,0,4" Minimum="0" Maximum="1"
+                             Value="{Binding SpeedProgress.OverallPercent, Mode=OneWay}" />
+                <TextBlock Text="{Binding SpeedProgress.CurrentSpeedText, Mode=OneWay}"
+                           Style="{DynamicResource MutedTextStyle}" />
+            </StackPanel>
+            <Grid Margin="0,12,0,0"
+                  Visibility="{Binding SpeedResult, Converter={StaticResource TrueToVisibility}}">
+                <StackPanel>
+                    <TextBlock><Run Text="下载 " /><Run Text="{Binding SpeedResult.DownloadText, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" /></TextBlock>
+                    <TextBlock><Run Text="上传 " /><Run Text="{Binding SpeedResult.UploadText, Mode=OneWay}" Foreground="{DynamicResource WarningBrush}" /></TextBlock>
+                    <TextBlock><Run Text="延迟 " /><Run Text="{Binding SpeedResult.PingText, Mode=OneWay}" /></TextBlock>
+                    <TextBlock><Run Text="抖动 " /><Run Text="{Binding SpeedResult.JitterText, Mode=OneWay}" /></TextBlock>
+                    <TextBlock Style="{DynamicResource MutedTextStyle}" Margin="0,6,0,0">
+                        <Run Text="{Binding SpeedResult.ServerName, Mode=OneWay}" />
+                        <Run Text=" · " /><Run Text="{Binding SpeedResult.DurationText, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+            <TextBlock Margin="0,10,0,0"
+                       Text="{Binding SpeedError}"
+                       Foreground="{DynamicResource DangerBrush}"
+                       Visibility="{Binding SpeedError, Converter={StaticResource NonEmptyString}}" />
+            <TextBlock Margin="0,6,0,0"
+                       Text="{Binding Message}"
+                       Style="{DynamicResource PageHintStyle}"
+                       Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
+        </StackPanel>
+    </Border>
+</UserControl>

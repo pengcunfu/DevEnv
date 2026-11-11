@@ -14,11 +14,18 @@ namespace DevEnv.Host.Infrastructure;
 /// </summary>
 public static class ToolWindowHost
 {
-    private static readonly Dictionary<string, ToolWindow> Windows = new();
+    private static readonly Dictionary<string, ToolWindow> Windows = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>工具 id → (标题, 视图工厂)。</summary>
-    private static readonly Dictionary<string, (string Title, Func<UserControl> Factory)> Tools = new()
+    private static readonly Dictionary<string, (string Title, Func<UserControl> Factory)> Tools = new(StringComparer.OrdinalIgnoreCase)
     {
+        ["devenv"] = ("开发环境", () => new DevEnvView()),
+        ["lava"] = ("熔岩环境", () => new LavaView()),
+        ["network"] = ("网络监控", () => new NetworkView()),
+        ["processes"] = ("进程监控", () => new ProcessesView()),
+        ["services"] = ("服务监控", () => new ServicesView()),
+        ["ports"] = ("端口管理", () => new PortsView()),
+        ["speed"] = ("网络测速", () => new SpeedTestView()),
         ["json"] = ("JSON 格式化器", () => new JsonToolView()),
         ["hosts"] = ("Hosts 文件编辑器", () => new HostsToolView()),
         ["hash"] = ("文件哈希计算器", () => new HashToolView()),
@@ -32,6 +39,10 @@ public static class ToolWindowHost
     public static bool IsTool(string id) => Tools.ContainsKey(id);
 
     public static IReadOnlyList<string> ToolIds => Tools.Keys.ToList();
+
+    /// <summary>按 id 查找已打开的工具窗（状态栏路由用）。</summary>
+    public static ToolWindow? Find(string id) =>
+        Windows.TryGetValue(id, out var window) ? window : null;
 
     /// <summary>打开（或前置）指定工具窗口。</summary>
     public static OperationResult Open(string id)
@@ -50,7 +61,7 @@ public static class ToolWindowHost
         var window = Windows.GetValueOrDefault(id);
         if (window is null)
         {
-            window = new ToolWindow(tool.Title, tool.Factory());
+            window = new ToolWindow(id, tool.Title, tool.Factory());
             window.Closed += (_, _) => Windows.Remove(id);
             Windows[id] = window;
         }
