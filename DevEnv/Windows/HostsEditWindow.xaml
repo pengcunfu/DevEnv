@@ -8,28 +8,47 @@
         MinWidth="800"
         MinHeight="560"
         WindowStartupLocation="Manual"
-        Background="{DynamicResource ChromeBrush}">
+        Background="{DynamicResource AppBackgroundBrush}">
     <DockPanel>
-        <TextBlock DockPanel.Dock="Top"
-                   x:Name="PathText"
-                   Margin="10,8"
-                   FontSize="12"
-                   Foreground="{DynamicResource TextSecondaryBrush}" />
-        <Border DockPanel.Dock="Bottom"
-                BorderBrush="{DynamicResource ChromeBorderBrush}"
-                BorderThickness="0,1,0,0"
-                Background="{DynamicResource ChromeBrush}">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Margin="10,8">
-                <Button Content="保存" Width="88" Height="32" Margin="0,0,8,0"
-                        IsDefault="True"
-                        Click="OnSaveClick" />
-                <Button Content="关闭" Width="88" Height="32"
-                        IsCancel="True"
-                        Click="OnCloseClick" />
-            </StackPanel>
+        <!-- 顶部：路径一行，紧凑工具条 -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="12,7">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left"
+                           Text="路径"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0"
+                           Style="{DynamicResource MutedTextStyle}" />
+                <TextBlock x:Name="PathText"
+                           VerticalAlignment="Center"
+                           FontFamily="Consolas"
+                           FontSize="12"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+            </DockPanel>
         </Border>
-        <views:HostsEditorView x:Name="EditorControl" />
+
+        <views:HostsEditorView x:Name="EditorControl">
+            <views:HostsEditorView.FooterActions>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="保存"
+                            MinWidth="80"
+                            Padding="14,5"
+                            Margin="0,0,8,0"
+                            Style="{StaticResource AccentButtonStyle}"
+                            IsDefault="True"
+                            Click="OnSaveClick" />
+                    <Button Content="关闭"
+                            MinWidth="80"
+                            Padding="14,5"
+                            IsCancel="True"
+                            Click="OnCloseClick" />
+                </StackPanel>
+            </views:HostsEditorView.FooterActions>
+        </views:HostsEditorView>
     </DockPanel>
 </Window>

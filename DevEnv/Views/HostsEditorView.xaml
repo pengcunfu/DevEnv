@@ -3,80 +3,154 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Name="Root">
     <DockPanel>
-        <!-- 校验状态条：正常时只占一行，有问题时可展开逐条定位 -->
+        <!-- 功能按钮 -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="10,6">
+            <WrapPanel>
+                <Button Content="定位到文件"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        Margin="0,0,6,0"
+                        Click="OnRevealFileClick" />
+                <Button Content="在记事本中打开"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        Margin="0,0,6,0"
+                        Click="OnOpenNotepadClick" />
+                <Button Content="环境变量"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        Click="OnOpenEnvClick" />
+            </WrapPanel>
+        </Border>
+
+        <!-- 底栏：校验摘要 + 宿主注入的保存等按钮 -->
         <Border DockPanel.Dock="Bottom"
-                Style="{StaticResource CardStyle}"
-                Padding="10,7"
-                Margin="0,8,0,0">
-            <StackPanel>
-                <DockPanel>
-                    <Button x:Name="ToggleIssuesButton"
-                            DockPanel.Dock="Right"
-                            VerticalAlignment="Center"
-                            Style="{StaticResource LinkButtonStyle}"
-                            Visibility="Collapsed"
-                            Click="OnToggleIssuesClick"
-                            Content="查看问题" />
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="12,6">
+            <DockPanel LastChildFill="True">
+                <ContentPresenter DockPanel.Dock="Right"
+                                  VerticalAlignment="Center"
+                                  Margin="12,0,0,0"
+                                  Content="{Binding FooterActions, ElementName=Root}" />
+
+                <Button x:Name="ToggleIssuesButton"
+                        DockPanel.Dock="Right"
+                        VerticalAlignment="Center"
+                        Margin="8,0,0,0"
+                        Style="{StaticResource LinkButtonStyle}"
+                        Visibility="Collapsed"
+                        Click="OnToggleIssuesClick"
+                        Content="查看问题" />
+
+                <StackPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock x:Name="StatusText" FontSize="12" />
-                        <TextBlock x:Name="CountText" Margin="8,0,0,0"
+                        <TextBlock x:Name="StatusText" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock x:Name="CountText"
+                                   Margin="8,0,0,0"
                                    VerticalAlignment="Center"
                                    Style="{DynamicResource MutedTextStyle}" />
                     </StackPanel>
-                </DockPanel>
 
-                <ListBox x:Name="IssueList"
-                         Margin="0,6,0,0"
-                         MaxHeight="120"
-                         Visibility="Collapsed"
-                         SelectionChanged="OnIssueSelected">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                            <Setter Property="Padding" Value="6,3" />
-                            <Setter Property="Margin" Value="0" />
-                            <Setter Property="Cursor" Value="Hand" />
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="72" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding LineLabel}" FontSize="12">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
-                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsError}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding Message}"
-                                           FontSize="12"
-                                           TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>
+                    <ListBox x:Name="IssueList"
+                             Margin="0,6,0,0"
+                             MaxHeight="120"
+                             Visibility="Collapsed"
+                             SelectionChanged="OnIssueSelected">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <Setter Property="Padding" Value="6,3" />
+                                <Setter Property="Margin" Value="0" />
+                                <Setter Property="Cursor" Value="Hand" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="72" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding LineLabel}" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextStyle}">
+                                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsError}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Message}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </DockPanel>
         </Border>
 
-        <TextBox x:Name="Editor"
-                 FontFamily="Consolas"
-                 FontSize="13"
-                 AcceptsReturn="True"
-                 AcceptsTab="True"
-                 VerticalContentAlignment="Top"
-                 VerticalScrollBarVisibility="Auto"
-                 HorizontalScrollBarVisibility="Auto"
-                 SpellCheck.IsEnabled="False"
-                 Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <!-- 文本 / 按条 -->
+        <TabControl x:Name="ModeTabs" Margin="10,8,10,0" SelectionChanged="OnModeTabChanged">
+            <TabItem Header="文本编辑">
+                <TextBox x:Name="Editor"
+                         Margin="0,8,0,0"
+                         FontFamily="Consolas"
+                         FontSize="13"
+                         AcceptsReturn="True"
+                         AcceptsTab="True"
+                         VerticalContentAlignment="Top"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         SpellCheck.IsEnabled="False"
+                         Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </TabItem>
+            <TabItem Header="按条编辑">
+                <DockPanel Margin="0,8,0,0">
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Button Content="添加"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Margin="0,0,6,0"
+                                Click="OnAddEntryClick" />
+                        <Button Content="删除"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Margin="0,0,6,0"
+                                Click="OnRemoveEntryClick" />
+                        <TextBlock Text="双击单元格可编辑；多个主机名用空格分隔"
+                                   VerticalAlignment="Center"
+                                   Style="{DynamicResource MutedTextStyle}" />
+                    </WrapPanel>
+                    <DataGrid x:Name="EntryGrid"
+                              ItemsSource="{Binding Entries, ElementName=Root}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              SelectionMode="Extended"
+                              SelectionUnit="FullRow">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="IP 地址"
+                                                Binding="{Binding Ip, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="180" />
+                            <DataGridTextColumn Header="主机名"
+                                                Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="行"
+                                                Binding="{Binding LineNumber}"
+                                                Width="56"
+                                                IsReadOnly="True" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </UserControl>

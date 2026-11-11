@@ -9,6 +9,7 @@ public sealed class HostsEntryTests
     [InlineData("192.168.1.10", "nas.local")]
     [InlineData("0.0.0.0", "ads.example.com")]
     [InlineData("255.255.255.255", "broadcast")]
+    [InlineData("::1", "localhost")]
     public void TryParse_ValidLine_ReturnsEntry(string ip, string domain)
     {
         Assert.True(HostsEntry.TryParse($"{ip} {domain}", out var entry));
@@ -17,16 +18,16 @@ public sealed class HostsEntryTests
     }
 
     [Fact]
-    public void TryParse_TakesFirstDomainOnly()
+    public void TryParse_KeepsAllDomains()
     {
         Assert.True(HostsEntry.TryParse("127.0.0.1  localhost alias.local", out var entry));
-        Assert.Equal("localhost", entry.Domain);
+        Assert.Equal("localhost alias.local", entry.Domain);
     }
 
     [Fact]
-    public void TryParse_TrimsWhitespaceAndKeepsOriginal()
+    public void TryParse_TrimsWhitespaceAndStripsInlineComment()
     {
-        Assert.True(HostsEntry.TryParse("   10.0.0.1\t  dev.local   ", out var entry));
+        Assert.True(HostsEntry.TryParse("   10.0.0.1\t  dev.local  # note ", out var entry));
         Assert.Equal("10.0.0.1", entry.Ip);
         Assert.Equal("dev.local", entry.Domain);
         Assert.Equal("10.0.0.1\t  dev.local", entry.OriginalLine);
@@ -40,7 +41,6 @@ public sealed class HostsEntryTests
     [InlineData("localhost")]
     [InlineData("256.1.1.1 too-high")]
     [InlineData("1.2.3 too-few")]
-    [InlineData("::1 localhost")]
     public void TryParse_InvalidLine_ReturnsFalse(string line)
     {
         Assert.False(HostsEntry.TryParse(line, out var entry));

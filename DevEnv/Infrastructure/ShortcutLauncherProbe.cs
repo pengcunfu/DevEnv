@@ -179,7 +179,7 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("内置工具页签载入宿主工具目录",
                 vm.IsBuiltinToolsPage
-                && vm.VisibleEntries.Count == 17
+                && vm.VisibleEntries.Count == 18
                 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.InternalTool),
                 $"共 {vm.VisibleEntries.Count} 项");
             Check("内置工具都带彩色图标",

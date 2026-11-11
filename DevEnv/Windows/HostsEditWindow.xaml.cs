@@ -33,6 +33,7 @@ public partial class HostsEditWindow : Window
     {
         try
         {
+            EditorControl.CommitPendingEdits();
             File.WriteAllText(HostsPath, EditorControl.Text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             System.Windows.MessageBox.Show(this, "已保存", "Hosts", MessageBoxButton.OK, MessageBoxImage.Information);
         }

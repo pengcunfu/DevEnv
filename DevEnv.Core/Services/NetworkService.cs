@@ -100,6 +100,23 @@ public sealed class NetworkService
         }
     }
 
+    /// <summary>采集端口行对应进程的详情（含连接信息），供详情对话框使用。</summary>
+    public ProcessDetailInfo GetPortProcessDetail(PortRowView row)
+    {
+        var connection = new PortConnection
+        {
+            Protocol = row.Protocol,
+            LocalAddress = row.LocalAddress,
+            LocalPort = row.LocalPort,
+            RemoteAddress = row.RemoteAddress,
+            RemotePort = row.RemotePort,
+            State = row.State,
+            ProcessId = row.ProcessId,
+            ProcessName = row.ProcessName,
+        };
+        return ProcessDetailService.Collect(row.ProcessId, connection);
+    }
+
     public bool IsElevated => ElevationHelper.IsAdministrator();
 
     public OperationResult RestartElevated(bool asAdmin)

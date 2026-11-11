@@ -1,14 +1,20 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using DevEnv.Core.LavaEnv.Models;
 using DevEnv.Core.LavaEnv.Services;
+using DevEnv.Core.Services;
+using DevEnv.Host.Infrastructure;
 
 namespace DevEnv.Host.Views;
 
 /// <summary>
-/// Hosts 文本编辑框：输入时实时校验语法与条目，并允许点击问题定位到对应行。
-/// 宿主只需绑定 <see cref="Text"/>，保存时读同一属性。
+/// Hosts 编辑器：文本编辑 / 按条编辑双模式，输入时实时校验；
+/// 工具条提供定位文件、记事本、环境变量。宿主绑定 <see cref="Text"/> 读写全文。
 /// </summary>
 public partial class HostsEditorView : UserControl
 {
@@ -21,13 +27,21 @@ public partial class HostsEditorView : UserControl
             FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
             OnTextChanged));
 
-    /// <summary>问题列表当前是否展开，以及用户是否手动干预过自动展开策略。</summary>
+    public static readonly DependencyProperty FooterActionsProperty = DependencyProperty.Register(
+        nameof(FooterActions),
+        typeof(object),
+        typeof(HostsEditorView));
+
     private bool _issuesExpanded;
     private bool _userToggledIssues;
+    private bool _syncing;
+    private bool _entryMode;
 
     public HostsEditorView()
     {
         InitializeComponent();
+        Entries = [];
+        Entries.CollectionChanged += OnEntriesCollectionChanged;
         Loaded += (_, _) => ValidateAndRender();
     }
 
@@ -37,14 +51,39 @@ public partial class HostsEditorView : UserControl
         set => SetValue(TextProperty, value);
     }
 
+    /// <summary>底栏右侧操作区（保存 / 关闭等），由宿主注入。</summary>
+    public object? FooterActions
+    {
+        get => GetValue(FooterActionsProperty);
+        set => SetValue(FooterActionsProperty, value);
+    }
+
+    public ObservableCollection<HostsEntry> Entries { get; }
+
     public HostsValidationResult Validation { get; private set; } = HostsFileValidator.Validate(string.Empty);
 
+    /// <summary>保存前调用：若在按条模式，先把表格写回文本。</summary>
+    public void CommitPendingEdits()
+    {
+        if (_entryMode)
+            FlushEntriesToText();
+    }
+
     private static void OnTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
-        ((HostsEditorView)d).ValidateAndRender();
+        ((HostsEditorView)d).OnTextPropertyChanged();
+
+    private void OnTextPropertyChanged()
+    {
+        if (_syncing)
+            return;
+
+        ValidateAndRender();
+        if (_entryMode)
+            ReloadEntriesFromText();
+    }
 
     private void ValidateAndRender()
     {
-        // 绑定可能在 InitializeComponent 之前触发，控件尚未就绪时交给 Loaded 补一次。
         if (StatusText is null || Editor is null)
             return;
 
@@ -94,8 +133,6 @@ public partial class HostsEditorView : UserControl
             return;
         }
 
-        // 有错误时默认展开问题列表；只有警告时默认收起，避免占满编辑区。
-        // 用户手动收起/展开后不再自动改变。
         if (!_userToggledIssues)
             _issuesExpanded = Validation.HasErrors;
         ApplyIssuesVisibility();
@@ -118,7 +155,17 @@ public partial class HostsEditorView : UserControl
 
     private void OnIssueSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (IssueList.SelectedItem is not HostsValidationIssue issue || Editor.LineCount <= 0)
+        if (IssueList.SelectedItem is not HostsValidationIssue issue)
+            return;
+
+        // 问题定位切回文本模式
+        if (_entryMode)
+        {
+            FlushEntriesToText();
+            ModeTabs.SelectedIndex = 0;
+        }
+
+        if (Editor.LineCount <= 0)
             return;
 
         var lineIndex = Math.Clamp(issue.LineNumber - 1, 0, Editor.LineCount - 1);
@@ -129,8 +176,160 @@ public partial class HostsEditorView : UserControl
         Editor.Focus();
         Editor.Select(start, 0);
         Editor.ScrollToLine(lineIndex);
-
-        // 立即取消选中，保证再次点击同一条问题也能重新定位。
         Dispatcher.BeginInvoke(new Action(() => IssueList.SelectedItem = null), DispatcherPriority.Background);
+    }
+
+    private void OnModeTabChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.Source, ModeTabs) || ModeTabs is null)
+            return;
+
+        var wantEntry = ModeTabs.SelectedIndex == 1;
+        if (wantEntry == _entryMode)
+            return;
+
+        if (wantEntry)
+        {
+            ReloadEntriesFromText();
+            _entryMode = true;
+        }
+        else
+        {
+            FlushEntriesToText();
+            _entryMode = false;
+        }
+    }
+
+    private void ReloadEntriesFromText()
+    {
+        _syncing = true;
+        try
+        {
+            UnsubscribeEntryHandlers();
+            Entries.Clear();
+            foreach (var entry in HostsDocument.ParseEntries(Text))
+            {
+                entry.PropertyChanged += OnEntryPropertyChanged;
+                Entries.Add(entry);
+            }
+        }
+        finally
+        {
+            _syncing = false;
+        }
+    }
+
+    private void FlushEntriesToText()
+    {
+        _syncing = true;
+        try
+        {
+            Text = HostsDocument.ApplyEntries(Text, Entries.ToList());
+        }
+        finally
+        {
+            _syncing = false;
+        }
+
+        ValidateAndRender();
+    }
+
+    private void OnEntriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_syncing || !_entryMode)
+            return;
+
+        if (e.NewItems is not null)
+        {
+            foreach (HostsEntry entry in e.NewItems)
+                entry.PropertyChanged += OnEntryPropertyChanged;
+        }
+
+        if (e.OldItems is not null)
+        {
+            foreach (HostsEntry entry in e.OldItems)
+                entry.PropertyChanged -= OnEntryPropertyChanged;
+        }
+
+        FlushEntriesToText();
+    }
+
+    private void OnEntryPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (_syncing || !_entryMode)
+            return;
+        FlushEntriesToText();
+    }
+
+    private void UnsubscribeEntryHandlers()
+    {
+        foreach (var entry in Entries)
+            entry.PropertyChanged -= OnEntryPropertyChanged;
+    }
+
+    private void OnAddEntryClick(object sender, RoutedEventArgs e)
+    {
+        if (!_entryMode)
+            return;
+
+        var entry = new HostsEntry { Ip = "127.0.0.1", Domain = "example.local", LineNumber = 0 };
+        Entries.Add(entry);
+        EntryGrid.SelectedItem = entry;
+        EntryGrid.ScrollIntoView(entry);
+    }
+
+    private void OnRemoveEntryClick(object sender, RoutedEventArgs e)
+    {
+        if (!_entryMode)
+            return;
+
+        var selected = EntryGrid.SelectedItems.Cast<HostsEntry>().ToList();
+        if (selected.Count == 0)
+            return;
+
+        foreach (var entry in selected)
+            Entries.Remove(entry);
+    }
+
+    private void OnRevealFileClick(object sender, RoutedEventArgs e) =>
+        HostServices.OpenFolder(UtilityService.HostsPath);
+
+    private void OnOpenNotepadClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "notepad.exe",
+                Arguments = $"\"{UtilityService.HostsPath}\"",
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                Window.GetWindow(this),
+                ex.Message,
+                "无法打开记事本",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private void OnOpenEnvClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            SystemTools.OpenEnvironmentVariables();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                Window.GetWindow(this),
+                ex.Message,
+                "无法打开环境变量",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 }

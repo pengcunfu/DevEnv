@@ -34,9 +34,9 @@ public sealed class ContextMenuEntry
         {
             var parts = new List<string>();
             if (ForFiles) parts.Add("文件");
-            if (ForDirectories) parts.Add("文件夹");
+            if (ForDirectories) parts.Add("目录");
             if (ForDesktop) parts.Add("桌面");
-            return parts.Count == 0 ? "未设置" : string.Join(" / ", parts);
+            return parts.Count == 0 ? "未设置" : string.Join(" + ", parts);
         }
     }
 }

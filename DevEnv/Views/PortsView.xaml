@@ -11,38 +11,72 @@
     </UserControl.DataContext>
 
     <DockPanel Margin="12">
-        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-            <TextBox Width="220" Margin="0,0,8,0"
-                     Style="{StaticResource SearchBoxStyle}"
-                     Tag="搜索端口 / 进程"
-                     ToolTip="搜索端口 / 进程"
-                     Text="{Binding PortQuery, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Content="刷新" Command="{Binding RefreshPortsCommand}" />
-        </WrapPanel>
+        <!-- 工具条：端口筛选 + 刷新 + 自动刷新 + 提权 -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10" LastChildFill="True">
+            <Button DockPanel.Dock="Right"
+                    MinWidth="120"
+                    Padding="12,5"
+                    Margin="12,0,0,0"
+                    Content="{Binding ElevationActionText}"
+                    Command="{Binding RestartElevatedCommand}">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                        <Setter Property="Background" Value="{DynamicResource WarningBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.92" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsElevated}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-        <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0"
-                   Text="{Binding Message}"
-                   Foreground="{DynamicResource DangerBrush}"
-                   Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}" />
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="端口筛选："
+                           VerticalAlignment="Center"
+                           Margin="0,0,6,0" />
+                <TextBox Width="240"
+                         Margin="0,0,8,0"
+                         VerticalAlignment="Center"
+                         Tag="输入端口号 (例如: 8080)"
+                         ToolTip="按本地端口、地址、远程地址或 PID 过滤"
+                         Text="{Binding PortQuery, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Content="刷新"
+                        MinWidth="72"
+                        Margin="0,0,10,0"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Command="{Binding RefreshPortsCommand}" />
+                <CheckBox Content="自动刷新"
+                          VerticalAlignment="Center"
+                          IsChecked="{Binding AutoRefresh}" />
+            </StackPanel>
+        </DockPanel>
 
-        <DataGrid ItemsSource="{Binding FilteredPorts}">
+        <DataGrid x:Name="PortGrid"
+                  ItemsSource="{Binding FilteredPorts}"
+                  SelectedItem="{Binding Selected, Mode=TwoWay}"
+                  PreviewMouseRightButtonDown="OnGridPreviewRightButtonDown"
+                  MouseDoubleClick="OnGridDoubleClick">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="查看详情"
+                              Command="{Binding PlacementTarget.DataContext.ShowDetailCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                    <MenuItem Header="终止进程"
+                              Command="{Binding PlacementTarget.DataContext.KillPortProcessCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="协议" Binding="{Binding Protocol}" Width="70" />
-                <DataGridTextColumn Header="本地" Binding="{Binding LocalEndpoint}" Width="*" />
-                <DataGridTextColumn Header="远程" Binding="{Binding RemoteEndpoint}" Width="*" />
-                <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="110" />
-                <DataGridTextColumn Header="进程" Binding="{Binding ProcessName}" Width="150" />
-                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="70" />
-                <DataGridTemplateColumn Header="操作" Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="结束"
-                                    Foreground="{DynamicResource DangerBrush}"
-                                    Command="{Binding DataContext.KillPortProcessCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="本地地址" Binding="{Binding LocalAddress}" Width="*" />
+                <DataGridTextColumn Header="本地端口" Binding="{Binding LocalPort}" Width="90" />
+                <DataGridTextColumn Header="远程地址" Binding="{Binding RemoteEndpoint}" Width="*" />
+                <DataGridTextColumn Header="PID" Binding="{Binding ProcessId}" Width="80" />
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

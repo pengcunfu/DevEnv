@@ -10,134 +10,181 @@
         <vm:ContextMenuViewModel />
     </UserControl.DataContext>
 
-    <DockPanel Margin="14">
-        <TextBlock DockPanel.Dock="Top"
-                   Margin="0,0,0,10"
-                   TextWrapping="Wrap"
-                   Text="{Binding Message}"
-                   Style="{DynamicResource PageHintStyle}" />
+    <DockPanel>
+        <!-- 工具 / 帮助：对齐原 MenuManager 菜单结构 -->
+        <Menu DockPanel.Dock="Top"
+              Background="{DynamicResource ChromeBrush}"
+              BorderBrush="{DynamicResource CardBorderBrush}"
+              BorderThickness="0,0,0,1">
+            <MenuItem Header="工具(_T)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="添加配置(_A)" Command="{Binding NewEntryCommand}" InputGestureText="A" />
+                <MenuItem Header="删除配置(_D)" Command="{Binding DeleteSelectedCommand}" InputGestureText="D" />
+                <MenuItem Header="刷新状态(_R)" Command="{Binding ReloadCommand}" InputGestureText="R" />
+                <Separator />
+                <MenuItem Header="禁用Win11一级菜单(_W)"
+                          Command="{Binding UseClassicMenuCommand}"
+                          IsEnabled="{Binding IsWindows11}"
+                          InputGestureText="W" />
+                <MenuItem Header="恢复Win11默认菜单(_E)"
+                          Command="{Binding UseDefaultMenuCommand}"
+                          IsEnabled="{Binding IsWindows11}"
+                          InputGestureText="E" />
+                <Separator />
+                <MenuItem Header="检查菜单状态(_S)" Command="{Binding CheckEnvironmentCommand}" InputGestureText="S" />
+            </MenuItem>
+            <MenuItem Header="帮助(_H)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="关于(_A)" Command="{Binding ShowAboutCommand}" InputGestureText="A" />
+            </MenuItem>
+        </Menu>
 
-        <!-- Win11 右键菜单形态 -->
-        <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-            <StackPanel>
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="Windows 11 右键菜单" FontSize="14" />
-                        <TextBlock Text="{Binding Win11Status}" Style="{DynamicResource PageHintStyle}" Margin="0,4,0,0" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="切换为完整二级菜单"
-                                Margin="0,0,8,0"
-                                Style="{StaticResource AccentButtonStyle}"
-                                IsEnabled="{Binding IsWindows11}"
-                                Command="{Binding UseClassicMenuCommand}" />
-                        <Button Content="恢复默认一级菜单"
-                                IsEnabled="{Binding IsWindows11}"
-                                Command="{Binding UseDefaultMenuCommand}" />
-                    </StackPanel>
-                </Grid>
-                <TextBlock Text="切换后会自动重启资源管理器使设置生效。"
-                           Style="{DynamicResource MutedTextStyle}" Margin="0,6,0,0" />
-            </StackPanel>
-        </Border>
+        <Grid Margin="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" MinWidth="220" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" MinWidth="360" />
+            </Grid.ColumnDefinitions>
 
-        <!-- 工具条 -->
-        <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
-            <TextBlock Text="「用 XXX 打开」右键菜单项" FontSize="14" VerticalAlignment="Center" />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="新增" Margin="0,0,8,0" Command="{Binding NewEntryCommand}" />
-                <Button Content="环境检查" Margin="0,0,8,0" Command="{Binding CheckEnvironmentCommand}" />
-                <Button Content="刷新" Command="{Binding ReloadCommand}" />
-            </StackPanel>
-        </Grid>
+            <!-- 左侧：配置列表 -->
+            <GroupBox Grid.Column="0" Header="配置列表" Padding="0">
+                <ListBox ItemsSource="{Binding Entries}"
+                         SelectedItem="{Binding Selected, Mode=TwoWay}"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         HorizontalContentAlignment="Stretch">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="6,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Grid.Column="0"
+                                         Width="8" Height="8"
+                                         VerticalAlignment="Top"
+                                         Margin="0,4,0,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEnabled}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="13"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding StatusText}"
+                                               Margin="0,2,0,0"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </GroupBox>
 
-        <!-- 编辑区 -->
-        <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12"
-                Visibility="{Binding IsEditing, Converter={StaticResource TrueToVisibility}}">
-            <StackPanel>
-                <TextBlock Text="新增 / 编辑菜单项" Margin="0,0,0,8" />
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="90" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+            <!-- 右侧：配置详情 -->
+            <GroupBox Grid.Column="2" Header="配置详情" Padding="14,12">
+                <Grid IsEnabled="{Binding HasSelection}">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="显示名称" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Margin="6,0"
-                             Tag="显示名称"
-                             Text="{Binding Editing.Entry.Name, UpdateSourceTrigger=PropertyChanged}" />
+                    <Grid Grid.Row="0" VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="88" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="注册表键名" VerticalAlignment="Center" Margin="0,6,0,0" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Margin="6,6"
-                             Tag="例如 Directory\Background"
-                             Text="{Binding Editing.Entry.Root, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="显示名称"
+                                   VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                                 Margin="8,0,0,10"
+                                 Tag="显示名称"
+                                 Text="{Binding Selected.Name, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="程序路径" VerticalAlignment="Center" Margin="0,6,0,0" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Margin="6,6"
-                             Tag="可执行文件路径"
-                             Text="{Binding Editing.Entry.Path, UpdateSourceTrigger=PropertyChanged}" />
-                    <Button Grid.Row="2" Grid.Column="2" Content="浏览…" Margin="0,6,0,0"
-                            Command="{Binding BrowseProgramCommand}" />
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="注册表键名"
+                                   VerticalAlignment="Center" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                 Margin="8,0,0,10"
+                                 Tag="例如 vscode"
+                                 Text="{Binding Selected.Root, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="作用域" VerticalAlignment="Center" Margin="0,8,0,0" />
-                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="6,8,0,0">
-                        <CheckBox Content="文件" Margin="0,0,14,0" IsChecked="{Binding Editing.Entry.ForFiles}" />
-                        <CheckBox Content="文件夹" Margin="0,0,14,0" IsChecked="{Binding Editing.Entry.ForDirectories}" />
-                        <CheckBox Content="桌面" IsChecked="{Binding Editing.Entry.ForDesktop}" />
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Text="程序路径"
+                                   VerticalAlignment="Center" />
+                        <TextBox Grid.Row="2" Grid.Column="1"
+                                 Margin="8,0,8,10"
+                                 Tag="可执行文件路径"
+                                 Text="{Binding Selected.Path, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Grid.Row="2" Grid.Column="2"
+                                Content="浏览..."
+                                MinWidth="72"
+                                Margin="0,0,0,10"
+                                VerticalAlignment="Top"
+                                Command="{Binding BrowseProgramCommand}" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Text="应用范围"
+                                   VerticalAlignment="Center"
+                                   Margin="0,4,0,0" />
+                        <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                                    Orientation="Horizontal"
+                                    Margin="8,4,0,0">
+                            <CheckBox Content="应用于文件"
+                                      Margin="0,0,16,0"
+                                      IsChecked="{Binding Selected.ForFiles}" />
+                            <CheckBox Content="应用于目录"
+                                      Margin="0,0,16,0"
+                                      IsChecked="{Binding Selected.ForDirectories}" />
+                            <CheckBox Content="应用于桌面"
+                                      IsChecked="{Binding Selected.ForDesktop}" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"
+                                   Margin="8,14,0,0"
+                                   TextWrapping="Wrap"
+                                   Style="{DynamicResource MutedTextStyle}"
+                                   Text="写入注册表需要管理员权限；未提权时会弹出 UAC。Win11 菜单形态切换写在当前用户，无需管理员。" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,16,0,0">
+                        <Button Content="保存配置"
+                                MinWidth="88"
+                                Margin="0,0,8,0"
+                                Command="{Binding SaveOnlyCommand}" />
+                        <Button Content="应用更改"
+                                MinWidth="88"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Command="{Binding SaveCommand}" />
+                        <Button Content="测试路径"
+                                MinWidth="88"
+                                Command="{Binding TestPathCommand}" />
                     </StackPanel>
                 </Grid>
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                    <Button Content="测试路径" Margin="0,0,8,0" Command="{Binding TestPathCommand}" />
-                    <Button Content="取消" Margin="0,0,8,0" Command="{Binding CancelEditCommand}" />
-                    <Button Content="仅保存" Margin="0,0,8,0" Command="{Binding SaveOnlyCommand}" />
-                    <Button Content="保存并写入注册表" Style="{StaticResource AccentButtonStyle}"
-                            Command="{Binding SaveCommand}" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <DataGrid ItemsSource="{Binding Entries}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="2*" />
-                <DataGridTextColumn Header="键名" Binding="{Binding Root}" Width="*" />
-                <DataGridTextColumn Header="作用域" Binding="{Binding ScopeText}" Width="*" />
-                <DataGridTextColumn Header="程序" Binding="{Binding Path}" Width="2*" />
-                <DataGridTextColumn Header="状态" Binding="{Binding StateText}" Width="110" />
-                <DataGridTemplateColumn Header="操作" Width="170">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="编辑" Margin="0,0,6,0" Padding="8,2"
-                                        Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
-                                <Button Content="同步" Margin="0,0,6,0" Padding="8,2"
-                                        Command="{Binding DataContext.SyncCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
-                                <Button Content="删除" Padding="8,2"
-                                        Foreground="{DynamicResource DangerBrush}"
-                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
-
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-            <TextBlock Text="写入注册表需要管理员权限，未提权时会弹出 UAC。"
-                       Style="{DynamicResource MutedTextStyle}" VerticalAlignment="Center" />
-            <Button Content="打开配置目录" Margin="12,0,0,0" Padding="10,3"
-                    HorizontalAlignment="Left"
-                    Command="{Binding OpenConfigFolderCommand}" />
-        </StackPanel>
+            </GroupBox>
+        </Grid>
     </DockPanel>
 </UserControl>

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DevEnv.Core;
@@ -9,12 +11,14 @@ using DevEnv.Host.Infrastructure;
 namespace DevEnv.Host.ViewModels;
 
 /// <summary>
-/// 右键菜单管理：
-/// 上半部分切换 Win11 一级 / 完整二级菜单，下半部分管理「用 XXX 打开」右键菜单项。
-/// 配置存放在文档\FNSoftware\DevEnv\ContextMenu\menu_configs.json，旧版 MenuManager 配置会自动迁入。
+/// 右键菜单管理：左侧配置列表 + 右侧详情，顶部菜单提供增删、
+/// Win11 一级/二级菜单切换与环境检查。配置在
+/// 文档\FNSoftware\DevEnv\ContextMenu\menu_configs.json。
 /// </summary>
 public sealed partial class ContextMenuViewModel : ObservableObject
 {
+    private const string PageId = "context-menu";
+
     public ContextMenuViewModel()
     {
         Entries = [];
@@ -34,13 +38,11 @@ public sealed partial class ContextMenuViewModel : ObservableObject
     [ObservableProperty]
     private string _win11Status = string.Empty;
 
-    [ObservableProperty]
-    private string _message = string.Empty;
-
     [RelayCommand]
     public void Reload()
     {
         var service = CoreServices.ContextMenu;
+        var keepRoot = Selected?.Root;
 
         IsWindows11 = service.IsWindows11;
         IsClassicMenu = service.IsWin11MenuDisabled;
@@ -48,11 +50,23 @@ public sealed partial class ContextMenuViewModel : ObservableObject
 
         Entries.Clear();
         var index = 0;
+        ContextMenuItemViewModel? restore = null;
         foreach (var entry in service.GetEntries())
         {
-            Entries.Add(new ContextMenuItemViewModel(entry, index, service.IsEntryEnabled(entry)));
+            var item = new ContextMenuItemViewModel(CloneEntry(entry), index, service.IsEntryEnabled(entry));
+            Entries.Add(item);
+            if (restore is null
+                && !string.IsNullOrWhiteSpace(keepRoot)
+                && string.Equals(item.Root, keepRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                restore = item;
+            }
+
             index++;
         }
+
+        Selected = restore ?? Entries.FirstOrDefault();
+        Report(Entries.Count == 0 ? "暂无配置，可从「工具 → 添加配置」新建" : $"已加载 {Entries.Count} 条配置 · {Win11Status}");
     }
 
     [RelayCommand]
@@ -64,80 +78,84 @@ public sealed partial class ContextMenuViewModel : ObservableObject
     private void ApplyWin11Menu(bool useClassic)
     {
         var result = CoreServices.ContextMenu.SetWin11ClassicMenu(useClassic);
-        Message = result.DisplayMessage;
         IsWindows11 = CoreServices.ContextMenu.IsWindows11;
         IsClassicMenu = CoreServices.ContextMenu.IsWin11MenuDisabled;
         Win11Status = CoreServices.ContextMenu.Win11StatusText;
+        Report(result.DisplayMessage);
     }
 
     #endregion
 
-    #region 自定义菜单项
+    #region 主从编辑
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsEditing))]
-    private ContextMenuItemViewModel? _editing;
+    [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveOnlyCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TestPathCommand))]
+    [NotifyCanExecuteChangedFor(nameof(BrowseProgramCommand))]
+    private ContextMenuItemViewModel? _selected;
 
-    public bool IsEditing => Editing is not null;
+    public bool HasSelection => Selected is not null;
 
     [RelayCommand]
     private void NewEntry()
     {
-        Editing = new ContextMenuItemViewModel(new ContextMenuEntry(), -1, false);
+        // 草稿必须进 ItemsSource，否则 ListBox 双向绑定会把 Selected 冲掉
+        foreach (var draft in Entries.Where(e => e.Index < 0).ToList())
+            Entries.Remove(draft);
+
+        var item = new ContextMenuItemViewModel(
+            new ContextMenuEntry
+            {
+                Name = "新菜单项",
+                ForFiles = true,
+                ForDirectories = true,
+                ForDesktop = true,
+            },
+            index: -1,
+            enabled: false);
+        Entries.Add(item);
+        Selected = item;
+        Report("填写右侧详情后点「保存配置」或「应用更改」");
     }
 
-    [RelayCommand]
-    private void Edit(ContextMenuItemViewModel? item)
-    {
-        if (item is not null)
-            Editing = item;
-    }
-
-    [RelayCommand]
-    private void CancelEdit()
-    {
-        Editing = null;
-        OnPropertyChanged(nameof(IsEditing));
-    }
-
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelection))]
     private void BrowseProgram()
     {
-        if (Editing is null)
+        if (Selected is null)
             return;
         var path = HostCallbacks.PickExecutable?.Invoke();
         if (string.IsNullOrWhiteSpace(path))
             return;
-        Editing.Entry.Path = path;
-        if (string.IsNullOrWhiteSpace(Editing.Entry.Name))
-            Editing.Entry.Name = System.IO.Path.GetFileNameWithoutExtension(path);
-        if (string.IsNullOrWhiteSpace(Editing.Entry.Root))
-            Editing.Entry.Root = CoreServices.ContextMenu.GenerateUniqueRoot(Editing.Entry.Name);
+
+        Selected.Path = path;
+        if (string.IsNullOrWhiteSpace(Selected.Name))
+            Selected.Name = Path.GetFileNameWithoutExtension(path);
+        if (string.IsNullOrWhiteSpace(Selected.Root))
+            Selected.Root = CoreServices.ContextMenu.GenerateUniqueRoot(Selected.Name);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelection))]
     private void Save() => SaveCore(applyToSystem: true);
 
-    /// <summary>只保存配置，不写入注册表。</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelection))]
     private void SaveOnly() => SaveCore(applyToSystem: false);
 
     private void SaveCore(bool applyToSystem)
     {
-        if (Editing is null)
+        if (Selected is null)
             return;
 
         var service = CoreServices.ContextMenu;
-        var index = Editing.Index;
-        var entry = Editing.Entry;
+        var index = Selected.Index;
+        var entry = Selected.ToEntry();
 
-        // 新增时键名留空：按显示名称自动生成一个不冲突的
         if (string.IsNullOrWhiteSpace(entry.Root))
             entry.Root = service.GenerateUniqueRoot(entry.Name);
 
         var previous = index >= 0 ? service.GetEntries().ElementAtOrDefault(index) : null;
-
-        // root 改了就先把旧键删掉，避免留下孤儿菜单项
         if (previous is not null
             && !string.Equals(previous.Root, entry.Root, StringComparison.OrdinalIgnoreCase))
         {
@@ -147,75 +165,96 @@ public sealed partial class ContextMenuViewModel : ObservableObject
         var saved = service.SaveEntry(entry, index >= 0 ? index : null);
         if (!saved.Ok)
         {
-            Message = saved.DisplayMessage;
+            Report(saved.DisplayMessage);
             return;
         }
 
         if (applyToSystem)
         {
             var applied = service.ApplyEntry(entry);
-            Message = applied.Ok ? $"{entry.Name}：{applied.DisplayMessage}" : applied.DisplayMessage;
+            Report(applied.Ok ? $"{entry.Name}：{applied.DisplayMessage}" : applied.DisplayMessage);
         }
         else
         {
-            Message = $"{entry.Name}：配置已保存（未写入注册表）";
+            Report($"{entry.Name}：配置已保存（未写入注册表）");
         }
 
-        Editing = null;
-        OnPropertyChanged(nameof(IsEditing));
+        var keepRoot = entry.Root;
         Reload();
+        Selected = Entries.FirstOrDefault(e =>
+            string.Equals(e.Root, keepRoot, StringComparison.OrdinalIgnoreCase));
     }
 
-    [RelayCommand]
-    private void Delete(ContextMenuItemViewModel? item)
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private void DeleteSelected()
     {
-        if (item is null)
+        if (Selected is null)
             return;
-        if (!Windows.ConfirmDialog.Show(HostServices.DialogOwner, $"删除「{item.Entry.Name}」并从注册表移除？", "删除"))
+
+        if (Selected.Index < 0)
+        {
+            Entries.Remove(Selected);
+            Selected = Entries.FirstOrDefault();
+            Report("已取消新建");
+            return;
+        }
+
+        if (!Windows.ConfirmDialog.Show(HostServices.DialogOwner, $"删除「{Selected.Name}」并从注册表移除？", "删除"))
             return;
 
         var service = CoreServices.ContextMenu;
-        var removed = service.RemoveEntryFromSystem(item.Entry);
-        var deleted = service.DeleteEntry(item.Index);
+        var removed = service.RemoveEntryFromSystem(Selected.ToEntry());
+        var deleted = service.DeleteEntry(Selected.Index);
 
-        Message = deleted.Ok
-            ? (removed.Ok ? $"{item.Entry.Name}：已删除" : $"配置已删除，注册表移除失败：{removed.DisplayMessage}")
-            : deleted.DisplayMessage;
+        Report(deleted.Ok
+            ? (removed.Ok ? $"{Selected.Name}：已删除" : $"配置已删除，注册表移除失败：{removed.DisplayMessage}")
+            : deleted.DisplayMessage);
 
         Reload();
     }
 
-    /// <summary>把菜单项同步到注册表（已存在则移除后重写）。</summary>
-    [RelayCommand]
-    private void Sync(ContextMenuItemViewModel? item)
-    {
-        if (item is null)
-            return;
-        var result = CoreServices.ContextMenu.ApplyEntry(item.Entry);
-        Message = result.DisplayMessage;
-        Reload();
-    }
-
-    /// <summary>校验当前填写的程序路径。</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelection))]
     private void TestPath()
     {
-        if (Editing is null)
+        if (Selected is null)
             return;
 
-        var path = Editing.Entry.Path;
-        Message = string.IsNullOrWhiteSpace(path)
+        var path = Selected.Path;
+        Report(string.IsNullOrWhiteSpace(path)
             ? "请先填写程序路径"
-            : System.IO.File.Exists(path) ? $"路径有效：{path}" : $"路径不存在：{path}";
+            : File.Exists(path) ? $"路径有效：{path}" : $"路径不存在：{path}");
     }
 
-    /// <summary>检查 Win11 / 权限 / 注册表环境。</summary>
     [RelayCommand]
-    private void CheckEnvironment() => Message = CoreServices.ContextMenu.GetStatusSummary();
+    private void CheckEnvironment() => Report(CoreServices.ContextMenu.GetStatusSummary());
 
-    /// <summary>打开配置文件所在目录。</summary>
     [RelayCommand]
-    private void OpenConfigFolder() => HostServices.OpenFolder(ContextMenuService.ConfigFilePath);
+    private void ShowAbout()
+    {
+        System.Windows.MessageBox.Show(
+            HostServices.DialogOwner,
+            "右键菜单管理\n\n"
+            + "· 自定义「用 XXX 打开」等资源管理器右键菜单项\n"
+            + "· 支持文件 / 目录 / 桌面作用域\n"
+            + "· 可切换 Windows 11 一级菜单与完整二级菜单\n\n"
+            + $"配置文件：\n{ContextMenuService.ConfigFilePath}\n\n"
+            + "写入注册表需要管理员权限。",
+            "关于",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    private void Report(string message) => HostServices.SetStatus(message, PageId);
+
+    private static ContextMenuEntry CloneEntry(ContextMenuEntry source) => new()
+    {
+        Name = source.Name,
+        Root = source.Root,
+        Path = source.Path,
+        ForFiles = source.ForFiles,
+        ForDirectories = source.ForDirectories,
+        ForDesktop = source.ForDesktop,
+    };
 
     #endregion
 }
@@ -225,26 +264,71 @@ public sealed partial class ContextMenuItemViewModel : ObservableObject
 {
     public ContextMenuItemViewModel(ContextMenuEntry entry, int index, bool enabled)
     {
-        Entry = entry;
+        _name = entry.Name;
+        _root = entry.Root;
+        _path = entry.Path;
+        _forFiles = entry.ForFiles;
+        _forDirectories = entry.ForDirectories;
+        _forDesktop = entry.ForDesktop;
         Index = index;
         _isEnabled = enabled;
     }
 
-    public ContextMenuEntry Entry { get; }
-
-    /// <summary>在配置列表中的位置，-1 表示新增。</summary>
+    /// <summary>在配置列表中的位置，-1 表示新增未落盘。</summary>
     public int Index { get; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
     private bool _isEnabled;
 
-    public string Name => Entry.Name;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    private string _name = string.Empty;
 
-    public string Root => Entry.Root;
+    [ObservableProperty]
+    private string _root = string.Empty;
 
-    public string Path => Entry.Path;
+    [ObservableProperty]
+    private string _path = string.Empty;
 
-    public string ScopeText => Entry.ScopeText;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(ScopeText))]
+    private bool _forFiles;
 
-    public string StateText => IsEnabled ? "已生效" : "未写入注册表";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(ScopeText))]
+    private bool _forDirectories;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(ScopeText))]
+    private bool _forDesktop;
+
+    public string ScopeText
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (ForFiles) parts.Add("文件");
+            if (ForDirectories) parts.Add("目录");
+            if (ForDesktop) parts.Add("桌面");
+            return parts.Count == 0 ? "未设置" : string.Join(" + ", parts);
+        }
+    }
+
+    public string StatusText => IsEnabled
+        ? $"✓ 已启用 ({ScopeText})"
+        : "○ 未启用";
+
+    public ContextMenuEntry ToEntry() => new()
+    {
+        Name = Name,
+        Root = Root,
+        Path = Path,
+        ForFiles = ForFiles,
+        ForDirectories = ForDirectories,
+        ForDesktop = ForDesktop,
+    };
 }
