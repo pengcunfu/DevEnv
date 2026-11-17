@@ -179,7 +179,7 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("内置工具页签载入宿主工具目录",
                 vm.IsBuiltinToolsPage
-                && vm.VisibleEntries.Count == 18
+                && vm.VisibleEntries.Count == ToolWindowHost.ToolIds.Count + 3 // 另含翻译 / 剪贴板 / 文件浏览器
                 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.InternalTool),
                 $"共 {vm.VisibleEntries.Count} 项");
             Check("内置工具都带彩色图标",
@@ -194,6 +194,13 @@ public static class ShortcutLauncherProbe
                 && builtinKeys.Contains("services")
                 && builtinKeys.Contains("ports")
                 && builtinKeys.Contains("speed"),
+                string.Join(" / ", builtinKeys));
+            Check("内置工具页签含实用工具入口",
+                builtinKeys.Contains("regex")
+                && builtinKeys.Contains("text-diff")
+                && builtinKeys.Contains("batch-rename")
+                && builtinKeys.Contains("color")
+                && builtinKeys.Contains("sysinfo"),
                 string.Join(" / ", builtinKeys));
             Check("内置工具页签含翻译 / 剪贴板 / 文件浏览器入口",
                 builtinKeys.Contains("translator")

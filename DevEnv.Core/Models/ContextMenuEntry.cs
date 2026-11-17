@@ -26,6 +26,10 @@ public sealed class ContextMenuEntry
     [JsonProperty("for_desktop")]
     public bool ForDesktop { get; set; }
 
+    /// <summary>文件夹空白处（资源管理器背景），注册表位置为 Directory\Background。</summary>
+    [JsonProperty("for_directory_background")]
+    public bool ForDirectoryBackground { get; set; }
+
     /// <summary>作用域的可读描述，用于界面展示。</summary>
     [JsonIgnore]
     public string ScopeText
@@ -34,7 +38,8 @@ public sealed class ContextMenuEntry
         {
             var parts = new List<string>();
             if (ForFiles) parts.Add("文件");
-            if (ForDirectories) parts.Add("目录");
+            if (ForDirectories) parts.Add("文件夹");
+            if (ForDirectoryBackground) parts.Add("文件夹空白处");
             if (ForDesktop) parts.Add("桌面");
             return parts.Count == 0 ? "未设置" : string.Join(" + ", parts);
         }

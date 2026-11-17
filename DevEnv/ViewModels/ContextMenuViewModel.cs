@@ -27,6 +27,128 @@ public sealed partial class ContextMenuViewModel : ObservableObject
 
     public ObservableCollection<ContextMenuItemViewModel> Entries { get; }
 
+    #region 已有菜单项
+
+    private List<SystemContextMenuItem> _allSystemEntries = [];
+
+    public ObservableCollection<SystemContextMenuItem> SystemEntries { get; } = [];
+
+    public IReadOnlyList<string> ScopeFilters { get; } =
+        ["全部", "文件", "文件夹", "文件夹空白处", "桌面", "文件与文件夹"];
+
+    [ObservableProperty]
+    private string _scopeFilter = "全部";
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ToggleSystemEntryCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSystemEntryCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CopySystemEntryPathCommand))]
+    private SystemContextMenuItem? _selectedSystemEntry;
+
+    partial void OnScopeFilterChanged(string value) => ApplySystemFilter(report: false);
+
+    private void ReloadSystemEntries(bool report = true)
+    {
+        _allSystemEntries = CoreServices.ContextMenu.GetSystemEntries().ToList();
+        ApplySystemFilter(report);
+    }
+
+    private void ApplySystemFilter(bool report)
+    {
+        var keepId = SelectedSystemEntry?.Id;
+        SystemEntries.Clear();
+        foreach (var item in _allSystemEntries.Where(MatchesScopeFilter))
+            SystemEntries.Add(item);
+
+        SelectedSystemEntry = SystemEntries.FirstOrDefault(e => e.Id == keepId)
+            ?? SystemEntries.FirstOrDefault();
+
+        if (report)
+            Report($"已有菜单：显示 {SystemEntries.Count} / {_allSystemEntries.Count} 项");
+    }
+
+    private bool MatchesScopeFilter(SystemContextMenuItem item) =>
+        ScopeFilter == "全部"
+        || string.Equals(item.ScopeText, ScopeFilter, StringComparison.Ordinal);
+
+    [RelayCommand(CanExecute = nameof(CanToggleSystemEntry))]
+    private void ToggleSystemEntry(SystemContextMenuItem? item)
+    {
+        var target = item ?? SelectedSystemEntry;
+        if (target is null)
+            return;
+
+        var result = CoreServices.ContextMenu.SetSystemEntryEnabled(target, !target.Enabled);
+        Report(result.Ok ? $"{target.Name}：{result.DisplayMessage}" : result.DisplayMessage);
+        ReloadSystemEntries(report: false);
+    }
+
+    private bool CanToggleSystemEntry(SystemContextMenuItem? item) =>
+        (item ?? SelectedSystemEntry)?.CanToggle == true;
+
+    [RelayCommand(CanExecute = nameof(CanDeleteSystemEntry))]
+    private void DeleteSystemEntry(SystemContextMenuItem? item)
+    {
+        var target = item ?? SelectedSystemEntry;
+        if (target is null)
+            return;
+
+        var prompt = $"删除「{target.Name}」？\n\n作用域：{target.ScopeText}\n类型：{target.Kind}\n注册表：{target.RegistryPath}\n\n"
+            + "删除后对应菜单入口会消失；如需恢复可双击备份的 .reg 文件。"
+            + (target.Source == "HKLM" ? "\n\n这是系统级（HKLM）项，删除可能影响资源管理器功能。" : "");
+        if (!Windows.ConfirmDialog.Show(HostServices.DialogOwner, prompt, "删除"))
+            return;
+
+        var result = CoreServices.ContextMenu.DeleteSystemEntry(target);
+        Report(result.Ok ? $"{target.Name}：{result.DisplayMessage}" : result.DisplayMessage);
+        ReloadSystemEntries(report: false);
+    }
+
+    private bool CanDeleteSystemEntry(SystemContextMenuItem? item) =>
+        (item ?? SelectedSystemEntry) is not null;
+
+    [RelayCommand(CanExecute = nameof(CanCopySystemEntryPath))]
+    private void CopySystemEntryPath(SystemContextMenuItem? item)
+    {
+        var target = item ?? SelectedSystemEntry;
+        if (target is null)
+            return;
+
+        try
+        {
+            System.Windows.Clipboard.SetText(target.RegistryPath);
+            Report("已复制注册表路径");
+        }
+        catch (Exception ex)
+        {
+            Report($"复制失败：{ex.Message}");
+        }
+    }
+
+    private bool CanCopySystemEntryPath(SystemContextMenuItem? item) =>
+        (item ?? SelectedSystemEntry) is not null;
+
+    [RelayCommand]
+    private void OpenBackupDirectory()
+    {
+        var dir = Path.Combine(ContextMenuService.UserDataDirectory, "backups");
+        try
+        {
+            Directory.CreateDirectory(dir);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = dir,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            Report($"打开备份目录失败：{ex.Message}");
+        }
+    }
+
+    #endregion
+
     #region Win11 菜单形态
 
     [ObservableProperty]
@@ -66,7 +188,10 @@ public sealed partial class ContextMenuViewModel : ObservableObject
         }
 
         Selected = restore ?? Entries.FirstOrDefault();
-        Report(Entries.Count == 0 ? "暂无配置，可从「工具 → 添加配置」新建" : $"已加载 {Entries.Count} 条配置 · {Win11Status}");
+        ReloadSystemEntries(report: false);
+        Report(Entries.Count == 0
+            ? $"暂无自定义配置 · 已有菜单 {SystemEntries.Count} 项 · {Win11Status}"
+            : $"已加载 {Entries.Count} 条配置 · 已有菜单 {SystemEntries.Count} 项 · {Win11Status}");
     }
 
     [RelayCommand]
@@ -234,11 +359,13 @@ public sealed partial class ContextMenuViewModel : ObservableObject
         System.Windows.MessageBox.Show(
             HostServices.DialogOwner,
             "右键菜单管理\n\n"
+            + "· 管理已有菜单项：文件 / 文件夹 / 文件夹空白处 / 桌面\n"
+            + "· 可启用 / 禁用或删除已有项；删除前自动导出 .reg 备份\n"
+            + $"· 备份目录：{Path.Combine(ContextMenuService.UserDataDirectory, "backups")}\n"
             + "· 自定义「用 XXX 打开」等资源管理器右键菜单项\n"
-            + "· 支持文件 / 目录 / 桌面作用域\n"
             + "· 可切换 Windows 11 一级菜单与完整二级菜单\n\n"
             + $"配置文件：\n{ContextMenuService.ConfigFilePath}\n\n"
-            + "写入注册表需要管理员权限。",
+            + "写入注册表需要管理员权限；已有菜单的启用 / 禁用写在当前用户下。",
             "关于",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
@@ -253,6 +380,7 @@ public sealed partial class ContextMenuViewModel : ObservableObject
         Path = source.Path,
         ForFiles = source.ForFiles,
         ForDirectories = source.ForDirectories,
+        ForDirectoryBackground = source.ForDirectoryBackground,
         ForDesktop = source.ForDesktop,
     };
 
@@ -269,6 +397,7 @@ public sealed partial class ContextMenuItemViewModel : ObservableObject
         _path = entry.Path;
         _forFiles = entry.ForFiles;
         _forDirectories = entry.ForDirectories;
+        _forDirectoryBackground = entry.ForDirectoryBackground;
         _forDesktop = entry.ForDesktop;
         Index = index;
         _isEnabled = enabled;
@@ -304,6 +433,11 @@ public sealed partial class ContextMenuItemViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
     [NotifyPropertyChangedFor(nameof(ScopeText))]
+    private bool _forDirectoryBackground;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(ScopeText))]
     private bool _forDesktop;
 
     public string ScopeText
@@ -312,7 +446,8 @@ public sealed partial class ContextMenuItemViewModel : ObservableObject
         {
             var parts = new List<string>();
             if (ForFiles) parts.Add("文件");
-            if (ForDirectories) parts.Add("目录");
+            if (ForDirectories) parts.Add("文件夹");
+            if (ForDirectoryBackground) parts.Add("文件夹空白处");
             if (ForDesktop) parts.Add("桌面");
             return parts.Count == 0 ? "未设置" : string.Join(" + ", parts);
         }
@@ -329,6 +464,7 @@ public sealed partial class ContextMenuItemViewModel : ObservableObject
         Path = Path,
         ForFiles = ForFiles,
         ForDirectories = ForDirectories,
+        ForDirectoryBackground = ForDirectoryBackground,
         ForDesktop = ForDesktop,
     };
 }

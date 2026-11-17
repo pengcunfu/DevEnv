@@ -1,4 +1,5 @@
 using DevEnv.Core.Components;
+using DevEnv.Core.DiskCleaner.Services;
 using DevEnv.Core.FileTools.Services;
 using DevEnv.Core.LavaEnv;
 using DevEnv.Core.LavaEnv.Services;
@@ -29,6 +30,7 @@ public static class CoreServices
     public static UtilityService Utility { get; } = new();
     public static FileUnlockService FileUnlock { get; } = new();
     public static FileShredService FileShred { get; } = new();
+    public static DiskCleanupService DiskCleanup { get; } = new();
     public static StartupService Startup { get; } = new();
     public static TranslatorService Translator { get; } = new();
     public static SettingsService Settings { get; } = new(Config);

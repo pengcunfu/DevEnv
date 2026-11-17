@@ -9,7 +9,7 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 功能工具窗自检：开发环境 / 熔岩环境 / 网络 / 进程 / 服务 / 端口 / 测速 / 启动项
+/// 功能工具窗自检：开发环境 / 熔岩环境 / 网络 / 进程 / 服务 / 端口 / 测速 / 启动项 / C 盘清理
 /// 各自作为独立 ToolWindow 打开，互不影响。
 /// 用法：<c>DevEnv.exe --windows-check %TEMP%\windows.txt</c>
 /// </summary>
@@ -27,6 +27,13 @@ public static class MainWindowProbe
         ("ports", "端口管理"),
         ("speed", "网络测速"),
         ("startup", "启动项管理"),
+        ("disk-cleaner", "C 盘清理"),
+        ("context-menu", "右键菜单管理"),
+        ("regex", "正则测试器"),
+        ("text-diff", "文本对比"),
+        ("batch-rename", "批量重命名"),
+        ("color", "颜色工具"),
+        ("sysinfo", "系统信息"),
     ];
 
     public static int Run(string[] args)

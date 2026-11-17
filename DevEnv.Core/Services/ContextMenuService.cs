@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using DevEnv.Core.Models;
@@ -176,7 +177,7 @@ public sealed class ContextMenuService
             return OperationResult.Fail("请选择程序");
         if (!File.Exists(entry.Path))
             return OperationResult.Fail($"程序不存在：{entry.Path}");
-        if (!entry.ForFiles && !entry.ForDirectories && !entry.ForDesktop)
+        if (!entry.ForFiles && !entry.ForDirectories && !entry.ForDirectoryBackground && !entry.ForDesktop)
             return OperationResult.Fail("请至少选择一个作用域");
         return OperationResult.Success();
     }
@@ -224,18 +225,26 @@ public sealed class ContextMenuService
         if (!validation.Ok)
             return validation;
 
-        return IsAdmin()
-            ? WriteEntry(entry)
-            : RunElevated(ElevatedOperation.Add, entry);
+        if (IsAdmin())
+            return WriteEntry(entry);
+
+        var result = RunElevated(ElevatedOperation.Add, entry);
+        if (result.Ok)
+            RestartExplorer();
+        return result;
     }
 
     public OperationResult RemoveEntryFromSystem(ContextMenuEntry entry)
     {
         if (string.IsNullOrWhiteSpace(entry.Root))
             return OperationResult.Fail("条目缺少注册表键名");
-        return IsAdmin()
-            ? DeleteEntryKeys(entry)
-            : RunElevated(ElevatedOperation.Remove, entry);
+        if (IsAdmin())
+            return DeleteEntryKeys(entry);
+
+        var result = RunElevated(ElevatedOperation.Remove, entry);
+        if (result.Ok)
+            RestartExplorer();
+        return result;
     }
 
     private OperationResult WriteEntry(ContextMenuEntry entry)
@@ -244,6 +253,7 @@ public sealed class ContextMenuService
         {
             foreach (var scope in ScopesOf(entry))
                 WriteScope(entry, scope);
+            CleanupLegacyDesktopScope(entry);
             RestartExplorer();
             return OperationResult.Success("已写入注册表");
         }
@@ -259,6 +269,7 @@ public sealed class ContextMenuService
         {
             foreach (var scope in ScopesOf(entry))
                 Registry.ClassesRoot.DeleteSubKeyTree($@"{scope}\shell\{entry.Root}", throwOnMissingSubKey: false);
+            CleanupLegacyDesktopScope(entry);
             RestartExplorer();
             return OperationResult.Success("已从注册表移除");
         }
@@ -268,11 +279,30 @@ public sealed class ContextMenuService
         }
     }
 
+    /// <summary>
+    /// 旧版把「桌面」作用域写到了 Directory\Background（实际是文件夹空白处）。
+    /// 应用到桌面时顺手清掉本程序留下的旧键，避免取消勾选后菜单仍残留在文件夹空白处。
+    /// </summary>
+    private static void CleanupLegacyDesktopScope(ContextMenuEntry entry)
+    {
+        if (!entry.ForDesktop || entry.ForDirectoryBackground)
+            return;
+
+        try
+        {
+            Registry.ClassesRoot.DeleteSubKeyTree(
+                $@"Directory\Background\shell\{entry.Root}", throwOnMissingSubKey: false);
+        }
+        catch
+        {
+            // 清理旧键失败不影响本次写入
+        }
+    }
+
     private static void WriteScope(ContextMenuEntry entry, string scope)
     {
         var keyPath = $@"{scope}\shell\{entry.Root}";
         var argument = scope == "*" ? "%1" : "%V";
-
         using (var key = Registry.ClassesRoot.CreateSubKey(keyPath))
         {
             key.SetValue("", entry.Name);
@@ -283,15 +313,459 @@ public sealed class ContextMenuService
         commandKey.SetValue("", $"\"{entry.Path}\" \"{argument}\"");
     }
 
-    /// <summary>条目对应的注册表 scope：*（文件）、Directory（文件夹）、Directory\Background（桌面）。</summary>
-    private static IEnumerable<string> ScopesOf(ContextMenuEntry entry)
+    /// <summary>条目对应的注册表 scope：*（文件）、Directory（文件夹）、
+    /// Directory\Background（文件夹空白处）、DesktopBackground（桌面）。</summary>
+    private static IEnumerable<string> ScopesOf(ContextMenuEntry entry) =>
+        ContextMenuScopes.GetScopes(entry);
+
+    #endregion
+
+    #region 已有菜单项
+
+    /// <summary>系统右键菜单的作用域；顺序即界面排序。</summary>
+    private static readonly (string Scope, string Text)[] SystemScopes =
+    [
+        ("*", "文件"),
+        ("Directory", "文件夹"),
+        ("Directory\\Background", "文件夹空白处"),
+        ("DesktopBackground", "桌面"),
+        ("AllFilesystemObjects", "文件与文件夹"),
+    ];
+
+    /// <summary>枚举系统里已注册的右键菜单项：shell 命令项 + shellex COM 扩展。</summary>
+    public IReadOnlyList<SystemContextMenuItem> GetSystemEntries()
     {
-        if (entry.ForFiles)
-            yield return "*";
-        if (entry.ForDirectories)
-            yield return "Directory";
-        if (entry.ForDesktop)
-            yield return @"Directory\Background";
+        var list = new List<SystemContextMenuItem>();
+        foreach (var (scope, text) in SystemScopes)
+        {
+            ReadShellVerbs(scope, text, list);
+            ReadContextMenuHandlers(scope, text, list);
+        }
+
+        return list;
+    }
+
+    private static void ReadShellVerbs(string scope, string scopeText, List<SystemContextMenuItem> list)
+    {
+        using var shell = Registry.ClassesRoot.OpenSubKey($@"{scope}\shell");
+        if (shell is null)
+            return;
+
+        foreach (var keyName in shell.GetSubKeyNames())
+        {
+            using var verb = shell.OpenSubKey(keyName);
+            if (verb is null)
+                continue;
+
+            var relativePath = $@"Software\Classes\{scope}\shell\{keyName}";
+            var source = ExistsInCurrentUser(relativePath) ? "HKCU" : "HKLM";
+            var hidden = verb.GetValue("ProgrammaticAccessOnly") is not null
+                || keyName.StartsWith(".", StringComparison.Ordinal);
+            var disabled = verb.GetValue("LegacyDisable") is not null;
+            var systemDisabled = disabled && IsDisabledInMachine(relativePath);
+            var extended = verb.GetValue("Extended") is not null;
+            var command = ReadVerbCommand(verb, out var commandNote);
+            var notes = new List<string>();
+            if (hidden) notes.Add("系统隐藏");
+            if (systemDisabled) notes.Add("系统级禁用");
+            if (extended) notes.Add("Shift 扩展菜单");
+            if (commandNote.Length > 0) notes.Add(commandNote);
+
+            list.Add(new SystemContextMenuItem
+            {
+                Id = $"verb|{scope}|{keyName}",
+                Name = ResolveVerbName(verb, keyName),
+                KeyName = keyName,
+                Scope = scope,
+                ScopeText = scopeText,
+                Kind = "命令",
+                Source = source,
+                RegistryPath = BuildRegistryPath(source, relativePath),
+                Command = command,
+                IconPath = ReadString(verb, "Icon"),
+                Enabled = !disabled && !hidden,
+                CanToggle = !hidden && !systemDisabled,
+                Note = string.Join(" · ", notes),
+            });
+        }
+    }
+
+    private static void ReadContextMenuHandlers(string scope, string scopeText, List<SystemContextMenuItem> list)
+    {
+        using var handlers = Registry.ClassesRoot.OpenSubKey($@"{scope}\shellex\ContextMenuHandlers");
+        if (handlers is null)
+            return;
+
+        foreach (var keyName in handlers.GetSubKeyNames())
+        {
+            using var handler = handlers.OpenSubKey(keyName);
+            if (handler is null)
+                continue;
+
+            var relativePath = $@"Software\Classes\{scope}\shellex\ContextMenuHandlers\{keyName}";
+            var source = ExistsInCurrentUser(relativePath) ? "HKCU" : "HKLM";
+            var clsid = ReadString(handler, null);
+            if (clsid.Length == 0 && LooksLikeClsid(keyName))
+                clsid = keyName;
+            var userBlocked = IsHandlerBlocked(clsid, user: true);
+            var systemBlocked = IsHandlerBlocked(clsid, user: false);
+            var dll = ResolveHandlerDll(clsid);
+            var notes = new List<string> { "COM 扩展" };
+            if (systemBlocked) notes.Add("系统策略禁用");
+            if (string.IsNullOrWhiteSpace(clsid)) notes.Add("缺少 CLSID");
+
+            list.Add(new SystemContextMenuItem
+            {
+                Id = $"handler|{scope}|{keyName}|{clsid}",
+                Name = ResolveHandlerName(clsid, keyName),
+                KeyName = keyName,
+                Scope = scope,
+                ScopeText = scopeText,
+                Kind = "COM 扩展",
+                Source = source,
+                RegistryPath = BuildRegistryPath(source, relativePath),
+                Command = string.IsNullOrWhiteSpace(dll) ? clsid : dll,
+                Clsid = clsid,
+                DllPath = dll,
+                Enabled = !userBlocked && !systemBlocked,
+                CanToggle = !systemBlocked && !string.IsNullOrWhiteSpace(clsid),
+                Note = string.Join(" · ", notes),
+            });
+        }
+    }
+
+    /// <summary>启用 / 禁用已有菜单项。命令项写 LegacyDisable，COM 扩展写 Shell Extensions\Blocked，均在当前用户下完成。</summary>
+    public OperationResult SetSystemEntryEnabled(SystemContextMenuItem item, bool enabled)
+    {
+        if (!item.CanToggle)
+            return OperationResult.Fail("该项由系统隐藏或系统策略控制，无法在此切换");
+
+        return item.Kind == "COM 扩展"
+            ? SetHandlerEnabled(item, enabled)
+            : SetVerbEnabled(item, enabled);
+    }
+
+    private static OperationResult SetVerbEnabled(SystemContextMenuItem item, bool enabled)
+    {
+        var relativePath = $@"Software\Classes\{item.Scope}\shell\{item.KeyName}";
+        try
+        {
+            if (!enabled)
+            {
+                using var key = Registry.CurrentUser.CreateSubKey(relativePath);
+                key?.SetValue("LegacyDisable", string.Empty, RegistryValueKind.String);
+            }
+            else
+            {
+                using (var key = Registry.CurrentUser.OpenSubKey(relativePath, writable: true))
+                    key?.DeleteValue("LegacyDisable", throwOnMissingValue: false);
+
+                var empty = false;
+                using (var key = Registry.CurrentUser.OpenSubKey(relativePath))
+                {
+                    if (key is not null)
+                        empty = key.SubKeyCount == 0 && key.ValueCount == 0;
+                }
+
+                if (empty)
+                    Registry.CurrentUser.DeleteSubKeyTree(relativePath, throwOnMissingSubKey: false);
+
+                using var merged = Registry.ClassesRoot.OpenSubKey($@"{item.Scope}\shell\{item.KeyName}");
+                if (merged?.GetValue("LegacyDisable") is not null)
+                    return OperationResult.Fail("已清除当前用户禁用，但系统级 LegacyDisable 仍生效，需要管理员权限处理");
+            }
+
+            RestartExplorer();
+            return OperationResult.Success(enabled ? "已启用" : "已禁用");
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail($"切换失败：{ex.Message}");
+        }
+    }
+
+    private static OperationResult SetHandlerEnabled(SystemContextMenuItem item, bool enabled)
+    {
+        const string blockedPath = @"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked";
+        try
+        {
+            if (!enabled)
+            {
+                using var key = Registry.CurrentUser.CreateSubKey(blockedPath);
+                key?.SetValue(item.Clsid, string.Empty, RegistryValueKind.String);
+            }
+            else
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(blockedPath, writable: true);
+                key?.DeleteValue(item.Clsid, throwOnMissingValue: false);
+            }
+
+            RestartExplorer();
+            return OperationResult.Success(enabled ? "已启用" : "已禁用");
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail($"切换失败：{ex.Message}");
+        }
+    }
+
+    /// <summary>删除已有菜单项：先导出 .reg 备份，再删除注册表键；HKLM 项需要提权。</summary>
+    public OperationResult DeleteSystemEntry(SystemContextMenuItem item)
+    {
+        var backup = TryBackupSystemEntry(item, out var backupPath);
+        if (!backup.Ok)
+            return backup;
+
+        if (item.Source == "HKCU" || IsAdmin())
+            return DeleteSystemEntryCore(item, backupPath);
+
+        var elevated = RunElevated(ElevatedOperation.DeleteSystem, item);
+        if (elevated.Ok)
+            RestartExplorer();
+
+        return elevated.Ok && backupPath.Length > 0
+            ? OperationResult.Success($"{elevated.DisplayMessage}，备份：{backupPath}")
+            : elevated;
+    }
+
+    private static OperationResult DeleteSystemEntryCore(
+        SystemContextMenuItem item,
+        string backupPath,
+        bool restartExplorer = true)
+    {
+        try
+        {
+            var isHandler = item.Kind == "COM 扩展";
+            var relativePath = isHandler
+                ? $@"Software\Classes\{item.Scope}\shellex\ContextMenuHandlers\{item.KeyName}"
+                : $@"Software\Classes\{item.Scope}\shell\{item.KeyName}";
+
+            if (item.Source == "HKCU")
+                Registry.CurrentUser.DeleteSubKeyTree(relativePath, throwOnMissingSubKey: false);
+            else
+                Registry.LocalMachine.DeleteSubKeyTree(relativePath, throwOnMissingSubKey: false);
+
+            // 清掉为 HKLM 项写下的当前用户禁用影子，以及 COM 扩展的屏蔽值。
+            Registry.CurrentUser.DeleteSubKeyTree(relativePath, throwOnMissingSubKey: false);
+            if (isHandler && !string.IsNullOrWhiteSpace(item.Clsid))
+            {
+                using var blocked = Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked", writable: true);
+                blocked?.DeleteValue(item.Clsid, throwOnMissingValue: false);
+            }
+
+            if (restartExplorer)
+                RestartExplorer();
+            var suffix = string.IsNullOrWhiteSpace(backupPath) ? string.Empty : $"，备份：{backupPath}";
+            return OperationResult.Success($"已删除{suffix}");
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail($"删除失败：{ex.Message}");
+        }
+    }
+
+    private static OperationResult TryBackupSystemEntry(SystemContextMenuItem item, out string backupPath)
+    {
+        backupPath = string.Empty;
+        try
+        {
+            var dir = Path.Combine(UserDataDirectory, "backups");
+            Directory.CreateDirectory(dir);
+            var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var safeName = new string(item.KeyName
+                .Where(c => char.IsLetterOrDigit(c) || c is '-' or '_')
+                .ToArray());
+            if (safeName.Length == 0)
+                safeName = "menu";
+
+            var file = Path.Combine(dir, $"{stamp}_{safeName}.reg");
+            var info = new ProcessStartInfo
+            {
+                FileName = "reg.exe",
+                Arguments = $"export \"{item.RegistryPath}\" \"{file}\" /y",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            using var process = Process.Start(info);
+            process?.WaitForExit(15000);
+            if (process is null || process.ExitCode != 0 || !File.Exists(file))
+                return OperationResult.Fail("导出注册表备份失败，已取消删除");
+
+            backupPath = file;
+            return OperationResult.Success(file);
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail($"备份注册表失败：{ex.Message}");
+        }
+    }
+
+    private static string ReadVerbCommand(RegistryKey verb, out string note)
+    {
+        note = string.Empty;
+        using var commandKey = verb.OpenSubKey("command");
+        var command = commandKey?.GetValue(null) as string;
+        if (!string.IsNullOrWhiteSpace(command))
+            return Environment.ExpandEnvironmentVariables(command.Trim());
+
+        var explorerHandler = ReadString(verb, "ExplorerCommandHandler");
+        if (explorerHandler.Length > 0)
+        {
+            note = "Win11 命令";
+            return $"ExplorerCommandHandler: {explorerHandler}";
+        }
+
+        var delegateExecute = ReadString(verb, "DelegateExecute");
+        if (delegateExecute.Length > 0)
+        {
+            note = "委托执行";
+            return $"DelegateExecute: {delegateExecute}";
+        }
+
+        note = "无命令";
+        return string.Empty;
+    }
+
+    private static string ResolveVerbName(RegistryKey verb, string fallback)
+    {
+        var resolved = ResolveIndirectString(ReadString(verb, "MUIVerb"));
+        if (resolved.Length > 0)
+            return resolved;
+
+        resolved = ResolveIndirectString(ReadString(verb, null));
+        return resolved.Length > 0 ? resolved : fallback;
+    }
+
+    private static string ResolveHandlerName(string clsid, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(clsid))
+            return fallback;
+
+        try
+        {
+            using var key = Registry.ClassesRoot.OpenSubKey($@"CLSID\{clsid}");
+            var resolved = ResolveIndirectString(ReadString(key, null));
+            return resolved.Length > 0 ? resolved : fallback;
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+
+    private static string ResolveHandlerDll(string clsid)
+    {
+        if (string.IsNullOrWhiteSpace(clsid))
+            return string.Empty;
+
+        try
+        {
+            using var key = Registry.ClassesRoot.OpenSubKey($@"CLSID\{clsid}\InprocServer32");
+            var dll = ReadString(key, null).Trim('"');
+            return dll.Length > 0 ? Environment.ExpandEnvironmentVariables(dll) : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static string ResolveIndirectString(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var text = Environment.ExpandEnvironmentVariables(value.Trim());
+        if (!text.StartsWith('@'))
+            return text;
+
+        try
+        {
+            var buffer = new StringBuilder(512);
+            return SHLoadIndirectString(text, buffer, buffer.Capacity, IntPtr.Zero) == 0
+                ? buffer.ToString().Trim()
+                : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern int SHLoadIndirectString(
+        string source,
+        StringBuilder output,
+        int outputCapacity,
+        IntPtr reserved);
+
+    private static string ReadString(RegistryKey? key, string? name)
+    {
+        try
+        {
+            return (key?.GetValue(name) as string)?.Trim() ?? string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static bool ExistsInCurrentUser(string relativePath)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(relativePath);
+            return key is not null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsDisabledInMachine(string relativePath)
+    {
+        try
+        {
+            using var key = Registry.LocalMachine.OpenSubKey(relativePath);
+            return key?.GetValue("LegacyDisable") is not null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool LooksLikeClsid(string value)
+    {
+        var text = value.Trim();
+        if (!text.StartsWith('{') || !text.EndsWith('}'))
+            return false;
+        return Guid.TryParse(text[1..^1], out _);
+    }
+
+    private static string BuildRegistryPath(string source, string relativePath) =>
+        $@"{(source == "HKCU" ? "HKEY_CURRENT_USER" : "HKEY_LOCAL_MACHINE")}\{relativePath}";
+
+    private static bool IsHandlerBlocked(string clsid, bool user)
+    {
+        if (string.IsNullOrWhiteSpace(clsid))
+            return false;
+
+        try
+        {
+            var root = user ? Registry.CurrentUser : Registry.LocalMachine;
+            using var key = root.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked");
+            return key?.GetValue(clsid) is not null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     #endregion
@@ -404,6 +878,7 @@ public sealed class ContextMenuService
     {
         Add,
         Remove,
+        DeleteSystem,
     }
 
     private sealed class ElevatedRequest
@@ -413,6 +888,9 @@ public sealed class ContextMenuService
 
         [JsonProperty("entry")]
         public ContextMenuEntry Entry { get; set; } = new();
+
+        [JsonProperty("system_entry")]
+        public SystemContextMenuItem? SystemEntry { get; set; }
 
         [JsonProperty("result_file")]
         public string ResultFile { get; set; } = string.Empty;
@@ -427,7 +905,15 @@ public sealed class ContextMenuService
         public string? Error { get; set; }
     }
 
-    private static OperationResult RunElevated(ElevatedOperation operation, ContextMenuEntry entry)
+    private static OperationResult RunElevated(ElevatedOperation operation, ContextMenuEntry entry) =>
+        RunElevated(operation, request => request.Entry = entry);
+
+    private static OperationResult RunElevated(ElevatedOperation operation, SystemContextMenuItem item) =>
+        RunElevated(operation, request => request.SystemEntry = item);
+
+    private static OperationResult RunElevated(
+        ElevatedOperation operation,
+        Action<ElevatedRequest> configure)
     {
         var tag = Guid.NewGuid().ToString("N");
         var requestFile = Path.Combine(Path.GetTempPath(), $"devenv_ctxmenu_{tag}.json");
@@ -435,12 +921,13 @@ public sealed class ContextMenuService
 
         try
         {
-            File.WriteAllText(requestFile, JsonConvert.SerializeObject(new ElevatedRequest
+            var request = new ElevatedRequest
             {
                 Operation = operation.ToString(),
-                Entry = entry,
                 ResultFile = resultFile,
-            }));
+            };
+            configure(request);
+            File.WriteAllText(requestFile, JsonConvert.SerializeObject(request));
 
             var executable = Environment.ProcessPath;
             if (string.IsNullOrEmpty(executable))
@@ -461,9 +948,15 @@ public sealed class ContextMenuService
                 return OperationResult.Fail("未获得管理员权限，操作未执行");
 
             var result = JsonConvert.DeserializeObject<ElevatedResult>(File.ReadAllText(resultFile));
-            return result is { Success: true }
-                ? OperationResult.Success(operation == ElevatedOperation.Add ? "已写入注册表" : "已从注册表移除")
-                : OperationResult.Fail(result?.Error ?? "操作失败");
+            if (result is not { Success: true })
+                return OperationResult.Fail(result?.Error ?? "操作失败");
+
+            return OperationResult.Success(operation switch
+            {
+                ElevatedOperation.Add => "已写入注册表",
+                ElevatedOperation.Remove => "已从注册表移除",
+                _ => "已删除",
+            });
         }
         catch (Exception ex)
         {
@@ -486,9 +979,25 @@ public sealed class ContextMenuService
                 ?? throw new InvalidOperationException("提权请求数据无效");
 
             if (Enum.TryParse<ElevatedOperation>(request.Operation, out var operation))
-                WriteOrDelete(operation, request.Entry);
+            {
+                if (operation == ElevatedOperation.DeleteSystem)
+                {
+                    if (request.SystemEntry is null)
+                        throw new InvalidOperationException("缺少要删除的菜单项");
+                    var result = DeleteSystemEntryCore(
+                        request.SystemEntry, backupPath: string.Empty, restartExplorer: false);
+                    if (!result.Ok)
+                        throw new InvalidOperationException(result.DisplayMessage);
+                }
+                else
+                {
+                    WriteOrDelete(operation, request.Entry);
+                }
+            }
             else
+            {
                 throw new InvalidOperationException($"不支持的操作：{request.Operation}");
+            }
 
             WriteResult(request.ResultFile, new ElevatedResult { Success = true });
             return 0;
@@ -521,7 +1030,8 @@ public sealed class ContextMenuService
             foreach (var scope in ScopesOf(entry))
                 Registry.ClassesRoot.DeleteSubKeyTree($@"{scope}\shell\{entry.Root}", false);
         }
-        RestartExplorer();
+
+        CleanupLegacyDesktopScope(entry);
     }
 
     private static void WriteResult(string file, ElevatedResult result)

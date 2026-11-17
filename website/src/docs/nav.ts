@@ -71,6 +71,12 @@ export const sidebarGroups: SidebarGroup[] = [
         description:
           '使用 DevEnv 的文件解锁与粉碎工具：通过 Restart Manager 定位占用文件的进程，并用随机数据多遍覆盖后删除文件或文件夹。',
       },
+      {
+        text: 'C 盘清理',
+        path: '/guide/diskcleaner/getting-started',
+        description:
+          '使用 DevEnv 的 C 盘清理工具扫描临时文件、系统缓存、浏览器缓存与回收站，查看占用并安全清理，释放磁盘空间。',
+      },
     ],
   },
   {

@@ -31,9 +31,15 @@ public static class ToolWindowHost
         ["hash"] = ("文件哈希计算器", () => new HashToolView()),
         ["codec"] = ("编码工具箱", () => new CodecToolView()),
         ["file-tools"] = ("文件解锁与粉碎", () => new FileToolView()),
+        ["disk-cleaner"] = ("C 盘清理", () => new DiskCleanerView()),
         ["image"] = ("图像格式转换器", () => new ImageToolView()),
         ["startup"] = ("启动项管理", () => new StartupToolView()),
         ["context-menu"] = ("右键菜单管理", () => new ContextMenuView()),
+        ["regex"] = ("正则测试器", () => new RegexTesterView()),
+        ["text-diff"] = ("文本对比", () => new TextDiffView()),
+        ["batch-rename"] = ("批量重命名", () => new BatchRenameView()),
+        ["color"] = ("颜色工具", () => new ColorToolView()),
+        ["sysinfo"] = ("系统信息", () => new SystemInfoView()),
     };
 
     /// <summary>支持的工具 id。</summary>

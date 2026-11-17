@@ -1,0 +1,132 @@
+<UserControl x:Class="DevEnv.Host.Views.TextDiffView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:TextDiffViewModel}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             PreviewKeyDown="OnPreviewKeyDown">
+    <UserControl.DataContext>
+        <vm:TextDiffViewModel />
+    </UserControl.DataContext>
+
+    <DockPanel Margin="14">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <TextBlock Text="文本对比" Style="{DynamicResource PageTitleStyle}" />
+            <TextBlock Text="逐行比较两段文本，标记新增与删除的行（Ctrl+Enter 开始对比）"
+                       Style="{DynamicResource PageHintStyle}" />
+        </StackPanel>
+
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <CheckBox Content="忽略大小写" Margin="0,0,14,0"
+                      IsChecked="{Binding IgnoreCase, Mode=TwoWay}" />
+            <CheckBox Content="忽略空白差异" Margin="0,0,14,0"
+                      IsChecked="{Binding IgnoreWhitespace, Mode=TwoWay}" />
+            <Button Content="开始对比" Style="{StaticResource AccentButtonStyle}" Margin="4,0,8,0"
+                    Command="{Binding CompareCommand}" />
+            <Button Content="交换左右" Margin="0,0,8,0" Command="{Binding SwapCommand}" />
+            <Button Content="清空" Command="{Binding ClearCommand}" />
+        </WrapPanel>
+
+        <Grid DockPanel.Dock="Top" Height="180" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <DockPanel Grid.Column="0">
+                <TextBlock DockPanel.Dock="Top" Text="原文本"
+                           Style="{DynamicResource SectionTitleStyle}" Margin="0,0,0,4" />
+                <TextBox AcceptsReturn="True"
+                         AcceptsTab="True"
+                         FontFamily="Consolas"
+                         FontSize="13"
+                         VerticalContentAlignment="Top"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         SpellCheck.IsEnabled="False"
+                         Text="{Binding LeftText, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+
+            <DockPanel Grid.Column="2">
+                <TextBlock DockPanel.Dock="Top" Text="新文本"
+                           Style="{DynamicResource SectionTitleStyle}" Margin="0,0,0,4" />
+                <TextBox AcceptsReturn="True"
+                         AcceptsTab="True"
+                         FontFamily="Consolas"
+                         FontSize="13"
+                         VerticalContentAlignment="Top"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         SpellCheck.IsEnabled="False"
+                         Text="{Binding RightText, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+        </Grid>
+
+        <TextBlock DockPanel.Dock="Top" Text="{Binding Summary}"
+                   Style="{DynamicResource MutedTextStyle}" Margin="0,0,0,6" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding Error}"
+                   Foreground="{DynamicResource DangerBrush}"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,6"
+                   Visibility="{Binding Error, Converter={StaticResource NonEmptyString}}" />
+
+        <Border Style="{StaticResource CardStyle}" Padding="0">
+            <ListBox ItemsSource="{Binding Lines}"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Focusable" Value="False" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid x:Name="Row">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4" />
+                                <ColumnDefinition Width="44" />
+                                <ColumnDefinition Width="44" />
+                                <ColumnDefinition Width="22" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="Bar" Grid.Column="0" Background="{DynamicResource CardBorderBrush}" />
+                            <TextBlock x:Name="OldNumber" Grid.Column="1" Text="{Binding OldLineText}"
+                                       HorizontalAlignment="Right" Margin="0,1,6,1"
+                                       Foreground="{DynamicResource TextMutedBrush}" FontFamily="Consolas" />
+                            <TextBlock x:Name="NewNumber" Grid.Column="2" Text="{Binding NewLineText}"
+                                       HorizontalAlignment="Right" Margin="0,1,6,1"
+                                       Foreground="{DynamicResource TextMutedBrush}" FontFamily="Consolas" />
+                            <TextBlock x:Name="Sign" Grid.Column="3" Text="{Binding Sign}"
+                                       HorizontalAlignment="Center" Margin="0,1"
+                                       Foreground="{DynamicResource TextMutedBrush}" FontFamily="Consolas" />
+                            <TextBlock x:Name="LineText" Grid.Column="4" Text="{Binding Text}"
+                                       Margin="2,1,8,1" TextWrapping="NoWrap"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" FontFamily="Consolas" />
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Kind}" Value="Added">
+                                <Setter TargetName="Bar" Property="Background" Value="{DynamicResource SuccessBrush}" />
+                                <Setter TargetName="Sign" Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                <Setter TargetName="LineText" Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Kind}" Value="Removed">
+                                <Setter TargetName="Bar" Property="Background" Value="{DynamicResource DangerBrush}" />
+                                <Setter TargetName="Sign" Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                <Setter TargetName="LineText" Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </DockPanel>
+</UserControl>

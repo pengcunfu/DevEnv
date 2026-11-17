@@ -1,0 +1,94 @@
+<UserControl x:Class="DevEnv.Host.Views.RegexTesterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DevEnv.Host.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:RegexTesterViewModel}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             PreviewKeyDown="OnPreviewKeyDown">
+    <UserControl.DataContext>
+        <vm:RegexTesterViewModel />
+    </UserControl.DataContext>
+
+    <DockPanel Margin="14">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <TextBlock Text="正则测试器" Style="{DynamicResource PageTitleStyle}" />
+            <TextBlock Text="用 .NET 正则引擎校验表达式，列出每处匹配的位置、长度与捕获组"
+                       Style="{DynamicResource PageHintStyle}" />
+        </StackPanel>
+
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <CheckBox Content="忽略大小写" Margin="0,0,14,0"
+                      ToolTip="RegexOptions.IgnoreCase"
+                      IsChecked="{Binding IgnoreCase, Mode=TwoWay}" />
+            <CheckBox Content="多行" Margin="0,0,14,0"
+                      ToolTip="{Binding MultilineHint}"
+                      IsChecked="{Binding Multiline, Mode=TwoWay}" />
+            <CheckBox Content="单行" Margin="0,0,14,0"
+                      ToolTip="RegexOptions.Singleline：让 . 匹配换行"
+                      IsChecked="{Binding Singleline, Mode=TwoWay}" />
+            <Button Content="匹配" Style="{StaticResource AccentButtonStyle}" Margin="4,0,8,0"
+                    Command="{Binding TestCommand}" />
+            <Button Content="清空" Margin="0,0,8,0" Command="{Binding ClearCommand}" />
+            <Button Content="复制匹配结果" Command="{Binding CopyMatchesCommand}" />
+        </WrapPanel>
+
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <TextBlock Text="{Binding Summary}" Style="{DynamicResource MutedTextStyle}" />
+            <TextBlock Text="{Binding Error}"
+                       Foreground="{DynamicResource DangerBrush}"
+                       TextWrapping="Wrap"
+                       Margin="0,4,0,0"
+                       Visibility="{Binding Error, Converter={StaticResource NonEmptyString}}" />
+        </StackPanel>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" MinWidth="280" />
+            </Grid.ColumnDefinitions>
+
+            <DockPanel Grid.Column="0">
+                <TextBlock DockPanel.Dock="Top" Text="正则表达式"
+                           Style="{DynamicResource SectionTitleStyle}" Margin="0,0,0,4" />
+                <TextBox DockPanel.Dock="Top"
+                         Height="40"
+                         FontFamily="Consolas"
+                         FontSize="13"
+                         VerticalContentAlignment="Center"
+                         Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,10" />
+                <TextBlock DockPanel.Dock="Top" Text="测试文本"
+                           Style="{DynamicResource SectionTitleStyle}" Margin="0,0,0,4" />
+                <TextBox AcceptsReturn="True"
+                         AcceptsTab="True"
+                         FontFamily="Consolas"
+                         FontSize="13"
+                         VerticalContentAlignment="Top"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         SpellCheck.IsEnabled="False"
+                         Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+
+            <DockPanel Grid.Column="2">
+                <TextBlock DockPanel.Dock="Top" Text="匹配结果"
+                           Style="{DynamicResource SectionTitleStyle}" Margin="0,0,0,4" />
+                <DataGrid ItemsSource="{Binding Matches}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="位置" Binding="{Binding IndexText}" Width="60" />
+                        <DataGridTextColumn Header="长度" Binding="{Binding LengthText}" Width="60" />
+                        <DataGridTextColumn Header="匹配文本" Binding="{Binding Value}" Width="*" />
+                        <DataGridTextColumn Header="捕获组" Binding="{Binding GroupsText}" Width="2*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>
