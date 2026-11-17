@@ -31,6 +31,7 @@
 | `ClipboardHotkey` | string | 全局打开熔岩剪贴板的组合键，默认 `Ctrl+Space` |
 | `TranslatorHotkey` | string | 全局打开熔岩翻译的组合键，默认 `Alt+Space` |
 | `AltKeyLauncher` | bool | 单独按左 Alt 键打开启动器 |
+| `DevServiceView` | string | 开发环境页的视图模式：`table`（表格）或 `card`（卡片），由页面「视图」菜单切换并自动保存 |
 
 修改后重启应用生效。`SelfStarting` 开启/关闭会同步系统启动项。快捷键建议在「设置 → 快捷键」页修改，保存后立即重新注册；手工编辑 `data.json` 的快捷键字段后需重启。
 
@@ -60,7 +61,7 @@
 | `WorkingDirectory` | string | 工作目录；留空时使用用户数据目录 |
 | `StartCommand` | string | 启动命令，通过 `cmd /c` 执行 |
 | `StopCommand` | string | 可选，停止命令；留空时直接结束进程树 |
-| `ProcessName` | string | 可选，进程名（不含 `.exe`）；用于识别状态，并能在重启程序后停止它 |
+| `ProcessName` | string | 可选，进程名（不含 `.exe`）；留空时会从启动命令推断，并按工作目录校验；npm / node / python 等共享进程建议手动填写 |
 
 服务的标准输出与错误输出会实时写入 `文档\FNSoftware\DevEnv\logs\`，文件名形如 `<服务名>-<Id>.log`，每次启动重新写入；页面上的「日志」按钮是查看同一份内容的实时窗口。
 

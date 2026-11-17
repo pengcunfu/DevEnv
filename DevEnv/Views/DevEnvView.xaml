@@ -10,20 +10,52 @@
         <vm:DevEnvViewModel />
     </UserControl.DataContext>
 
-    <DockPanel Margin="12">
-        <Border DockPanel.Dock="Top" Style="{StaticResource ToolbarStyle}" Margin="0,0,0,6">
-            <StackPanel Orientation="Horizontal">
-                <Button Content="添加服务" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding AddServiceCommand}" />
-                <Button Content="刷新" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding ReloadCommand}" />
-                <Button Content="日志目录" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding OpenLogsDirectoryCommand}" />
-            </StackPanel>
-        </Border>
+    <UserControl.Resources>
+        <Style x:Key="StatusDotStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Fill" Value="{DynamicResource DangerBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Running}" Value="True">
+                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
 
-        <Grid>
-            <DataGrid ItemsSource="{Binding Services}">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top"
+              Background="{DynamicResource ChromeBrush}"
+              BorderBrush="{DynamicResource CardBorderBrush}"
+              BorderThickness="0,0,0,1">
+            <MenuItem Header="服务(_S)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="添加服务(_A)" Command="{Binding AddServiceCommand}" />
+                <MenuItem Header="刷新(_R)" Command="{Binding ReloadCommand}" />
+                <MenuItem Header="日志目录(_L)" Command="{Binding OpenLogsDirectoryCommand}" />
+            </MenuItem>
+            <MenuItem Header="视图(_V)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="表格视图(_T)" Command="{Binding ShowTableViewCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock Text="✓"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   Visibility="{Binding IsTableView, Converter={StaticResource TrueToVisibility}}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="卡片视图(_C)" Command="{Binding ShowCardViewCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock Text="✓"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   Visibility="{Binding IsCardView, Converter={StaticResource TrueToVisibility}}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+
+        <Grid Margin="12">
+            <!-- 表格视图 -->
+            <DataGrid ItemsSource="{Binding Services}"
+                      Visibility="{Binding IsTableView, Converter={StaticResource TrueToVisibility}}">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="服务" Width="3*">
                         <DataGridTemplateColumn.CellTemplate>
@@ -50,7 +82,16 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="100" />
+                    <DataGridTemplateColumn Header="状态" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse Style="{StaticResource StatusDotStyle}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="操作" Width="340">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -83,7 +124,81 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <TextBlock Text="还没有服务，点「添加服务」配一个要常驻的后台进程。"
+            <!-- 卡片视图 -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="{Binding IsCardView, Converter={StaticResource TrueToVisibility}}">
+                <ItemsControl ItemsSource="{Binding Services}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="340" Margin="0,0,12,12" Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Style="{StaticResource StatusDotStyle}" Margin="0,0,7,0" />
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="14" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding Name}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding StatusText}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+
+                                    <TextBlock Margin="0,10,0,0"
+                                               Text="{Binding StartCommand}"
+                                               FontFamily="Consolas" FontSize="11"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding StartCommand}" />
+                                    <TextBlock Margin="0,4,0,0"
+                                               Text="{Binding WorkingDirectory}"
+                                               FontFamily="Consolas" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding WorkingDirectory}" />
+
+                                    <WrapPanel Margin="0,12,0,0">
+                                        <Button Content="启动" Margin="0,0,6,6" Padding="9,3"
+                                                IsEnabled="{Binding CanStart}"
+                                                Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="停止" Margin="0,0,6,6" Padding="9,3"
+                                                IsEnabled="{Binding CanStop}"
+                                                Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="日志" Margin="0,0,6,6" Padding="9,3"
+                                                Command="{Binding DataContext.OpenLogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="编辑" Margin="0,0,6,6" Padding="9,3"
+                                                Command="{Binding DataContext.EditServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="目录" Margin="0,0,6,6" Padding="9,3"
+                                                Command="{Binding DataContext.OpenDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="移除" Margin="0,0,6,6" Padding="9,3"
+                                                Foreground="{DynamicResource DangerBrush}"
+                                                Command="{Binding DataContext.RemoveServiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <TextBlock Text="还没有服务，从「服务 → 添加服务」配一个要常驻的后台进程。"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        IsHitTestVisible="False"
                        Style="{DynamicResource PageHintStyle}"

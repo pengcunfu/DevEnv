@@ -32,9 +32,9 @@
 
         <TextBlock Text="进程名（可选）" Style="{DynamicResource MutedTextStyle}" Margin="0,12,0,0" />
         <TextBox x:Name="ProcessNameBox" Margin="0,4,0,0"
-                 Tag="例如 node；用于重启本程序后仍能识别状态并结束进程" />
+                 Tag="例如 node；留空时从启动命令自动推断" />
 
-        <TextBlock Text="命令通过 cmd 执行，支持 npm、批处理与带参数的 exe；工作目录留空时使用用户数据目录。进程名请填该服务独有的名称，否则可能误判运行状态。"
+        <TextBlock Text="命令通过 cmd 执行，支持 npm、批处理与带参数的 exe；工作目录留空时使用用户数据目录。进程名留空时会从启动命令推断，并按工作目录判断进程归属；npm / node / python 等共享进程无法区分时请手动填写。"
                    Style="{DynamicResource PageHintStyle}" Margin="0,12,0,0" />
 
         <TextBlock x:Name="ErrorText" Style="{DynamicResource ErrorTextStyle}"

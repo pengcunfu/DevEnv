@@ -6,17 +6,26 @@ using DevEnv.Core.Models;
 using DevEnv.Core.Services;
 using DevEnv.Host.Infrastructure;
 using DevEnv.Host.Windows;
+using Newtonsoft.Json.Linq;
 
 namespace DevEnv.Host.ViewModels;
 
 /// <summary>开发环境页：用户自定义后台服务的配置、启停与目录快捷访问。</summary>
 public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
 {
+    /// <summary>视图模式保存在 data.json 的 Config 段，下次打开工具窗沿用。</summary>
+    private const string ViewModeKey = "DevServiceView";
+
     private readonly DispatcherTimer _timer;
 
     public DevEnvViewModel()
     {
         Services = [];
+        _isCardView = string.Equals(
+            CoreServices.Config.GetConfig().Value<string>(ViewModeKey),
+            "card",
+            StringComparison.OrdinalIgnoreCase);
+
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _timer.Tick += (_, _) => Reload();
         _timer.Start();
@@ -24,6 +33,34 @@ public sealed partial class DevEnvViewModel : ObservableObject, IDisposable
     }
 
     public ObservableCollection<DevServiceItem> Services { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTableView))]
+    private bool _isCardView;
+
+    /// <summary>表格视图与卡片视图互斥，菜单里的勾选标记直接绑定这两个属性。</summary>
+    public bool IsTableView => !IsCardView;
+
+    partial void OnIsCardViewChanged(bool value)
+    {
+        try
+        {
+            CoreServices.Config.SaveConfig(new JObject
+            {
+                [ViewModeKey] = value ? "card" : "table",
+            });
+        }
+        catch
+        {
+            // 偏好写入失败不影响当前视图切换。
+        }
+    }
+
+    [RelayCommand]
+    private void ShowTableView() => IsCardView = false;
+
+    [RelayCommand]
+    private void ShowCardView() => IsCardView = true;
 
     [RelayCommand]
     public void Reload()

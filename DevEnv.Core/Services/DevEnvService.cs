@@ -174,8 +174,15 @@ public sealed class DevEnvService
             KillProcess(tracked);
 
         // 3. 按进程名兜底（也能停掉本程序重启前启动的进程）。
-        if (IsRunning(config) && NormalizeProcessName(config.ProcessName).Length > 0)
-            KillProcessesByName(NormalizeProcessName(config.ProcessName));
+        //    显式进程名按名字结束；从启动命令推断时限定工作目录，避免误杀同名进程。
+        var fallbackName = DevServiceProcessResolver.ResolveProcessName(config);
+        if (IsRunning(config) && fallbackName.Length > 0)
+        {
+            var scopeDirectory = DevServiceProcessResolver.HasExplicitProcessName(config)
+                ? null
+                : config.WorkingDirectory;
+            KillProcessesByName(fallbackName, scopeDirectory);
+        }
 
         WaitUntilStopped(config, 5000);
         if (IsRunning(config))
@@ -283,18 +290,35 @@ public sealed class DevEnvService
         if (IsTrackedRunning(config.Id))
             return true;
 
-        var processName = NormalizeProcessName(config.ProcessName);
+        // 进程名留空时从启动命令推断，并按工作目录校验，程序重启后也能识别外部启动的进程。
+        var processName = DevServiceProcessResolver.ResolveProcessName(config);
         if (processName.Length == 0)
             return false;
 
+        var scopeDirectory = DevServiceProcessResolver.HasExplicitProcessName(config)
+            ? string.Empty
+            : config.WorkingDirectory;
+
+        Process[] processes;
         try
         {
-            return Process.GetProcessesByName(processName).Length > 0;
+            processes = Process.GetProcessesByName(processName);
         }
         catch
         {
             return false;
         }
+
+        foreach (var process in processes)
+        {
+            using (process)
+            {
+                if (DevServiceProcessResolver.MatchesWorkingDirectory(process, scopeDirectory))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private bool IsTrackedRunning(string id)
@@ -320,17 +344,27 @@ public sealed class DevEnvService
     /// <summary>启动命令可能是 npm 之类的壳，进程名要稍等才会出现；这里只做有限轮询。</summary>
     private static void WaitForProcessName(DevServiceConfig config, int timeoutMs)
     {
-        var processName = NormalizeProcessName(config.ProcessName);
+        var processName = DevServiceProcessResolver.ResolveProcessName(config);
         if (processName.Length == 0)
             return;
+
+        var scopeDirectory = DevServiceProcessResolver.HasExplicitProcessName(config)
+            ? string.Empty
+            : config.WorkingDirectory;
 
         var deadline = Environment.TickCount64 + timeoutMs;
         while (Environment.TickCount64 < deadline)
         {
             try
             {
-                if (Process.GetProcessesByName(processName).Length > 0)
-                    return;
+                foreach (var process in Process.GetProcessesByName(processName))
+                {
+                    using (process)
+                    {
+                        if (DevServiceProcessResolver.MatchesWorkingDirectory(process, scopeDirectory))
+                            return;
+                    }
+                }
             }
             catch
             {
@@ -465,7 +499,7 @@ public sealed class DevEnvService
         }
     }
 
-    private static void KillProcessesByName(string processName)
+    private static void KillProcessesByName(string processName, string? scopeDirectory)
     {
         Process[] processes;
         try
@@ -480,7 +514,14 @@ public sealed class DevEnvService
         foreach (var process in processes)
         {
             using (process)
+            {
+                // 推断出来的进程名可能和别的服务重名，结束前必须确认它就在工作目录里。
+                if (!DevServiceProcessResolver.MatchesWorkingDirectory(
+                        process, scopeDirectory, assumeMatchWhenUnknown: false))
+                    continue;
+
                 KillProcess(process);
+            }
         }
     }
 
