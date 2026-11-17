@@ -4,10 +4,10 @@ namespace DevEnv.Core;
 
 public static class AutostartHelper
 {
-    public const string AppName = "FireNeb DevEnv";
+    public const string AppName = "燧岚开发盒子";
 
     /// <summary>历史注册表项名，切换显示名时清理，避免重复开机启动。</summary>
-    private static readonly string[] LegacyNames = ["燧岚开发盒子", "程序盒子", "ProgramBox"];
+    private static readonly string[] LegacyNames = ["FireNeb DevEnv", "程序盒子", "ProgramBox"];
     private const string KeyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
     public static void Set(bool enable)

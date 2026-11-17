@@ -93,7 +93,7 @@ public static class ShortcutLauncherProbe
             window.UpdateLayout();
 
             Check("启动器窗口可正常加载", window.IsVisible);
-            Check("窗口标题为「FireNeb DevEnv」", window.Title == "FireNeb DevEnv", $"Title={window.Title}");
+            Check("窗口标题为「燧岚开发盒子」", window.Title == "燧岚开发盒子", $"Title={window.Title}");
             // 启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
             Check("启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
             // 窗口改用 Windows 默认外观：系统标题栏与边框，不再自绘透明分层窗口

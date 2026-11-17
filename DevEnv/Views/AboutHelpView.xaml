@@ -18,7 +18,7 @@
     <StackPanel HorizontalAlignment="Stretch">
         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12" HorizontalAlignment="Stretch">
             <StackPanel>
-                <TextBlock Text="FireNeb DevEnv" Style="{DynamicResource PageTitleStyle}" />
+                <TextBlock Text="燧岚开发盒子" Style="{DynamicResource PageTitleStyle}" />
                 <TextBlock Text="{Binding VersionText, Mode=OneWay}" Style="{DynamicResource PageHintStyle}" Margin="0,4,0,0" />
                 <TextBlock Margin="0,12,0,0"
                            TextWrapping="Wrap"
@@ -28,7 +28,7 @@
                            TextWrapping="Wrap"
                            Style="{DynamicResource MutedTextStyle}"
                            Text="熔岩翻译：Alt+Space；熔岩剪贴板：Ctrl+Space；显示窗口：Ctrl+Alt+D（均可在设置 → 快捷键修改）" />
-                <TextBlock Margin="0,12,0,0" Text="© 2026 FireNeb · DevEnv" Style="{DynamicResource MutedTextStyle}" />
+                <TextBlock Margin="0,12,0,0" Text="© 2026 FireNeb · 燧岚开发盒子" Style="{DynamicResource MutedTextStyle}" />
             </StackPanel>
         </Border>
 
@@ -108,7 +108,7 @@
                 </TextBlock>
                 <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Style="{DynamicResource PageHintStyle}">
                     <Run Text="开源地址：" />
-                    <Hyperlink NavigateUri="https://github.com/pengcunfu/DevBox.Net" RequestNavigate="OnLinkClick">https://github.com/pengcunfu/DevBox.Net</Hyperlink>
+                    <Hyperlink NavigateUri="https://github.com/pengcunfu/DevEnv" RequestNavigate="OnLinkClick">https://github.com/pengcunfu/DevEnv</Hyperlink>
                 </TextBlock>
 
                 <TextBlock Text="飞书交流群" Margin="0,16,0,8" />

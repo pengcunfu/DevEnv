@@ -160,7 +160,7 @@ public sealed partial class PortsViewModel : ObservableObject, IDisposable
     {
         var asAdmin = !IsElevated;
         var prompt = asAdmin
-            ? "将以管理员身份重启 FireNeb DevEnv？\n提权后可查看更多进程信息并终止受保护进程。"
+            ? "将以管理员身份重启 燧岚开发盒子？\n提权后可查看更多进程信息并终止受保护进程。"
             : "将以降权普通用户重启？";
         if (!ConfirmDialog.Show(HostServices.DialogOwner, prompt, "重启"))
             return;

@@ -5,15 +5,15 @@ namespace DevEnv.Core.Services;
 
 /// <summary>
 /// Windows 开始菜单：读取用户与公共 Programs 目录，并为启动器应用维护
-/// 「开始菜单\程序\FireNeb DevEnv」下的托管快捷方式。
+/// 「开始菜单\程序\燧岚开发盒子」下的托管快捷方式。
 /// </summary>
 public sealed class StartMenuService
 {
     /// <summary>我们创建的快捷方式所在的一级目录名，同时用于把它从开始菜单页里排除。</summary>
-    public const string ManagedFolderName = "FireNeb DevEnv";
+    public const string ManagedFolderName = "燧岚开发盒子";
 
     /// <summary>历史托管目录名；启动时迁入新目录，并从开始菜单页排除。</summary>
-    private static readonly string[] LegacyManagedFolderNames = ["燧岚开发盒子", "程序盒子"];
+    private static readonly string[] LegacyManagedFolderNames = ["FireNeb DevEnv", "程序盒子"];
 
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(5);
 
@@ -29,7 +29,7 @@ public sealed class StartMenuService
         MigrateLegacyManagedFolder();
     }
 
-    /// <summary>托管快捷方式目录：%APPDATA%\Microsoft\Windows\Start Menu\Programs\FireNeb DevEnv。</summary>
+    /// <summary>托管快捷方式目录：%APPDATA%\Microsoft\Windows\Start Menu\Programs\燧岚开发盒子。</summary>
     public string ManagedFolderPath { get; }
 
     /// <summary>最近一次读取 / 写入失败的原因；成功时为空。</summary>
@@ -58,7 +58,7 @@ public sealed class StartMenuService
     ];
 
     /// <summary>
-    /// 把旧显示名目录里的托管快捷方式迁到「FireNeb DevEnv」。
+    /// 把旧显示名目录里的托管快捷方式迁到「燧岚开发盒子」。
     /// 新目录已存在时合并文件；冲突文件名保留新目录里的。
     /// </summary>
     private void MigrateLegacyManagedFolder()
@@ -310,7 +310,7 @@ public sealed class StartMenuService
                     return null;
                 }
 
-                if (!gateway.TryWrite(fullPath, targetPath, "由 FireNeb DevEnv 创建"))
+                if (!gateway.TryWrite(fullPath, targetPath, "由燧岚开发盒子创建"))
                 {
                     LastError = "创建开始菜单快捷方式失败";
                     return null;

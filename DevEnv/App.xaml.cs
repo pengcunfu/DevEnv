@@ -197,7 +197,7 @@ public partial class App : System.Windows.Application
         SingleInstance.StartActivateListener(Dispatcher, ShowMainWindow);
         SingleInstance.StartFileListener(Dispatcher, paths => _sigXor?.ShowPreviewForPaths(paths));
 
-        _tray = new TrayIconHost("FireNeb DevEnv", LoadAppIcon());
+        _tray = new TrayIconHost("燧岚开发盒子", LoadAppIcon());
         // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
         // 单击托盘 / 「显示主窗口」= 打开启动器（主窗口）
         _tray.MainWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
@@ -840,7 +840,7 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"无法重启: {ex.Message}", "FireNeb DevEnv", MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Windows.MessageBox.Show($"无法重启: {ex.Message}", "燧岚开发盒子", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

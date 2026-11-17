@@ -25,7 +25,7 @@ export function softwareSchema(version: string, description: string): Record<str
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'FireNeb DevEnv',
+    name: '燧岚开发盒子',
     alternateName: 'DevEnv',
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Windows 10, Windows 11',
@@ -53,7 +53,7 @@ export function sourceCodeSchema(version: string, description: string): Record<s
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareSourceCode',
-    name: 'FireNeb DevEnv',
+    name: '燧岚开发盒子',
     description,
     codeRepository: repoUrl,
     programmingLanguage: 'C#',
