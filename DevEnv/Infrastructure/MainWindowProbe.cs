@@ -9,7 +9,7 @@ using DevEnv.Host.Windows;
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 功能工具窗自检：开发环境 / 熔岩环境 / 网络 / 进程 / 服务 / 端口 / 测速
+/// 功能工具窗自检：开发环境 / 熔岩环境 / 网络 / 进程 / 服务 / 端口 / 测速 / 启动项
 /// 各自作为独立 ToolWindow 打开，互不影响。
 /// 用法：<c>DevEnv.exe --windows-check %TEMP%\windows.txt</c>
 /// </summary>
@@ -26,6 +26,7 @@ public static class MainWindowProbe
         ("services", "服务监控"),
         ("ports", "端口管理"),
         ("speed", "网络测速"),
+        ("startup", "启动项管理"),
     ];
 
     public static int Run(string[] args)

@@ -10,41 +10,163 @@
         <vm:StartupToolViewModel />
     </UserControl.DataContext>
 
-    <DockPanel Margin="14">
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-            <TextBlock Text="启动项管理" Style="{DynamicResource PageTitleStyle}" />
-            <TextBlock Text="当前用户 Run 注册表与启动文件夹" Style="{DynamicResource PageHintStyle}" />
-        </StackPanel>
+    <UserControl.Resources>
+        <Style x:Key="StartupStatusDotStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding FileExists}" Value="True">
+                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding FileExists}" Value="False">
+                    <Setter Property="Fill" Value="{DynamicResource DangerBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
 
-        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-            <TextBox Width="160" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
-                     Tag="启动项名称" ToolTip="名称" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBox Width="300" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
-                     Tag="命令 / 文件路径" ToolTip="命令 / 路径" Text="{Binding Command, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Content="添加注册表项" Margin="0,0,8,0" Style="{StaticResource AccentButtonStyle}"
-                    Command="{Binding AddCommand}" />
-            <Button Content="刷新" Command="{Binding ReloadCommand}" />
-        </WrapPanel>
+        <Style x:Key="StartupCellTextStyle" TargetType="TextBlock">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
 
-        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8"
-                   Text="{Binding Message}" Style="{DynamicResource PageHintStyle}" />
+    <DockPanel>
+        <Menu DockPanel.Dock="Top"
+              Background="{DynamicResource ChromeBrush}"
+              BorderBrush="{DynamicResource CardBorderBrush}"
+              BorderThickness="0,0,0,1">
+            <MenuItem Header="启动项(_S)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="添加注册表项(_A)" Command="{Binding AddCommand}" />
+                <MenuItem Header="刷新(_R)" Command="{Binding ReloadCommand}" />
+            </MenuItem>
+        </Menu>
 
-        <DataGrid ItemsSource="{Binding Items}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="220" />
-                <DataGridTextColumn Header="位置" Binding="{Binding Location}" Width="120" />
-                <DataGridTextColumn Header="命令" Binding="{Binding Command}" Width="*" />
-                <DataGridTemplateColumn Header="操作" Width="90">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="删除"
-                                    Foreground="{DynamicResource DangerBrush}"
-                                    Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+        <DockPanel Margin="14">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                <TextBlock Text="启动项管理" Style="{DynamicResource PageTitleStyle}" />
+                <TextBlock Text="当前用户 Run 注册表与启动文件夹；显示来源类型、发布者、文件说明、可执行文件与文件状态，右键启动项可删除"
+                           Style="{DynamicResource PageHintStyle}" />
+            </StackPanel>
+
+            <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                <TextBox Width="160" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                         Tag="启动项名称" ToolTip="名称" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Width="300" Margin="0,0,8,0" Style="{StaticResource SearchBoxStyle}"
+                         Tag="命令 / 文件路径" ToolTip="命令 / 路径" Text="{Binding Command, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="填写后从「启动项」菜单添加"
+                           VerticalAlignment="Center"
+                           Style="{DynamicResource MutedTextStyle}" />
+            </WrapPanel>
+
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8"
+                       Text="{Binding Message}" Style="{DynamicResource PageHintStyle}" />
+
+            <DataGrid ItemsSource="{Binding Items}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      FrozenColumnCount="1"
+                      PreviewMouseRightButtonDown="OnPreviewMouseRightButtonDown">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                        <Setter Property="ContextMenu">
+                            <Setter.Value>
+                                <ContextMenu>
+                                    <MenuItem Header="删除此启动项"
+                                              Command="{Binding PlacementTarget.Tag.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                    <Separator />
+                                    <MenuItem Header="刷新"
+                                              Command="{Binding PlacementTarget.Tag.ReloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                </ContextMenu>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="名称" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"
+                                           Style="{StaticResource StartupCellTextStyle}"
+                                           ToolTip="{Binding Name}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="类型" Binding="{Binding Kind}" Width="66" />
+                    <DataGridTemplateColumn Header="来源" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Location}"
+                                           Style="{StaticResource StartupCellTextStyle}"
+                                           ToolTip="{Binding LocationDetail}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="发布者" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Publisher}"
+                                           Style="{StaticResource StartupCellTextStyle}"
+                                           ToolTip="{Binding Publisher}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="文件说明" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Description}"
+                                           Style="{StaticResource StartupCellTextStyle}"
+                                           ToolTip="{Binding Description}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="版本" Width="72">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding FileVersion}"
+                                           Style="{StaticResource StartupCellTextStyle}"
+                                           ToolTip="{Binding FileVersion}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="可执行文件" Width="2*" MinWidth="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ExecutablePath}"
+                                           FontFamily="Consolas" FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Style="{StaticResource StartupCellTextStyle}"
+                                           ToolTip="{Binding ExecutablePath}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="状态" Width="84">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse Style="{StaticResource StartupStatusDotStyle}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding FileStatusText}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="命令" Width="2*" MinWidth="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Command}"
+                                           FontFamily="Consolas" FontSize="11"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Style="{StaticResource StartupCellTextStyle}"
+                                           ToolTip="{Binding Command}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
     </DockPanel>
 </UserControl>

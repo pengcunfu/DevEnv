@@ -88,7 +88,7 @@
 - 新增功能工具时：在 `ToolWindowHost.Tools` 注册视图工厂，并在 `ShortcutLauncherViewModel.BuiltinToolDefinitions` 加一条（含分类 / 字形 / 底色）；`HostCallbacks.OnActivateTab` 与 `DEVENV_START_PAGE` 对已注册 id 直接 `ToolWindowHost.Open`。
 - 全局热键挂在 `App` 启动时创建的**隐藏 HWND**（`_hotkeyWindow`）上，不再依赖功能窗。托盘「显示主窗口」、单击托盘、`Ctrl+Alt+D`、二次启动只打开**启动器**；翻译窗 / 剪贴板窗的 owner 在启动器可见时挂到启动器，否则不挂。
 - `OnShowDevelopmentWindow` / `OnShowMonitorWindow` 仅作兼容：分别打开 `devenv` / `network` 工具窗。
-- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --windows-check %TEMP%\windows.txt`，验证七个功能工具都能打开、重复打开复用同一实例。
+- 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --windows-check %TEMP%\windows.txt`，验证八个功能工具（含启动项管理）都能打开、重复打开复用同一实例。
 
 ### 左 Alt 拦截
 

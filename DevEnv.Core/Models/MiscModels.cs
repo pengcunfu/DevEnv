@@ -59,6 +59,30 @@ public sealed class StartupEntry
     public required string Command { get; init; }
     public required string Location { get; init; }
     public bool Enabled { get; init; } = true;
+
+    /// <summary>来源类型：注册表值 / 快捷方式 / 网址快捷方式 / 文件。</summary>
+    public string Kind { get; init; } = string.Empty;
+
+    /// <summary>完整来源位置：注册表键路径或启动文件夹中的文件路径。</summary>
+    public string LocationDetail { get; init; } = string.Empty;
+
+    /// <summary>从命令或快捷方式目标解析出的可执行文件路径。</summary>
+    public string ExecutablePath { get; init; } = string.Empty;
+
+    /// <summary>可执行文件的文件说明，如「Microsoft Windows 操作系统」。</summary>
+    public string Description { get; init; } = string.Empty;
+
+    /// <summary>可执行文件的发布者（CompanyName）。</summary>
+    public string Publisher { get; init; } = string.Empty;
+
+    /// <summary>可执行文件版本。</summary>
+    public string FileVersion { get; init; } = string.Empty;
+
+    /// <summary>可执行文件是否存在；null 表示只有命令名或无法读取。</summary>
+    public bool? FileExists { get; init; }
+
+    /// <summary>文件状态文案：文件存在 / 文件缺失 / 系统命令 / 未解析。</summary>
+    public string FileStatusText { get; init; } = string.Empty;
 }
 
 /// <summary>Windows 系统工具目录项。</summary>
