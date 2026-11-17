@@ -131,12 +131,12 @@
                 <ItemsControl ItemsSource="{Binding Services}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel />
+                            <UniformGrid Columns="3" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Width="340" Margin="0,0,12,12" Style="{StaticResource CardStyle}">
+                            <Border Margin="0,0,10,10" Style="{StaticResource CardStyle}">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>

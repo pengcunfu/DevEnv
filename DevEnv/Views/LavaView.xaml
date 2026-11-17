@@ -19,29 +19,31 @@
         </Style>
     </UserControl.Resources>
 
-    <DockPanel Margin="12">
-        <Border DockPanel.Dock="Top" Style="{StaticResource ToolbarStyle}" Margin="0,0,0,6">
-            <StackPanel Orientation="Horizontal">
-                <Button Content="应用目录" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding OpenAppsDirectoryCommand}" />
-                <Button Content="下载缓存" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding OpenCacheDirectoryCommand}" />
-                <Button Content="数据目录" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding OpenDataRootCommand}" />
-                <Border Width="1" Margin="5,3" Background="{DynamicResource CardBorderBrush}" />
-                <Button Content="环境变量" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding OpenEnvironmentVariablesCommand}" />
-                <Button Content="官方文档" Style="{StaticResource ToolbarButtonStyle}"
-                        Command="{Binding OpenDocsCommand}" />
-            </StackPanel>
-        </Border>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top"
+              Background="{DynamicResource ChromeBrush}"
+              BorderBrush="{DynamicResource CardBorderBrush}"
+              BorderThickness="0,0,0,1">
+            <MenuItem Header="目录(_D)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="应用目录(_A)" Command="{Binding OpenAppsDirectoryCommand}" />
+                <MenuItem Header="下载缓存(_C)" Command="{Binding OpenCacheDirectoryCommand}" />
+                <MenuItem Header="数据目录(_D)" Command="{Binding OpenDataRootCommand}" />
+            </MenuItem>
+            <MenuItem Header="工具(_T)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="环境变量(_E)" Command="{Binding OpenEnvironmentVariablesCommand}" />
+            </MenuItem>
+            <MenuItem Header="帮助(_H)" Style="{StaticResource TopLevelMenuItemStyle}">
+                <MenuItem Header="官方文档(_O)" Command="{Binding OpenDocsCommand}" />
+            </MenuItem>
+        </Menu>
 
-        <!-- 无消息时不占位，避免顶部多出一条空隙 -->
-        <TextBlock DockPanel.Dock="Top"
-                   Margin="0,0,0,6"
-                   Text="{Binding Message}"
-                   Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}"
-                   Style="{DynamicResource PageHintStyle}" />
+        <DockPanel Margin="12">
+            <!-- 无消息时不占位，避免顶部多出一条空隙 -->
+            <TextBlock DockPanel.Dock="Top"
+                       Margin="0,0,0,6"
+                       Text="{Binding Message}"
+                       Visibility="{Binding Message, Converter={StaticResource NonEmptyString}}"
+                       Style="{DynamicResource PageHintStyle}" />
 
         <TabControl x:Name="Tabs" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
 
@@ -395,5 +397,6 @@
                 </ScrollViewer>
             </TabItem>
         </TabControl>
+        </DockPanel>
     </DockPanel>
 </UserControl>

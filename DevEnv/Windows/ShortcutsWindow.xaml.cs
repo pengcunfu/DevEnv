@@ -16,10 +16,10 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 启动器（Launchpad 样式）：固定 960 × 680 DIP、居中，配色与 Windows 11 开始菜单一致。
-/// 左侧栏自上而下是搜索框与本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具 / 开始菜单六个纵向页签
-/// 与系统工具 / 内置工具两个只读文件夹；中部大图标网格；
-/// 单击图标即启动，Esc 或点击空白处关闭。
+/// 启动器（Launchpad 样式）：默认 960 × 680 DIP、居中，配色与 Windows 11 开始菜单一致，
+/// 使用系统标题栏按钮，可最大化 / 最小化。左侧栏自上而下是搜索框与本地应用 / 文件夹 /
+/// 网站 / 系统工具 / 内置工具 / 开始菜单六个纵向页签与系统工具 / 内置工具两个只读文件夹；
+/// 中部大图标网格；单击图标即启动，Esc 或点击空白处关闭。
 /// 非模态、单实例（由 <see cref="Infrastructure.ShortcutWindowHost"/> 管理）。
 /// </summary>
 public partial class ShortcutsWindow : Window
@@ -188,9 +188,9 @@ public partial class ShortcutsWindow : Window
     }
 
     /// <summary>
-    /// 固定 960 × 680 DIP，在工作区内水平、垂直居中。
+    /// 默认 960 × 680 DIP，在工作区内水平、垂直居中。
     /// 只在尺寸/位置确实不同时才改，显示过程中改窗口几何会让 DWM 重新合成，肉眼就是闪一下；
-    /// 预热后这里通常一次都不改。
+    /// 预热后这里通常一次都不改。最大化 / 最小化时由 <see cref="OnWindowStateChanged"/> 维护钩子。
     /// </summary>
     private void ApplyScreenBounds()
     {
@@ -372,7 +372,8 @@ public partial class ShortcutsWindow : Window
     /// </summary>
     private void OnOutsideClicked()
     {
-        if (!IsVisible || _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive)
+        if (!IsVisible || _suppressDeactivate || _menuOpen || _dragActive || _marqueeActive
+            || WindowState == WindowState.Minimized)
             return;
 
         HideLauncher();
@@ -392,7 +393,7 @@ public partial class ShortcutsWindow : Window
     private void OnWindowsKeyPressed()
     {
         // 打开文件 / 重命名对话框期间不动窗口，避免把模态对话框的宿主一起藏掉
-        if (!IsVisible || _suppressDeactivate)
+        if (!IsVisible || _suppressDeactivate || WindowState == WindowState.Minimized)
             return;
 
         HideLauncher();
@@ -1108,12 +1109,16 @@ public partial class ShortcutsWindow : Window
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
+        if (WindowState == WindowState.Minimized)
+            return;
+
         if (_suppressDeactivate || _prewarming || _menuOpen || _dragActive || _marqueeActive || !IsVisible)
             return;
 
         Dispatcher.BeginInvoke(new Action(() =>
         {
-            if (!IsVisible || !IsActive || _suppressDeactivate || _menuOpen)
+            if (!IsVisible || !IsActive || _suppressDeactivate || _menuOpen
+                || WindowState == WindowState.Minimized)
                 return;
             if (DateTime.UtcNow - _shownAtUtc < FocusGrace)
                 return;
@@ -1121,6 +1126,28 @@ public partial class ShortcutsWindow : Window
             HideLauncher();
             AutoDismissed?.Invoke();
         }), DispatcherPriority.Input);
+    }
+
+    /// <summary>
+    /// 最大化 / 最小化 / 还原时维护只在窗口可见期间需要的钩子：
+    /// 最小化后卸载，避免点击任务栏恢复时被窗口外点击监听当成「点外面」又收起；
+    /// 还原后重新安装，并重置激活宽限，防止恢复瞬间的 Deactivated 把窗口藏掉。
+    /// </summary>
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            _winKeyHook.Uninstall();
+            _outsideClickHook.Uninstall();
+            return;
+        }
+
+        if (!IsVisible)
+            return;
+
+        _winKeyHook.Install();
+        _outsideClickHook.Install();
+        _shownAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>

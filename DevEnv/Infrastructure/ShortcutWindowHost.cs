@@ -170,11 +170,14 @@ public static class ShortcutWindowHost
     /// </summary>
     public static bool Toggle()
     {
-        // 已经打开时再按一次 = 收起
+        // 已经打开时再按一次 = 收起；最小化状态下则还原，而不是藏掉任务栏按钮
         if (_window is { IsVisible: true } window)
         {
             CancelPendingOpen();
-            window.Dismiss();
+            if (window.WindowState == WindowState.Minimized)
+                OpenCore(null);
+            else
+                window.Dismiss();
             return true;
         }
 

@@ -58,7 +58,7 @@ public static class ShortcutLauncherProbe
             Check("预热已完成", window.IsPrewarmed);
             // 预热必须落在最终几何上，否则 Show 时还要挪窗口，DWM 重新合成会闪
             var expected = ShortcutsWindow.ComputeScreenBounds();
-            Check("预热使用最终几何（固定 960 × 680 DIP、居中，显示时不再移动窗口）",
+            Check("预热使用最终几何（默认 960 × 680 DIP、居中，显示时不再移动窗口）",
                 Math.Abs(window.Left - expected.Left) < 0.5
                 && Math.Abs(window.Top - expected.Top) < 0.5
                 && Math.Abs(window.Width - expected.Width) < 0.5
@@ -66,7 +66,7 @@ public static class ShortcutLauncherProbe
                 $"Left={window.Left}, Top={window.Top}, W={window.Width}, H={window.Height}, " +
                 $"expected=({expected.Left},{expected.Top},{expected.Width},{expected.Height})");
             var area = CursorScreen.GetWorkAreaDip();
-            Check("启动器为固定尺寸（960 × 680 DIP）",
+            Check("启动器默认尺寸为 960 × 680 DIP",
                 Math.Abs(window.Width - DevEnv.Core.Services.LauncherGeometry.Width) < 0.5
                 && Math.Abs(window.Height - DevEnv.Core.Services.LauncherGeometry.Height) < 0.5,
                 $"W={window.Width}, H={window.Height}, area={area.Width}×{area.Height}");
@@ -310,6 +310,20 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("回到 apps 页签", !vm.IsInsideGroup && vm.SelectedPage == 0);
             Check("ShowPage 可见时安装窗口外点击监听", window.IsOutsideClickHookInstalled);
+
+            // 系统标题栏按钮：允许最大化 / 最小化。探针只验证最小化（最大化会铺满屏幕），
+            // 并确认最小化期间卸载窗口外点击钩子，还原后重新安装。
+            Check("启动器允许最大化与最小化",
+                window.ResizeMode == ResizeMode.CanResize,
+                $"ResizeMode={window.ResizeMode}");
+            window.WindowState = WindowState.Minimized;
+            Pump();
+            Check("启动器可最小化", window.WindowState == WindowState.Minimized);
+            Check("最小化时卸载窗口外点击监听", !window.IsOutsideClickHookInstalled);
+            Check("最小化不会触发自动收起", window.IsVisible, $"visible={window.IsVisible}");
+            window.WindowState = WindowState.Normal;
+            Pump();
+            Check("还原后重新安装窗口外点击监听", window.IsOutsideClickHookInstalled);
 
             // 窗口外点击必须真的收起，而不是只装了钩子；标准窗口直接隐藏，没有退出动画
             window.SimulateOutsideClick();
