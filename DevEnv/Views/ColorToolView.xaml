@@ -160,7 +160,11 @@
                                             ToolTip="{Binding Hex}"
                                             Command="{Binding DataContext.UseColorCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding Hex}">
-                                        <Border Background="{Binding Brush}" CornerRadius="6" Margin="2" />
+                                        <Border Width="44" Height="44"
+                                                Background="{Binding Brush}"
+                                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="6" />
                                     </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

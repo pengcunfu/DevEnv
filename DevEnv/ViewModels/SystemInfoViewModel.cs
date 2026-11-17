@@ -59,7 +59,8 @@ public sealed partial class SystemInfoViewModel : ObservableObject
         foreach (var group in Groups)
         {
             lines.Add($"[{group.Title}]");
-            lines.AddRange(group.Items.Select(item => $"  {item.Name}: {item.Value}"));
+            // 名称与值用制表符分隔，粘贴到 Excel / 表格软件时可直接分列。
+            lines.AddRange(group.Items.Select(item => $"{item.Name}\t{item.Value}"));
             lines.Add(string.Empty);
         }
 
