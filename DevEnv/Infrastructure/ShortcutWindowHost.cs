@@ -9,16 +9,16 @@ namespace DevEnv.Host.Infrastructure;
 /// 启动器宿主：六个页签（本地应用 / 文件夹 / 网站 / 系统工具 / 内置工具 / 开始菜单）共用同一个居中窗口。
 /// 单实例，重复打开是「切到对应页签 / 展开文件夹并前置已有窗口」，不再开一堆。
 ///
-/// 启动器**不设 Owner**：它居中悬浮且置顶，本来就不跟主窗最小化 / 隐藏联动；
-/// 一旦挂到主窗名下，从托盘（主窗隐藏）唤起时会把主窗一起拉出来，
-/// 所以这里刻意不走 ToolWindowHost 那套 owner 绑定。
+/// 启动器就是产品主窗口，**不设 Owner**：它不跟别的窗口最小化 / 隐藏联动，
+/// 从托盘唤起时也不会把别的窗口一起拉出来，所以这里不走 ToolWindowHost 那套 owner 绑定。
+/// 启动器本身是普通非置顶窗口；从它打开的工具窗会挂它做 Owner。
 /// </summary>
 public static class ShortcutWindowHost
 {
     /// <summary>失去焦点自动收起后的短时间窗口：在此期间再点托盘菜单视为「关闭」而不是重新打开。</summary>
     private static readonly TimeSpan AutoDismissGrace = TimeSpan.FromMilliseconds(500);
 
-    /// <summary>收起开始菜单后留一两帧再显示启动器，避免两个置顶窗口叠在一起。</summary>
+    /// <summary>收起开始菜单后留一两帧再显示启动器，避免开始菜单压在启动器上面。</summary>
     private static readonly TimeSpan StartMenuDismissDelay = TimeSpan.FromMilliseconds(120);
 
     private static ShortcutsWindow? _window;
@@ -120,7 +120,7 @@ public static class ShortcutWindowHost
             return;
         }
 
-        // 开始菜单和启动器都是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，
+        // 开始菜单是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，
         // 否则开始菜单会一直压在启动器上面，看起来像 Alt 没生效。
         if (ShellStartMenu.DismissIfOpen())
         {

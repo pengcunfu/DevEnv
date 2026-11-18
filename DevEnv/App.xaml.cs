@@ -229,19 +229,24 @@ public partial class App : System.Windows.Application
         _clipboardWatcher = new ClipboardWatcher();
         _clipboardWatcher.Captured += OnClipboardCaptured;
 
+        // 启动时带调试路由（DEVENV_START_PAGE）就只打开目标页 / 工具窗，不再额外弹主界面
+        var startPage = Environment.GetEnvironmentVariable("DEVENV_START_PAGE");
+
         // 启动后在后台空闲时把启动器（主窗口）准备好（屏幕外完成布局与首帧渲染），
         // 之后左 Alt / 托盘 / Ctrl+Alt+D 唤起时只是把窗口摆出来，不再临时创建、不会闪。
-        // 放到 ApplicationIdle 是为了不拖慢启动本身。
+        // 放到 ApplicationIdle 是为了不拖慢启动本身。预热完成后直接显示主界面。
         Dispatcher.BeginInvoke(new Action(() =>
         {
             ShortcutWindowHost.Prewarm();
             if (ShortcutWindowHost.Window is { } launcher)
                 MainWindow = launcher;
+
+            if (string.IsNullOrWhiteSpace(startPage))
+                ShortcutWindowHost.Open();
         }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
         // 调试用：DEVENV_START_PAGE=lava / network / ports 直接打开对应工具窗，
         // 启动器页签（apps / tools 等）走 ShortcutWindowHost。
-        var startPage = Environment.GetEnvironmentVariable("DEVENV_START_PAGE");
         if (!string.IsNullOrWhiteSpace(startPage))
         {
             var pageId = startPage.Trim();

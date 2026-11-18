@@ -9,7 +9,6 @@
         MinWidth="800"
         MinHeight="560"
         ShowInTaskbar="True"
-        Topmost="True"
         WindowStartupLocation="Manual"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
@@ -32,10 +31,11 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!-- 系统工具叶子项（DataContext 是 LauncherEntry）：图标 + 名称。
+                 菜单沿用应用默认的 Windows 风格样式，不自定义外观。
                  必须先于使用它的分组样式定义，StaticResource 不支持向前引用。 -->
             <Style x:Key="SystemToolLeafMenuItem"
                    TargetType="MenuItem"
-                   BasedOn="{StaticResource LauncherMenuItemStyle}">
+                   BasedOn="{StaticResource {x:Type MenuItem}}">
                 <Setter Property="Header" Value="{Binding}" />
                 <Setter Property="ToolTip" Value="{Binding TargetPath}" />
                 <Setter Property="HeaderTemplate">
@@ -61,7 +61,7 @@
             <!-- 系统工具菜单：分类子菜单（DataContext 是 LauncherSection） -->
             <Style x:Key="SystemToolGroupMenuItem"
                    TargetType="MenuItem"
-                   BasedOn="{StaticResource LauncherMenuItemStyle}">
+                   BasedOn="{StaticResource {x:Type MenuItem}}">
                 <Setter Property="Header" Value="{Binding Title}" />
                 <Setter Property="ItemsSource" Value="{Binding Entries}" />
                 <Setter Property="ItemContainerStyle" Value="{StaticResource SystemToolLeafMenuItem}" />
@@ -75,22 +75,16 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 顶部菜单栏：全部系统工具按分类收进「系统工具」 -->
-        <Border Grid.Row="0"
-                Background="{DynamicResource LauncherSurfaceBrush}"
-                BorderBrush="{DynamicResource LauncherBorderBrush}"
-                BorderThickness="0,0,0,1"
-                Padding="8,3">
-            <Menu x:Name="MainMenu"
-                  VerticalAlignment="Center"
-                  Style="{StaticResource LauncherMenuStyle}">
-                <MenuItem x:Name="SystemToolsMenuItem"
-                          Header="系统工具(_S)"
-                          Style="{StaticResource LauncherTopLevelMenuItemStyle}"
-                          ItemsSource="{Binding SystemToolMenus}"
-                          ItemContainerStyle="{StaticResource SystemToolGroupMenuItem}" />
-            </Menu>
-        </Border>
+        <!-- 顶部菜单栏：全部系统工具按分类收进「系统工具」，外观交给应用默认菜单样式 -->
+        <Menu x:Name="MainMenu"
+              Grid.Row="0"
+              VerticalAlignment="Center">
+            <MenuItem x:Name="SystemToolsMenuItem"
+                      Header="系统工具(_S)"
+                      Style="{StaticResource TopLevelMenuItemStyle}"
+                      ItemsSource="{Binding SystemToolMenus}"
+                      ItemContainerStyle="{StaticResource SystemToolGroupMenuItem}" />
+        </Menu>
 
         <Grid x:Name="Root" Grid.Row="1" Margin="12,0,12,0">
             <Grid.ContextMenu>

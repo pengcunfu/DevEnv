@@ -235,6 +235,26 @@ public static class ShortcutLauncherProbe
             window.WindowState = WindowState.Normal;
             Pump();
             Check("还原后重新安装窗口外点击监听", window.IsOutsideClickHookInstalled);
+            Check("主窗口不是置顶窗口", !window.Topmost);
+
+            // 从主界面打开的子窗口还开着时，主界面必须保持可见
+            var child = new Window
+            {
+                Owner = window,
+                Width = 200,
+                Height = 120,
+                ShowInTaskbar = false,
+                ShowActivated = false,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -4000,
+                Top = -4000,
+            };
+            child.Show();
+            Pump();
+            window.SimulateOutsideClick();
+            Check("子工具窗打开时主界面不因点外面收起", window.IsVisible);
+            child.Close();
+            Pump();
 
             window.SimulateOutsideClick();
             Check("窗口外点击立即收起并隐藏", !window.IsVisible);

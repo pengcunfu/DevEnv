@@ -69,7 +69,7 @@ public partial class ShortcutsWindow : Window
         _outsideClickHook = new OutsideClickDismissHook(
             Dispatcher,
             () => new WindowInteropHelper(this).Handle,
-            () => _suppressDeactivate || _menuOpen);
+            () => _suppressDeactivate || _menuOpen || HasVisibleOwnedChildWindow());
         _outsideClickHook.OutsideClicked += OnOutsideClicked;
 
         Closed += (_, _) =>
@@ -281,7 +281,7 @@ public partial class ShortcutsWindow : Window
 
     private void OnOutsideClicked()
     {
-        if (!IsVisible || _suppressDeactivate || _menuOpen
+        if (!IsVisible || _suppressDeactivate || _menuOpen || HasVisibleOwnedChildWindow()
             || WindowState == WindowState.Minimized)
             return;
 
@@ -305,7 +305,7 @@ public partial class ShortcutsWindow : Window
 
     #region 交互
 
-    /// <summary>图标单击启动；事件挂在网格上，由模板按钮冒泡上来。</summary>
+    /// <summary>图标单击启动；事件挂在网格上，由模板按钮冒泡上来。主界面保持打开。</summary>
     private void OnEntryClick(object sender, RoutedEventArgs e)
     {
         if (FindEntry(e.OriginalSource as DependencyObject) is not { } entry)
@@ -313,8 +313,6 @@ public partial class ShortcutsWindow : Window
 
         ViewModel.Message = string.Empty;
         ViewModel.Launch(entry);
-        if (string.IsNullOrEmpty(ViewModel.Message))
-            HideLauncher();
     }
 
     private void OnEntryContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -331,8 +329,6 @@ public partial class ShortcutsWindow : Window
         {
             ViewModel.Message = string.Empty;
             ViewModel.Launch(entry);
-            if (string.IsNullOrEmpty(ViewModel.Message))
-                HideLauncher();
         };
         menu.Items.Add(run);
 
@@ -377,21 +373,17 @@ public partial class ShortcutsWindow : Window
                 {
                     e.Handled = true;
                     ViewModel.Launch(focused);
-                    if (string.IsNullOrEmpty(ViewModel.Message))
-                        HideLauncher();
                 }
                 else if (Keyboard.FocusedElement is not ButtonBase && ViewModel.VisibleEntries.Count > 0)
                 {
                     e.Handled = true;
                     ViewModel.Launch(ViewModel.VisibleEntries[0]);
-                    if (string.IsNullOrEmpty(ViewModel.Message))
-                        HideLauncher();
                 }
                 break;
         }
     }
 
-    /// <summary>系统工具菜单项单击：运行对应工具并收起启动器。</summary>
+    /// <summary>系统工具菜单项单击：运行对应工具，主界面保持打开。</summary>
     private void OnSystemToolMenuClick(object sender, RoutedEventArgs e)
     {
         if (sender is not MenuItem { DataContext: LauncherEntry entry })
@@ -399,21 +391,32 @@ public partial class ShortcutsWindow : Window
 
         ViewModel.Message = string.Empty;
         ViewModel.Launch(entry);
-        if (string.IsNullOrEmpty(ViewModel.Message))
-            HideLauncher();
     }
+
+    /// <summary>
+    /// 从主界面打开的子窗口（内置工具窗 / 分类窗口 / 翻译 / 剪贴板）还开着时，
+    /// 主界面保持可见，不因失焦或点击子窗口而收起。
+    /// </summary>
+    private bool HasVisibleOwnedChildWindow() =>
+        Application.Current?.Windows
+            .OfType<Window>()
+            .Any(window => !ReferenceEquals(window, this)
+                && window.IsVisible
+                && ReferenceEquals(window.Owner, this)) == true;
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
         if (WindowState == WindowState.Minimized)
             return;
 
-        if (_suppressDeactivate || _prewarming || _menuOpen || !IsVisible)
+        if (_suppressDeactivate || _prewarming || _menuOpen
+            || HasVisibleOwnedChildWindow() || !IsVisible)
             return;
 
         Dispatcher.BeginInvoke(new Action(() =>
         {
             if (!IsVisible || !IsActive || _suppressDeactivate || _menuOpen
+                || HasVisibleOwnedChildWindow()
                 || WindowState == WindowState.Minimized)
                 return;
             if (DateTime.UtcNow - _shownAtUtc < FocusGrace)
