@@ -605,8 +605,7 @@ public partial class ShortcutsWindow : Window
 
         menu.Items.Add(new Separator());
         menu.Items.Add(MenuItemFor("编辑别名与图标", () => _ = RunDialogAsync(() => ViewModel.RenameAsync(entry, this))));
-        if (entry.Kind != ShortcutKind.Folder)
-            menu.Items.Add(MenuItemFor("刷新图标", () => _ = RunDialogAsync(() => ViewModel.RefreshIconAsync(entry))));
+        menu.Items.Add(MenuItemFor("刷新图标", () => _ = RunDialogAsync(() => ViewModel.RefreshIconAsync(entry))));
 
         if (ViewModel.IsInsideGroup)
         {

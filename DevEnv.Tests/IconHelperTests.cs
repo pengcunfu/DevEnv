@@ -23,6 +23,17 @@ public sealed class IconHelperTests
     }
 
     [Fact]
+    public void GetFolderIconPath_IsStableAndCaseInsensitive()
+    {
+        var first = IconHelper.GetFolderIconPath(@"C:\Data\Projects");
+        var second = IconHelper.GetFolderIconPath(@"c:\data\projects");
+
+        Assert.Equal(first, second);
+        Assert.StartsWith("dir_", Path.GetFileName(first));
+        Assert.True(IconHelper.IsUnderIconsDir(first));
+    }
+
+    [Fact]
     public void IsUnderIconsDir_MatchesOnlyIconsDirectory()
     {
         var inside = Path.Combine(IconHelper.IconsDirectory, "exe_0123456789abcdef.png");

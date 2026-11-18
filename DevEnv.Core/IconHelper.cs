@@ -73,6 +73,39 @@ public static class IconHelper
         return ExtractExecutableIcon(exePath);
     }
 
+    /// <summary>文件夹图标的缓存文件路径（不一定存在）。</summary>
+    public static string GetFolderIconPath(string folderPath) =>
+        Path.Combine(IconsDirectory, $"dir_{ComputeHash(folderPath)}.png");
+
+    /// <summary>
+    /// 提取文件夹在资源管理器里显示的图标（含自定义文件夹图标）并缓存。
+    /// 优先取系统大图标列表的 256px 图标，取不到再退回 32px 关联图标。
+    /// </summary>
+    public static string? EnsureFolderIcon(string folderPath, bool force = false)
+    {
+        var destPath = GetFolderIconPath(folderPath);
+        try
+        {
+            if (!force && File.Exists(destPath) && GetPixelWidth(destPath) >= LauncherIconSize)
+                return destPath;
+
+            using var bitmap = ExtractFolderBitmap(folderPath);
+            if (bitmap is null)
+                return File.Exists(destPath) ? destPath : null;
+
+            lock (IconGate)
+            {
+                Directory.CreateDirectory(IconsDirectory);
+                bitmap.Save(destPath, ImageFormat.Png);
+            }
+            return destPath;
+        }
+        catch
+        {
+            return File.Exists(destPath) ? destPath : null;
+        }
+    }
+
     /// <summary>
     /// 为 .lnk / .url 等非 PE 文件提取 shell 关联图标并缓存。缓存键包含解析目标，
     /// 快捷方式改目标后不会继续用旧图。
@@ -156,6 +189,132 @@ public static class IconHelper
         using var fallback = Icon.ExtractAssociatedIcon(exePath);
         return fallback?.ToBitmap();
     }
+
+    /// <summary>
+    /// 取文件夹在资源管理器里的显示图标。走系统大图标列表可以拿到 256px 版本，
+    /// 也会尊重文件夹属性里设置的自定义图标；取不到时退回 32px 的 shell 图标。
+    /// </summary>
+    private static Bitmap? ExtractFolderBitmap(string folderPath)
+    {
+        var info = new SHFILEINFO
+        {
+            szDisplayName = string.Empty,
+            szTypeName = string.Empty,
+        };
+        var result = SHGetFileInfo(
+            folderPath,
+            0,
+            ref info,
+            (uint)Marshal.SizeOf<SHFILEINFO>(),
+            SHGFI_SYSICONINDEX);
+        if (result == IntPtr.Zero)
+            return ExtractFolderFallbackBitmap(folderPath);
+
+        var iid = typeof(IImageList).GUID;
+        var hr = SHGetImageList(SHIL_JUMBO, ref iid, out var imageList);
+        if (hr != 0 || imageList is null)
+            return ExtractFolderFallbackBitmap(folderPath);
+
+        try
+        {
+            if (imageList.GetIcon(info.iIcon, ILD_TRANSPARENT, out var hIcon) != 0
+                || hIcon == IntPtr.Zero)
+            {
+                return ExtractFolderFallbackBitmap(folderPath);
+            }
+
+            try
+            {
+                using var icon = (Icon)Icon.FromHandle(hIcon).Clone();
+                return icon.ToBitmap();
+            }
+            finally
+            {
+                DestroyIcon(hIcon);
+            }
+        }
+        catch
+        {
+            return ExtractFolderFallbackBitmap(folderPath);
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(imageList);
+        }
+    }
+
+    private static Bitmap? ExtractFolderFallbackBitmap(string folderPath)
+    {
+        var info = new SHFILEINFO
+        {
+            szDisplayName = string.Empty,
+            szTypeName = string.Empty,
+        };
+        var result = SHGetFileInfo(
+            folderPath,
+            0,
+            ref info,
+            (uint)Marshal.SizeOf<SHFILEINFO>(),
+            SHGFI_ICON | SHGFI_LARGEICON);
+        if (result == IntPtr.Zero || info.hIcon == IntPtr.Zero)
+            return null;
+
+        try
+        {
+            using var icon = (Icon)Icon.FromHandle(info.hIcon).Clone();
+            return icon.ToBitmap();
+        }
+        finally
+        {
+            DestroyIcon(info.hIcon);
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct SHFILEINFO
+    {
+        public IntPtr hIcon;
+        public int iIcon;
+        public uint dwAttributes;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string szDisplayName;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+        public string szTypeName;
+    }
+
+    [ComImport]
+    [Guid("46EB5926-582E-4017-9FDF-E8998DAA0950")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IImageList
+    {
+        [PreserveSig] int Add(IntPtr hbmImage, IntPtr hbmMask, out int pi);
+        [PreserveSig] int ReplaceIcon(int i, IntPtr hicon, out int pi);
+        [PreserveSig] int SetOverlayImage(int iImage, int iOverlay);
+        [PreserveSig] int Replace(int i, IntPtr hbmImage, IntPtr hbmMask);
+        [PreserveSig] int AddMasked(IntPtr hbmImage, int crMask, out int pi);
+        [PreserveSig] int Draw(IntPtr pimldp);
+        [PreserveSig] int Remove(int i);
+        [PreserveSig] int GetIcon(int i, int flags, out IntPtr picon);
+    }
+
+    private const uint SHGFI_ICON = 0x00000100;
+    private const uint SHGFI_LARGEICON = 0x00000000;
+    private const uint SHGFI_SYSICONINDEX = 0x00004000;
+    private const int SHIL_JUMBO = 0x4;
+    private const int ILD_TRANSPARENT = 0x1;
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr SHGetFileInfo(
+        string pszPath,
+        uint dwFileAttributes,
+        ref SHFILEINFO psfi,
+        uint cbFileInfo,
+        uint uFlags);
+
+    [DllImport("shell32.dll")]
+    private static extern int SHGetImageList(int iImageList, ref Guid riid, out IImageList? ppv);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern uint PrivateExtractIcons(

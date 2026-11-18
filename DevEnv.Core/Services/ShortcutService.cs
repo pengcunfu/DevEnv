@@ -423,6 +423,29 @@ public sealed class ShortcutService
         }
     }
 
+    /// <summary>重新提取文件夹在资源管理器里的显示图标（用户在文件夹属性里改过自定义图标后使用）。</summary>
+    public OperationResult RefreshFolderIcon(int index)
+    {
+        lock (_gate)
+        {
+            var list = ReadFolders();
+            if (index < 0 || index >= list.Count)
+                return OperationResult.Fail("条目不存在");
+
+            var item = list[index];
+            if (string.IsNullOrWhiteSpace(item.FolderPath) || !Directory.Exists(item.FolderPath))
+                return OperationResult.Fail("文件夹不存在");
+
+            var icon = IconHelper.EnsureFolderIcon(item.FolderPath, force: true);
+            if (string.IsNullOrWhiteSpace(icon))
+                return OperationResult.Fail("提取文件夹图标失败");
+
+            item.IconPath = icon;
+            _store.SaveList(FolderKey, new JArray(list.Select(WriteFolder)));
+            return OperationResult.Success();
+        }
+    }
+
     public OperationResult OpenFolder(int index)
     {
         var list = ReadFolders();
@@ -666,14 +689,28 @@ public sealed class ShortcutService
         ["StartMenuChecked"] = item.StartMenuChecked,
     };
 
-    private static FolderItem ReadFolder(JObject o) => new()
+    private static FolderItem ReadFolder(JObject o)
     {
-        Name = o["Name"]?.ToString() ?? string.Empty,
-        IconPath = IconHelper.ResolveIconPath(o["IconPath"]?.ToString()) ?? string.Empty,
-        Description = o["Description"]?.ToString() ?? string.Empty,
-        FolderPath = o["FolderPath"]?.ToString() ?? string.Empty,
-        QuickAccessPinned = o["QuickAccessPinned"]?.Value<bool>() ?? false,
-    };
+        var folderPath = o["FolderPath"]?.ToString() ?? string.Empty;
+        var iconPath = IconHelper.ResolveIconPath(o["IconPath"]?.ToString());
+
+        // 文件夹与资源管理器共用图标：没有缓存时按 shell 图标提取，含自定义文件夹图标
+        if (string.IsNullOrWhiteSpace(iconPath)
+            && !string.IsNullOrWhiteSpace(folderPath)
+            && Directory.Exists(folderPath))
+        {
+            iconPath = IconHelper.EnsureFolderIcon(folderPath);
+        }
+
+        return new FolderItem
+        {
+            Name = o["Name"]?.ToString() ?? string.Empty,
+            IconPath = iconPath ?? string.Empty,
+            Description = o["Description"]?.ToString() ?? string.Empty,
+            FolderPath = folderPath,
+            QuickAccessPinned = o["QuickAccessPinned"]?.Value<bool>() ?? false,
+        };
+    }
 
     private static JObject WriteFolder(FolderItem item) => new()
     {

@@ -1592,7 +1592,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         Reload();
     }
 
-    /// <summary>刷新图标：应用重新提取 exe 图标，网站重新抓 favicon；文件夹没有图标源。</summary>
+    /// <summary>刷新图标：应用重新提取 exe 图标，网站重新抓 favicon，文件夹重新读取资源管理器图标。</summary>
     public async Task RefreshIconAsync(LauncherEntry entry)
     {
         if (entry.IsGroup || entry.Kind == ShortcutKind.StartMenu)
@@ -1602,6 +1602,11 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         {
             case ShortcutKind.App:
                 Report(CoreServices.Shortcuts.UpdateApp(entry.Index, refreshIcon: true));
+                FilePathToImageConverter.Invalidate(entry.IconPath);
+                break;
+            case ShortcutKind.Folder:
+                Message = "正在刷新图标…";
+                Report(CoreServices.Shortcuts.RefreshFolderIcon(entry.Index));
                 FilePathToImageConverter.Invalidate(entry.IconPath);
                 break;
             case ShortcutKind.Web:

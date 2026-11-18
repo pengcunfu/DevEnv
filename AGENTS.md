@@ -80,7 +80,7 @@
 - **显示/激活只做一次**：`ShortcutWindowHost.Open` 不再补 `Show()` / `Activate()`，统一由 `ShowPage` 负责；激活用 `GetForegroundWindow()` 判断，只在确实不在前台时调用一次 `WindowPlacement.ForceForeground`；`Deactivated` 有 400ms 宽限，前台权限交接期间的假 Deactivated 不会把窗口关掉；另有 `OutsideClickDismissHook`（`WH_MOUSE_LL`）在可见期间监听窗口外点击，补上不触发 `Deactivated` 的点击场景（任务栏空白、窗口尚未激活等），与 Win 键钩子一样只在可见期间安装、隐藏后卸载。**无 `pageId` 再打开时保留上次页签**（托盘 / 左 Alt /「显示主窗口」），只有显式 `ShowPage("apps"|…)` 或 `DEVENV_START_PAGE` 才切页。
 - 数据仍走 `ShortcutService`；原先的 `AppsView` / `FoldersView` / `WebsView` 与对应 ViewModel **已删除**，不要再恢复卡片页。
 - `DEVENV_START_PAGE=apps|folders|webs|startmenu|tools|builtin`、主窗拖放都经 `ShortcutWindowHost` 打开对应页签：`apps` / `folders` / `webs` / `startmenu` 切页签，`tools` / `builtin` 直接切到对应页签；`DEVENV_START_PAGE=devenv|lava|network|processes|services|ports|speed` 由 `App.OpenFeatureOrLauncher` → `ToolWindowHost.Open`。启动器窗口单实例、非模态、`Topmost`，弹系统对话框前会临时取消置顶。
-- 图标：贴近 Windows 11 开始菜单「已固定」——卡片格 **90 × 112**、图标 **48px**（普通应用不套灰底板，文件夹磁贴才有圆角底板）、标题**最多两行换行**（固定 32 DIP 高，超出省略）；悬停 / 选中为抬升白底圆角（无描边、不缩放）。`IconHelper.ExtractExecutableIcon` 仍优先提取 256px，旧版 32px 缓存会在打开时自动升级。内置工具用品牌色圆角底 + 白色 Segoe MDL2 字形；其余缺图标回退灰色 `KindGlyph`。
+- 图标：贴近 Windows 11 开始菜单「已固定」——卡片格 **90 × 112**、图标 **48px**（普通应用不套灰底板，文件夹磁贴才有圆角底板）、标题**最多两行换行**（固定 32 DIP 高，超出省略）；悬停 / 选中为抬升白底圆角（无描边、不缩放）。`IconHelper.ExtractExecutableIcon` 仍优先提取 256px，旧版 32px 缓存会在打开时自动升级。内置工具用品牌色圆角底 + 白色 Segoe MDL2 字形；文件夹卡片用资源管理器里的文件夹图标（`IconHelper.EnsureFolderIcon` 走 Shell 大图标列表取 256px，文件夹属性里的自定义图标同样生效，右键「刷新图标」可重新读取），其余缺图标回退灰色 `KindGlyph`。
 - 自检：`DevEnv\bin\Release\net10.0-windows\DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt`，验证窗口加载、四个页签切换、开始菜单页只读、两个工具文件夹按钮与浮层展开、`DEVENV_START_PAGE=startmenu|tools|builtin` 路由、搜索与数据绑定错误（WPF 的 XAML / 绑定异常是静默的）。
 
 ### 功能工具窗（独立入口）
