@@ -17,4 +17,22 @@ internal static class VisualTreeSearch
 
         return null;
     }
+
+    /// <summary>在可视树里向下找第一个指定类型的元素（含根元素本身）。</summary>
+    public static T? FindDescendant<T>(DependencyObject? root) where T : DependencyObject
+    {
+        if (root is null)
+            return null;
+        if (root is T match)
+            return match;
+
+        int count = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < count; i++)
+        {
+            if (FindDescendant<T>(VisualTreeHelper.GetChild(root, i)) is { } found)
+                return found;
+        }
+
+        return null;
+    }
 }

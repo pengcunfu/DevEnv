@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 using DevEnv.Core.Services;
 using DevEnv.Host.SigXor.Diagnostics;
@@ -70,6 +71,14 @@ public static class MainWindowProbe
                 Check($"「{title}」窗口可加载",
                     window is { IsVisible: true } && window.Title == title,
                     window is null ? "窗口为 null" : $"Title={window.Title} Visible={window.IsVisible}");
+
+                // 带菜单栏的工具窗不能把 Menu 当 WPF 主菜单：单按 Alt（右 Alt 是语音键）
+                // 会让主菜单抢走编辑框的键盘焦点，之后输入的字符被当成访问键吞掉。
+                if (window is not null && VisualTreeSearch.FindDescendant<Menu>(window) is { } menu)
+                {
+                    Check($"「{title}」菜单不抢 Alt 键焦点", !menu.IsMainMenu,
+                        "IsMainMenu 仍为 True，单按 Alt 会把焦点从编辑框移到菜单栏");
+                }
             }
 
             // 再打开一次应前置已有实例，而不是新建

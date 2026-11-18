@@ -748,6 +748,13 @@
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="2,0" />
+        <!--
+            本程序把 Alt 用作全局键（左 Alt 启动器、右 Alt 语音键）。WPF 的「主菜单」
+            会在单独按一下 Alt 抬起时进入菜单模式，把键盘焦点从编辑框移到菜单栏，
+            之后输入的字符被菜单当成访问键吞掉。关掉主菜单激活即可避免抢焦点，
+            Alt + 字母的访问键（如 Alt+T 打开「工具」）仍然照常可用。
+        -->
+        <Setter Property="IsMainMenu" Value="False" />
     </Style>
 
     <!-- 子菜单项 / 右键菜单项（隐式样式） -->

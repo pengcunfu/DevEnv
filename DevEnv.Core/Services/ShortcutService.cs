@@ -26,15 +26,21 @@ public sealed class ShortcutService
     private readonly DataStore _store;
     private readonly StartMenuService _startMenu;
     private readonly QuickAccessService _quickAccess;
+    private readonly EdgeFavoritesService _edgeFavorites;
 
     /// <summary>应用列表的读取 / 写入锁：启动后台补建开始菜单快捷方式时不能和 UI 添加互相覆盖。</summary>
     private readonly object _gate = new();
 
-    public ShortcutService(DataStore store, StartMenuService startMenu, QuickAccessService? quickAccess = null)
+    public ShortcutService(
+        DataStore store,
+        StartMenuService startMenu,
+        QuickAccessService? quickAccess = null,
+        EdgeFavoritesService? edgeFavorites = null)
     {
         _store = store;
         _startMenu = startMenu;
         _quickAccess = quickAccess ?? new QuickAccessService();
+        _edgeFavorites = edgeFavorites ?? new EdgeFavoritesService();
     }
 
     #region 本地应用
@@ -497,7 +503,22 @@ public sealed class ShortcutService
 
     #region 网站
 
-    public IReadOnlyList<WebItem> GetWebs() => ReadWebs();
+    /// <summary>
+    /// 读取网站快捷方式，并用 Edge 收藏夹里对应页面的 favicon 覆盖图标。
+    /// 只对 Edge 收藏里出现过的站点生效，不是收藏站点时保留原来抓取的图标。
+    /// </summary>
+    public IReadOnlyList<WebItem> GetWebs()
+    {
+        var list = ReadWebs();
+        foreach (var item in list)
+        {
+            var icon = _edgeFavorites.TryGetFavoriteIcon(item.Url);
+            if (!string.IsNullOrWhiteSpace(icon))
+                item.IconPath = icon;
+        }
+
+        return list;
+    }
 
     public async Task<OperationResult> AddWebAsync(string? urlInput, string? titleOverride = null)
     {
@@ -540,6 +561,9 @@ public sealed class ShortcutService
         if (duplicate is not null)
             return OperationResult.Success(duplicate.Name);
 
+        // Edge 收藏里有这个站点时优先用 Edge 缓存的 favicon，和收藏夹显示保持一致
+        iconPath = _edgeFavorites.TryGetFavoriteIcon(url) ?? iconPath;
+
         list.Add(new WebItem
         {
             Name = name,
@@ -571,18 +595,30 @@ public sealed class ShortcutService
             {
                 item.Url = url;
                 item.Description = url;
+
+                var edgeIcon = _edgeFavorites.TryGetFavoriteIcon(url, force: true);
+                if (!string.IsNullOrWhiteSpace(edgeIcon))
+                    item.IconPath = edgeIcon;
             }
         }
         if (refreshIcon)
         {
-            try
+            var edgeIcon = _edgeFavorites.TryGetFavoriteIcon(item.Url, force: true);
+            if (!string.IsNullOrWhiteSpace(edgeIcon))
             {
-                var (_, _, icon) = await WebMetadataHelper.FetchAsync(item.Url);
-                item.IconPath = icon;
+                item.IconPath = edgeIcon;
             }
-            catch
+            else
             {
-                // 图标抓取失败保持原值
+                try
+                {
+                    var (_, _, icon) = await WebMetadataHelper.FetchAsync(item.Url);
+                    item.IconPath = icon;
+                }
+                catch
+                {
+                    // 图标抓取失败保持原值
+                }
             }
         }
 

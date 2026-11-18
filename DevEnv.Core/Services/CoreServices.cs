@@ -21,7 +21,8 @@ public static class CoreServices
 
     public static StartMenuService StartMenu { get; } = new();
     public static QuickAccessService QuickAccess { get; } = new();
-    public static ShortcutService Shortcuts { get; } = new(Data, StartMenu, QuickAccess);
+    public static EdgeFavoritesService EdgeFavorites { get; } = new();
+    public static ShortcutService Shortcuts { get; } = new(Data, StartMenu, QuickAccess, EdgeFavorites);
     public static LavaService Lava { get; } = new();
     public static DevEnvService DevEnvServices { get; } = new(new DevServiceStore(Data));
     public static ProcessService Processes { get; } = new();
