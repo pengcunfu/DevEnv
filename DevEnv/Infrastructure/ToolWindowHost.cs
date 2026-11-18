@@ -40,6 +40,12 @@ public static class ToolWindowHost
         ["batch-rename"] = ("批量重命名", () => new BatchRenameView()),
         ["color"] = ("颜色工具", () => new ColorToolView()),
         ["sysinfo"] = ("系统信息", () => new SystemInfoView()),
+
+        // 启动器拆出来的四个内容窗口：普通工具窗，各自单实例
+        ["shortcut-apps"] = ("本地应用", () => new ShortcutCategoryView(0)),
+        ["shortcut-folders"] = ("文件夹", () => new ShortcutCategoryView(1)),
+        ["shortcut-webs"] = ("网站", () => new ShortcutCategoryView(2)),
+        ["shortcut-startmenu"] = ("开始菜单", () => new ShortcutCategoryView(5)),
     };
 
     /// <summary>支持的工具 id。</summary>

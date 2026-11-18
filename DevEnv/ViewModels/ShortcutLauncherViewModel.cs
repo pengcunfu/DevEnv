@@ -93,6 +93,10 @@ public sealed partial class LauncherEntry : ObservableObject
     [ObservableProperty]
     private bool _isSelected;
 
+    /// <summary>搜索态才在标题下显示种类 / 分类；由视图模型在刷新时统一设置。</summary>
+    [ObservableProperty]
+    private bool _showsKindText;
+
     public bool IsGroup => Kind == ShortcutKind.Group;
 
     public bool IsTool => Kind == ShortcutKind.Tool;
@@ -178,6 +182,10 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         ("services", "服务监控", "监控", "Windows 服务启停与启动类型", "\uE9F5", "#0891B2"),
         ("ports", "端口管理", "监控", "查看占用并结束进程", "\uE8F2", "#0369A1"),
         ("speed", "网络测速", "监控", "延迟、下载与上传测速", "\uE9A6", "#CA8A04"),
+        ("shortcut-apps", "本地应用", "窗口入口", "本地应用快捷方式窗口", "\uE71D", "#0284C7"),
+        ("shortcut-folders", "文件夹", "窗口入口", "文件夹快捷方式窗口", "\uE8B7", "#CA8A04"),
+        ("shortcut-webs", "网站", "窗口入口", "网站快捷方式窗口", "\uE774", "#7C3AED"),
+        ("shortcut-startmenu", "开始菜单", "窗口入口", "系统开始菜单投影窗口", "\uE700", "#475569"),
         (TranslatorKey, "熔岩翻译", "窗口入口", "翻译剪贴板文本", "\uE774", "#EA580C"),
         (ClipboardKey, "熔岩剪贴板", "窗口入口", "剪贴板历史与图片", "\uE8C8", "#7C3AED"),
         (BrowserKey, "文件浏览器", "窗口入口", "目录导航与内嵌预览", "\uE8B7", "#D97706"),
@@ -236,11 +244,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>批量重建时暂时屏蔽属性变更回调里的 Refresh，避免重复刷新。</summary>
     private bool _suspendRefresh;
 
-    public ShortcutLauncherViewModel() => Reload();
-
-    public bool IsShortcutDataLoading => _shortcutDataLoading;
-
-    public IReadOnlyList<LauncherPage> Pages { get; } =
+    /// <summary>全部页签定义；启动器只取工具两页，分类窗口只取自己那一页。</summary>
+    private static readonly LauncherPage[] AllPages =
     [
         new(AppsPage, "本地应用", ""),
         new(FoldersPage, "文件夹", ""),
@@ -250,6 +255,35 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         new(StartMenuPage, "开始菜单", ""),
     ];
 
+    /// <summary>启动器只保留系统工具 / 内置工具两页；分类窗口固定为单页。</summary>
+    public ShortcutLauncherViewModel() : this(null)
+    {
+    }
+
+    /// <summary>
+    /// <paramref name="fixedPage"/> 为空时是启动器（系统工具 / 内置工具两页）；
+    /// 传入页签索引时是独立分类窗口，Pages 只含该页，添加操作不会再切页。
+    /// </summary>
+    public ShortcutLauncherViewModel(int? fixedPage)
+    {
+        _fixedPage = fixedPage;
+        Pages = fixedPage is int page
+            ? [AllPages.Single(item => item.Index == page)]
+            : [AllPages[BuiltinToolsPage]];
+        _selectedPage = fixedPage ?? BuiltinToolsPage;
+        Reload();
+    }
+
+    /// <summary>分类窗口固定的页签；启动器为 null。</summary>
+    private readonly int? _fixedPage;
+
+    public bool IsCategoryWindow => _fixedPage is not null;
+
+    public bool IsShortcutDataLoading => _shortcutDataLoading;
+
+    /// <summary>当前窗口包含的页面：启动器只有内置工具，分类窗口只有自己那一页。</summary>
+    public IReadOnlyList<LauncherPage> Pages { get; }
+
     public ObservableCollection<LauncherEntry> VisibleEntries { get; } = [];
 
     /// <summary>
@@ -258,8 +292,11 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// </summary>
     public ObservableCollection<LauncherEntry> PageEntries { get; } = [];
 
-    /// <summary>系统工具 / 内置工具页按分类分组后的区块（非搜索态）。</summary>
+    /// <summary>内置工具页按分类分组后的区块（非搜索态）。</summary>
     public ObservableCollection<LauncherSection> ToolSections { get; } = [];
+
+    /// <summary>系统工具菜单栏：每个分类一个子菜单，叶子项是具体工具。</summary>
+    public ObservableCollection<LauncherSection> SystemToolMenus { get; } = [];
 
     /// <summary>
     /// 系统工具与内置工具在非搜索态用「分类标签 + 图标」布局；
@@ -339,6 +376,13 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
     /// <summary>只有可编辑页签显示右下角「添加」。</summary>
     public bool CanAddOnCurrentPage => !IsInsideGroup && IsEditableLauncherPage;
 
+    /// <summary>分类窗口的右键菜单只显示本类添加入口。</summary>
+    public bool CanAddApps => _fixedPage == AppsPage;
+
+    public bool CanAddFolders => _fixedPage == FoldersPage;
+
+    public bool CanAddWebs => _fixedPage == WebsPage;
+
     public IReadOnlyList<LauncherEntry> SelectedEntries =>
         VisibleEntries.Where(entry => entry.IsSelected).ToList();
 
@@ -417,7 +461,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         ShortcutReloadPayload payload;
         try
         {
-            payload = await Task.Run(BuildShortcutPayload).ConfigureAwait(false);
+            payload = await Task.Run(() => BuildShortcutPayload(_fixedPage)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -438,8 +482,11 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             _suspendRefresh = false;
             NotifyEditableChanged();
             UpdateEmptyText();
-            if (forceStartMenuRefresh || _startMenuItems.Count == 0)
+            if (_fixedPage == StartMenuPage
+                && (forceStartMenuRefresh || _startMenuItems.Count == 0))
+            {
                 BeginStartMenuLoad(forceStartMenuRefresh);
+            }
             else
             {
                 RebuildStartMenuTiles();
@@ -452,90 +499,119 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         if (generation != _reloadGeneration)
             return;
 
-        _ = UpgradeAppIconsAsync(generation);
+        if (_fixedPage is null or AppsPage)
+            _ = UpgradeAppIconsAsync(generation);
     }
 
-    private static ShortcutReloadPayload BuildShortcutPayload()
+    private static ShortcutReloadPayload BuildShortcutPayload(int? fixedPage)
     {
-        // 先与资源管理器快速访问对账，再读取文件夹列表；Shell 不可用时自动跳过
-        var quickAccess = CoreServices.Shortcuts.SyncQuickAccess();
+        // 启动器只显示内置工具 + 菜单栏系统工具，不需要读快捷方式与布局；
+        // 只有分类窗口才读对应数据（开始菜单窗口也要用快捷方式列表做隐藏判定）。
+        var needsShortcuts = fixedPage is not null;
+        var isStartMenuWindow = fixedPage == StartMenuPage;
 
-        var apps = CoreServices.Shortcuts.GetApps()
-            .Select((item, index) => new LauncherEntry
-            {
-                Kind = ShortcutKind.App,
-                Index = index,
-                Key = LauncherLayout.AppKey(item.ExecPath),
-                Name = item.Name,
-                IconPath = item.IconPath ?? string.Empty,
-                TargetPath = item.ExecPath,
-            })
-            .ToList();
+        // 只有文件夹窗口需要与资源管理器快速访问对账；Shell 不可用时服务内部会安全返回
+        var quickAccess = fixedPage == FoldersPage
+            ? CoreServices.Shortcuts.SyncQuickAccess()
+            : null;
 
-        var folders = CoreServices.Shortcuts.GetFolders()
-            .Select((item, index) => new LauncherEntry
-            {
-                Kind = ShortcutKind.Folder,
-                Index = index,
-                Key = LauncherLayout.FolderKey(item.FolderPath),
-                Name = item.Name,
-                IconPath = item.IconPath ?? string.Empty,
-                TargetPath = item.FolderPath,
-                IsQuickAccessPinned = item.QuickAccessPinned,
-            })
-            .ToList();
+        var apps = needsShortcuts
+            ? CoreServices.Shortcuts.GetApps()
+                .Select((item, index) => new LauncherEntry
+                {
+                    Kind = ShortcutKind.App,
+                    Index = index,
+                    Key = LauncherLayout.AppKey(item.ExecPath),
+                    Name = item.Name,
+                    IconPath = item.IconPath ?? string.Empty,
+                    TargetPath = item.ExecPath,
+                })
+                .ToList()
+            : [];
 
-        var webs = CoreServices.Shortcuts.GetWebs()
-            .Select((item, index) => new LauncherEntry
-            {
-                Kind = ShortcutKind.Web,
-                Index = index,
-                Key = LauncherLayout.WebKey(item.Url),
-                Name = item.Name,
-                IconPath = item.IconPath ?? string.Empty,
-                TargetPath = item.Url,
-            })
-            .ToList();
+        var folders = needsShortcuts
+            ? CoreServices.Shortcuts.GetFolders()
+                .Select((item, index) => new LauncherEntry
+                {
+                    Kind = ShortcutKind.Folder,
+                    Index = index,
+                    Key = LauncherLayout.FolderKey(item.FolderPath),
+                    Name = item.Name,
+                    IconPath = item.IconPath ?? string.Empty,
+                    TargetPath = item.FolderPath,
+                    IsQuickAccessPinned = item.QuickAccessPinned,
+                })
+                .ToList()
+            : [];
 
-        var tools = CoreServices.Shortcuts.GetSystemTools()
-            .OrderBy(item =>
-            {
-                var rank = Array.IndexOf(ToolCategoryOrder, item.Category);
-                return rank < 0 ? int.MaxValue : rank;
-            })
-            .Select((item, index) => new LauncherEntry
-            {
-                Kind = ShortcutKind.Tool,
-                Index = index,
-                Key = item.Key,
-                Name = item.Name,
-                Category = item.Category,
-                IconPath = item.IconPath ?? string.Empty,
-                TargetPath = item.Description,
-            })
-            .ToList();
+        var webs = needsShortcuts
+            ? CoreServices.Shortcuts.GetWebs()
+                .Select((item, index) => new LauncherEntry
+                {
+                    Kind = ShortcutKind.Web,
+                    Index = index,
+                    Key = LauncherLayout.WebKey(item.Url),
+                    Name = item.Name,
+                    IconPath = item.IconPath ?? string.Empty,
+                    TargetPath = item.Url,
+                })
+                .ToList()
+            : [];
 
-        var builtinTools = BuiltinToolDefinitions
-            .Select((item, index) => new LauncherEntry
-            {
-                Kind = ShortcutKind.InternalTool,
-                Index = index,
-                Key = item.Key,
-                Name = item.Name,
-                Category = item.Category,
-                TargetPath = item.Description,
-                IconGlyph = item.Glyph,
-                IconBrush = CreateBadgeBrush(item.Color),
-            })
-            .ToList();
 
-        var layout = CoreServices.Shortcuts.ReadLauncherLayout();
-        layout.Normalize(
-        [
-            apps.Select(entry => entry.Key).ToList(),
-            folders.Select(entry => entry.Key).ToList(),
-            webs.Select(entry => entry.Key).ToList(),
-        ]);
+        // 分类窗口不显示工具，不必扫描开始菜单里的系统工具目录
+        var needsTools = fixedPage is null;
+        var tools = needsTools
+            ? CoreServices.Shortcuts.GetSystemTools()
+                .OrderBy(item =>
+                {
+                    var rank = Array.IndexOf(ToolCategoryOrder, item.Category);
+                    return rank < 0 ? int.MaxValue : rank;
+                })
+                .Select((item, index) => new LauncherEntry
+                {
+                    Kind = ShortcutKind.Tool,
+                    Index = index,
+                    Key = item.Key,
+                    Name = item.Name,
+                    Category = item.Category,
+                    IconPath = item.IconPath ?? string.Empty,
+                    TargetPath = item.Description,
+                })
+                .ToList()
+            : [];
+
+        var builtinTools = needsTools
+            ? BuiltinToolDefinitions
+                .Select((item, index) => new LauncherEntry
+                {
+                    Kind = ShortcutKind.InternalTool,
+                    Index = index,
+                    Key = item.Key,
+                    Name = item.Name,
+                    Category = item.Category,
+                    TargetPath = item.Description,
+                    IconGlyph = item.Glyph,
+                    IconBrush = CreateBadgeBrush(item.Color),
+                })
+                .ToList()
+            : [];
+
+
+        // 开始菜单窗口只做投影与隐藏判定，不需要分组布局
+        var needsLayout = needsShortcuts && !isStartMenuWindow;
+        var layout = needsLayout
+            ? CoreServices.Shortcuts.ReadLauncherLayout()
+            : new LauncherLayout();
+        if (needsLayout)
+        {
+            layout.Normalize(
+            [
+                apps.Select(entry => entry.Key).ToList(),
+                folders.Select(entry => entry.Key).ToList(),
+                webs.Select(entry => entry.Key).ToList(),
+            ]);
+        }
 
         return new ShortcutReloadPayload(apps, folders, webs, tools, builtinTools, layout, quickAccess);
     }
@@ -558,6 +634,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         _layout = payload.Layout;
         RebuildTiles();
         RebuildAllItems();
+        RebuildSystemToolMenus();
 
         // 快速访问带来的增删只在底部提示一次；纯补标记不打扰用户
         if (payload.QuickAccess is { Succeeded: true } qa && qa.Imported + qa.Removed > 0)
@@ -581,19 +658,25 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         List<LauncherEntry> Tools,
         List<LauncherEntry> BuiltinTools,
         LauncherLayout Layout,
-        QuickAccessSyncResult QuickAccess);
+        QuickAccessSyncResult? QuickAccess);
 
-    /// <summary>把应用 / 文件夹 / 网站 / 工具与开始菜单条目合并成搜索数据源。</summary>
+    /// <summary>
+    /// 搜索数据源按窗口范围收窄：启动器只搜系统工具 / 内置工具，
+    /// 分类窗口只搜本页，避免在一个分类窗口里搜出别的分类的条目。
+    /// </summary>
     private void RebuildAllItems()
     {
-        _allItems = _apps
-            .Concat(_folders)
-            .Concat(_webs)
-            .Concat(_tools)
-            .Concat(_builtinTools)
-            .Concat(_startMenuTiles.Where(entry => !entry.IsGroup))
-            .Concat(_startMenuTiles.Where(entry => entry.IsGroup).SelectMany(entry => entry.GroupItems))
-            .ToList();
+        _allItems = _fixedPage switch
+        {
+            AppsPage => _apps.ToList(),
+            FoldersPage => _folders.ToList(),
+            WebsPage => _webs.ToList(),
+            StartMenuPage => _startMenuTiles
+                .Where(entry => !entry.IsGroup)
+                .Concat(_startMenuTiles.Where(entry => entry.IsGroup).SelectMany(entry => entry.GroupItems))
+                .ToList(),
+            _ => _tools.Concat(_builtinTools).ToList(),
+        };
     }
 
     /// <summary>按一级文件夹重建开始菜单页；已经收进启动器的条目在这里被过滤掉。</summary>
@@ -955,6 +1038,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         IEnumerable<LauncherEntry> source = CurrentGroup is not null ? CurrentGroup.GroupItems : pageEntries;
         ReplaceCollectionBatched(VisibleEntries, source.ToList());
 
+        foreach (var entry in VisibleEntries)
+            entry.ShowsKindText = IsSearching;
+
         RebuildToolSections(pageEntries);
 
         var startMenuPending = IsStartMenuPage && _startMenuLoading && _startMenuTiles.Count == 0;
@@ -973,14 +1059,24 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                         ? $"{_tools.Count} 项"
                         : IsBuiltinToolsPage
                             ? $"{_builtinTools.Count} 项"
-                            : string.Empty;
+                            : IsEditableLauncherPage
+                                ? $"{VisibleEntries.Count} 项"
+                                : string.Empty;
 
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(SelectedEntries));
         OnPropertyChanged(nameof(ShowsToolSections));
     }
 
-    /// <summary>把系统 / 内置工具按 Category 拆成「标签 + 图标」区块；其它页签清空。</summary>
+    /// <summary>系统工具全部收进菜单栏：按分类排序，每个分类一个子菜单。</summary>
+    private void RebuildSystemToolMenus()
+    {
+        SystemToolMenus.Clear();
+        foreach (var section in BuildSections(_tools, ToolCategoryOrder))
+            SystemToolMenus.Add(section);
+    }
+
+    /// <summary>把内置工具按 Category 拆成「标签 + 图标」区块；搜索 / 其它页签清空。</summary>
     private void RebuildToolSections(IReadOnlyList<LauncherEntry> pageEntries)
     {
         ToolSections.Clear();
@@ -1082,6 +1178,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     private void NavigateToLauncherPage(int page)
     {
+        if (_fixedPage is not null)
+            return;
+
         Message = string.Empty;
         Query = string.Empty;
         if (CurrentGroup is not null)
@@ -1089,7 +1188,16 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         if (_shortcutDataLoading)
             _pendingSelectedPage = page;
         else
-            SelectedPage = page;
+            NavigateToPage(page);
+    }
+
+    /// <summary>切页：分类窗口固定单页，添加操作只刷新数据，不切走。</summary>
+    private void NavigateToPage(int page)
+    {
+        if (_fixedPage is not null)
+            return;
+
+        SelectedPage = page;
     }
 
     public void CloseGroup()
@@ -1394,7 +1502,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         Report(CoreServices.Shortcuts.AddApp(path));
         Query = string.Empty;
-        SelectedPage = AppsPage;
+        NavigateToPage(AppsPage);
         Reload();
     }
 
@@ -1406,7 +1514,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         Report(CoreServices.Shortcuts.AddFolder(path));
         Query = string.Empty;
-        SelectedPage = FoldersPage;
+        NavigateToPage(FoldersPage);
         Reload();
     }
 
@@ -1426,7 +1534,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         Report(result);
 
         Query = string.Empty;
-        SelectedPage = WebsPage;
+        NavigateToPage(WebsPage);
         Reload();
     }
 
@@ -1473,24 +1581,31 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
         if (File.Exists(path) && path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
         {
+            // 分类窗口只接受自己这一类：文件夹窗口不会因为拖入 exe 而跳出本地应用
+            if (_fixedPage is not null and not AppsPage)
+                return null;
+
             var result = CoreServices.Shortcuts.AddApp(path);
             Report(result);
             if (!result.Ok)
                 return null;
             Query = string.Empty;
-            SelectedPage = AppsPage;
+            NavigateToPage(AppsPage);
             Reload();
             return AppsPage;
         }
 
         if (Directory.Exists(path))
         {
+            if (_fixedPage is not null and not FoldersPage)
+                return null;
+
             var result = CoreServices.Shortcuts.AddFolder(path);
             Report(result);
             if (!result.Ok)
                 return null;
             Query = string.Empty;
-            SelectedPage = FoldersPage;
+            NavigateToPage(FoldersPage);
             Reload();
             return FoldersPage;
         }

@@ -97,9 +97,29 @@ public static class ShortcutWindowHost
         app.MainWindow = window;
     }
 
-    /// <summary>打开（或前置）启动器，并切到指定页签：apps / folders / webs / tools / builtin / startmenu。</summary>
+    /// <summary>内容页 id → 独立窗口的 ToolWindowHost id。</summary>
+    private static readonly Dictionary<string, string> CategoryWindows = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["apps"] = "shortcut-apps",
+        ["folders"] = "shortcut-folders",
+        ["webs"] = "shortcut-webs",
+        ["startmenu"] = "shortcut-startmenu",
+    };
+
+    /// <summary>
+    /// 打开（或前置）启动器；apps / folders / webs / startmenu 已拆成独立窗口，
+    /// 这里转给 <see cref="ToolWindowHost"/>，tools / builtin 仍切启动器自己的页签。
+    /// </summary>
     public static void Open(string? pageId = null)
     {
+        var normalized = pageId?.Trim().TrimStart('/');
+        if (!string.IsNullOrWhiteSpace(normalized)
+            && CategoryWindows.TryGetValue(normalized, out var toolId))
+        {
+            ToolWindowHost.Open(toolId);
+            return;
+        }
+
         // 开始菜单和启动器都是置顶窗口：先把开始菜单收掉，等它真正隐藏后再显示启动器，
         // 否则开始菜单会一直压在启动器上面，看起来像 Alt 没生效。
         if (ShellStartMenu.DismissIfOpen())

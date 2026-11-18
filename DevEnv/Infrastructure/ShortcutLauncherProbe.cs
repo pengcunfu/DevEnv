@@ -2,21 +2,33 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 using DevEnv.Host.SigXor.Diagnostics;
 using DevEnv.Host.ViewModels;
+using DevEnv.Host.Views;
 using DevEnv.Host.Windows;
 
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 启动器自检：WPF 的 XAML / 绑定错误是静默的，肉眼看不出，
-/// 这里加载启动器、遍历四个页签、展开两个工具文件夹、跑一次搜索，并收集数据绑定错误。
+/// 启动器自检：启动器本身只保留系统工具 / 内置工具两页，
+/// 本地应用 / 文件夹 / 网站 / 开始菜单已拆成独立窗口。
+/// 探针同时验证启动器的系统工具菜单栏与内置工具分组，以及四个分类窗口的加载、
+/// 只读判定、选择 API、搜索范围与文件夹浮层。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
 public static class ShortcutLauncherProbe
 {
     public const string Argument = "--shortcuts-check";
+
+    private static readonly (int Page, string Title)[] CategoryPages =
+    [
+        (0, "本地应用"),
+        (1, "文件夹"),
+        (2, "网站"),
+        (5, "开始菜单"),
+    ];
 
     public static int Run(string[] args)
     {
@@ -43,6 +55,7 @@ public static class ShortcutLauncherProbe
         PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error;
 
         ShortcutsWindow? window = null;
+        var categoryWindows = new List<Window>();
         try
         {
             window = new ShortcutsWindow
@@ -56,7 +69,6 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("预热后保持隐藏（不打扰当前前台程序）", !window.IsVisible);
             Check("预热已完成", window.IsPrewarmed);
-            // 预热必须落在最终几何上，否则 Show 时还要挪窗口，DWM 重新合成会闪
             var expected = ShortcutsWindow.ComputeScreenBounds();
             Check("预热使用最终几何（默认 960 × 680 DIP、居中，显示时不再移动窗口）",
                 Math.Abs(window.Left - expected.Left) < 0.5
@@ -70,7 +82,6 @@ public static class ShortcutLauncherProbe
                 Math.Abs(window.Width - DevEnv.Core.Services.LauncherGeometry.Width) < 0.5
                 && Math.Abs(window.Height - DevEnv.Core.Services.LauncherGeometry.Height) < 0.5,
                 $"W={window.Width}, H={window.Height}, area={area.Width}×{area.Height}");
-            // 居中：左右与上下留白相等（取整误差在 1 DIP 内）；工作区跟鼠标所在屏
             var leftGap = window.Left - area.Left;
             var rightGap = area.Left + area.Width - (window.Left + window.Width);
             var topGap = window.Top - area.Top;
@@ -78,7 +89,6 @@ public static class ShortcutLauncherProbe
             Check("启动器在鼠标所在屏工作区内水平、垂直居中",
                 Math.Abs(leftGap - rightGap) <= 1 && Math.Abs(topGap - bottomGap) <= 1,
                 $"left={leftGap:F1}, right={rightGap:F1}, top={topGap:F1}, bottom={bottomGap:F1}");
-            // 配色跟随系统应用模式：浅 / 深两套 key 一致，读不到时应至少能解析到画刷
             Check("启动器配色已加载（跟随系统浅 / 深色）",
                 window.TryFindResource("LauncherBackgroundBrush") is System.Windows.Media.Brush
                 && window.TryFindResource("LauncherTextPrimaryBrush") is System.Windows.Media.Brush
@@ -94,90 +104,80 @@ public static class ShortcutLauncherProbe
 
             Check("启动器窗口可正常加载", window.IsVisible);
             Check("窗口标题为「燧岚开发盒子」", window.Title == "燧岚开发盒子", $"Title={window.Title}");
-            // 启动器不挂 owner：挂上主窗后从托盘唤起会把主窗一起拉出来
             Check("启动器不挂 Owner（不会带出主窗口）", window.Owner is null);
-            // 窗口改用 Windows 默认外观：系统标题栏与边框，不再自绘透明分层窗口
             Check("使用 Windows 默认窗口（标准边框与标题栏）",
                 window.WindowStyle == WindowStyle.SingleBorderWindow && !window.AllowsTransparency,
                 $"WindowStyle={window.WindowStyle}, AllowsTransparency={window.AllowsTransparency}");
             if (window.DataContext is not ShortcutLauncherViewModel vm)
                 throw new InvalidOperationException("DataContext 不是 ShortcutLauncherViewModel");
 
-            // 快捷方式与开始菜单都在后台加载；等索引落定再断言（图标可继续分批补齐）
+            // 顶栏只有系统工具菜单，内置工具网格在其下方
+            var menuTop = window.SystemToolsMenuItem.TranslatePoint(new Point(0, 0), window).Y;
+            var contentTop = window.PageContentHost.TranslatePoint(new Point(0, 0), window).Y;
+            Check("系统工具菜单位于窗口顶部", menuTop < 40, $"menuTop={menuTop:F1}");
+            Check("内置工具网格位于菜单栏下方", contentTop > menuTop,
+                $"contentTop={contentTop:F1}, menuTop={menuTop:F1}");
+            Check("启动器菜单栏不抢 Alt 键焦点", !window.MainMenu.IsMainMenu,
+                "IsMainMenu 必须为 False，否则单按 Alt 会把焦点移到菜单栏");
+            Check("启动器不再提供搜索框",
+                VisualTreeSearch.FindDescendant<System.Windows.Controls.TextBox>(window) is null);
+
             WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
-            WaitUntil(() => !vm.IsStartMenuLoading, 15_000);
+            Pump();
 
-            Check("页签为纵向六个", vm.Pages.Count == 6, string.Join(" / ", vm.Pages.Select(p => p.Title)));
-            Check("默认显示本地应用", vm.SelectedPage == 0);
-            Check("页签与当前页同步", window.PageTabs.SelectedIndex == vm.SelectedPage);
-            var tabsLeft = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).X;
-            var tabsTop = window.PageTabs.TranslatePoint(new Point(0, 0), window.Root).Y;
-            var searchLeft = window.SearchShell.TranslatePoint(new Point(0, 0), window.Root).X;
-            var searchTop = window.SearchShell.TranslatePoint(new Point(0, 0), window.Root).Y;
-            var searchBottom = searchTop + window.SearchShell.ActualHeight;
-            var searchRight = searchLeft + window.SearchShell.ActualWidth;
-            Check("搜索框与页签排在左侧栏",
-                searchLeft < window.Root.ActualWidth / 4
-                && tabsLeft < window.Root.ActualWidth / 4
-                && searchBottom <= tabsTop + 0.5
-                && Math.Abs(searchLeft - tabsLeft) <= 12,
-                $"search=({searchLeft:F1},{searchTop:F1}) tabs=({tabsLeft:F1},{tabsTop:F1})");
-            Check("搜索框落在左侧栏宽度内",
-                searchRight <= window.Root.ActualWidth / 3,
-                $"searchRight={searchRight:F1}, rootWidth={window.Root.ActualWidth:F1}");
-            Check("图标网格已生成卡片容器",
-                vm.VisibleEntries.Count == 0 || window.EntryGrid.ItemContainerGenerator.ContainerFromIndex(0) is not null);
-            // 右侧内容区 ≈ 客户区 − 196（侧栏）− 8（滚动区内边距）；卡片宽 90 → 每行 8 个
-            var gridWidth = window.EntryScroller.ActualWidth;
-            var columns = gridWidth > 0 ? (int)(gridWidth / 90d) : 0;
-            Check("右侧网格每行可排 8 个图标",
-                columns >= 8,
-                $"gridWidth={gridWidth:F1}, columns={columns}");
+            Check("启动器只剩内置工具一页（系统工具已进菜单栏）",
+                vm.Pages.Count == 1 && vm.Pages[0].Title == "内置工具",
+                string.Join(" / ", vm.Pages.Select(p => p.Title)));
+            Check("启动器默认显示内置工具页", vm.SelectedPage == 4 && vm.IsBuiltinToolsPage);
 
-            foreach (var page in vm.Pages)
+            // 系统工具全部挂在顶部菜单栏：分类子菜单 + 叶子工具项
+            Check("系统工具全部进入菜单栏",
+                vm.SystemToolMenus.Count >= 2
+                && vm.SystemToolMenus.All(section =>
+                    !string.IsNullOrWhiteSpace(section.Title)
+                    && section.Entries.Count > 0
+                    && section.Entries.All(entry => entry.Kind == ShortcutKind.Tool)),
+                $"menus={vm.SystemToolMenus.Count}, builtin={vm.VisibleEntries.Count}, message={vm.Message}");
+            var menuEntries = vm.SystemToolMenus.SelectMany(section => section.Entries).ToList();
+            Check("菜单栏覆盖完整的 Windows 工具目录",
+                menuEntries.Count > 0
+                && menuEntries.Select(entry => entry.Key).Distinct(StringComparer.OrdinalIgnoreCase).Count()
+                    == menuEntries.Count,
+                $"共 {menuEntries.Count} 项");
+            Check("菜单栏已绑定系统工具菜单",
+                ReferenceEquals(window.SystemToolsMenuItem.ItemsSource, vm.SystemToolMenus),
+                "SystemToolsMenuItem.ItemsSource 与 SystemToolMenus 不是同一集合");
+
+            // 菜单必须真的能点开，并且分类 / 叶子项都生成了容器
+            window.UpdateLayout();
+            Pump();
+            window.SystemToolsMenuItem.IsSubmenuOpen = true;
+            Pump();
+            var groupItem = window.SystemToolsMenuItem.ItemContainerGenerator
+                .ContainerFromIndex(0) as MenuItem;
+            Check("系统工具菜单可展开并生成分类项",
+                groupItem is not null,
+                $"IsSubmenuOpen={window.SystemToolsMenuItem.IsSubmenuOpen}");
+            if (groupItem is not null)
             {
-                vm.SelectedPage = page.Index;
-                window.UpdateLayout();
+                groupItem.IsSubmenuOpen = true;
                 Pump();
-                Check($"页签「{page.Title}」可切换（{vm.VisibleEntries.Count} 项）",
-                    vm.SelectedPage == page.Index && window.PageTabs.SelectedIndex == page.Index);
+                var leafItem = groupItem.ItemContainerGenerator.ContainerFromIndex(0) as MenuItem;
+                Check("系统工具叶子项已生成且带条目数据",
+                    leafItem is { DataContext: LauncherEntry },
+                    leafItem is null ? "叶子容器为 null" : $"Header={leafItem.Header?.GetType().Name ?? "null"}");
             }
 
-            // 开始菜单页签是 Windows 开始菜单的只读投影：只能启动或收进启动器
-            vm.SelectedPage = 5;
-            window.UpdateLayout();
-            WaitUntil(() => !vm.IsStartMenuLoading, 10_000);
+            window.SystemToolsMenuItem.IsSubmenuOpen = false;
             Pump();
-            Check("开始菜单页只读（无添加 / 框选 / 分组）",
-                vm.IsStartMenuPage
-                && !vm.IsEditableView
-                && !vm.CanCreateGroup
-                && !vm.CanAddOnCurrentPage
-                && !vm.CanAcceptExternalDrop);
-            Check("开始菜单页顶层条目类型正确",
-                vm.VisibleEntries.All(entry =>
-                    entry.Kind is ShortcutKind.StartMenu or ShortcutKind.Group),
-                $"共 {vm.VisibleEntries.Count} 项");
-            window.ShowPage("startmenu");
-            WaitUntil(() => !vm.IsStartMenuLoading, 10_000);
-            Pump();
-            Check("DEVENV_START_PAGE=startmenu 切到开始菜单页",
-                vm.SelectedPage == 5 && !vm.IsInsideGroup && !vm.IsSearching);
-            window.ShowPage("apps");
-            Pump();
-
-            vm.SelectedPage = 3;
-            Pump();
-            Check("系统工具页签载入完整的 Windows 工具目录",
-                vm.IsSystemToolsPage
-                && vm.VisibleEntries.Count > 0
-                && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.Tool),
-                $"共 {vm.VisibleEntries.Count} 项");
-            Check("系统工具页签只读", !vm.IsEditableView && !vm.CanAddOnCurrentPage && !vm.CanCreateGroup);
+            Check("内置工具分类网格已生成容器",
+                window.SectionGrid.Items.Count > 0
+                && window.SectionGrid.ItemContainerGenerator.ContainerFromIndex(0) is not null,
+                $"sections={window.SectionGrid.Items.Count}");
 
             vm.SelectedPage = 4;
             Pump();
-            Check("内置工具页签载入宿主工具目录",
+            Check("内置工具页载入宿主工具目录",
                 vm.IsBuiltinToolsPage
                 && vm.VisibleEntries.Count == ToolWindowHost.ToolIds.Count + 3 // 另含翻译 / 剪贴板 / 文件浏览器
                 && vm.VisibleEntries.All(e => e.Kind == ShortcutKind.InternalTool),
@@ -186,140 +186,44 @@ public static class ShortcutLauncherProbe
                 vm.VisibleEntries.All(e => e.HasToolBadge && !e.ShowsKindGlyph),
                 $"缺图标 {vm.VisibleEntries.Count(e => !e.HasToolBadge)} 项");
             var builtinKeys = vm.VisibleEntries.Select(e => e.Key).ToList();
-            Check("内置工具页签含环境与监控独立入口",
-                builtinKeys.Contains("devenv")
-                && builtinKeys.Contains("lava")
-                && builtinKeys.Contains("network")
-                && builtinKeys.Contains("processes")
-                && builtinKeys.Contains("services")
-                && builtinKeys.Contains("ports")
-                && builtinKeys.Contains("speed"),
+            Check("内置工具含四个独立窗口入口",
+                builtinKeys.Contains("shortcut-apps")
+                && builtinKeys.Contains("shortcut-folders")
+                && builtinKeys.Contains("shortcut-webs")
+                && builtinKeys.Contains("shortcut-startmenu"),
                 string.Join(" / ", builtinKeys));
-            Check("内置工具页签含实用工具入口",
-                builtinKeys.Contains("regex")
-                && builtinKeys.Contains("text-diff")
-                && builtinKeys.Contains("batch-rename")
-                && builtinKeys.Contains("color")
-                && builtinKeys.Contains("sysinfo"),
-                string.Join(" / ", builtinKeys));
-            Check("内置工具页签含翻译 / 剪贴板 / 文件浏览器入口",
-                builtinKeys.Contains("translator")
-                && builtinKeys.Contains("clipboard")
-                && builtinKeys.Contains("browser"),
-                string.Join(" / ", builtinKeys));
-            Check("内置工具页签只读", !vm.IsEditableView);
+            Check("四个窗口入口归在「窗口入口」分类",
+                vm.VisibleEntries
+                    .Where(e => e.Key.StartsWith("shortcut-", StringComparison.OrdinalIgnoreCase))
+                    .All(e => e.Category == "窗口入口"));
+            Check("内置工具页只读（无添加 / 框选 / 分组）",
+                !vm.IsEditableView && !vm.CanAddOnCurrentPage && !vm.CanCreateGroup);
 
-            vm.SelectedPage = 0;
-            vm.Query = string.Empty;
+            vm.SelectedPage = 4;
             Pump();
-            Check("本地应用页允许框选与拖动", vm.IsEditableView && vm.CanCreateGroup);
-            Check("每个页签的卡片标识不重复",
-                vm.Pages.All(p =>
-                {
-                    vm.SelectedPage = p.Index;
-                    Pump();
-                    var keys = vm.VisibleEntries.Select(e => e.Key).ToList();
-                    return keys.Count == keys.Distinct(StringComparer.OrdinalIgnoreCase).Count();
-                }));
-
-            vm.SelectedPage = 0;
-            Pump();
-            if (vm.VisibleEntries.FirstOrDefault() is { } selectable)
-            {
-                vm.SetSelection([selectable]);
-                Check("选中卡片后记录选择", vm.HasSelection && vm.SelectedEntries.Count == 1);
-                vm.ClearSelection();
-                Check("清空选择", !vm.HasSelection);
-            }
-
-            vm.SelectedPage = 0;
-            Pump();
-            if (vm.AddDiagnosticGroup())
-            {
-                window.UpdateLayout();
-                Pump();
-                var group = vm.VisibleEntries.FirstOrDefault(entry => entry.IsGroup);
-                Check("启动器文件夹磁贴可渲染（含 2×2 预览）", group is not null);
-                if (group is not null)
-                {
-                    vm.OpenGroup(group);
-                    Pump();
-                    Check("打开启动器文件夹后显示组内条目",
-                        vm.IsInsideGroup && vm.VisibleEntries.Count == group.GroupItems.Count);
-                    Check("文件夹浮层打开时底层页签卡片保留",
-                        vm.PageEntries.Count > 0 && vm.PageEntries.Any(entry => entry.IsGroup));
-                    Check("文件夹内禁止再建文件夹", !vm.CanCreateGroup);
-                    vm.CloseGroup();
-                    Pump();
-                    Check("返回后回到页签视图", !vm.IsInsideGroup);
-                }
-
-                vm.RemoveDiagnosticGroup();
-                Pump();
-            }
-            else
-            {
-                report.AppendLine("SKIP  本地应用不足 2 项，跳过启动器文件夹检查");
-            }
-
-            vm.SelectedPage = 0;
-            vm.Query = string.Empty;
-            Pump();
-            if (vm.VisibleEntries.FirstOrDefault() is { } sample)
-            {
-                var needle = sample.Name.Length > 2 ? sample.Name[..2] : sample.Name;
-                vm.Query = needle;
-                Pump();
-                Check($"搜索「{needle}」能命中", vm.IsSearching && vm.VisibleEntries.Any(e => e.Name == sample.Name));
-            }
-
-            vm.Query = "JSON";
-            Pump();
-            Check("搜索能命中内置工具", vm.IsSearching && vm.VisibleEntries.Any(e => e.Key == "json"));
-            vm.Query = string.Empty;
-            Pump();
-
-            vm.Query = "__launcher_probe_no_match__";
-            Pump();
-            Check("搜索无匹配时显示空状态", vm.IsSearching && vm.IsEmpty);
-            Check("搜索态禁止框选与拖动", !vm.IsEditableView);
-
-            vm.Query = string.Empty;
-            Pump();
-            Check("清空搜索后退出搜索模式", !vm.IsSearching);
-
-            // 环境变量路由：tools / builtin 对应页签索引
-            window.ShowPage("tools");
-            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
-            Pump();
-            Check("DEVENV_START_PAGE=tools 切到系统工具页签",
-                vm.SelectedPage == 3 && vm.IsSystemToolsPage && !vm.IsInsideGroup && !vm.IsSearching);
-            Check("系统工具按分类标签展示",
+            Check("内置工具按分类标签展示",
                 vm.ShowsToolSections
-                && vm.ToolSections.Count >= 2
-                && vm.ToolSections.All(section => !string.IsNullOrWhiteSpace(section.Title) && section.Entries.Count > 0),
-                $"sections={vm.ToolSections.Count}: {string.Join(", ", vm.ToolSections.Select(s => $"{s.Title}×{s.Entries.Count}"))}");
+                && vm.ToolSections.Count >= 4
+                && vm.ToolSections.Any(section => section.Title == "窗口入口"),
+                $"sections={string.Join(", ", vm.ToolSections.Select(s => s.Title))}");
+
+            window.ShowPage("tools");
+            WaitUntil(() => !vm.IsShortcutDataLoading && vm.SystemToolMenus.Count > 0, 15_000);
+            Pump();
+            Check("DEVENV_START_PAGE=tools 展开系统工具菜单",
+                vm.SelectedPage == 4
+                && !vm.IsInsideGroup
+                && !vm.IsSearching
+                && window.SystemToolsMenuItem.IsSubmenuOpen,
+                $"SelectedPage={vm.SelectedPage}, menuOpen={window.SystemToolsMenuItem.IsSubmenuOpen}");
+            window.SystemToolsMenuItem.IsSubmenuOpen = false;
             window.ShowPage("builtin");
             WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
             Check("DEVENV_START_PAGE=builtin 切到内置工具页签",
                 vm.SelectedPage == 4 && vm.IsBuiltinToolsPage && !vm.IsInsideGroup && !vm.IsSearching);
-            Check("内置工具按分类标签展示",
-                vm.ShowsToolSections
-                && vm.ToolSections.Count >= 4
-                && vm.ToolSections.Any(section => section.Title == "环境")
-                && vm.ToolSections.Any(section => section.Title == "监控")
-                && vm.ToolSections.Any(section => section.Title == "窗口入口")
-                && vm.ToolSections.Any(section => section.Title == "实用工具"),
-                $"sections={string.Join(", ", vm.ToolSections.Select(s => s.Title))}");
-            window.ShowPage("apps");
-            WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
-            Pump();
-            Check("回到 apps 页签", !vm.IsInsideGroup && vm.SelectedPage == 0);
             Check("ShowPage 可见时安装窗口外点击监听", window.IsOutsideClickHookInstalled);
 
-            // 系统标题栏按钮：允许最大化 / 最小化。探针只验证最小化（最大化会铺满屏幕），
-            // 并确认最小化期间卸载窗口外点击钩子，还原后重新安装。
             Check("启动器允许最大化与最小化",
                 window.ResizeMode == ResizeMode.CanResize,
                 $"ResizeMode={window.ResizeMode}");
@@ -332,23 +236,20 @@ public static class ShortcutLauncherProbe
             Pump();
             Check("还原后重新安装窗口外点击监听", window.IsOutsideClickHookInstalled);
 
-            // 窗口外点击必须真的收起，而不是只装了钩子；标准窗口直接隐藏，没有退出动画
             window.SimulateOutsideClick();
             Check("窗口外点击立即收起并隐藏", !window.IsVisible);
             Check("窗口外点击后卸载监听", !window.IsOutsideClickHookInstalled);
-            window.ShowPage("apps");
+            window.ShowPage("tools");
             Pump();
             Check("窗口外点击收起后可以重新打开",
                 window.IsVisible && window.IsOutsideClickHookInstalled,
                 $"visible={window.IsVisible}, hook={window.IsOutsideClickHookInstalled}");
 
-            // 收起 → 再打开（第二次打开正是用户反馈会闪的地方）：标准窗口不播退出动画，直接 Hide
             window.ShowPage("builtin");
             WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
             window.Dismiss();
             Check("收起立即隐藏（无退出动画）", !window.IsVisible);
-            Check("收起后卸载窗口外点击监听", !window.IsOutsideClickHookInstalled);
 
             // 托盘 / 左 Alt / 显示主窗口不传 pageId，应留在隐藏前的页签
             window.ShowPage(null);
@@ -359,8 +260,114 @@ public static class ShortcutLauncherProbe
                 vm.SelectedPage == 4 && vm.IsBuiltinToolsPage,
                 $"SelectedPage={vm.SelectedPage}");
 
-            window.ShowPage("apps");
-            Pump();
+            // 四个分类窗口：各自单页、独立窗口，不再有页签切换
+            foreach (var (page, title) in CategoryPages)
+            {
+                Check($"分类窗口 id「{title}」已注册", ToolWindowHost.IsTool(
+                    page switch
+                    {
+                        0 => "shortcut-apps",
+                        1 => "shortcut-folders",
+                        2 => "shortcut-webs",
+                        _ => "shortcut-startmenu",
+                    }));
+
+                var view = new ShortcutCategoryView(page);
+                var host = new Window
+                {
+                    Title = title,
+                    Width = 900,
+                    Height = 640,
+                    ShowInTaskbar = false,
+                    ShowActivated = false,
+                    Left = -4000,
+                    Top = -4000,
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Content = view,
+                };
+                categoryWindows.Add(host);
+                host.Show();
+                Pump();
+                WaitUntil(() => !view.ViewModel.IsShortcutDataLoading, 15_000);
+                if (page == 5)
+                    WaitUntil(() => !view.ViewModel.IsStartMenuLoading, 15_000);
+                Pump();
+                host.UpdateLayout();
+
+                var category = view.ViewModel;
+                Check($"分类窗口「{title}」可加载", host.IsVisible && category.Pages.Count == 1);
+                Check($"分类窗口「{title}」固定单页",
+                    category.SelectedPage == page && category.IsCategoryWindow);
+
+                var expectedKind = page switch
+                {
+                    0 => ShortcutKind.App,
+                    1 => ShortcutKind.Folder,
+                    2 => ShortcutKind.Web,
+                    _ => ShortcutKind.StartMenu,
+                };
+                Check($"分类窗口「{title}」只含本类条目",
+                    category.VisibleEntries.All(e => e.Kind == expectedKind || e.IsGroup),
+                    $"共 {category.VisibleEntries.Count} 项");
+                Check($"分类窗口「{title}」可编辑判定正确",
+                    page == 5
+                        ? !category.IsEditableView && !category.CanCreateGroup && !category.CanAddOnCurrentPage
+                        : category.IsEditableView && category.CanCreateGroup && category.CanAddOnCurrentPage);
+                Check($"分类窗口「{title}」右键菜单入口正确",
+                    page == 0 ? category.CanAddApps && !category.CanAddFolders && !category.CanAddWebs
+                    : page == 1 ? category.CanAddFolders && !category.CanAddApps && !category.CanAddWebs
+                    : page == 2 ? category.CanAddWebs && !category.CanAddApps && !category.CanAddFolders
+                    : !category.CanAddApps && !category.CanAddFolders && !category.CanAddWebs);
+
+                if (category.VisibleEntries.FirstOrDefault() is { } selectable)
+                {
+                    category.SetSelection([selectable]);
+                    Check($"分类窗口「{title}」选中卡片后记录选择",
+                        category.HasSelection && category.SelectedEntries.Count == 1);
+                    category.ClearSelection();
+                    Check($"分类窗口「{title}」清空选择", !category.HasSelection);
+                }
+
+                if (page == 0 && category.AddDiagnosticGroup())
+                {
+                    host.UpdateLayout();
+                    Pump();
+                    var group = category.VisibleEntries.FirstOrDefault(entry => entry.IsGroup);
+                    Check("分类窗口内文件夹磁贴可渲染（含 2×2 预览）", group is not null);
+                    if (group is not null)
+                    {
+                        category.OpenGroup(group);
+                        Pump();
+                        Check("打开文件夹后显示组内条目",
+                            category.IsInsideGroup && category.VisibleEntries.Count == group.GroupItems.Count);
+                        Check("文件夹浮层打开时底层卡片保留",
+                            category.PageEntries.Count > 0 && category.PageEntries.Any(entry => entry.IsGroup));
+                        Check("文件夹内禁止再建文件夹", !category.CanCreateGroup);
+                        category.CloseGroup();
+                        Pump();
+                        Check("关闭文件夹后回到页签视图", !category.IsInsideGroup);
+                    }
+
+                    category.RemoveDiagnosticGroup();
+                    Pump();
+                }
+
+                var sample = category.VisibleEntries.FirstOrDefault(entry => !entry.IsGroup);
+                if (sample is not null)
+                {
+                    var needle = sample.Name.Length > 2 ? sample.Name[..2] : sample.Name;
+                    category.Query = needle;
+                    Pump();
+                    Check($"分类窗口「{title}」搜索「{needle}」只命中本类",
+                        category.IsSearching
+                        && category.VisibleEntries.Any(e => e.Name == sample.Name)
+                        && category.VisibleEntries.All(e => e.Kind == expectedKind));
+                    category.Query = string.Empty;
+                    Pump();
+                }
+
+                host.Close();
+            }
 
             Check("无数据绑定错误", bindingErrors.Count == 0,
                 bindingErrors.Count == 0 ? null : string.Join(" | ", bindingErrors.Take(5)));
@@ -373,6 +380,10 @@ public static class ShortcutLauncherProbe
         finally
         {
             PresentationTraceSources.DataBindingSource.Listeners.Remove(listener);
+            foreach (var categoryWindow in categoryWindows)
+            {
+                try { categoryWindow.Close(); } catch { /* 探针退出路径 */ }
+            }
             try { window?.Close(); } catch { /* 探针退出路径 */ }
         }
 
@@ -388,10 +399,10 @@ public static class ShortcutLauncherProbe
         return failures == 0 ? 0 : 1;
     }
 
-    /// <summary>反复跑消息循环直到条件成立（最多等 timeoutMs）。后台加载与异步绑定需要泵消息。</summary>
+    /// <summary>反复跑消息循环直到条件成立（最多等 timeoutMs）。</summary>
     private static void WaitUntil(Func<bool> condition, int timeoutMs = 2000)
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         while (!condition() && stopwatch.ElapsedMilliseconds < timeoutMs)
         {
             Pump();

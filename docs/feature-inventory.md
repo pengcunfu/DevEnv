@@ -42,8 +42,8 @@
 | 分组 | 接口数 | 现在的实现 | 界面入口 | 状态 |
 |------|-------:|-----------|---------|------|
 | 主壳 / 配置 / 对话框 | 12 | `SettingsService` + `HostCallbacks` | 设置页 / 各页按钮 / 菜单 | ✅ |
-| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` + `StartMenuService` | 启动器（Launchpad）本地应用 / 文件夹 / 网站三页 + 只读「开始菜单」页 | ✅ |
-| 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 启动器（Launchpad）搜索框右侧「系统工具」文件夹 | ✅ |
+| 快捷方式（应用·文件夹·网站） | 16 | `ShortcutService` + `StartMenuService` | 四个独立窗口（本地应用 / 文件夹 / 网站 / 只读「开始菜单」），从启动器内置工具进入 | ✅ |
+| 系统工具 | 2 | `ShortcutService.GetSystemTools / RunSystemTool` | 启动器顶部「系统工具」菜单 | ✅ |
 | 进程监控 | 3 | `ProcessService` | 进程监控页 | ✅ |
 | 网络监控 | 8 | `NetworkService` | 网络监控页（流量/端口/测速） | ✅ |
 | 熔岩 - 进程与目录 | 9 | `LavaService` | 熔岩环境页 | ✅ |
@@ -65,7 +65,7 @@
 - `/api/nav` → `ViewFactory.NavItems`（前端原本就硬编码，等价迁移）
 - `POST /api/shell/*`（7 个）→ `HostCallbacks` 委托 → WPF 对话框 / 独立窗 / 页面跳转
 - `native-apps / folders / webs`（16 个）→ `ShortcutService` 同名方法 → 三个卡片页
-- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 启动器搜索框右侧「系统工具」文件夹（19 个磁贴）
+- `GET /api/system-tools` + `run` → `GetSystemTools / RunSystemTool` → 启动器顶部「系统工具」菜单（19 个磁贴）
 - `/api/processes` 三件套 → `ProcessService.GetSnapshot / Kill / OpenFolder` → 进程监控页
 - `/api/network/*` 八个 → `NetworkService`（含测速状态机原样搬运）→ 网络监控页三页签
 - `/api/lava/*` 二十一个 → `LavaService` → 熔岩环境页七页签
@@ -86,12 +86,12 @@
 | `Layout`（菜单/侧栏/状态栏） | `MainWindow.xaml` | — | ✅ |
 | `AppMenuBar`（含关于窗） | `Menu` + `AboutWindow` | — | ✅ |
 | `ContextMenu`（卡片右键） | 三个视图的 `ContextMenu`（Tag 分派） | — | ✅ 本轮修复 |
-| `AppsPage` / `FoldersPage` / `WebsPage` / `StartMenuPage` | `ShortcutsWindow`（Launchpad 启动器） | `apps` / `folders` / `webs` / `startmenu` | ✅ |
+| `AppsPage` / `FoldersPage` / `WebsPage` / `StartMenuPage` | `ShortcutCategoryView`（四个独立分类窗口） | `apps` / `folders` / `webs` / `startmenu` | ✅ |
 | `DevEnvPage` | `DevEnvView` | `devenv` | ✅ |
 | `LavaPage`（7 个 Tab） | `LavaView`（7 个页签） | `lava` | ✅ |
 | `NetworkPage`（3 个 Tab） | `NetworkView`（3 个页签） | `network` | ✅ |
 | `ProcessesPage` | `ProcessesView` | `processes` | ✅ |
-| 系统工具（启动器文件夹） | `ShortcutService.GetSystemTools` → 搜索框右侧「系统工具」浮层 | `tools` | ✅ |
+| 系统工具 | `ShortcutService.GetSystemTools` → 启动器顶部「系统工具」菜单 | `tools` | ✅ |
 | `JsonToolPage` | `JsonToolView` | `tools/json` | ✅ |
 | `HostsToolPage` | `HostsToolView` | `tools/hosts` | ✅ |
 | `HashToolPage` | `HashToolView` | `tools/hash` | ✅ |
@@ -107,7 +107,8 @@
 
 | 视图 | 按钮 | 菜单项 | 表格列 | 输入控件 |
 |------|-----:|-------:|-------:|--------:|
-| ShortcutsWindow（启动器） | 1 | 8 | 0 | 1 |
+| ShortcutsWindow（启动器） | 0 | 3 | 0 | 0 |
+| ShortcutCategoryView（分类窗口） | 1 | 4 | 0 | 1 |
 | DevEnvView | 3 | 0 | 5 | 0 |
 | LavaView | 28 | 0 | 27 | 4 |
 | NetworkView | 7 | 0 | 17 | 2 |
@@ -163,8 +164,8 @@
 |---|------|
 | 托盘双击唤醒 / 退出 / 关闭主窗进托盘 | 点关闭只隐藏，不退进程 |
 | `Alt+Space` 翻译 / `Ctrl+Space` 剪贴板 / 托盘单击启动器 | 翻译窗填充剪贴板文本 / 剪贴板窗前置 / 启动器显示与收起 |
-| 启动器框选 / 拖拽排序 / 启动器文件夹 | 点击空白不关窗；多选高亮；重启后顺序与分组保留；文件夹可展开、重命名、解散、移出条目 |
-| 拖放 .exe 与文件夹进主窗 | 落到「快捷方式」窗口的对应页签并刷新 |
+| 分类窗口框选 / 拖拽排序 / 启动器文件夹 | 点击空白不关窗；多选高亮；重启后顺序与分组保留；文件夹可展开、重命名、解散、移出条目 |
+| 拖放 .exe 与文件夹进分类窗口 | 落到本地应用 / 文件夹窗口并刷新 |
 | 熔岩：启停服务、开始下载、活动/历史刷新、镜像测速与切换、环境扫描 | 与迁移前一致 |
 | 网络/进程：结束进程、结束进程树、端口结束、测速进度 | 与迁移前一致 |
 | 工具：JSON 格式化、Hosts 保存（非管理员拉起提权窗）、哈希、图像转换、启动项增删 | 与迁移前一致 |
