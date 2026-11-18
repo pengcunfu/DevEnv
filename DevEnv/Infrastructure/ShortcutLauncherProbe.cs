@@ -6,29 +6,18 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using DevEnv.Host.SigXor.Diagnostics;
 using DevEnv.Host.ViewModels;
-using DevEnv.Host.Views;
 using DevEnv.Host.Windows;
 
 namespace DevEnv.Host.Infrastructure;
 
 /// <summary>
-/// 启动器自检：启动器本身只保留系统工具 / 内置工具两页，
-/// 本地应用 / 文件夹 / 网站 / 开始菜单已拆成独立窗口。
-/// 探针同时验证启动器的系统工具菜单栏与内置工具分组，以及四个分类窗口的加载、
-/// 只读判定、选择 API、搜索范围与文件夹浮层。
+/// 启动器自检：验证主窗口的系统工具菜单栏、设置入口与内置工具分组，
+/// 以及窗口几何、窗口外点击收起等基本交互。
 /// 用法：<c>DevEnv.exe --shortcuts-check %TEMP%\shortcuts.txt</c>
 /// </summary>
 public static class ShortcutLauncherProbe
 {
     public const string Argument = "--shortcuts-check";
-
-    private static readonly (int Page, string Title)[] CategoryPages =
-    [
-        (0, "本地应用"),
-        (1, "文件夹"),
-        (2, "网站"),
-        (5, "开始菜单"),
-    ];
 
     public static int Run(string[] args)
     {
@@ -55,7 +44,6 @@ public static class ShortcutLauncherProbe
         PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error;
 
         ShortcutsWindow? window = null;
-        var categoryWindows = new List<Window>();
         try
         {
             window = new ShortcutsWindow
@@ -189,16 +177,9 @@ public static class ShortcutLauncherProbe
                 vm.VisibleEntries.All(e => e.HasToolBadge && !e.ShowsKindGlyph),
                 $"缺图标 {vm.VisibleEntries.Count(e => !e.HasToolBadge)} 项");
             var builtinKeys = vm.VisibleEntries.Select(e => e.Key).ToList();
-            Check("内置工具含四个独立窗口入口",
-                builtinKeys.Contains("shortcut-apps")
-                && builtinKeys.Contains("shortcut-folders")
-                && builtinKeys.Contains("shortcut-webs")
-                && builtinKeys.Contains("shortcut-startmenu"),
+            Check("内置工具不再包含快捷方式窗口入口",
+                builtinKeys.All(key => !key.StartsWith("shortcut-", StringComparison.OrdinalIgnoreCase)),
                 string.Join(" / ", builtinKeys));
-            Check("四个窗口入口归在「窗口入口」分类",
-                vm.VisibleEntries
-                    .Where(e => e.Key.StartsWith("shortcut-", StringComparison.OrdinalIgnoreCase))
-                    .All(e => e.Category == "窗口入口"));
             Check("内置工具页只读（无添加 / 框选 / 分组）",
                 !vm.IsEditableView && !vm.CanAddOnCurrentPage && !vm.CanCreateGroup);
 
@@ -283,115 +264,6 @@ public static class ShortcutLauncherProbe
                 vm.SelectedPage == 4 && vm.IsBuiltinToolsPage,
                 $"SelectedPage={vm.SelectedPage}");
 
-            // 四个分类窗口：各自单页、独立窗口，不再有页签切换
-            foreach (var (page, title) in CategoryPages)
-            {
-                Check($"分类窗口 id「{title}」已注册", ToolWindowHost.IsTool(
-                    page switch
-                    {
-                        0 => "shortcut-apps",
-                        1 => "shortcut-folders",
-                        2 => "shortcut-webs",
-                        _ => "shortcut-startmenu",
-                    }));
-
-                var view = new ShortcutCategoryView(page);
-                var host = new Window
-                {
-                    Title = title,
-                    Width = 900,
-                    Height = 640,
-                    ShowInTaskbar = false,
-                    ShowActivated = false,
-                    Left = -4000,
-                    Top = -4000,
-                    WindowStartupLocation = WindowStartupLocation.Manual,
-                    Content = view,
-                };
-                categoryWindows.Add(host);
-                host.Show();
-                Pump();
-                WaitUntil(() => !view.ViewModel.IsShortcutDataLoading, 15_000);
-                if (page == 5)
-                    WaitUntil(() => !view.ViewModel.IsStartMenuLoading, 15_000);
-                Pump();
-                host.UpdateLayout();
-
-                var category = view.ViewModel;
-                Check($"分类窗口「{title}」可加载", host.IsVisible && category.Pages.Count == 1);
-                Check($"分类窗口「{title}」固定单页",
-                    category.SelectedPage == page && category.IsCategoryWindow);
-
-                var expectedKind = page switch
-                {
-                    0 => ShortcutKind.App,
-                    1 => ShortcutKind.Folder,
-                    2 => ShortcutKind.Web,
-                    _ => ShortcutKind.StartMenu,
-                };
-                Check($"分类窗口「{title}」只含本类条目",
-                    category.VisibleEntries.All(e => e.Kind == expectedKind || e.IsGroup),
-                    $"共 {category.VisibleEntries.Count} 项");
-                Check($"分类窗口「{title}」可编辑判定正确",
-                    page == 5
-                        ? !category.IsEditableView && !category.CanCreateGroup && !category.CanAddOnCurrentPage
-                        : category.IsEditableView && category.CanCreateGroup && category.CanAddOnCurrentPage);
-                Check($"分类窗口「{title}」右键菜单入口正确",
-                    page == 0 ? category.CanAddApps && !category.CanAddFolders && !category.CanAddWebs
-                    : page == 1 ? category.CanAddFolders && !category.CanAddApps && !category.CanAddWebs
-                    : page == 2 ? category.CanAddWebs && !category.CanAddApps && !category.CanAddFolders
-                    : !category.CanAddApps && !category.CanAddFolders && !category.CanAddWebs);
-
-                if (category.VisibleEntries.FirstOrDefault() is { } selectable)
-                {
-                    category.SetSelection([selectable]);
-                    Check($"分类窗口「{title}」选中卡片后记录选择",
-                        category.HasSelection && category.SelectedEntries.Count == 1);
-                    category.ClearSelection();
-                    Check($"分类窗口「{title}」清空选择", !category.HasSelection);
-                }
-
-                if (page == 0 && category.AddDiagnosticGroup())
-                {
-                    host.UpdateLayout();
-                    Pump();
-                    var group = category.VisibleEntries.FirstOrDefault(entry => entry.IsGroup);
-                    Check("分类窗口内文件夹磁贴可渲染（含 2×2 预览）", group is not null);
-                    if (group is not null)
-                    {
-                        category.OpenGroup(group);
-                        Pump();
-                        Check("打开文件夹后显示组内条目",
-                            category.IsInsideGroup && category.VisibleEntries.Count == group.GroupItems.Count);
-                        Check("文件夹浮层打开时底层卡片保留",
-                            category.PageEntries.Count > 0 && category.PageEntries.Any(entry => entry.IsGroup));
-                        Check("文件夹内禁止再建文件夹", !category.CanCreateGroup);
-                        category.CloseGroup();
-                        Pump();
-                        Check("关闭文件夹后回到页签视图", !category.IsInsideGroup);
-                    }
-
-                    category.RemoveDiagnosticGroup();
-                    Pump();
-                }
-
-                var sample = category.VisibleEntries.FirstOrDefault(entry => !entry.IsGroup);
-                if (sample is not null)
-                {
-                    var needle = sample.Name.Length > 2 ? sample.Name[..2] : sample.Name;
-                    category.Query = needle;
-                    Pump();
-                    Check($"分类窗口「{title}」搜索「{needle}」只命中本类",
-                        category.IsSearching
-                        && category.VisibleEntries.Any(e => e.Name == sample.Name)
-                        && category.VisibleEntries.All(e => e.Kind == expectedKind));
-                    category.Query = string.Empty;
-                    Pump();
-                }
-
-                host.Close();
-            }
-
             Check("无数据绑定错误", bindingErrors.Count == 0,
                 bindingErrors.Count == 0 ? null : string.Join(" | ", bindingErrors.Take(5)));
         }
@@ -403,10 +275,6 @@ public static class ShortcutLauncherProbe
         finally
         {
             PresentationTraceSources.DataBindingSource.Listeners.Remove(listener);
-            foreach (var categoryWindow in categoryWindows)
-            {
-                try { categoryWindow.Close(); } catch { /* 探针退出路径 */ }
-            }
             try { window?.Close(); } catch { /* 探针退出路径 */ }
         }
 

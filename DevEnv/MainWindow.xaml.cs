@@ -112,7 +112,7 @@ public partial class MainWindow : Window
         }
 
         ViewModel.SetStatus($"已添加 {added} 项");
-        ShortcutWindowHost.Open(addedFolders > 0 && addedApps == 0 ? "folders" : "apps");
+        ShortcutWindowHost.Open("builtin");
     }
 
     /// <summary>点关闭 = 进托盘而不是退出；只有显式退出才真正关闭。</summary>

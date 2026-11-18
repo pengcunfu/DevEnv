@@ -19,10 +19,10 @@ public static class ViewFactory
         _ => new PlaceholderView("未知页面", id),
     };
 
-    /// <summary>是否为启动器页签 id（apps / folders / webs / …）。</summary>
+    /// <summary>是否为启动器页签 id（tools / builtin）。</summary>
     public static bool IsLauncherPage(string? id)
     {
         var normalized = id?.TrimStart('/').ToLowerInvariant();
-        return normalized is "apps" or "folders" or "webs" or "startmenu" or "tools" or "builtin";
+        return normalized is "tools" or "builtin";
     }
 }

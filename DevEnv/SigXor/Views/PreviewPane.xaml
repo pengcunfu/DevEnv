@@ -21,7 +21,7 @@
                     <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" MaxWidth="680"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Esc 关闭 · ↑/↓ 切换文件" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                    <TextBlock Text="Esc 关闭 · ↑/↓ 浏览 / 切换" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,14,0"/>
                     <Button Content="✕" FontSize="13" Padding="9,3" ToolTip="关闭预览"
                             Command="{Binding DataContext.ClosePreviewCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
@@ -41,6 +41,9 @@
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:InfoContentViewModel}">
                     <views:InfoView/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:FolderContentViewModel}">
+                    <views:FolderView/>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:OfficeContentViewModel}">
                     <views:OfficeView/>

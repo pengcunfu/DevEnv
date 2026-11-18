@@ -103,7 +103,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // 启动器自检：菜单栏、内置工具网格与四个分类窗口能加载，没有数据绑定错误
+        // 启动器自检：菜单栏、内置工具网格与基本窗口交互能加载，没有数据绑定错误
         int shortcutsIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ShortcutLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
         if (shortcutsIndex >= 0)

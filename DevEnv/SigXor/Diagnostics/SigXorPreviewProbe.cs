@@ -98,8 +98,8 @@ public static class SigXorPreviewProbe
                 return preview.Content;
             });
 
-            // 目录 → 信息视图
-            await ProbeAsync("预览 目录", async () =>
+            // 目录 → 文件管理器（目录导航 + 文件列表）
+            await ProbeAsync("预览 目录（文件管理器）", async () =>
             {
                 var entry = new DevEnv.Core.SigXor.FileEntry
                 {

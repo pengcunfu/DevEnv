@@ -15,7 +15,9 @@ public partial class PreviewViewModel : ObservableObject
 
     private readonly BackupService _backup;
     private readonly SettingsService _settings;
-    private CancellationTokenSource? _folderCts;
+
+    /// <summary>文件夹预览里双击文件时交给宿主：通常追加到预览历史再加载，保证能返回文件夹。</summary>
+    public Func<FileEntry, Task>? OpenFileFromFolder { get; set; }
 
     public PreviewViewModel(SettingsService settings, BackupService backup)
     {
@@ -169,10 +171,7 @@ public partial class PreviewViewModel : ObservableObject
 
     public void CloseDocument()
     {
-        try { _folderCts?.Cancel(); } catch { /* ignore */ }
-        _folderCts?.Dispose();
-        _folderCts = null;
-
+        if (Content is FolderContentViewModel folder) folder.Dispose();
         if (Content is HexContentViewModel hex) hex.Dispose();
         if (Content is OfficeContentViewModel office) office.Dispose();
         if (Content is MarkdownContentViewModel markdown) markdown.Dispose();
@@ -180,90 +179,18 @@ public partial class PreviewViewModel : ObservableObject
         Content = null;
     }
 
-    private async Task LoadFolderAsync(FileEntry file)
+    /// <summary>文件夹预览改用文件管理器：目录导航、文件列表，双击文件交给外层预览打开。</summary>
+    private Task LoadFolderAsync(FileEntry file)
     {
-        _folderCts?.Cancel();
-        _folderCts?.Dispose();
-        _folderCts = new CancellationTokenSource();
-        CancellationToken ct = _folderCts.Token;
-
-        DirectoryInfo di;
-        try
-        {
-            di = new DirectoryInfo(file.FullPath);
-            if (!di.Exists) throw new DirectoryNotFoundException(file.FullPath);
-        }
-        catch (Exception ex)
-        {
-            Content = new InfoContentViewModel("无法打开文件夹", ex.Message);
-            Subtitle = $"{file.FullPath} · 文件夹";
-            return;
-        }
-
-        string created = di.CreationTime.ToString("yyyy-MM-dd HH:mm:ss");
-        string modified = di.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss");
-        string attrs = FormatFileAttributes(di.Attributes);
-        var info = new InfoContentViewModel(
-            "文件夹",
-            BuildFolderMessage(file.FullPath, created, modified, attrs, "正在计算…"));
-        Content = info;
+        var folder = new FolderContentViewModel(file.FullPath, OpenFileFromFolderAsync);
+        Content = folder;
         Subtitle = $"{file.FullPath} · 文件夹";
-
-        try
-        {
-            DirectoryStats stats = await Task.Run(() => FileSystemService.InspectDirectory(file.FullPath, ct), ct);
-            if (ct.IsCancellationRequested || !ReferenceEquals(Content, info)) return;
-
-            string sizeText = FileEntry.FormatSize(stats.TotalBytes);
-            string counts = $"{stats.FileCount:N0} 个文件 · {stats.DirectoryCount:N0} 个子文件夹";
-            if (stats.Skipped > 0) counts += $" · {stats.Skipped:N0} 项无法访问";
-            info.Message = BuildFolderMessage(file.FullPath, created, modified, attrs, sizeText, counts);
-            Subtitle = $"{file.FullPath} · {sizeText} · 文件夹";
-        }
-        catch (OperationCanceledException)
-        {
-            // 切换预览时取消
-        }
-        catch (Exception ex)
-        {
-            if (ReferenceEquals(Content, info))
-                info.Message = BuildFolderMessage(file.FullPath, created, modified, attrs, $"计算失败（{ex.Message}）");
-        }
+        _ = folder.InitializeAsync();
+        return Task.CompletedTask;
     }
 
-    private static string BuildFolderMessage(
-        string path,
-        string created,
-        string modified,
-        string attributes,
-        string sizeText,
-        string? counts = null)
-    {
-        var lines = new List<string>
-        {
-            path,
-            "",
-            $"大小：{sizeText}",
-            $"创建时间：{created}",
-            $"修改时间：{modified}",
-            $"属性：{attributes}",
-        };
-        if (!string.IsNullOrEmpty(counts))
-            lines.Add($"包含：{counts}");
-        return string.Join(Environment.NewLine, lines);
-    }
-
-    private static string FormatFileAttributes(FileAttributes attributes)
-    {
-        var parts = new List<string>();
-        if (attributes.HasFlag(FileAttributes.ReadOnly)) parts.Add("只读");
-        if (attributes.HasFlag(FileAttributes.Hidden)) parts.Add("隐藏");
-        if (attributes.HasFlag(FileAttributes.System)) parts.Add("系统");
-        if (attributes.HasFlag(FileAttributes.Compressed)) parts.Add("压缩");
-        if (attributes.HasFlag(FileAttributes.Encrypted)) parts.Add("加密");
-        if (attributes.HasFlag(FileAttributes.ReparsePoint)) parts.Add("链接/重解析点");
-        return parts.Count == 0 ? "普通" : string.Join(" · ", parts);
-    }
+    private Task OpenFileFromFolderAsync(FileEntry file) =>
+        OpenFileFromFolder?.Invoke(file) ?? LoadAsync(file);
 
     private async Task LoadTextAsync(FileEntry file)
     {

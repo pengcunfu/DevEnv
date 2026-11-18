@@ -52,6 +52,24 @@ public static class SettingsDialogProbe
             window.SetVoiceContent(voiceView);
             window.SetServiceContent(serviceView);
 
+            // 设置窗口跟随主窗口的尺寸与位置
+            var geometryOwner = new Window
+            {
+                Left = 120,
+                Top = 90,
+                Width = 910,
+                Height = 650,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+            };
+            Check("设置窗口可应用主窗口几何",
+                Windows.SettingsDialogHost.ApplyMainWindowBounds(window, geometryOwner));
+            Check("设置窗口与主窗口大小位置一致",
+                Math.Abs(window.Left - 120) < 0.5
+                && Math.Abs(window.Top - 90) < 0.5
+                && Math.Abs(window.Width - 910) < 0.5
+                && Math.Abs(window.Height - 650) < 0.5,
+                $"Left={window.Left}, Top={window.Top}, W={window.Width}, H={window.Height}");
+
             // 页签数量与标题：平铺五页签，不做二级
             var tabs = FindTabControl(window);
             Check("设置窗口包含 TabControl", tabs is not null);

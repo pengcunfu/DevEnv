@@ -1,5 +1,7 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using DevEnv.Core.Services;
 using DevEnv.Host.SigXor.ViewModels;
 
@@ -43,9 +45,17 @@ public partial class ShellPreviewWindow : Window
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // 编辑模式或输入框里不拦截按键，让编辑器 / 输入控件处理方向键
+        // 编辑模式或输入框里不拦截按键
         if (IsInEditMode()
             || Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase)
+        {
+            return;
+        }
+
+        // 文件夹列表里方向键与回车交给列表自己处理，但 Esc 仍要关闭预览
+        if (e.Key != Key.Escape
+            && Keyboard.FocusedElement is DependencyObject focused
+            && FindAncestor<ListView>(focused) is not null)
         {
             return;
         }
@@ -177,5 +187,16 @@ public partial class ShellPreviewWindow : Window
             }
             Hide();
         });
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? node) where T : DependencyObject
+    {
+        while (node is not null)
+        {
+            if (node is T match)
+                return match;
+            node = VisualTreeHelper.GetParent(node);
+        }
+        return null;
     }
 }

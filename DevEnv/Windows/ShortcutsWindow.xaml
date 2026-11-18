@@ -15,8 +15,8 @@
         PreviewKeyDown="OnPreviewKeyDown"
         StateChanged="OnWindowStateChanged"
         Deactivated="OnDeactivated">
-    <!-- 启动器（主窗口）：顶部菜单栏放全部系统工具，内容区是内置工具分类网格。
-         本地应用 / 文件夹 / 网站 / 开始菜单已拆成独立窗口，从「内置工具 → 窗口入口」打开。
+    <!-- 启动器（主窗口）：顶部菜单栏放系统工具与设置，内容区是内置工具分类网格。
+         本地应用 / 文件夹 / 网站 / 开始菜单的快捷方式界面已移除。
          使用 Windows 默认窗口边框与标题栏，默认 960 × 680 DIP、在工作区内居中。 -->
     <Window.DataContext>
         <vm:ShortcutLauncherViewModel />

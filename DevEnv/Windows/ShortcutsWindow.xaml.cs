@@ -13,10 +13,9 @@ using DevEnv.Host.ViewModels;
 namespace DevEnv.Host.Windows;
 
 /// <summary>
-/// 启动器（主窗口）：只承载「系统工具 / 内置工具」两个页签。
-/// 本地应用 / 文件夹 / 网站 / 开始菜单已拆成独立窗口（见 <see cref="Views.ShortcutCategoryView"/>），
-/// 从内置工具页的「窗口入口」打开。
-/// 非模态、单实例（由 <see cref="ShortcutWindowHost"/> 管理），左 Alt / 托盘唤起。
+/// 启动器（主窗口）：顶部菜单栏承载系统工具与设置，下方是内置工具网格。
+/// 本地应用 / 文件夹 / 网站 / 开始菜单的快捷方式界面已移除。
+/// 非模态、单实例（由 <see cref="ShortcutWindowHost"/> 管理），托盘 / 热键唤起。
 /// </summary>
 public partial class ShortcutsWindow : Window
 {

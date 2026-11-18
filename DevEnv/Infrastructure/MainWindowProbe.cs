@@ -35,10 +35,6 @@ public static class MainWindowProbe
         ("batch-rename", "批量重命名"),
         ("color", "颜色工具"),
         ("sysinfo", "系统信息"),
-        ("shortcut-apps", "本地应用"),
-        ("shortcut-folders", "文件夹"),
-        ("shortcut-webs", "网站"),
-        ("shortcut-startmenu", "开始菜单"),
     ];
 
     public static int Run(string[] args)

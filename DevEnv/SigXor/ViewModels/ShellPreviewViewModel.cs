@@ -17,6 +17,12 @@ public sealed partial class ShellPreviewViewModel : ObservableObject
     public ShellPreviewViewModel(SettingsService settings, BackupService backup)
     {
         _preview = new PreviewViewModel(settings, backup);
+        // 文件夹预览里打开文件：追加到历史再加载，窗口的左右箭头可以返回文件夹
+        _preview.OpenFileFromFolder = file =>
+        {
+            AppendFiles([file]);
+            return Task.CompletedTask;
+        };
     }
 
     public PreviewViewModel Preview => _preview;

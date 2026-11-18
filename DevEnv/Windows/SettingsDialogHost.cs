@@ -55,13 +55,53 @@ public static class SettingsDialogHost
         window.Closed += (_, _) => _window = null;
         _window = window;
 
+        // 设置窗口与主窗口保持同样的大小和位置：主窗口可见时直接复制它的几何，
+        // 主窗口隐藏（例如从托盘 / 模块回调进入）时摆到启动器的默认几何上。
         if (app.MainWindow is { IsVisible: true } owner && !ReferenceEquals(owner, window))
+        {
             window.Owner = owner;
+            ApplyMainWindowBounds(window, owner);
+        }
         else
-            CursorScreen.Center(window);
+        {
+            var bounds = CursorScreen.GetLauncherBoundsDip();
+            window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.Width = bounds.Width;
+            window.Height = bounds.Height;
+            window.Left = bounds.Left;
+            window.Top = bounds.Top;
+        }
 
         window.SelectTab(tabIndex);
         window.ShowDialog();
+    }
+
+    /// <summary>
+    /// 把设置窗口摆到与主窗口相同的尺寸和位置。主窗口最大化 / 最小化时用还原后的几何。
+    /// 供自检探针直接验证。
+    /// </summary>
+    internal static bool ApplyMainWindowBounds(Window window, Window? main)
+    {
+        if (main is null || ReferenceEquals(main, window))
+            return false;
+
+        var bounds = main.WindowState == WindowState.Normal
+            ? new Rect(main.Left, main.Top, main.Width, main.Height)
+            : main.RestoreBounds;
+        if (bounds.IsEmpty
+            || double.IsNaN(bounds.Left) || double.IsNaN(bounds.Top)
+            || double.IsNaN(bounds.Width) || double.IsNaN(bounds.Height)
+            || bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return false;
+        }
+
+        window.WindowStartupLocation = WindowStartupLocation.Manual;
+        window.Width = bounds.Width;
+        window.Height = bounds.Height;
+        window.Left = bounds.Left;
+        window.Top = bounds.Top;
+        return true;
     }
 
     /// <summary>关闭设置窗口（应用退出时调用）。</summary>
