@@ -22,6 +22,12 @@ public sealed class FolderItem
     public string IconPath { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string FolderPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 是否已确认固定到资源管理器快速访问。由快速访问同步标记；
+    /// 用户在资源管理器里取消固定后，下次同步会把这类条目从启动器移除。
+    /// </summary>
+    public bool QuickAccessPinned { get; set; }
 }
 
 /// <summary>网站快捷方式（WebAtomList）。</summary>

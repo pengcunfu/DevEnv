@@ -29,16 +29,16 @@ public static class ShortcutWindowHost
     /// <summary>
     /// 启动后调用一次：在内存里建好窗口并完成布局与首帧渲染（屏幕外、不可见）。
     /// 每次打开都临时创建窗口会让首次显示先闪空白，预热后 Show 只是把窗口摆出来。
-    /// 预热完成后顺带在后台给已有启动器应用补建开始菜单快捷方式，不阻塞界面。
+    /// 预热完成后顺带在后台补建开始菜单快捷方式并与快速访问对账，不阻塞界面。
     /// </summary>
     public static void Prewarm()
     {
         EnsureWindow().Prewarm();
-        StartStartMenuSync();
+        StartBackgroundSync();
     }
 
-    /// <summary>补建开始菜单快捷方式只跑一次；探针直接创建窗口，不会走到这里。</summary>
-    private static void StartStartMenuSync()
+    /// <summary>开始菜单补建与快速访问同步只跑一次；探针直接创建窗口，不会走到这里。</summary>
+    private static void StartBackgroundSync()
     {
         if (_startMenuSyncStarted)
             return;
@@ -53,6 +53,15 @@ public static class ShortcutWindowHost
             catch
             {
                 // 开始菜单同步失败不影响启动与启动器本身
+            }
+
+            try
+            {
+                CoreServices.Shortcuts.SyncQuickAccess();
+            }
+            catch
+            {
+                // 快速访问同步失败（Shell 不可用等）不影响启动与启动器本身
             }
         });
     }

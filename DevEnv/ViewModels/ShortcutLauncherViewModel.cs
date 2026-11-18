@@ -65,6 +65,9 @@ public sealed partial class LauncherEntry : ObservableObject
     /// <summary>开始菜单条目的原始索引记录；收进启动器时使用。</summary>
     public StartMenuItem? StartMenuSource { get; init; }
 
+    /// <summary>该文件夹是否已固定到资源管理器快速访问；移除时会同步取消固定。</summary>
+    public bool IsQuickAccessPinned { get; init; }
+
     /// <summary>布局里的稳定标识：普通条目为 app|路径 / folder|路径 / web|url，系统工具为工具键。</summary>
     public string Key { get; init; } = string.Empty;
 
@@ -454,6 +457,9 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
 
     private static ShortcutReloadPayload BuildShortcutPayload()
     {
+        // 先与资源管理器快速访问对账，再读取文件夹列表；Shell 不可用时自动跳过
+        var quickAccess = CoreServices.Shortcuts.SyncQuickAccess();
+
         var apps = CoreServices.Shortcuts.GetApps()
             .Select((item, index) => new LauncherEntry
             {
@@ -475,6 +481,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
                 Name = item.Name,
                 IconPath = item.IconPath ?? string.Empty,
                 TargetPath = item.FolderPath,
+                IsQuickAccessPinned = item.QuickAccessPinned,
             })
             .ToList();
 
@@ -530,7 +537,7 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             webs.Select(entry => entry.Key).ToList(),
         ]);
 
-        return new ShortcutReloadPayload(apps, folders, webs, tools, builtinTools, layout);
+        return new ShortcutReloadPayload(apps, folders, webs, tools, builtinTools, layout, quickAccess);
     }
 
     private void ApplyShortcutPayload(ShortcutReloadPayload payload)
@@ -552,6 +559,14 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         RebuildTiles();
         RebuildAllItems();
 
+        // 快速访问带来的增删只在底部提示一次；纯补标记不打扰用户
+        if (payload.QuickAccess is { Succeeded: true } qa && qa.Imported + qa.Removed > 0)
+        {
+            Notice = qa.Removed > 0
+                ? $"已按资源管理器快速访问同步：新增 {qa.Imported} 个，移除 {qa.Removed} 个"
+                : $"已从资源管理器快速访问同步 {qa.Imported} 个文件夹";
+        }
+
         if (_pendingSelectedPage is int pendingPage)
         {
             SelectedPage = pendingPage;
@@ -565,7 +580,8 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         List<LauncherEntry> Webs,
         List<LauncherEntry> Tools,
         List<LauncherEntry> BuiltinTools,
-        LauncherLayout Layout);
+        LauncherLayout Layout,
+        QuickAccessSyncResult QuickAccess);
 
     /// <summary>把应用 / 文件夹 / 网站 / 工具与开始菜单条目合并成搜索数据源。</summary>
     private void RebuildAllItems()
@@ -1517,7 +1533,10 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
             return;
         }
 
-        if (!ConfirmDialog.Show(owner, $"移除「{entry.Name}」？", "移除"))
+        var message = entry.IsQuickAccessPinned
+            ? $"移除「{entry.Name}」？同时会从资源管理器快速访问取消固定。"
+            : $"移除「{entry.Name}」？";
+        if (!ConfirmDialog.Show(owner, message, "移除"))
             return;
         Report(entry.Kind switch
         {
@@ -1540,7 +1559,10 @@ public sealed partial class ShortcutLauncherViewModel : ObservableObject
         if (selected.Count == 0)
             return;
 
-        if (!ConfirmDialog.Show(owner, $"移除选中的 {selected.Count} 项？", "移除"))
+        var message = selected.Any(entry => entry.IsQuickAccessPinned)
+            ? $"移除选中的 {selected.Count} 项？其中已固定到快速访问的文件夹会同时取消固定。"
+            : $"移除选中的 {selected.Count} 项？";
+        if (!ConfirmDialog.Show(owner, message, "移除"))
             return;
 
         foreach (var group in selected.Where(entry => entry.IsGroup))

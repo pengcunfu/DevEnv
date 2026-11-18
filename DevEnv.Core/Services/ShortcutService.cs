@@ -25,14 +25,16 @@ public sealed class ShortcutService
 
     private readonly DataStore _store;
     private readonly StartMenuService _startMenu;
+    private readonly QuickAccessService _quickAccess;
 
     /// <summary>应用列表的读取 / 写入锁：启动后台补建开始菜单快捷方式时不能和 UI 添加互相覆盖。</summary>
     private readonly object _gate = new();
 
-    public ShortcutService(DataStore store, StartMenuService startMenu)
+    public ShortcutService(DataStore store, StartMenuService startMenu, QuickAccessService? quickAccess = null)
     {
         _store = store;
         _startMenu = startMenu;
+        _quickAccess = quickAccess ?? new QuickAccessService();
     }
 
     #region 本地应用
@@ -310,35 +312,115 @@ public sealed class ShortcutService
             return OperationResult.Success(duplicate.Name);
 
         var name = string.IsNullOrWhiteSpace(nameOverride)
-            ? new DirectoryInfo(path).Name
+            ? GetFolderName(path)
             : nameOverride;
         list.Add(new FolderItem
         {
             Name = name,
             Description = path,
             FolderPath = path,
+            // 双向同步：启动器里新增的文件夹同时固定到资源管理器快速访问
+            QuickAccessPinned = _quickAccess.Pin(path),
         });
         _store.SaveList(FolderKey, new JArray(list.Select(WriteFolder)));
         return OperationResult.Success(name);
     }
 
+    /// <summary>
+    /// 与资源管理器快速访问对账：导入缺失的固定文件夹、补标记已有条目、
+    /// 移除已在资源管理器里取消固定的条目。Shell 不可用时返回失败且不改数据。
+    /// </summary>
+    public QuickAccessSyncResult SyncQuickAccess()
+    {
+        lock (_gate)
+        {
+            // 读取系统列表与写回 data.json 必须在同一把锁里：否则 UI 刚固定 / 移除的文件夹
+            // 会被这次读到的旧列表覆盖（误删或重新导入）。
+            if (!_quickAccess.TryGetPinnedFolders(out var pinned))
+                return QuickAccessSyncResult.Failed;
+
+            var list = ReadFolders();
+            var plan = QuickAccessReconciler.Build(
+                list.Select(item => (item.FolderPath, item.QuickAccessPinned)).ToList(),
+                pinned);
+
+            foreach (var index in plan.MarkPinnedIndexes)
+                list[index].QuickAccessPinned = true;
+
+            var removed = 0;
+            foreach (var index in plan.RemoveIndexes.OrderByDescending(i => i))
+            {
+                list.RemoveAt(index);
+                removed++;
+            }
+
+            var imported = 0;
+            foreach (var path in plan.ImportPaths)
+            {
+                // 离线的移动盘 / 网络盘仍算已固定，但暂时没法作为快捷方式打开，先不导入
+                if (!Directory.Exists(path))
+                    continue;
+
+                list.Add(new FolderItem
+                {
+                    Name = GetFolderName(path),
+                    Description = path,
+                    FolderPath = path,
+                    QuickAccessPinned = true,
+                });
+                imported++;
+            }
+
+            if (plan.MarkPinnedIndexes.Count > 0 || removed > 0 || imported > 0)
+                _store.SaveList(FolderKey, new JArray(list.Select(WriteFolder)));
+
+            return new QuickAccessSyncResult(
+                true,
+                imported,
+                removed,
+                plan.MarkPinnedIndexes.Count);
+        }
+    }
+
+    private static string GetFolderName(string path)
+    {
+        var name = new DirectoryInfo(path).Name;
+        return string.IsNullOrWhiteSpace(name) ? path.TrimEnd('\\', '/') : name;
+    }
+
     public OperationResult UpdateFolder(int index, string? name = null, string? folderPath = null)
     {
-        var list = ReadFolders();
-        if (index < 0 || index >= list.Count)
-            return OperationResult.Fail("条目不存在");
-
-        var item = list[index];
-        if (name is not null)
-            item.Name = name;
-        if (!string.IsNullOrWhiteSpace(folderPath) && Directory.Exists(folderPath))
+        lock (_gate)
         {
-            item.FolderPath = folderPath;
-            item.Description = folderPath;
-        }
+            var list = ReadFolders();
+            if (index < 0 || index >= list.Count)
+                return OperationResult.Fail("条目不存在");
 
-        _store.SaveList(FolderKey, new JArray(list.Select(WriteFolder)));
-        return OperationResult.Success();
+            var item = list[index];
+            if (name is not null)
+                item.Name = name;
+            if (!string.IsNullOrWhiteSpace(folderPath) && Directory.Exists(folderPath))
+            {
+                var changed = !string.Equals(
+                    StartMenuIndex.NormalizePathForCompare(folderPath),
+                    StartMenuIndex.NormalizePathForCompare(item.FolderPath),
+                    StringComparison.OrdinalIgnoreCase);
+
+                if (changed)
+                {
+                    // 换路径时把快速访问里的固定项一并迁过去，避免留下指向旧目录的条目
+                    if (item.QuickAccessPinned)
+                        _quickAccess.Unpin(item.FolderPath);
+
+                    item.FolderPath = folderPath;
+                    item.Description = folderPath;
+                    item.QuickAccessPinned = _quickAccess.Pin(folderPath);
+                }
+            }
+
+            _store.SaveList(FolderKey, new JArray(list.Select(WriteFolder)));
+            return OperationResult.Success();
+        }
     }
 
     public OperationResult OpenFolder(int index)
@@ -369,12 +451,23 @@ public sealed class ShortcutService
 
     public OperationResult RemoveFolder(int index)
     {
-        var list = ReadFolders();
-        if (index < 0 || index >= list.Count)
-            return OperationResult.Fail("条目不存在");
-        list.RemoveAt(index);
-        _store.SaveList(FolderKey, new JArray(list.Select(WriteFolder)));
-        return OperationResult.Success();
+        lock (_gate)
+        {
+            var list = ReadFolders();
+            if (index < 0 || index >= list.Count)
+                return OperationResult.Fail("条目不存在");
+
+            var removed = list[index];
+            list.RemoveAt(index);
+
+            // 双向同步：启动器里移除文件夹时同步取消快速访问里的固定（手动条目原本就没固定，不受影响）。
+            // 必须在锁内完成并等列表刷新，否则紧随其后的同步会把还没取消的条目重新导入。
+            if (removed.QuickAccessPinned)
+                _quickAccess.Unpin(removed.FolderPath);
+
+            _store.SaveList(FolderKey, new JArray(list.Select(WriteFolder)));
+            return OperationResult.Success();
+        }
     }
 
     #endregion
@@ -579,6 +672,7 @@ public sealed class ShortcutService
         IconPath = IconHelper.ResolveIconPath(o["IconPath"]?.ToString()) ?? string.Empty,
         Description = o["Description"]?.ToString() ?? string.Empty,
         FolderPath = o["FolderPath"]?.ToString() ?? string.Empty,
+        QuickAccessPinned = o["QuickAccessPinned"]?.Value<bool>() ?? false,
     };
 
     private static JObject WriteFolder(FolderItem item) => new()
@@ -588,6 +682,7 @@ public sealed class ShortcutService
         ["Tag"] = "folder",
         ["Description"] = item.Description,
         ["FolderPath"] = item.FolderPath,
+        ["QuickAccessPinned"] = item.QuickAccessPinned,
     };
 
     private static WebItem ReadWeb(JObject o) => new()
