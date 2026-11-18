@@ -254,9 +254,6 @@ public partial class ShortcutsWindow : Window
     /// <summary>从外部收起（Win 键再次按下、托盘入口等）。</summary>
     public void Dismiss() => HideLauncher();
 
-    /// <summary>因失去焦点而自动收起时触发；宿主据此判断紧接着的托盘点击是「关闭」。</summary>
-    public event Action? AutoDismissed;
-
     /// <summary>刚显示的一小段时间内忽略「失去焦点就收起」，等系统把前台权限交过来。</summary>
     private static readonly TimeSpan FocusGrace = TimeSpan.FromMilliseconds(400);
     private DateTime _shownAtUtc;
@@ -286,7 +283,6 @@ public partial class ShortcutsWindow : Window
             return;
 
         HideLauncher();
-        AutoDismissed?.Invoke();
     }
 
     /// <summary>自检探针用：窗口外点击监听是否处于安装状态。</summary>
@@ -393,6 +389,21 @@ public partial class ShortcutsWindow : Window
         ViewModel.Launch(entry);
     }
 
+    /// <summary>菜单栏「设置」：打开合并后的设置对话框（含关于与帮助）。</summary>
+    private void OnSettingsMenuClick(object sender, RoutedEventArgs e)
+    {
+        // 模态对话框显示期间不允许主界面因失焦收起
+        _suppressDeactivate = true;
+        try
+        {
+            SettingsDialogHost.Open();
+        }
+        finally
+        {
+            _suppressDeactivate = false;
+        }
+    }
+
     /// <summary>
     /// 从主界面打开的子窗口（内置工具窗 / 分类窗口 / 翻译 / 剪贴板）还开着时，
     /// 主界面保持可见，不因失焦或点击子窗口而收起。
@@ -423,7 +434,6 @@ public partial class ShortcutsWindow : Window
                 return;
 
             HideLauncher();
-            AutoDismissed?.Invoke();
         }), DispatcherPriority.Input);
     }
 

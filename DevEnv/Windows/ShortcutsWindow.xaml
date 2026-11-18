@@ -84,6 +84,10 @@
                       Style="{StaticResource TopLevelMenuItemStyle}"
                       ItemsSource="{Binding SystemToolMenus}"
                       ItemContainerStyle="{StaticResource SystemToolGroupMenuItem}" />
+            <MenuItem x:Name="SettingsMenuItem"
+                      Header="设置(_O)"
+                      Style="{StaticResource TopLevelMenuItemStyle}"
+                      Click="OnSettingsMenuClick" />
         </Menu>
 
         <Grid x:Name="Root" Grid.Row="1" Margin="12,0,12,0">

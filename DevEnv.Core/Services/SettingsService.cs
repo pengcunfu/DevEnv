@@ -23,8 +23,6 @@ public sealed class SettingsService
             ShowWindowHotkey = json.Value<string>("ShowWindowHotkey") ?? "Ctrl+Alt+D",
             ClipboardHotkey = json.Value<string>("ClipboardHotkey") ?? "Ctrl+Space",
             TranslatorHotkey = json.Value<string>("TranslatorHotkey") ?? "Alt+Space",
-            // 缺省开启：新用户装上就能用左 Alt 键唤出启动器
-            AltKeyLauncher = json.Value<bool?>("AltKeyLauncher") != false,
         };
     }
 
@@ -52,12 +50,11 @@ public sealed class SettingsService
         return OperationResult.Success("已保存");
     }
 
-    /// <summary>保存全局快捷键与 Win 键开关，并通知宿主重新注册热键。</summary>
+    /// <summary>保存全局快捷键，并通知宿主重新注册热键。</summary>
     public OperationResult SaveHotkeys(
         string showWindowHotkey,
         string clipboardHotkey,
-        string translatorHotkey,
-        bool altKeyLauncher)
+        string translatorHotkey)
     {
         var errors = HotkeyValidator.ValidateBindings(
         [
@@ -77,7 +74,6 @@ public sealed class SettingsService
             ["ShowWindowHotkey"] = HotkeyParser.FormatCanonical(show),
             ["ClipboardHotkey"] = HotkeyParser.FormatCanonical(clipboard),
             ["TranslatorHotkey"] = HotkeyParser.FormatCanonical(translator),
-            ["AltKeyLauncher"] = altKeyLauncher,
         };
 
         _store.SaveConfig(patch);

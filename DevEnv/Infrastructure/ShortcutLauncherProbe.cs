@@ -119,6 +119,9 @@ public static class ShortcutLauncherProbe
                 $"contentTop={contentTop:F1}, menuTop={menuTop:F1}");
             Check("启动器菜单栏不抢 Alt 键焦点", !window.MainMenu.IsMainMenu,
                 "IsMainMenu 必须为 False，否则单按 Alt 会把焦点移到菜单栏");
+            Check("菜单栏含设置入口",
+                window.SettingsMenuItem.Header?.ToString()?.Contains("设置") == true,
+                $"Header={window.SettingsMenuItem.Header}");
             Check("启动器不再提供搜索框",
                 VisualTreeSearch.FindDescendant<System.Windows.Controls.TextBox>(window) is null);
 

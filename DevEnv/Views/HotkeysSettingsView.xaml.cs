@@ -109,7 +109,6 @@ public partial class HotkeysSettingsView : UserControl
         ShowWindowRecorder.Hotkey = NormalizeHotkey(cfg.ShowWindowHotkey, "Ctrl+Alt+D");
         ClipboardRecorder.Hotkey = NormalizeHotkey(cfg.ClipboardHotkey, "Ctrl+Space");
         TranslatorRecorder.Hotkey = NormalizeHotkey(cfg.TranslatorHotkey, "Alt+Space");
-        AltKeyLauncherCheck.IsChecked = cfg.AltKeyLauncher;
 
         var s = _settings.Current;
         VoiceShortcutCombo.SelectedValue = ShortcutDefinition.NormalizeVoiceShortcut(s.Voice.Shortcut);
@@ -188,8 +187,7 @@ public partial class HotkeysSettingsView : UserControl
         var hostResult = _hostSettings.SaveHotkeys(
             ShowWindowRecorder.Hotkey,
             ClipboardRecorder.Hotkey,
-            TranslatorRecorder.Hotkey,
-            AltKeyLauncherCheck.IsChecked == true);
+            TranslatorRecorder.Hotkey);
         if (!hostResult.Ok)
         {
             error = hostResult.DisplayMessage;
@@ -223,7 +221,6 @@ public partial class HotkeysSettingsView : UserControl
         ShowWindowRecorder.Hotkey = "Ctrl+Alt+D";
         ClipboardRecorder.Hotkey = "Ctrl+Space";
         TranslatorRecorder.Hotkey = "Alt+Space";
-        AltKeyLauncherCheck.IsChecked = true;
         VoiceShortcutCombo.SelectedValue = ShortcutDefinition.RightAlt;
         CaptureEnabledCheck.IsChecked = true;
         CaptureModifierCombo.SelectedValue = ShortcutDefinition.CaptureAlt;

@@ -13,8 +13,6 @@ internal sealed class TrayIconHost : IDisposable
 
     /// <summary>右键菜单「显示主窗口」与单击托盘：打开启动器（主窗口）。</summary>
     public event Action? MainWindowRequested;
-    /// <summary>右键菜单「设置…」：打开合并后的设置对话框（含关于与帮助）。</summary>
-    public event Action? SettingsRequested;
     public event Action? TranslatorRequested;
     public event Action? ClipboardRequested;
     public event Action? ExitRequested;
@@ -36,7 +34,6 @@ internal sealed class TrayIconHost : IDisposable
         };
 
         _menu.Items.Add("显示主窗口", null, (_, _) => Raise(MainWindowRequested));
-        _menu.Items.Add("设置…", null, (_, _) => Raise(SettingsRequested));
         _menu.Items.Add("熔岩翻译", null, (_, _) => Raise(TranslatorRequested));
         _menu.Items.Add("熔岩剪贴板", null, (_, _) => Raise(ClipboardRequested));
         _menu.Items.Add(new Forms.ToolStripSeparator());

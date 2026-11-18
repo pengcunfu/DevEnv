@@ -33,7 +33,6 @@ public partial class App : System.Windows.Application
     private GlobalHotkeys? _hotkeys;
     private HwndSourceHook? _hotkeyHook;
     private ClipboardWatcher? _clipboardWatcher;
-    private AltKeyLauncherHook? _altKeyHook;
     private TranslatorWindow? _translatorWindow;
     private ClipboardWindow? _clipboardWindow;
     private SigXorHost? _sigXor;
@@ -104,17 +103,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // 左 Alt 拦截自检：真实安装钩子 + SendInput 模拟按键，验证触发与放行
-        int altKeyIndex = Array.FindIndex(e.Args, a =>
-            string.Equals(a, AltKeyLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
-        if (altKeyIndex >= 0)
-        {
-            string report = altKeyIndex + 1 < e.Args.Length ? e.Args[altKeyIndex + 1] : "";
-            Shutdown(AltKeyLauncherProbe.Run(string.IsNullOrWhiteSpace(report) ? [] : [report]));
-            return;
-        }
-
-        // 启动器自检：三个页签与两个工具文件夹能加载、搜索可用、没有数据绑定错误
+        // 启动器自检：菜单栏、内置工具网格与四个分类窗口能加载，没有数据绑定错误
         int shortcutsIndex = Array.FindIndex(e.Args, a =>
             string.Equals(a, ShortcutLauncherProbe.Argument, StringComparison.OrdinalIgnoreCase));
         if (shortcutsIndex >= 0)
@@ -201,7 +190,6 @@ public partial class App : System.Windows.Application
         // 托盘事件在 WinForms 消息循环里触发，统一经 Dispatcher 回 UI 线程
         // 单击托盘 / 「显示主窗口」= 打开启动器（主窗口）
         _tray.MainWindowRequested += () => Dispatcher.InvokeAsync(ShowMainWindow);
-        _tray.SettingsRequested += () => Dispatcher.InvokeAsync(() => SettingsDialogHost.Open());
         _tray.TranslatorRequested += () => Dispatcher.InvokeAsync(() => ShowTranslatorWindow(new TranslatorRequest { Visible = true }));
         _tray.ClipboardRequested += () => Dispatcher.InvokeAsync(() => ShowClipboardWindow(true));
         _tray.ExitRequested += ExitApp;
@@ -255,10 +243,6 @@ public partial class App : System.Windows.Application
                 System.Windows.Threading.DispatcherPriority.Background);
         }
 
-        // 左 Alt 拦截放在启动流程最后安装：前面的探针 / 提权子进程早已 return，
-        // 不会把键盘钩子带进那些只跑一次就退出的进程。
-        ApplyAltKeyLauncher(CoreServices.Settings.GetConfig().AltKeyLauncher);
-
         CompleteStartupForUpdate();
     }
 
@@ -297,37 +281,6 @@ public partial class App : System.Windows.Application
         catch
         {
             // 标记写入失败只影响看门狗判定，不影响正常启动。
-        }
-    }
-
-    /// <summary>
-    /// 按设置安装 / 卸载左 Alt 拦截钩子。
-    /// 开启时单独按左 Alt 键唤起启动器，Alt+组合键原样放行。
-    /// </summary>
-    private void ApplyAltKeyLauncher(bool enabled)
-    {
-        _altKeyHook?.Resume();
-
-        if (!enabled)
-        {
-            _altKeyHook?.Uninstall();
-            return;
-        }
-
-        if (_altKeyHook is null)
-        {
-            _altKeyHook = new AltKeyLauncherHook(Dispatcher)
-            {
-                // 模态对话框开着时不抢左 Alt，让前台程序照常收到 Alt
-                CanTrigger = ShortcutWindowHost.CanOpen,
-            };
-            _altKeyHook.LauncherRequested += () => ShortcutWindowHost.Toggle();
-        }
-
-        if (!_altKeyHook.Install())
-        {
-            _tray?.ShowBalloon("左 Alt 拦截失败：无法安装键盘钩子，左 Alt 不会唤起启动器。",
-                Forms.ToolTipIcon.Warning);
         }
     }
 
@@ -498,10 +451,6 @@ public partial class App : System.Windows.Application
         _hotkeys?.Dispose();
         _hotkeys = null;
 
-        // 先摘键盘钩子：退出路径上继续拦截 Win 键会把开始菜单吞掉
-        _altKeyHook?.Dispose();
-        _altKeyHook = null;
-
         ToolWindowHost.CloseAll();
         ShortcutWindowHost.Close();
         SettingsDialogHost.Close();
@@ -557,18 +506,17 @@ public partial class App : System.Windows.Application
         if (HwndSource.FromHwnd(hwnd) is { } source)
             source.AddHook(_hotkeyHook);
 
-        ApplyGlobalHotkeys(includeAltKey: false);
+        ApplyGlobalHotkeys();
     }
 
     /// <summary>
     /// 读取 data.json 并注册全局热键。录制快捷键结束后也走这里恢复注册。
     /// </summary>
-    private void ApplyGlobalHotkeys(bool notify = true, bool includeAltKey = true)
+    private void ApplyGlobalHotkeys(bool notify = true)
     {
         string show = "Ctrl+Alt+D";
         string clipboard = "Ctrl+Space";
         string translator = "Alt+Space";
-        bool altKeyLauncher = true;
         try
         {
             var cfg = CoreServices.Settings.GetConfig();
@@ -578,7 +526,6 @@ public partial class App : System.Windows.Application
                 clipboard = cfg.ClipboardHotkey;
             if (!string.IsNullOrWhiteSpace(cfg.TranslatorHotkey))
                 translator = cfg.TranslatorHotkey;
-            altKeyLauncher = cfg.AltKeyLauncher;
         }
         catch
         {
@@ -594,9 +541,6 @@ public partial class App : System.Windows.Application
             if (!_hotkeys.ApplyTranslatorHotkey(translator) && notify)
                 ShowHotkeyFailure(translator, "熔岩翻译");
         }
-
-        if (includeAltKey)
-            ApplyAltKeyLauncher(altKeyLauncher);
     }
 
     private void ShowHotkeyFailure(string hotkey, string action)
@@ -614,7 +558,6 @@ public partial class App : System.Windows.Application
             if (capturing)
             {
                 _hotkeys?.Suspend();
-                _altKeyHook?.Suspend();
                 return;
             }
 

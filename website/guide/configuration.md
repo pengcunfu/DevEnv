@@ -30,7 +30,6 @@
 | `ShowWindowHotkey` | string | 显示主窗口（启动器）的全局组合键，默认 `Ctrl+Alt+D` |
 | `ClipboardHotkey` | string | 全局打开熔岩剪贴板的组合键，默认 `Ctrl+Space` |
 | `TranslatorHotkey` | string | 全局打开熔岩翻译的组合键，默认 `Alt+Space` |
-| `AltKeyLauncher` | bool | 单独按左 Alt 键打开启动器 |
 | `DevServiceView` | string | 开发环境页的视图模式：`table`（表格）或 `card`（卡片），由页面「视图」菜单切换并自动保存 |
 
 修改后重启应用生效。`SelfStarting` 开启/关闭会同步系统启动项。快捷键建议在「设置 → 快捷键」页修改，保存后立即重新注册；手工编辑 `data.json` 的快捷键字段后需重启。

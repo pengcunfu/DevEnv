@@ -15,14 +15,10 @@ namespace DevEnv.Host.Infrastructure;
 /// </summary>
 public static class ShortcutWindowHost
 {
-    /// <summary>失去焦点自动收起后的短时间窗口：在此期间再点托盘菜单视为「关闭」而不是重新打开。</summary>
-    private static readonly TimeSpan AutoDismissGrace = TimeSpan.FromMilliseconds(500);
-
     /// <summary>收起开始菜单后留一两帧再显示启动器，避免开始菜单压在启动器上面。</summary>
     private static readonly TimeSpan StartMenuDismissDelay = TimeSpan.FromMilliseconds(120);
 
     private static ShortcutsWindow? _window;
-    private static DateTime _lastAutoDismissUtc = DateTime.MinValue;
     private static DispatcherTimer? _pendingOpenTimer;
     private static bool _startMenuSyncStarted;
 
@@ -82,7 +78,6 @@ public static class ShortcutWindowHost
                 app.MainWindow = null;
             _window = null;
         };
-        window.AutoDismissed += () => _lastAutoDismissUtc = DateTime.UtcNow;
         _window = window;
         BindAsApplicationMainWindow(window);
         return window;
@@ -190,50 +185,6 @@ public static class ShortcutWindowHost
         // Show / 激活只在 ShowPage 里做一次：这里再补 Show / Activate 会让窗口
         // 被重复激活、重绘，表现为进入时闪一下。
         window.ShowPage(pageId);
-    }
-
-    /// <summary>
-    /// 开关启动器（左 Alt 键与托盘菜单共用）：已打开就收起，否则打开。
-    /// 返回 false 表示此刻不该由启动器接手（模态设置框正开着），
-    /// 让左 Alt 照常交给前台程序。
-    /// </summary>
-    public static bool Toggle()
-    {
-        // 已经打开时再按一次 = 收起；最小化状态下则还原，而不是藏掉任务栏按钮
-        if (_window is { IsVisible: true } window)
-        {
-            CancelPendingOpen();
-            if (window.WindowState == WindowState.Minimized)
-                OpenCore(null);
-            else
-                window.Dismiss();
-            return true;
-        }
-
-        // 点托盘 / 按 Win 时启动器会先因失去焦点自动收起，紧接着的这次调用应视为「关闭」，
-        // 否则会收起后立刻又弹出来，看起来像点了没反应。
-        if (DateTime.UtcNow - _lastAutoDismissUtc < AutoDismissGrace)
-            return true;
-
-        if (!CanOpen())
-            return false;
-
-        Open();
-        return true;
-    }
-
-    /// <summary>此刻能否打开启动器：模态对话框会禁用其它窗口，这时让给系统开始菜单。</summary>
-    public static bool CanOpen()
-    {
-        if (SettingsDialogHost.IsOpen)
-            return false;
-
-        var app = Application.Current;
-        if (app is null)
-            return true;
-
-        // ShowDialog 会话期间被禁用的窗口 IsEnabled == false
-        return !app.Windows.OfType<Window>().Any(w => w.IsVisible && !w.IsEnabled);
     }
 
     /// <summary>主窗真正退出前调用，避免退出流程被未关闭的窗口阻塞。</summary>

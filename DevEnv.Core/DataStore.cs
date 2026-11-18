@@ -41,7 +41,6 @@ public sealed class DataStore
                     ["ShowWindowHotkey"] = "Ctrl+Alt+D",
                     ["ClipboardHotkey"] = "Ctrl+Space",
                     ["TranslatorHotkey"] = "Alt+Space",
-                    ["AltKeyLauncher"] = true,
                 },
                 ["NativeAtomList"] = new JArray(),
                 ["FolderAtomList"] = new JArray(),

@@ -70,6 +70,5 @@ public sealed class ConfigStore
         ["ShowWindowHotkey"] = "Ctrl+Alt+D",
         ["ClipboardHotkey"] = "Ctrl+Space",
         ["TranslatorHotkey"] = "Alt+Space",
-        ["AltKeyLauncher"] = true,
     };
 }
