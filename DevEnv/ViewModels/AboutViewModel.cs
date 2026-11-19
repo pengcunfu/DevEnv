@@ -8,7 +8,7 @@ using DevEnv.Host.Infrastructure;
 
 namespace DevEnv.Host.ViewModels;
 
-/// <summary>「关于与帮助」页：产品信息 + 检查更新。更新状态与下载进度从宿主更新服务读取。</summary>
+/// <summary>「关于与帮助」模态框：产品信息 + 检查更新。更新状态与下载进度从宿主更新服务读取。</summary>
 public sealed partial class AboutViewModel : ObservableObject, IDisposable
 {
     private readonly DispatcherTimer _updateTimer;

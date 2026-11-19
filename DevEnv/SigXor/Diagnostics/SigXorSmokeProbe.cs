@@ -40,6 +40,7 @@ public static class SigXorSmokeProbe
 
         // ---- 预览视图（按 PreviewViewModel 的内容类型分发）----
         Probe("Views.PreviewPane", () => new Views.PreviewPane());
+        Probe("Views.FolderView", () => new Views.FolderView());
         Probe("Views.TextView", () => new Views.TextView());
         Probe("Views.HexEditorView", () => new Views.HexEditorView());
         Probe("Views.ImageView", () => new Views.ImageView());

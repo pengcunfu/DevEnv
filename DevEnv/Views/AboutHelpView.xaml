@@ -13,7 +13,7 @@
         <vm:AboutViewModel />
     </UserControl.DataContext>
 
-    <!-- 只提供内容，不自带 ScrollViewer：设置对话框的页签统一负责滚动。
+    <!-- 只提供内容，不自带 ScrollViewer：独立的关于窗口统一负责滚动。
          关于信息、检查更新与帮助文档从原来的「帮助」菜单和模块关于窗迁移过来。 -->
     <StackPanel HorizontalAlignment="Stretch">
         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12" HorizontalAlignment="Stretch">

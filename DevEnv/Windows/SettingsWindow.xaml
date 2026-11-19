@@ -53,14 +53,5 @@
                 </Grid>
             </ScrollViewer>
         </TabItem>
-        <TabItem Header="关于与帮助" x:Name="AboutTab">
-            <ScrollViewer Style="{StaticResource SettingsPageScrollStyle}"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch">
-                <Grid Style="{StaticResource SettingsPageHostStyle}">
-                    <views:AboutHelpView x:Name="AboutHelpHost" HorizontalAlignment="Stretch" />
-                </Grid>
-            </ScrollViewer>
-        </TabItem>
     </TabControl>
 </Window>

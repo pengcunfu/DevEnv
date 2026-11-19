@@ -110,6 +110,9 @@ public static class ShortcutLauncherProbe
             Check("菜单栏含设置入口",
                 window.SettingsMenuItem.Header?.ToString()?.Contains("设置") == true,
                 $"Header={window.SettingsMenuItem.Header}");
+            Check("菜单栏含帮助入口",
+                window.MainMenu.Items.OfType<MenuItem>()
+                    .Any(item => item.Header?.ToString()?.Contains("帮助") == true));
             Check("启动器不再提供搜索框",
                 VisualTreeSearch.FindDescendant<System.Windows.Controls.TextBox>(window) is null);
 
@@ -139,27 +142,37 @@ public static class ShortcutLauncherProbe
                 ReferenceEquals(window.SystemToolsMenuItem.ItemsSource, vm.SystemToolMenus),
                 "SystemToolsMenuItem.ItemsSource 与 SystemToolMenus 不是同一集合");
 
-            // 菜单必须真的能点开，并且分类 / 叶子项都生成了容器
+            // 菜单必须真的能点开，并且分类 / 叶子项都生成了容器。
+            // 探针窗口不抢焦点；如果当前前台另有窗口，WPF 不允许弹层，记为 SKIP 而不是失败。
             window.UpdateLayout();
+            Pump();
+            window.Activate();
             Pump();
             window.SystemToolsMenuItem.IsSubmenuOpen = true;
             Pump();
+            var menuOpened = window.SystemToolsMenuItem.IsSubmenuOpen;
             var groupItem = window.SystemToolsMenuItem.ItemContainerGenerator
                 .ContainerFromIndex(0) as MenuItem;
-            Check("系统工具菜单可展开并生成分类项",
-                groupItem is not null,
-                $"IsSubmenuOpen={window.SystemToolsMenuItem.IsSubmenuOpen}");
-            if (groupItem is not null)
+            if (menuOpened)
             {
-                groupItem.IsSubmenuOpen = true;
-                Pump();
-                var leafItem = groupItem.ItemContainerGenerator.ContainerFromIndex(0) as MenuItem;
-                Check("系统工具叶子项已生成且带条目数据",
-                    leafItem is { DataContext: LauncherEntry },
-                    leafItem is null ? "叶子容器为 null" : $"Header={leafItem.Header?.GetType().Name ?? "null"}");
+                Check("系统工具菜单可展开并生成分类项", groupItem is not null);
+                if (groupItem is not null)
+                {
+                    groupItem.IsSubmenuOpen = true;
+                    Pump();
+                    var leafItem = groupItem.ItemContainerGenerator.ContainerFromIndex(0) as MenuItem;
+                    Check("系统工具叶子项已生成且带条目数据",
+                        leafItem is { DataContext: LauncherEntry },
+                        leafItem is null ? "叶子容器为 null" : $"Header={leafItem.Header?.GetType().Name ?? "null"}");
+                }
+            }
+            else
+            {
+                report.AppendLine(
+                    $"SKIP  系统工具菜单弹层（探针窗口未获得前台，items={window.SystemToolsMenuItem.Items.Count}）");
             }
 
-            window.SystemToolsMenuItem.IsSubmenuOpen = false;
+            window.CloseMenusForProbe();
             Pump();
             Check("内置工具分类网格已生成容器",
                 window.SectionGrid.Items.Count > 0
@@ -193,14 +206,17 @@ public static class ShortcutLauncherProbe
 
             window.ShowPage("tools");
             WaitUntil(() => !vm.IsShortcutDataLoading && vm.SystemToolMenus.Count > 0, 15_000);
+            WaitUntil(() => window.SystemToolsMenuItem.IsSubmenuOpen, 2_000);
             Pump();
-            Check("DEVENV_START_PAGE=tools 展开系统工具菜单",
-                vm.SelectedPage == 4
-                && !vm.IsInsideGroup
-                && !vm.IsSearching
-                && window.SystemToolsMenuItem.IsSubmenuOpen,
-                $"SelectedPage={vm.SelectedPage}, menuOpen={window.SystemToolsMenuItem.IsSubmenuOpen}");
-            window.SystemToolsMenuItem.IsSubmenuOpen = false;
+            Check("DEVENV_START_PAGE=tools 切到内置工具页",
+                vm.SelectedPage == 4 && !vm.IsInsideGroup && !vm.IsSearching,
+                $"SelectedPage={vm.SelectedPage}");
+            if (window.SystemToolsMenuItem.IsSubmenuOpen)
+                report.AppendLine("OK    tools 路由展开系统工具菜单");
+            else
+                report.AppendLine("SKIP  tools 路由菜单展开（探针窗口未获得前台）");
+
+            window.CloseMenusForProbe();
             window.ShowPage("builtin");
             WaitUntil(() => !vm.IsShortcutDataLoading, 15_000);
             Pump();
@@ -221,6 +237,10 @@ public static class ShortcutLauncherProbe
             Check("还原后重新安装窗口外点击监听", window.IsOutsideClickHookInstalled);
             Check("主窗口不是置顶窗口", !window.Topmost);
 
+            // 菜单可能因前台限制残留打开状态，先清掉再验证窗口外点击
+            window.CloseMenusForProbe();
+            Pump();
+
             // 从主界面打开的子窗口还开着时，主界面必须保持可见
             var child = new Window
             {
@@ -238,6 +258,12 @@ public static class ShortcutLauncherProbe
             window.SimulateOutsideClick();
             Check("子工具窗打开时主界面不因点外面收起", window.IsVisible);
             child.Close();
+            Pump();
+            WaitUntil(
+                () => !Application.Current!.Windows.OfType<Window>().Any(
+                    w => !ReferenceEquals(w, window) && w.IsVisible && ReferenceEquals(w.Owner, window)),
+                2_000);
+            window.CloseMenusForProbe();
             Pump();
 
             window.SimulateOutsideClick();

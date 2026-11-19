@@ -41,8 +41,30 @@ public static class SigXorPreviewProbe
             }
         }
 
+        void Check(string name, bool ok, string? detail = null)
+        {
+            if (ok)
+            {
+                report.AppendLine($"OK    {name}");
+                return;
+            }
+
+            failures++;
+            report.AppendLine($"FAIL  {name}{(detail is null ? "" : ": " + detail)}");
+        }
+
+        static async Task WaitUntilAsync(Func<bool> condition, int timeoutMs)
+        {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            while (!condition() && stopwatch.ElapsedMilliseconds < timeoutMs)
+                await Task.Delay(20);
+        }
+
         string dir = Path.Combine(Path.GetTempPath(), "sigxor-probe-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
+        string subDir = Path.Combine(dir, "sub");
+        Directory.CreateDirectory(subDir);
+        File.WriteAllText(Path.Combine(subDir, "sub.txt"), "sub folder\n", new UTF8Encoding(false));
         try
         {
             var settings = new Services.SettingsService();
@@ -110,6 +132,77 @@ public static class SigXorPreviewProbe
                 await preview.LoadAsync(entry);
                 return preview.Content;
             });
+
+            // 文件夹预览完整流程：列表加载、打开文件、返回文件夹
+            var shell = new ViewModels.ShellPreviewViewModel(settings, backup);
+            shell.ResetFiles(
+            [
+                new DevEnv.Core.SigXor.FileEntry
+                {
+                    Name = "dir",
+                    FullPath = dir,
+                    IsDirectory = true,
+                },
+            ]);
+            await WaitUntilAsync(() => shell.Preview.Content is ViewModels.FolderContentViewModel, 5_000);
+            var folder = shell.Preview.Content as ViewModels.FolderContentViewModel;
+            await WaitUntilAsync(() => folder is { Entries.Count: > 0 }, 5_000);
+            Check("文件夹预览加载文件列表", folder is { Entries.Count: > 0 });
+
+            if (folder is not null)
+            {
+                var sub = folder.Entries.FirstOrDefault(
+                    entry => entry.IsDirectory && entry.Name == "sub");
+                Check("文件夹预览包含子目录", sub is not null);
+                if (sub is not null)
+                {
+                    folder.SelectedEntry = sub;
+                    await folder.ActivateSelectedAsync();
+                    await WaitUntilAsync(
+                        () => string.Equals(folder.CurrentDirectory, subDir, StringComparison.OrdinalIgnoreCase)
+                            && folder.Entries.Any(entry => entry.Name == "sub.txt"),
+                        5_000);
+                    Check("双击子目录可进入",
+                        string.Equals(folder.CurrentDirectory, subDir, StringComparison.OrdinalIgnoreCase)
+                        && folder.Entries.Any(entry => entry.Name == "sub.txt"));
+                    Check("子目录可返回上级", folder.CanGoBack);
+
+                    folder.NavigateUpCommand.Execute(null);
+                    await WaitUntilAsync(
+                        () => string.Equals(folder.CurrentDirectory, dir, StringComparison.OrdinalIgnoreCase)
+                            && folder.Entries.Any(entry => entry.Name == "sample.txt"),
+                        5_000);
+                    Check("返回上级目录",
+                        string.Equals(folder.CurrentDirectory, dir, StringComparison.OrdinalIgnoreCase)
+                        && folder.Entries.Any(entry => entry.Name == "sample.txt"),
+                        $"cwd={folder.CurrentDirectory}, status={folder.StatusText}, entries={folder.Entries.Count}");
+                }
+
+                var sample = folder.Entries.FirstOrDefault(
+                    entry => !entry.IsDirectory && entry.Name == "sample.txt");
+                Check("文件夹预览包含示例文件", sample is not null);
+                if (sample is not null)
+                {
+                    folder.SelectedEntry = sample;
+                    await folder.ActivateSelectedAsync();
+                    await WaitUntilAsync(
+                        () => shell.Preview.Content is ViewModels.TextContentViewModel, 5_000);
+                    Check("从文件夹预览打开文件",
+                        shell.Preview.Content is ViewModels.TextContentViewModel);
+                    Check("预览历史可返回文件夹", shell.CanGoPrevious);
+
+                    if (shell.CanGoPrevious)
+                    {
+                        shell.PreviousCommand.Execute(null);
+                        await WaitUntilAsync(
+                            () => shell.Preview.Content is ViewModels.FolderContentViewModel, 5_000);
+                        Check("返回文件夹预览",
+                            shell.Preview.Content is ViewModels.FolderContentViewModel);
+                    }
+                }
+            }
+
+            shell.DisposeContent();
         }
         catch (Exception ex)
         {

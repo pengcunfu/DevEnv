@@ -30,6 +30,10 @@ public sealed partial class FolderContentViewModel : ObservableObject
     [ObservableProperty]
     private string _currentDirectory = "";
 
+    /// <summary>路径输入框内容；与 CurrentDirectory 分开，避免用户打字时把实际目录改掉。</summary>
+    [ObservableProperty]
+    private string _pathInput = "";
+
     [ObservableProperty]
     private FileEntry? _selectedEntry;
 
@@ -70,6 +74,7 @@ public sealed partial class FolderContentViewModel : ObservableObject
         _navCts = cts;
 
         CurrentDirectory = path;
+        PathInput = path;
         StatusText = "正在加载…";
         try
         {

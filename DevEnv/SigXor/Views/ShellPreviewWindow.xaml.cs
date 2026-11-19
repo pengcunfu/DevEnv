@@ -43,6 +43,10 @@ public partial class ShellPreviewWindow : Window
         return false;
     }
 
+    /// <summary>焦点是否在文本输入框（文件夹预览的路径框等）。</summary>
+    public bool IsTextInputFocused() =>
+        Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase;
+
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         // 编辑模式或输入框里不拦截按键

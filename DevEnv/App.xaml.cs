@@ -453,6 +453,7 @@ public partial class App : System.Windows.Application
 
         ToolWindowHost.CloseAll();
         ShortcutWindowHost.Close();
+        AboutHelpDialogHost.Close();
         SettingsDialogHost.Close();
         _translatorWindow?.PrepareForExit();
         _clipboardWindow?.PrepareForExit();

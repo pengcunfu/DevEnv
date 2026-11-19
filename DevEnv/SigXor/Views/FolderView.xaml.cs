@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using DevEnv.Host.SigXor.ViewModels;
 
 namespace DevEnv.Host.SigXor.Views;
@@ -25,6 +26,10 @@ public partial class FolderView : UserControl
 
     private void OnFileDoubleClick(object sender, MouseButtonEventArgs e)
     {
+        // 双击列表空白处不触发当前选中项
+        if (FindAncestor<ListViewItem>(e.OriginalSource as DependencyObject) is null)
+            return;
+
         if (Vm is { } vm)
             _ = vm.ActivateSelectedAsync();
     }
@@ -59,10 +64,10 @@ public partial class FolderView : UserControl
 
     private void Go()
     {
-        if (Vm is not { } vm || string.IsNullOrWhiteSpace(vm.CurrentDirectory))
+        if (Vm is not { } vm || string.IsNullOrWhiteSpace(vm.PathInput))
             return;
 
-        _ = vm.NavigateToAsync(vm.CurrentDirectory);
+        _ = vm.NavigateToAsync(vm.PathInput);
     }
 
     private void OnOpenExplorerClick(object sender, RoutedEventArgs e)
@@ -81,5 +86,16 @@ public partial class FolderView : UserControl
         {
             // 资源管理器不可用时保持预览窗口不变
         }
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? node) where T : DependencyObject
+    {
+        while (node is not null)
+        {
+            if (node is T match)
+                return match;
+            node = VisualTreeHelper.GetParent(node);
+        }
+        return null;
     }
 }

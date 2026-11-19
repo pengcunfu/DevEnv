@@ -76,6 +76,10 @@ public sealed class ShellPreviewService : IDisposable
         // 表现为资源管理器 / 桌面里 Alt + 空格呼不出翻译窗。
         if (HasSystemModifier()) return false;
 
+        // 文件夹预览的路径框等文本输入框需要正常输入空格，不把它当成关闭预览
+        if (vkCode == VkSpace && IsPreviewVisible && _window?.IsTextInputFocused() == true)
+            return false;
+
         PreviewSettings preview = _settings.Current.Preview;
         int closeKey = ShortcutDefinition.ToPreviewVirtualKey(
             preview.CloseShortcut, GlobalHotkeyService.VK_ESCAPE);
@@ -284,6 +288,7 @@ public sealed class ShellPreviewService : IDisposable
 
     private static bool IsKeyDown(int virtualKey) => (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
 
+    private const int VkSpace = 0x20;
     private const int VkControl = 0x11;
     private const int VkMenu = 0x12;
     private const int VkLWin = 0x5B;

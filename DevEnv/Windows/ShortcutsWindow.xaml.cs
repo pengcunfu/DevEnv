@@ -290,6 +290,15 @@ public partial class ShortcutsWindow : Window
     /// <summary>自检探针用：模拟一次窗口外点击，走与钩子相同的收起路径。</summary>
     internal void SimulateOutsideClick() => OnOutsideClicked();
 
+    /// <summary>自检探针用：关闭可能残留的菜单，避免 _menuOpen 影响窗口外点击检查。</summary>
+    internal void CloseMenusForProbe()
+    {
+        SystemToolsMenuItem.IsSubmenuOpen = false;
+        if (Root.ContextMenu is { IsOpen: true } menu)
+            menu.IsOpen = false;
+        _menuOpen = false;
+    }
+
     private void OnWindowsKeyPressed()
     {
         if (!IsVisible || _suppressDeactivate || WindowState == WindowState.Minimized)
@@ -388,14 +397,20 @@ public partial class ShortcutsWindow : Window
         ViewModel.Launch(entry);
     }
 
-    /// <summary>菜单栏「设置」：打开合并后的设置对话框（含关于与帮助）。</summary>
-    private void OnSettingsMenuClick(object sender, RoutedEventArgs e)
+    /// <summary>菜单栏「设置」：打开合并后的设置对话框。</summary>
+    private void OnSettingsMenuClick(object sender, RoutedEventArgs e) =>
+        RunModalDialog(() => SettingsDialogHost.Open());
+
+    /// <summary>菜单栏「帮助 → 关于与帮助」：打开独立的关于模态框。</summary>
+    private void OnAboutMenuClick(object sender, RoutedEventArgs e) => RunModalDialog(AboutHelpDialogHost.Open);
+
+    /// <summary>模态对话框显示期间不允许主界面因失焦收起。</summary>
+    private void RunModalDialog(Action open)
     {
-        // 模态对话框显示期间不允许主界面因失焦收起
         _suppressDeactivate = true;
         try
         {
-            SettingsDialogHost.Open();
+            open();
         }
         finally
         {

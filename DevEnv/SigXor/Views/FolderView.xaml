@@ -49,7 +49,7 @@
                 <Button Grid.Column="3" Style="{StaticResource FolderToolbarButton}" Content="&#xE72C;" ToolTip="刷新"
                         Command="{Binding RefreshCommand}" />
                 <TextBox x:Name="PathBox" Grid.Column="4" Margin="8,0" Padding="6,4"
-                         Text="{Binding CurrentDirectory, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding PathInput, UpdateSourceTrigger=PropertyChanged}"
                          VerticalContentAlignment="Center" KeyDown="OnPathKeyDown" />
                 <Button Grid.Column="5" Content="转到" Padding="12,4" Click="OnGoClick" ToolTip="进入输入的目录" />
                 <Button Grid.Column="6" Content="资源管理器" Padding="10,4" Margin="8,0,0,0"

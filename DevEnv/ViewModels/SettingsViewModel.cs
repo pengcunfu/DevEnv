@@ -7,7 +7,7 @@ using DevEnv.Host.Themes;
 
 namespace DevEnv.Host.ViewModels;
 
-/// <summary>设置页：常规选项（含深色主题）+ 默认翻译引擎。检查更新位于「关于与帮助」页。</summary>
+/// <summary>设置页：常规选项（含深色主题）+ 默认翻译引擎。检查更新位于独立的「关于与帮助」窗口。</summary>
 public sealed partial class SettingsViewModel : ObservableObject
 {
     public SettingsViewModel()
